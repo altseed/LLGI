@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="..\src\LLGI.Base.h" />
+    <ClInclude Include="..\src\G3\LLGI.G3.CommandList.h">
+      <Filter>G3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\G3\LLGI.G3.ConstantBuffer.h">
+      <Filter>G3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\G3\LLGI.G3.Graphics.h">
+      <Filter>G3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\G3\LLGI.G3.IndexBuffer.h">
+      <Filter>G3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\G3\LLGI.G3.PipelineState.h">
+      <Filter>G3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\G3\LLGI.G3.Platform.h">
+      <Filter>G3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\G3\LLGI.G3.Shader.h">
+      <Filter>G3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\G3\LLGI.G3.VertexBuffer.h">
+      <Filter>G3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\G3\DX12\LLGI.G3.PlatformDX12.h">
+      <Filter>G3\DX12</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="G3">
+      <UniqueIdentifier>{905ccd25-b91d-40e9-9a1f-ff339aa86a34}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="G3\DX12">
+      <UniqueIdentifier>{572c3c29-226f-4618-8b81-5c2bbcd7f652}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\G3\LLGI.G3.CommandList.cpp">
+      <Filter>G3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\G3\LLGI.G3.ConstantBuffer.cpp">
+      <Filter>G3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\G3\LLGI.G3.Graphics.cpp">
+      <Filter>G3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\G3\LLGI.G3.IndexBuffer.cpp">
+      <Filter>G3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\G3\LLGI.G3.PipelineState.cpp">
+      <Filter>G3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\G3\LLGI.G3.Platform.cpp">
+      <Filter>G3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\G3\LLGI.G3.Shader.cpp">
+      <Filter>G3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\G3\LLGI.G3.VertexBuffer.cpp">
+      <Filter>G3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\G3\DX12\LLGI.G3.PlatformDX12.cpp">
+      <Filter>G3\DX12</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
