@@ -13,6 +13,9 @@ class VertexBuffer
 	private:
 	public:
 
+	VertexBuffer() = default;
+	virtual ~VertexBuffer() = default;
+
 	virtual void* Lock();
 	virtual void* Lock(int32_t offset, int32_t size);
 	virtual void Unlock();

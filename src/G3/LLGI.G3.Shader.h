@@ -13,6 +13,8 @@ class Shader
 	private:
 	public:
 
+	Shader() = default;
+	virtual ~Shader() = default;
 };
 
 }

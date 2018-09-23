@@ -12,7 +12,8 @@ class Texture
 {
 private:
 public:
-
+	Texture() = default;
+	virtual ~Texture() = default;
 };
 
 }

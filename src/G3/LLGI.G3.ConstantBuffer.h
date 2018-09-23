@@ -12,6 +12,8 @@ namespace G3
 	{
 	private:
 	public:
+		ConstantBuffer() = default;
+		virtual ~ConstantBuffer() = default;
 
 		virtual void* Lock();
 		virtual void* Lock(int32_t offset, int32_t size);

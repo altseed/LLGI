@@ -12,6 +12,8 @@ class IndexBuffer
 {
 private:
 public:
+	IndexBuffer() = default;
+	virtual ~IndexBuffer() = default;
 
 	virtual void* Lock();
 	virtual void* Lock(int32_t offset, int32_t size);

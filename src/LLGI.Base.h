@@ -14,6 +14,11 @@
 namespace LLGI
 {
 
+enum class PlatformType
+{
+	Default,
+};
+
 enum class ErrorCode
 {
 	OK,
@@ -133,6 +138,9 @@ class ConstantBuffer;
 class Shader;
 class PipelineState;
 class Texture;
+class Platform;
+class Graphics;
+class CommandList;
 
 }
 
