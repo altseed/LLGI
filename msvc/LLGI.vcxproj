@@ -117,6 +117,7 @@
     <ClInclude Include="..\src\G3\LLGI.G3.PipelineState.h" />
     <ClInclude Include="..\src\G3\LLGI.G3.Platform.h" />
     <ClInclude Include="..\src\G3\LLGI.G3.Shader.h" />
+    <ClInclude Include="..\src\G3\LLGI.G3.Texture.h" />
     <ClInclude Include="..\src\G3\LLGI.G3.VertexBuffer.h" />
     <ClInclude Include="..\src\LLGI.Base.h" />
   </ItemGroup>
@@ -129,6 +130,7 @@
     <ClCompile Include="..\src\G3\LLGI.G3.PipelineState.cpp" />
     <ClCompile Include="..\src\G3\LLGI.G3.Platform.cpp" />
     <ClCompile Include="..\src\G3\LLGI.G3.Shader.cpp" />
+    <ClCompile Include="..\src\G3\LLGI.G3.Texture.cpp" />
     <ClCompile Include="..\src\G3\LLGI.G3.VertexBuffer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
