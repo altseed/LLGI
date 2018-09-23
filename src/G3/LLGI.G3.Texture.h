@@ -8,10 +8,10 @@ namespace LLGI
 namespace G3
 {
 
-class Shader
+class Texture
 {
-	private:
-	public:
+private:
+public:
 
 };
 
