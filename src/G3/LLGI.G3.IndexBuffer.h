@@ -9,6 +9,7 @@ namespace G3
 {
 
 class IndexBuffer
+	: public ReferenceObject
 {
 private:
 public:

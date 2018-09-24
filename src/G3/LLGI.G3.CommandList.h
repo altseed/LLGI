@@ -21,7 +21,7 @@ public:
 
 	virtual void Begin();
 	virtual void End();
-	virtual void Clear();
+	virtual void Clear(const Color8& color);
 	virtual void SetScissor(int32_t x, int32_t y, int32_t width, int32_t height);
 	virtual void Draw();
 	virtual void SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride);

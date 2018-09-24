@@ -8,7 +8,7 @@ namespace LLGI
 namespace G3
 {
 
-Platform* CreatePlatform(PlatformType platform);
+Platform* CreatePlatform(DeviceType platform);
 
 class Platform
 	: public ReferenceObject

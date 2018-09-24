@@ -16,7 +16,7 @@ void CommandList::End()
 
 }
 
-void CommandList::Clear()
+void CommandList::Clear(const Color8& color)
 {
 
 }

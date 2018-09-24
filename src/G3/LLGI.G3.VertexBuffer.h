@@ -9,6 +9,7 @@ namespace G3
 {
 
 class VertexBuffer
+	: public ReferenceObject
 {
 	private:
 	public:

@@ -9,6 +9,7 @@ namespace G3
 {
 
 class PipelineState
+	: public ReferenceObject
 {
 private:
 public:

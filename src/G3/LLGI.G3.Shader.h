@@ -9,6 +9,7 @@ namespace G3
 {
 
 class Shader
+	: public ReferenceObject
 {
 	private:
 	public:
