@@ -56,7 +56,7 @@ layout(location = 0) out vec4 color;
 
 void main()
 {
-   color = v_color;
+    color = v_color;
 }
 
 )";
@@ -147,11 +147,15 @@ void main()
 	ib_buf[0] = 0;
 	ib_buf[1] = 1;
 	ib_buf[2] = 2;
-	ib_buf[3] = 1;
+	ib_buf[3] = 0;
 	ib_buf[4] = 2;
 	ib_buf[5] = 3;
 	ib->Unlock();
 	
+	pip->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
+	pip->VertexLayouts[1] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
+	pip->VertexLayouts[2] = LLGI::VertexLayoutFormat::R8G8B8A8_UNORM;
+	pip->VertexLayoutCount = 3;
 
 	pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs);
 	pip->SetShader(LLGI::ShaderStageType::Pixel , shader_ps);
@@ -173,7 +177,7 @@ void main()
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex));
 		commandList->SetIndexBuffer(ib);
 		commandList->SetPipelineState(pip);
-		commandList->Draw();
+		commandList->Draw(2);
 
 		commandList->End();
 
@@ -193,40 +197,6 @@ void main()
 	LLGI::SafeRelease(platform);
 
 	LLGI::SafeRelease(compiler);
-}
-
-void test_clear_update()
-{
-	int count = 0;
-
-	auto platform = LLGI::G3::CreatePlatform(LLGI::DeviceType::Default);
-	auto graphics = platform->CreateGraphics();
-	auto commandList = graphics->CreateCommandList();
-
-	while (count < 1000)
-	{
-		platform->NewFrame();
-
-		LLGI::Color8 color;
-		color.R = count % 255;
-		color.G = 0;
-		color.B = 0;
-		color.A = 255;
-
-		commandList->Begin();
-		commandList->SetScissor(0, 0, 1280, 720);
-		commandList->Clear(color);
-		commandList->End();
-
-		graphics->Execute(commandList);
-
-		platform->Present();
-		count++;
-	}
-
-	LLGI::SafeRelease(commandList);
-	LLGI::SafeRelease(graphics);
-	LLGI::SafeRelease(platform);
 }
 
 void test_compile()
@@ -283,6 +253,40 @@ void main()
 	LLGI::SafeRelease(compiler);
 }
 
+void test_clear_update()
+{
+	int count = 0;
+
+	auto platform = LLGI::G3::CreatePlatform(LLGI::DeviceType::Default);
+	auto graphics = platform->CreateGraphics();
+	auto commandList = graphics->CreateCommandList();
+
+	while (count < 1000)
+	{
+		platform->NewFrame();
+
+		LLGI::Color8 color;
+		color.R = count % 255;
+		color.G = 0;
+		color.B = 0;
+		color.A = 255;
+
+		commandList->Begin();
+		commandList->SetScissor(0, 0, 1280, 720);
+		commandList->Clear(color);
+		commandList->End();
+
+		graphics->Execute(commandList);
+
+		platform->Present();
+		count++;
+	}
+
+	LLGI::SafeRelease(commandList);
+	LLGI::SafeRelease(graphics);
+	LLGI::SafeRelease(platform);
+}
+
 void test_clear()
 {
 	int count = 0;
@@ -319,7 +323,9 @@ void test_clear()
 
 int main()
 {
-	test_compile();
+	test_simple_rectangle();
+	//test_compile();
+	//test_clear_update();
 	//test_clear();
 
 
