@@ -32,6 +32,9 @@
     <ClInclude Include="..\src\G3\LLGI.G3.Texture.h">
       <Filter>G3</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\G3\LLGI.G3.Compiler.h">
+      <Filter>G3</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="G3">
@@ -39,6 +42,9 @@
     </Filter>
     <Filter Include="G3\DX12">
       <UniqueIdentifier>{572c3c29-226f-4618-8b81-5c2bbcd7f652}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="G3\PC">
+      <UniqueIdentifier>{5b153f4c-e753-4f4e-ae3e-2b502c5912b2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -71,6 +77,12 @@
     </ClCompile>
     <ClCompile Include="..\src\G3\LLGI.G3.Texture.cpp">
       <Filter>G3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\G3\LLGI.G3.Compiler.cpp">
+      <Filter>G3</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\G3\PC\LLGI.G3.CreatePC.cpp">
+      <Filter>G3\PC</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -6,15 +6,16 @@
 #include <stdint.h>
 #include <assert.h>
 
+#include <string>
+#include <vector>
 #include <memory>
 #include <atomic>
 #include <array>
-#include <vector>
 
 namespace LLGI
 {
 
-enum class PlatformType
+enum class DeviceType
 {
 	Default,
 };
@@ -52,6 +53,21 @@ struct Vec2I
 	int32_t X;
 	int32_t Y;
 };
+
+struct Color8
+{
+	uint8_t R;
+	uint8_t G;
+	uint8_t B;
+	uint8_t A;
+};
+
+struct DataStructure
+{
+	void* Data;
+	int32_t Size;
+};
+
 
 template <class T>
 void SafeAddRef(T& t)
@@ -141,6 +157,7 @@ class Texture;
 class Platform;
 class Graphics;
 class CommandList;
+class Compiler;
 
 }
 

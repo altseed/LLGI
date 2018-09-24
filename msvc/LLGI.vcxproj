@@ -111,6 +111,7 @@
   <ItemGroup>
     <ClInclude Include="..\src\G3\DX12\LLGI.G3.PlatformDX12.h" />
     <ClInclude Include="..\src\G3\LLGI.G3.CommandList.h" />
+    <ClInclude Include="..\src\G3\LLGI.G3.Compiler.h" />
     <ClInclude Include="..\src\G3\LLGI.G3.ConstantBuffer.h" />
     <ClInclude Include="..\src\G3\LLGI.G3.Graphics.h" />
     <ClInclude Include="..\src\G3\LLGI.G3.IndexBuffer.h" />
@@ -124,6 +125,7 @@
   <ItemGroup>
     <ClCompile Include="..\src\G3\DX12\LLGI.G3.PlatformDX12.cpp" />
     <ClCompile Include="..\src\G3\LLGI.G3.CommandList.cpp" />
+    <ClCompile Include="..\src\G3\LLGI.G3.Compiler.cpp" />
     <ClCompile Include="..\src\G3\LLGI.G3.ConstantBuffer.cpp" />
     <ClCompile Include="..\src\G3\LLGI.G3.Graphics.cpp" />
     <ClCompile Include="..\src\G3\LLGI.G3.IndexBuffer.cpp" />
@@ -132,6 +134,7 @@
     <ClCompile Include="..\src\G3\LLGI.G3.Shader.cpp" />
     <ClCompile Include="..\src\G3\LLGI.G3.Texture.cpp" />
     <ClCompile Include="..\src\G3\LLGI.G3.VertexBuffer.cpp" />
+    <ClCompile Include="..\src\G3\PC\LLGI.G3.CreatePC.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
