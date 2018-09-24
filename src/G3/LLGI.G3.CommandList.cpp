@@ -26,7 +26,7 @@ void CommandList::SetScissor(int32_t x, int32_t y, int32_t width, int32_t height
 
 }
 
-void CommandList::Draw()
+void CommandList::Draw(int32_t pritimiveCount)
 {
 
 }
