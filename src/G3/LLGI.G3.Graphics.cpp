@@ -10,6 +10,11 @@ void Graphics::Execute(CommandList* commandList)
 
 }
 
+RenderTarget* Graphics::GetCurrentScreen()
+{
+	return nullptr;
+}
+
 VertexBuffer* Graphics::CreateVertexBuffer(int32_t size)
 {
 	return nullptr;

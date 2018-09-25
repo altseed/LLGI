@@ -173,7 +173,7 @@ void main()
 
 		commandList->Begin();
 		commandList->SetScissor(0, 0, 1280, 720);
-		commandList->Clear(color);
+		commandList->Clear(graphics->GetCurrentScreen(), color);
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex));
 		commandList->SetIndexBuffer(ib);
 		commandList->SetPipelineState(pip);
@@ -273,7 +273,7 @@ void test_clear_update()
 
 		commandList->Begin();
 		commandList->SetScissor(0, 0, 1280, 720);
-		commandList->Clear(color);
+		commandList->Clear(graphics->GetCurrentScreen(), color);
 		commandList->End();
 
 		graphics->Execute(commandList);
@@ -303,7 +303,7 @@ void test_clear()
 
 	commandList->Begin();
 	commandList->SetScissor(0, 0, 1280, 720);
-	commandList->Clear(color);
+	commandList->Clear(graphics->GetCurrentScreen(), color);
 	commandList->End();
 
 	while (count < 1000)

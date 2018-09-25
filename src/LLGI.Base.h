@@ -158,6 +158,7 @@ class Platform;
 class Graphics;
 class CommandList;
 class Compiler;
+class RenderTarget;
 
 }
 
