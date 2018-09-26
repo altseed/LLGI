@@ -46,5 +46,15 @@ void CommandList::SetPipelineState(PipelineState* pipelineState)
 
 }
 
+void CommandList::SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageType shaderStage)
+{
+
+}
+
+void CommandList::SetTexture(Texture* texture, int32_t unit, ShaderStageType shaderStage)
+{
+
+}
+
 }
 }

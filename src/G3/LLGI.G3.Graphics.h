@@ -38,6 +38,8 @@ public:
 	virtual Shader* CreateShader(DataStructure* data, int32_t count);
 	virtual PipelineState* CreatePiplineState();
 	virtual CommandList* CreateCommandList();
+	virtual ConstantBuffer* CreateConstantBuffer(int32_t size);
+	virtual Texture* CreateTexture();
 };
 
 }
