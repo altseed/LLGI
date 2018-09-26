@@ -11,6 +11,7 @@
 #include <memory>
 #include <atomic>
 #include <array>
+#include <queue>
 
 namespace LLGI
 {

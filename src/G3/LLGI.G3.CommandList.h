@@ -34,6 +34,8 @@ public:
 	virtual void SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride);
 	virtual void SetIndexBuffer(IndexBuffer* indexBuffer);
 	virtual void SetPipelineState(PipelineState* pipelineState);
+	virtual void SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageType shaderStage);
+	virtual void SetTexture(Texture* texture, int32_t unit, ShaderStageType shaderStage);
 };
 
 }

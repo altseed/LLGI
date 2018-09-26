@@ -40,5 +40,15 @@ CommandList* Graphics::CreateCommandList()
 	return nullptr;
 }
 
+ConstantBuffer* Graphics::CreateConstantBuffer(int32_t size)
+{
+	return nullptr;
+}
+
+Texture* Graphics::CreateTexture()
+{
+	return nullptr;
+}
+
 }
 }
