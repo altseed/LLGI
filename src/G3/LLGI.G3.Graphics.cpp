@@ -45,7 +45,7 @@ ConstantBuffer* Graphics::CreateConstantBuffer(int32_t size)
 	return nullptr;
 }
 
-Texture* Graphics::CreateTexture()
+Texture* Graphics::CreateTexture(const Vec2I& size)
 {
 	return nullptr;
 }

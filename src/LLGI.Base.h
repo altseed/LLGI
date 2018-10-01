@@ -53,6 +53,18 @@ struct Vec2I
 {
 	int32_t X;
 	int32_t Y;
+
+	Vec2I()
+		: X (0)
+		, Y (0)
+	{
+	}
+
+	Vec2I(int32_t x, int32_t y)
+		: X(x)
+		, Y(y)
+	{
+	}
 };
 
 struct Color8
