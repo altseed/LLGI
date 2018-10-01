@@ -39,7 +39,7 @@ public:
 	virtual PipelineState* CreatePiplineState();
 	virtual CommandList* CreateCommandList();
 	virtual ConstantBuffer* CreateConstantBuffer(int32_t size);
-	virtual Texture* CreateTexture();
+	virtual Texture* CreateTexture(const Vec2I& size);
 };
 
 }
