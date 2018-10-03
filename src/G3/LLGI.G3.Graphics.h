@@ -14,6 +14,18 @@ class RenderTarget
 public:
 	RenderTarget() = default;
 	virtual ~RenderTarget() = default;
+
+	/**
+	@brief	Set a texture as render target
+	@param	texture	null is OK. A texture without render target is not OK.
+	*/
+	virtual bool SetRenderTexture(Texture* texture, int32_t index) { return false; }
+
+	/**
+	@brief	Set a texture as a depth map
+	@param	texture	null is OK. A texture without depth is not OK.
+	*/
+	virtual bool SetDepthTexture(Texture* texture) { return false; }
 };
 
 class Graphics
@@ -39,7 +51,8 @@ public:
 	virtual PipelineState* CreatePiplineState();
 	virtual CommandList* CreateCommandList();
 	virtual ConstantBuffer* CreateConstantBuffer(int32_t size);
-	virtual Texture* CreateTexture(const Vec2I& size);
+	virtual RenderTarget* CreateRenderTarget() { return nullptr; }
+	virtual Texture* CreateTexture(const Vec2I& size, bool isRenderTarget, bool isDepthBuffer);
 };
 
 }
