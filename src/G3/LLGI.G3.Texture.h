@@ -18,6 +18,9 @@ public:
 
 	virtual void* Lock();
 	virtual void Unlock();
+
+	virtual bool IsRenderTarget() const;
+	virtual bool IsDepthTexture() const;
 };
 
 }

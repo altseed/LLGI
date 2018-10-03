@@ -18,6 +18,20 @@ public:
 
 	CullingMode Culling = CullingMode::Clockwise;
 
+	bool IsBlendEnabled = true;
+
+	BlendFuncType BlendSrcFunc = BlendFuncType::SrcAlpha;
+	BlendFuncType BlendDstFunc = BlendFuncType::OneMinusSrcAlpha;
+	BlendFuncType BlendSrcFuncAlpha = BlendFuncType::SrcAlpha;
+	BlendFuncType BlendDstFuncAlpha = BlendFuncType::OneMinusSrcAlpha;
+
+	BlendEquationType BlendEquationRGB = BlendEquationType::Add;
+	BlendEquationType BlendEquationAlpha = BlendEquationType::Add;
+
+	bool IsDepthTestEnabled = false;
+	bool IsDepthWriteEnabled = false;
+	bool IsStencilTestEnabled = false;
+
 	std::array<VertexLayoutFormat, 16> VertexLayouts;
 	int32_t VertexLayoutCount = 0;
 

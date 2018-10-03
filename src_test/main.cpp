@@ -1,23 +1,5 @@
 
-#include <G3/LLGI.G3.Platform.h>
-#include <G3/LLGI.G3.Graphics.h>
-#include <G3/LLGI.G3.CommandList.h>
-#include <G3/LLGI.G3.VertexBuffer.h>
-#include <G3/LLGI.G3.IndexBuffer.h>
-#include <G3/LLGI.G3.Compiler.h>
-#include <G3/LLGI.G3.Shader.h>
-#include <G3/LLGI.G3.PipelineState.h>
-#include <G3/LLGI.G3.ConstantBuffer.h>
-#include <G3/LLGI.G3.Texture.h>
-
-#include <iostream>
-
-struct SimpleVertex
-{
-	float Pos[3];
-	float UV[2];
-	LLGI::Color8 Color;
-};
+#include "test.h"
 
 void test_simple_texture_rectangle()
 {
@@ -75,7 +57,7 @@ void main()
 	auto vb = graphics->CreateVertexBuffer(sizeof(SimpleVertex) * 4);
 	auto ib = graphics->CreateIndexBuffer(2, 6);
 	auto pip = graphics->CreatePiplineState();
-	auto texture = graphics->CreateTexture(LLGI::Vec2I(256, 256));
+	auto texture = graphics->CreateTexture(LLGI::Vec2I(256, 256), false, false);
 
 	auto texture_buf = (LLGI::Color8*)texture->Lock();
 	for (int y = 0; y < 256; y++)
@@ -124,42 +106,20 @@ void main()
 	}
 
 	auto vb_buf = (SimpleVertex*)vb->Lock();
-	vb_buf[0].Pos[0] = -0.5;
-	vb_buf[0].Pos[1] = 0.5;
-	vb_buf[0].Pos[2] = 0.5;
+	vb_buf[0].Pos = LLGI::Vec3F(-0.5, 0.5, 0.5);
+	vb_buf[1].Pos = LLGI::Vec3F(0.5, 0.5, 0.5);
+	vb_buf[2].Pos = LLGI::Vec3F(0.5, -0.5, 0.5);
+	vb_buf[3].Pos = LLGI::Vec3F(-0.5, -0.5, 0.5);
 
-	vb_buf[1].Pos[0] = 0.5;
-	vb_buf[1].Pos[1] = 0.5;
-	vb_buf[1].Pos[2] = 0.5;
+	vb_buf[0].UV = LLGI::Vec2F(0.0f, 0.0f);
+	vb_buf[1].UV = LLGI::Vec2F(1.0f, 0.0f);
+	vb_buf[2].UV = LLGI::Vec2F(1.0f, 1.0f);
+	vb_buf[3].UV = LLGI::Vec2F(0.0f, 1.0f);
 
-	vb_buf[2].Pos[0] = 0.5;
-	vb_buf[2].Pos[1] = -0.5;
-	vb_buf[2].Pos[2] = 0.5;
-
-	vb_buf[3].Pos[0] = -0.5;
-	vb_buf[3].Pos[1] = -0.5;
-	vb_buf[3].Pos[2] = 0.5;
-
-	vb_buf[0].UV[0] = 0.0;
-	vb_buf[0].UV[1] = 0.0;
-
-	vb_buf[1].UV[0] = 1.0;
-	vb_buf[1].UV[1] = 0.0;
-
-	vb_buf[2].UV[0] = 1.0;
-	vb_buf[2].UV[1] = 1.0;
-
-	vb_buf[3].UV[0] = 0.0;
-	vb_buf[3].UV[1] = 1.0;
-
-	vb_buf[0].Color.R = 255;
-	vb_buf[0].Color.G = 255;
-	vb_buf[0].Color.B = 255;
-	vb_buf[0].Color.A = 255;
-
-	vb_buf[1].Color = vb_buf[0].Color;
-	vb_buf[2].Color = vb_buf[0].Color;
-	vb_buf[3].Color = vb_buf[0].Color;
+	vb_buf[0].Color = LLGI::Color8();
+	vb_buf[1].Color = LLGI::Color8();
+	vb_buf[2].Color = LLGI::Color8();
+	vb_buf[3].Color = LLGI::Color8();
 
 	vb->Unlock();
 
@@ -323,41 +283,15 @@ void main()
 	}
 
 	auto vb_buf = (SimpleVertex*)vb->Lock();
-	vb_buf[0].Pos[0] = -0.5;
-	vb_buf[0].Pos[1] = 0.5;
-	vb_buf[0].Pos[2] = 0.5;
+	vb_buf[0].Pos = LLGI::Vec3F(-0.5, 0.5, 0.5);
+	vb_buf[1].Pos = LLGI::Vec3F( 0.5, 0.5, 0.5);
+	vb_buf[2].Pos = LLGI::Vec3F(0.5, -0.5, 0.5);
+	vb_buf[3].Pos = LLGI::Vec3F(-0.5, -0.5, 0.5);
 
-	vb_buf[1].Pos[0] = 0.5;
-	vb_buf[1].Pos[1] = 0.5;
-	vb_buf[1].Pos[2] = 0.5;
-
-	vb_buf[2].Pos[0] = 0.5;
-	vb_buf[2].Pos[1] = -0.5;
-	vb_buf[2].Pos[2] = 0.5;
-
-	vb_buf[3].Pos[0] = -0.5;
-	vb_buf[3].Pos[1] = -0.5;
-	vb_buf[3].Pos[2] = 0.5;
-
-	vb_buf[0].Color.R = 255;
-	vb_buf[0].Color.G = 255;
-	vb_buf[0].Color.B = 255;
-	vb_buf[0].Color.A = 255;
-
-	vb_buf[1].Color.R = 255;
-	vb_buf[1].Color.G = 255;
-	vb_buf[1].Color.B = 0;
-	vb_buf[1].Color.A = 255;
-
-	vb_buf[2].Color.R = 0;
-	vb_buf[2].Color.G = 255;
-	vb_buf[2].Color.B = 0;
-	vb_buf[2].Color.A = 255;
-
-	vb_buf[3].Color.R = 0;
-	vb_buf[3].Color.G = 0;
-	vb_buf[3].Color.B = 255;
-	vb_buf[3].Color.A = 255;
+	vb_buf[0].Color = LLGI::Color8(255, 255, 255, 255);
+	vb_buf[1].Color = LLGI::Color8(255, 255, 0, 255);
+	vb_buf[2].Color = LLGI::Color8(0, 255, 0, 255);
+	vb_buf[3].Color = LLGI::Color8(0, 0, 255, 255);
 
 	vb->Unlock();
 
@@ -521,41 +455,15 @@ void main()
 	}
 
 	auto vb_buf = (SimpleVertex*)vb->Lock();
-	vb_buf[0].Pos[0] = -0.5;
-	vb_buf[0].Pos[1] = 0.5;
-	vb_buf[0].Pos[2] = 0.5;
+	vb_buf[0].Pos = LLGI::Vec3F(-0.5, 0.5, 0.5);
+	vb_buf[1].Pos = LLGI::Vec3F(0.5, 0.5, 0.5);
+	vb_buf[2].Pos = LLGI::Vec3F(0.5, -0.5, 0.5);
+	vb_buf[3].Pos = LLGI::Vec3F(-0.5, -0.5, 0.5);
 
-	vb_buf[1].Pos[0] = 0.5;
-	vb_buf[1].Pos[1] = 0.5;
-	vb_buf[1].Pos[2] = 0.5;
-
-	vb_buf[2].Pos[0] = 0.5;
-	vb_buf[2].Pos[1] = -0.5;
-	vb_buf[2].Pos[2] = 0.5;
-
-	vb_buf[3].Pos[0] = -0.5;
-	vb_buf[3].Pos[1] = -0.5;
-	vb_buf[3].Pos[2] = 0.5;
-
-	vb_buf[0].Color.R = 255;
-	vb_buf[0].Color.G = 255;
-	vb_buf[0].Color.B = 255;
-	vb_buf[0].Color.A = 255;
-
-	vb_buf[1].Color.R = 255;
-	vb_buf[1].Color.G = 255;
-	vb_buf[1].Color.B = 0;
-	vb_buf[1].Color.A = 255;
-
-	vb_buf[2].Color.R = 0;
-	vb_buf[2].Color.G = 255;
-	vb_buf[2].Color.B = 0;
-	vb_buf[2].Color.A = 255;
-
-	vb_buf[3].Color.R = 0;
-	vb_buf[3].Color.G = 0;
-	vb_buf[3].Color.B = 255;
-	vb_buf[3].Color.A = 255;
+	vb_buf[0].Color = LLGI::Color8(255, 255, 255, 255);
+	vb_buf[1].Color = LLGI::Color8(255, 255, 0, 255);
+	vb_buf[2].Color = LLGI::Color8(0, 255, 0, 255);
+	vb_buf[3].Color = LLGI::Color8(0, 0, 255, 255);
 
 	vb->Unlock();
 
@@ -669,77 +577,14 @@ void main()
 	LLGI::SafeRelease(compiler);
 }
 
-void test_clear_update()
-{
-	int count = 0;
-
-	auto platform = LLGI::G3::CreatePlatform(LLGI::DeviceType::Default);
-	auto graphics = platform->CreateGraphics();
-	auto commandList = graphics->CreateCommandList();
-
-	while (count < 1000)
-	{
-		platform->NewFrame();
-
-		LLGI::Color8 color;
-		color.R = count % 255;
-		color.G = 0;
-		color.B = 0;
-		color.A = 255;
-
-		commandList->Begin();
-		commandList->SetScissor(0, 0, 1280, 720);
-		commandList->Clear(graphics->GetCurrentScreen(), color);
-		commandList->End();
-
-		graphics->Execute(commandList);
-
-		platform->Present();
-		count++;
-	}
-
-	LLGI::SafeRelease(commandList);
-	LLGI::SafeRelease(graphics);
-	LLGI::SafeRelease(platform);
-}
-
-void test_clear()
-{
-	int count = 0;
-
-	auto platform = LLGI::G3::CreatePlatform(LLGI::DeviceType::Default);
-	auto graphics = platform->CreateGraphics();
-	auto commandList = graphics->CreateCommandList();
-
-	LLGI::Color8 color;
-	color.R = 255;
-	color.G = 0;
-	color.B = 0;
-	color.A = 255;
-
-	commandList->Begin();
-	commandList->SetScissor(0, 0, 1280, 720);
-	commandList->Clear(graphics->GetCurrentScreen(), color);
-	commandList->End();
-
-	while (count < 1000)
-	{
-		platform->NewFrame();
-
-		graphics->Execute(commandList);
-
-		platform->Present();
-		count++;
-	}
-
-	LLGI::SafeRelease(commandList);
-	LLGI::SafeRelease(graphics);
-	LLGI::SafeRelease(platform);
-}
+void test_clear_update();
+void test_clear();
+void test_rendertarget();
 
 int main()
 {
-	test_simple_texture_rectangle();
+	test_rendertarget();
+	//test_simple_texture_rectangle();
 	//test_simple_constant_rectangle();
 	//test_simple_rectangle();
 	//test_compile();

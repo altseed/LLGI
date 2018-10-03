@@ -14,7 +14,15 @@ void Texture::Unlock()
 {
 }
 
+bool Texture::IsRenderTarget() const
+{
+	return false;
+}
 
+bool Texture::IsDepthTexture() const
+{
+	return false;
+}
 
 }
 }
