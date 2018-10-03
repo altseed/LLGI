@@ -35,6 +35,18 @@
     <ClInclude Include="..\src\G3\LLGI.G3.Compiler.h">
       <Filter>G3</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\G3\DX12\LLGI.G3.BaseDX12.h">
+      <Filter>G3\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\G3\DX12\LLGI.G3.GraphicsDX12.h">
+      <Filter>G3\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\G3\DX12\LLGI.G3.CommandListDX12.h">
+      <Filter>G3\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\G3\DX12\LLGI.G3.CompilerDX12.h">
+      <Filter>G3\DX12</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="G3">
@@ -83,6 +95,15 @@
     </ClCompile>
     <ClCompile Include="..\src\G3\PC\LLGI.G3.CreatePC.cpp">
       <Filter>G3\PC</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\G3\DX12\LLGI.G3.GraphicsDX12.cpp">
+      <Filter>G3\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\G3\DX12\LLGI.G3.CommandListDX12.cpp">
+      <Filter>G3\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\G3\DX12\LLGI.G3.CompilerDX12.cpp">
+      <Filter>G3\DX12</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
