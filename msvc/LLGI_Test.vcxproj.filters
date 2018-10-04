@@ -2,5 +2,12 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="..\src_test\main.cpp" />
+    <ClCompile Include="..\src_test\test_clear.cpp" />
+    <ClCompile Include="..\src_test\test_depth.cpp" />
+    <ClCompile Include="..\src_test\test_rendertarget.cpp" />
+    <ClCompile Include="..\src_test\test_empty.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src_test\test.h" />
   </ItemGroup>
 </Project>

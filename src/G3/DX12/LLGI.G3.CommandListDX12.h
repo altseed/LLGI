@@ -26,6 +26,8 @@ public:
 	void Begin() override;
 	void End() override;
 	void Clear(RenderTarget* renderTarget, const Color8& color) override;
+
+	ID3D12GraphicsCommandList* GetCommandList() { return commandList; }
 };
 
 }

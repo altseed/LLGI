@@ -11,12 +11,21 @@ GraphicsDX12::GraphicsDX12(ID3D12Device* device, std::function<std::tuple< D3D12
 	, getScreenFunc_(getScreenFunc)
 	, commandQueue_(commandQueue)
 {
-
+	SafeAddRef(device_);
+	SafeAddRef(commandQueue_);
 }
 
 GraphicsDX12::~GraphicsDX12()
 {
+	SafeRelease(device_);
+	SafeRelease(commandQueue_);
+}
 
+void GraphicsDX12::Execute(CommandList* commandList)
+{
+	auto cl = (CommandListDX12*)commandList;
+	auto cl_internal = cl->GetCommandList();
+	commandQueue_->ExecuteCommandLists(1, (ID3D12CommandList**)(&cl_internal));
 }
 
 RenderTarget* GraphicsDX12::GetCurrentScreen()
@@ -30,13 +39,13 @@ RenderTarget* GraphicsDX12::GetCurrentScreen()
 CommandList* GraphicsDX12::CreateCommandList()
 {
 	auto obj = new CommandListDX12();
-	if (obj->Initialize(this))
+	if (!obj->Initialize(this))
 	{
 		SafeRelease(obj);
 		return nullptr;
 	}
 
-	return nullptr;
+	return obj;
 }
 
 ID3D12Device* GraphicsDX12::GetDevice()

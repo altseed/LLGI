@@ -34,6 +34,8 @@ public:
 	GraphicsDX12(ID3D12Device* device, std::function<std::tuple< D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*>()> getScreenFunc, ID3D12CommandQueue* commandQueue);
 	virtual ~GraphicsDX12();
 
+	void Execute(CommandList* commandList) override;
+
 	RenderTarget* GetCurrentScreen() override;
 
 	CommandList* CreateCommandList() override;

@@ -15,7 +15,7 @@ class PlatformDX12
 private:
 	static const int SwapBufferCount = 2;
 
-	HWND hwnd;
+	HWND hwnd = nullptr;
 	ID3D12Device* device = nullptr;
 	IDXGIFactory4* dxgiFactory = nullptr;
 	ID3D12CommandQueue* commandQueue = nullptr;
@@ -30,7 +30,7 @@ private:
 	ID3D12CommandAllocator* commandAllocator = nullptr;
 	ID3D12GraphicsCommandList* commandListStart = nullptr;
 	ID3D12GraphicsCommandList* commandListPresent = nullptr;
-	UINT64 fenceValue = 0;
+	UINT64 fenceValue = 1;
 
 	int32_t frameIndex = 0;
 
