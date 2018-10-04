@@ -70,6 +70,7 @@ PlatformDX12::~PlatformDX12()
 	SafeRelease(fence);
 	SafeRelease(device);
 	SafeRelease(dxgiFactory);
+	SafeRelease(swapChain);
 
 	if (fenceEvent != nullptr)
 	{
@@ -96,7 +97,7 @@ bool PlatformDX12::Initialize(Vec2I windowSize)
 
 	RegisterClassExA(&wcex);
 
-	HWND hwnd = CreateWindowA(
+	hwnd = CreateWindowA(
 		"DirectX12", 
 		"DirectX12", 
 		WS_OVERLAPPEDWINDOW, 
@@ -279,6 +280,7 @@ FAILED_EXIT:;
 	SafeRelease(fence);
 	SafeRelease(device);
 	SafeRelease(dxgiFactory);
+	SafeRelease(swapChain);
 
 	if (fenceEvent != nullptr)
 	{
@@ -301,6 +303,10 @@ void PlatformDX12::NewFrame()
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 			continue;
+		}
+		else
+		{
+			break;
 		}
 	}
 

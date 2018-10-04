@@ -577,19 +577,29 @@ void main()
 	LLGI::SafeRelease(compiler);
 }
 
-void test_clear_update();
+// Empty
+void test_empty();
+
+// About clear
 void test_clear();
+void test_clear_update();
+
 void test_rendertarget();
 
 int main()
 {
-	test_rendertarget();
+	// Empty
+	//test_empty();
+
+	// About clear
+	test_clear();
+	//test_clear_update();
+
+	//test_rendertarget();
 	//test_simple_texture_rectangle();
 	//test_simple_constant_rectangle();
 	//test_simple_rectangle();
 	//test_compile();
-	//test_clear_update();
-	//test_clear();
 
 
 	return 0;

@@ -48,14 +48,16 @@ void test_clear()
 	color.B = 0;
 	color.A = 255;
 
-	commandList->Begin();
-	commandList->SetScissor(0, 0, 1280, 720);
-	commandList->Clear(graphics->GetCurrentScreen(), color);
-	commandList->End();
-
 	while (count < 1000)
 	{
 		platform->NewFrame();
+
+		// It need to create a command buffer between NewFrame and Present.
+		// Because get current screen returns other values by every frame.
+		commandList->Begin();
+		commandList->SetScissor(0, 0, 1280, 720);
+		commandList->Clear(graphics->GetCurrentScreen(), color);
+		commandList->End();
 
 		graphics->Execute(commandList);
 

@@ -59,7 +59,7 @@ void CommandListDX12::Clear(RenderTarget* renderTarget, const Color8& color)
 {
 	auto rt = (RenderTargetDX12*)renderTarget;
 
-	float color_[] = { 1.0, 1.0, 1.0, 1.0 };
+	float color_[] = { color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f };
 
 	commandList->ClearRenderTargetView(rt->handleRTV, color_, 0, nullptr);
 }

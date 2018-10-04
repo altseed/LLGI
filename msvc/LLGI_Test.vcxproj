@@ -115,11 +115,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src_test\main.cpp" />
+    <ClCompile Include="..\src_test\test_clear.cpp" />
+    <ClCompile Include="..\src_test\test_depth.cpp" />
+    <ClCompile Include="..\src_test\test_empty.cpp" />
+    <ClCompile Include="..\src_test\test_rendertarget.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="LLGI.vcxproj">
       <Project>{f4edddd6-1631-4f44-b685-733d95ecd678}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src_test\test.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
