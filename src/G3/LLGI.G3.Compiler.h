@@ -25,6 +25,8 @@ public:
 
 	virtual void Initialize();
 	virtual void Compile(CompilerResult& result, const char* code, ShaderStageType shaderStage);
+
+	virtual DeviceType GetDeviceType() const { return DeviceType::Default; }
 };
 
 }

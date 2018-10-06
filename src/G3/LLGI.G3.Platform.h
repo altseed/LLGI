@@ -21,6 +21,7 @@ public:
 	virtual void NewFrame();
 	virtual void Present();
 	virtual Graphics* CreateGraphics();
+	virtual DeviceType GetDeviceType() const { return DeviceType::Default; }
 };
 
 }

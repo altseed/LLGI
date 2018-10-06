@@ -19,6 +19,7 @@ namespace LLGI
 enum class DeviceType
 {
 	Default,
+	DirectX12,
 };
 
 enum class ErrorCode
