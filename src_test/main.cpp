@@ -1,6 +1,10 @@
 
 #include "test.h"
 
+#ifdef _WIN32
+#pragma comment (lib, "d3dcompiler.lib")
+#endif
+
 void test_simple_texture_rectangle()
 {
 	auto code_gl_vs = R"(
@@ -530,7 +534,56 @@ void test_compile()
 	LLGI::G3::CompilerResult result_vs;
 	LLGI::G3::CompilerResult result_ps;
 
-	auto code_vs = R"(
+	auto code_hlsl_vs = R"(
+
+struct VS_Input
+{
+	float3 Pos		: Pos;
+	float2 UV		: UV;
+	float4 Color		: Color;
+};
+
+struct VS_Output
+{
+	float4 Pos		: SV_POSITION;
+	float2 UV		: TEXCOORD0;
+	float4 Color		: COLOR;
+};
+
+VS_Output main( const VS_Input Input )
+{
+	VS_Output Output = (VS_Output)0;
+	float4 pos4 = { Input.Pos.x, Input.Pos.y, Input.Pos.z, 1.0 };
+	Output.Pos = pos4;
+	Output.Color = Input.Color;
+	Output.UV = Input.UV;
+	return Output;
+}
+
+)";
+
+auto code_hlsl_ps = R"(
+
+struct PS_Input
+{
+	float4 Pos		: SV_POSITION;
+	float2 UV		: TEXCOORD0;
+	float4 Color		: COLOR;
+};
+
+
+float4 main( const PS_Input Input ) : SV_Target
+{
+	float4 Output = Input.Color;
+
+	if(Output.a == 0.0f) discard;
+
+	return Output;
+}
+
+)";
+
+	auto code_glsl_vs = R"(
 #version 440 core
 layout(location = 0) in vec3 a_position;
 layout(location = 1) in vec2 a_uv;
@@ -553,7 +606,7 @@ void main()
 
 )";
 
-	auto code_ps = R"(
+	auto code_glsl_ps = R"(
 #version 440 core
 #extension GL_NV_gpu_shader5:require
 
@@ -568,8 +621,16 @@ void main()
 
 )";
 
-	compiler->Compile(result_vs, code_vs, LLGI::ShaderStageType::Vertex);
-	compiler->Compile(result_ps, code_ps, LLGI::ShaderStageType::Pixel);
+	if (compiler->GetDeviceType() == LLGI::DeviceType::DirectX12)
+	{
+		compiler->Compile(result_vs, code_hlsl_vs, LLGI::ShaderStageType::Vertex);
+		compiler->Compile(result_ps, code_hlsl_ps, LLGI::ShaderStageType::Pixel);
+	}
+	else
+	{
+		compiler->Compile(result_vs, code_glsl_vs, LLGI::ShaderStageType::Vertex);
+		compiler->Compile(result_ps, code_glsl_ps, LLGI::ShaderStageType::Pixel);
+	}
 
 	std::cout << result_vs.Message.c_str() << std::endl;
 	std::cout << result_ps.Message.c_str() << std::endl;

@@ -47,6 +47,8 @@ public:
 	Graphics* CreateGraphics() override;
 
 	ID3D12Device* GetDevice();
+
+	 DeviceType GetDeviceType() const override { return DeviceType::DirectX12; }
 };
 
 }
