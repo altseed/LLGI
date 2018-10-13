@@ -17,6 +17,7 @@ public:
 	virtual ~PipelineState() = default;
 
 	CullingMode Culling = CullingMode::Clockwise;
+	TopologyType Topology = TopologyType::Triangle;
 
 	bool IsBlendEnabled = true;
 

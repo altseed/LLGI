@@ -73,6 +73,12 @@ enum class VertexLayoutFormat
 	R32G32_FLOAT,
 };
 
+enum class TopologyType
+{
+	Triangle,
+	Line,
+};
+
 struct Vec2I
 {
 	int32_t X;
