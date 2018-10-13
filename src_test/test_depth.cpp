@@ -132,7 +132,7 @@ void main()
 		commandList->Begin();
 		commandList->SetScissor(0, 0, 1280, 720);
 		commandList->Clear(graphics->GetCurrentScreen(), color);
-		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex));
+		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib);
 		commandList->SetPipelineState(pip);
 		commandList->Draw(2);

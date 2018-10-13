@@ -31,7 +31,7 @@ void CommandList::Draw(int32_t pritimiveCount)
 
 }
 
-void CommandList::SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride)
+void CommandList::SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride, int32_t offset)
 {
 
 }
