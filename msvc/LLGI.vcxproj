@@ -115,6 +115,7 @@
     <ClInclude Include="..\src\G3\DX12\LLGI.G3.CompilerDX12.h" />
     <ClInclude Include="..\src\G3\DX12\LLGI.G3.GraphicsDX12.h" />
     <ClInclude Include="..\src\G3\DX12\LLGI.G3.PlatformDX12.h" />
+    <ClInclude Include="..\src\G3\DX12\LLGI.G3.VertexBufferDX12.h" />
     <ClInclude Include="..\src\G3\LLGI.G3.CommandList.h" />
     <ClInclude Include="..\src\G3\LLGI.G3.Compiler.h" />
     <ClInclude Include="..\src\G3\LLGI.G3.ConstantBuffer.h" />
@@ -132,6 +133,7 @@
     <ClCompile Include="..\src\G3\DX12\LLGI.G3.CompilerDX12.cpp" />
     <ClCompile Include="..\src\G3\DX12\LLGI.G3.GraphicsDX12.cpp" />
     <ClCompile Include="..\src\G3\DX12\LLGI.G3.PlatformDX12.cpp" />
+    <ClCompile Include="..\src\G3\DX12\LLGI.G3.VertexBufferDX12.cpp" />
     <ClCompile Include="..\src\G3\LLGI.G3.CommandList.cpp" />
     <ClCompile Include="..\src\G3\LLGI.G3.Compiler.cpp" />
     <ClCompile Include="..\src\G3\LLGI.G3.ConstantBuffer.cpp" />
