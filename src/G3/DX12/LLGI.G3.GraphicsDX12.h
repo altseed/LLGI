@@ -37,7 +37,7 @@ public:
 	void Execute(CommandList* commandList) override;
 
 	RenderTarget* GetCurrentScreen() override;
-
+	VertexBuffer* CreateVertexBuffer(int32_t size) override;
 	CommandList* CreateCommandList() override;
 
 	ID3D12Device* GetDevice();
