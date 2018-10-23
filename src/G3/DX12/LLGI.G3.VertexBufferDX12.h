@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "../LLGI.G3.VertexBuffer.h"
 #include "LLGI.G3.BaseDX12.h"
 #include "LLGI.G3.GraphicsDX12.h"
 
@@ -18,7 +19,7 @@ struct Vertex3D {
 };
 
 class VertexBufferDX12
-	: public ReferenceObject
+	: public VertexBuffer
 {
 	private:
 		std::shared_ptr<GraphicsDX12> graphics_;
@@ -26,20 +27,18 @@ class VertexBufferDX12
 		ID3D12Resource* vertexBuffer = nullptr;
 		D3D12_HEAP_PROPERTIES heapProperties;
 		D3D12_RESOURCE_DESC   resourceDesc;
-		D3D12_VERTEX_BUFFER_VIEW vertexView;
 		Vertex3D* mapped;
 
-		bool Initialize(GraphicsDX12* graphics);
-
 	public:
+		bool Initialize(GraphicsDX12* graphics, int32_t size);
 
-	VertexBufferDX12(GraphicsDX12* graphics);
-	virtual ~VertexBufferDX12() = default;
+		VertexBufferDX12();
+		virtual ~VertexBufferDX12() = default;
 
-	virtual void* Lock();
-	virtual void* Lock(int32_t offset, int32_t size);
-	virtual void Unlock();
-	virtual int32_t GetSize();
+		virtual void* Lock();
+		virtual void* Lock(int32_t offset, int32_t size);
+		virtual void Unlock();
+		virtual int32_t GetSize();
 };
 
 }

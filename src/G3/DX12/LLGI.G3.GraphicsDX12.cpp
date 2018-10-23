@@ -1,4 +1,5 @@
 #include "LLGI.G3.GraphicsDX12.h"
+#include "LLGI.G3.VertexBufferDX12.h"
 #include "LLGI.G3.CommandListDX12.h"
 
 namespace LLGI
@@ -34,6 +35,23 @@ RenderTarget* GraphicsDX12::GetCurrentScreen()
 	currentScreen.handleRTV = std::get<0>(currentParam);
 	currentScreen.renderTarget = std::get<1>(currentParam);
 	return &currentScreen;
+}
+
+VertexBuffer* GraphicsDX12::CreateVertexBuffer(int32_t size)
+{
+	auto obj = new VertexBufferDX12();
+	if (!obj->Initialize(this, size))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
+
+	//auto vertexView = D3D12_VERTEX_BUFFER_VIEW();
+	//vertexView.BufferLocation = obj->GetGPUVirtualAddress();
+	//vertexView.StrideInBytes = sizeof(Vertex3D);
+	//vertexView.SizeInBytes = size * sizeof(Vertex3D);
+
+	return obj;
 }
 
 CommandList* GraphicsDX12::CreateCommandList()
