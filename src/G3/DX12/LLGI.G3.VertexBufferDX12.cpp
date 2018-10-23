@@ -7,12 +7,12 @@ namespace LLGI
 namespace G3
 {
 
-VertexBufferDX12::VertexBufferDX12(GraphicsDX12* graphics)
+VertexBufferDX12::VertexBufferDX12()
 {
-	Initialize(graphics);
+	
 }
 
-bool VertexBufferDX12::Initialize(GraphicsDX12* graphics)
+bool VertexBufferDX12::Initialize(GraphicsDX12* graphics, int32_t size)
 {
 	heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
 	heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
@@ -21,7 +21,7 @@ bool VertexBufferDX12::Initialize(GraphicsDX12* graphics)
 	heapProperties.VisibleNodeMask = 0;
 
 	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	resourceDesc.Width = 256;
+	resourceDesc.Width = size * sizeof(Vertex3D);
 	resourceDesc.Height = 1;
 	resourceDesc.DepthOrArraySize = 1;
 	resourceDesc.MipLevels = 1;
@@ -47,14 +47,10 @@ FAILED_EXIT:
 
 void* VertexBufferDX12::Lock()
 {
-	mapped = new Vertex3D[3];
 	auto hr = vertexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mapped));
 	if (FAILED(hr)) {
 		goto FAILED_EXIT;
 	}
-	vertexView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-	vertexView.StrideInBytes = sizeof(Vertex3D);
-	vertexView.SizeInBytes = 3 * sizeof(Vertex3D);
 	return mapped;
 
 FAILED_EXIT:
@@ -63,13 +59,19 @@ FAILED_EXIT:
 
 void* VertexBufferDX12::Lock(int32_t offset, int32_t size)
 {
+	auto hr = vertexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mapped));
+	if (FAILED(hr)) {
+		goto FAILED_EXIT;
+	}
+	return mapped + offset;
+
+FAILED_EXIT:
 	return nullptr;
 }
 
 void VertexBufferDX12::Unlock()
 {
 	vertexBuffer->Unmap(0, nullptr);
-	delete mapped;
 }
 
 int32_t VertexBufferDX12::GetSize()
