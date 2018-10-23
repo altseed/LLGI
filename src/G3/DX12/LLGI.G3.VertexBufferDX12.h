@@ -11,11 +11,11 @@ namespace LLGI
 namespace G3
 {
 
-	struct Vertex3D {
-		XMFLOAT3 Position;
-		XMFLOAT3 Normal;
-		XMFLOAT4 Color;
-	};
+struct Vertex3D {
+	XMFLOAT3 Position;
+	XMFLOAT3 Normal;
+	XMFLOAT4 Color;
+};
 
 class VertexBufferDX12
 	: public ReferenceObject
@@ -26,7 +26,8 @@ class VertexBufferDX12
 		ID3D12Resource* vertexBuffer = nullptr;
 		D3D12_HEAP_PROPERTIES heapProperties;
 		D3D12_RESOURCE_DESC   resourceDesc;
-		Vertex3D* buffer;
+		D3D12_VERTEX_BUFFER_VIEW vertexView;
+		Vertex3D* mapped;
 
 		bool Initialize(GraphicsDX12* graphics);
 

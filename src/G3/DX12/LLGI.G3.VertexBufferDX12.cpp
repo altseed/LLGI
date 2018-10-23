@@ -47,6 +47,17 @@ FAILED_EXIT:
 
 void* VertexBufferDX12::Lock()
 {
+	mapped = new Vertex3D[3];
+	auto hr = vertexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mapped));
+	if (FAILED(hr)) {
+		goto FAILED_EXIT;
+	}
+	vertexView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
+	vertexView.StrideInBytes = sizeof(Vertex3D);
+	vertexView.SizeInBytes = 3 * sizeof(Vertex3D);
+	return mapped;
+
+FAILED_EXIT:
 	return nullptr;
 }
 
@@ -57,11 +68,13 @@ void* VertexBufferDX12::Lock(int32_t offset, int32_t size)
 
 void VertexBufferDX12::Unlock()
 {
+	vertexBuffer->Unmap(0, nullptr);
+	delete mapped;
 }
 
 int32_t VertexBufferDX12::GetSize()
 {
-	return 0;
+	return sizeof(float)*9;
 }
 
 }
