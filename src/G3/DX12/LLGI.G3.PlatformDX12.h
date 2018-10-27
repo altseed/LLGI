@@ -25,7 +25,7 @@ private:
 
 	ID3D12DescriptorHeap* descriptorHeapRTV = nullptr;
 	D3D12_CPU_DESCRIPTOR_HANDLE handleRTV[SwapBufferCount];
-	ID3D12Resource* renderTarget[SwapBufferCount];
+	ID3D12Resource* RenderPass[SwapBufferCount];
 
 	ID3D12CommandAllocator* commandAllocator = nullptr;
 	ID3D12GraphicsCommandList* commandListStart = nullptr;

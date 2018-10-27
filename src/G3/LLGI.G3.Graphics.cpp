@@ -10,7 +10,7 @@ void Graphics::Execute(CommandList* commandList)
 
 }
 
-RenderTarget* Graphics::GetCurrentScreen()
+RenderPass* Graphics::GetCurrentScreen()
 {
 	return nullptr;
 }
@@ -45,7 +45,7 @@ ConstantBuffer* Graphics::CreateConstantBuffer(int32_t size)
 	return nullptr;
 }
 
-Texture* Graphics::CreateTexture(const Vec2I& size, bool isRenderTarget, bool isDepthBuffer)
+Texture* Graphics::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer)
 {
 	return nullptr;
 }

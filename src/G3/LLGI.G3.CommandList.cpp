@@ -16,7 +16,7 @@ void CommandList::End()
 
 }
 
-void CommandList::Clear(RenderTarget* renderTarget, const Color8& color)
+void CommandList::Clear(const Color8& color)
 {
 
 }

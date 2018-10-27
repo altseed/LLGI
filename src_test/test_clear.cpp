@@ -19,8 +19,10 @@ void test_clear_update()
 		color.A = 255;
 
 		commandList->Begin();
+		commandList->BeginRenderPass(graphics->GetCurrentScreen());
 		commandList->SetScissor(0, 0, 1280, 720);
-		commandList->Clear(graphics->GetCurrentScreen(), color);
+		commandList->Clear( color);
+		commandList->EndRenderPass();
 		commandList->End();
 
 		graphics->Execute(commandList);
@@ -55,8 +57,10 @@ void test_clear()
 		// It need to create a command buffer between NewFrame and Present.
 		// Because get current screen returns other values by every frame.
 		commandList->Begin();
+		commandList->BeginRenderPass(graphics->GetCurrentScreen());
 		commandList->SetScissor(0, 0, 1280, 720);
-		commandList->Clear(graphics->GetCurrentScreen(), color);
+		commandList->Clear(color);
+		commandList->EndRenderPass();
 		commandList->End();
 
 		graphics->Execute(commandList);

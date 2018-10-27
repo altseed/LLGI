@@ -14,7 +14,7 @@ void Texture::Unlock()
 {
 }
 
-bool Texture::IsRenderTarget() const
+bool Texture::IsRenderTexture() const
 {
 	return false;
 }
