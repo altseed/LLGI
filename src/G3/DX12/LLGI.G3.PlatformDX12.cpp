@@ -47,7 +47,7 @@ PlatformDX12::PlatformDX12()
 {
 	for (int32_t i = 0; i < SwapBufferCount; i++)
 	{
-		renderTarget[i] = nullptr;
+		RenderPass[i] = nullptr;
 	}
 
 }
@@ -60,7 +60,7 @@ PlatformDX12::~PlatformDX12()
 
 	for (int32_t i = 0; i < SwapBufferCount; i++)
 	{
-		SafeRelease(renderTarget[i]);
+		SafeRelease(RenderPass[i]);
 	}
 
 	SafeRelease(commandAllocator);
@@ -232,15 +232,15 @@ bool PlatformDX12::Initialize(Vec2I windowSize)
 	commandListPresent->Close();
 
 	// Render target
-	D3D12_DESCRIPTOR_HEAP_DESC renderTargetHeapDesc;
+	D3D12_DESCRIPTOR_HEAP_DESC RenderPassHeapDesc;
 
 	// Render target DescriptorHeap
-	ZeroMemory(&renderTargetHeapDesc, sizeof(renderTargetHeapDesc));
-	renderTargetHeapDesc.NumDescriptors = 2;
-	renderTargetHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-	renderTargetHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	renderTargetHeapDesc.NodeMask = 0;
-	hr = device->CreateDescriptorHeap(&renderTargetHeapDesc, IID_PPV_ARGS(&descriptorHeapRTV));
+	ZeroMemory(&RenderPassHeapDesc, sizeof(RenderPassHeapDesc));
+	RenderPassHeapDesc.NumDescriptors = 2;
+	RenderPassHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+	RenderPassHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	RenderPassHeapDesc.NodeMask = 0;
+	hr = device->CreateDescriptorHeap(&RenderPassHeapDesc, IID_PPV_ARGS(&descriptorHeapRTV));
 	if (FAILED(hr))
 	{
 		goto FAILED_EXIT;
@@ -250,7 +250,7 @@ bool PlatformDX12::Initialize(Vec2I windowSize)
 	for (int32_t i = 0; i < SwapBufferCount; ++i)
 	{
 		// get render target from swap chain
-		hr = swapChain->GetBuffer(i, IID_PPV_ARGS(&renderTarget[i]));
+		hr = swapChain->GetBuffer(i, IID_PPV_ARGS(&RenderPass[i]));
 		if (FAILED(hr))
 		{
 			goto FAILED_EXIT;
@@ -258,7 +258,7 @@ bool PlatformDX12::Initialize(Vec2I windowSize)
 
 		handleRTV[i] = descriptorHeapRTV->GetCPUDescriptorHandleForHeapStart();
 		handleRTV[i].ptr += descriptorHandleIncrementSize * i;
-		device->CreateRenderTargetView(renderTarget[i], nullptr, handleRTV[i]);
+		device->CreateRenderTargetView(RenderPass[i], nullptr, handleRTV[i]);
 	}
 
 
@@ -270,7 +270,7 @@ FAILED_EXIT:;
 
 	for (int32_t i = 0; i < SwapBufferCount; i++)
 	{
-		SafeRelease(renderTarget[i]);
+		SafeRelease(RenderPass[i]);
 	}
 
 	SafeRelease(commandAllocator);
@@ -318,7 +318,7 @@ void PlatformDX12::NewFrame()
 	ZeroMemory(&barrier, sizeof(barrier));
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrier.Transition.pResource = renderTarget[frameIndex];
+	barrier.Transition.pResource = RenderPass[frameIndex];
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -339,7 +339,7 @@ void PlatformDX12::Present()
 	ZeroMemory(&barrier, sizeof(barrier));
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrier.Transition.pResource = renderTarget[frameIndex];
+	barrier.Transition.pResource = RenderPass[frameIndex];
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -358,7 +358,7 @@ Graphics* PlatformDX12::CreateGraphics()
 {
 	std::function<std::tuple< D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*>()> getScreenFunc = [this]() ->std::tuple< D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*>
 	{
-		std::tuple< D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*> ret(handleRTV[frameIndex], renderTarget[frameIndex]);
+		std::tuple< D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*> ret(handleRTV[frameIndex], RenderPass[frameIndex]);
 		
 		return ret;
 	};

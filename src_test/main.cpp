@@ -156,14 +156,15 @@ void main()
 		color.A = 255;
 
 		commandList->Begin();
+		commandList->BeginRenderPass(graphics->GetCurrentScreen());
 		commandList->SetScissor(0, 0, 1280, 720);
-		commandList->Clear(graphics->GetCurrentScreen(), color);
+		commandList->Clear(color);
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib);
 		commandList->SetPipelineState(pip);
 		commandList->SetTexture(texture, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
-
+		commandList->EndRenderPass();
 		commandList->End();
 
 		graphics->Execute(commandList);
@@ -340,8 +341,9 @@ void main()
 		color.A = 255;
 
 		commandList->Begin();
+		commandList->BeginRenderPass(graphics->GetCurrentScreen());
 		commandList->SetScissor(0, 0, 1280, 720);
-		commandList->Clear(graphics->GetCurrentScreen(), color);
+		commandList->Clear(color);
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib);
 		commandList->SetPipelineState(pip);
@@ -349,6 +351,7 @@ void main()
 		commandList->SetConstantBuffer(cb_ps, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 
+		commandList->EndRenderPass();
 		commandList->End();
 
 		graphics->Execute(commandList);
@@ -501,12 +504,12 @@ void main()
 
 		commandList->Begin();
 		commandList->SetScissor(0, 0, 1280, 720);
-		commandList->Clear(graphics->GetCurrentScreen(), color);
+		commandList->Clear(color);
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib);
 		commandList->SetPipelineState(pip);
 		commandList->Draw(2);
-
+		commandList->EndRenderPass();
 		commandList->End();
 
 		graphics->Execute(commandList);
@@ -645,7 +648,7 @@ void test_empty();
 void test_clear();
 void test_clear_update();
 
-void test_rendertarget();
+void test_renderPass();
 
 int main()
 {
@@ -656,7 +659,7 @@ int main()
 	test_clear();
 	//test_clear_update();
 
-	//test_rendertarget();
+	//test_renderPass();
 	//test_simple_texture_rectangle();
 	//test_simple_constant_rectangle();
 	//test_simple_rectangle();

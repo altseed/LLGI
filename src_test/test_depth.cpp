@@ -1,6 +1,6 @@
 #include "test.h"
 
-void test_depth_rendertarget()
+void test_depth_RenderPass()
 {
 	auto code_gl_vs = R"(
 #version 440 core
@@ -130,13 +130,14 @@ void main()
 		color.A = 255;
 
 		commandList->Begin();
+		commandList->BeginRenderPass(graphics->GetCurrentScreen());
 		commandList->SetScissor(0, 0, 1280, 720);
-		commandList->Clear(graphics->GetCurrentScreen(), color);
+		commandList->Clear(color);
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib);
 		commandList->SetPipelineState(pip);
 		commandList->Draw(2);
-
+		commandList->EndRenderPass();
 		commandList->End();
 
 		graphics->Execute(commandList);

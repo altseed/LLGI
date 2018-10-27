@@ -23,11 +23,11 @@ public:
 	virtual void End();
 
 	/**
-		@brief Clear renderTarget
+		@brief Clear RenderPass
 		@note
-		This function is composed of SetRenderTarget and Clear on seviral environment.
+		This function is composed of SetRenderPass and Clear on seviral environment.
 	*/
-	virtual void Clear(RenderTarget* renderTarget, const Color8& color);
+	virtual void Clear(const Color8& color);
 
 	virtual void SetScissor(int32_t x, int32_t y, int32_t width, int32_t height);
 	virtual void Draw(int32_t pritimiveCount);
@@ -36,7 +36,8 @@ public:
 	virtual void SetPipelineState(PipelineState* pipelineState);
 	virtual void SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageType shaderStage);
 	virtual void SetTexture(Texture* texture, int32_t unit, ShaderStageType shaderStage);
-	virtual void SetRenderTarget(RenderTarget* renderTarget) {}
+	virtual void BeginRenderPass(RenderPass* renderPass) {}
+	virtual void EndRenderPass() {}
 };
 
 }

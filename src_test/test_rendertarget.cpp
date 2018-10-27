@@ -1,7 +1,7 @@
 #include "test.h"
 
 
-void test_rendertarget()
+void test_renderPass()
 {
 	auto code_gl_vs = R"(
 #version 440 core
@@ -58,10 +58,10 @@ void main()
 	auto ib = graphics->CreateIndexBuffer(2, 6);
 	auto pip = graphics->CreatePiplineState();
 
-	auto renderTarget = graphics->CreateRenderTarget();
 	auto renderTexture = graphics->CreateTexture(LLGI::Vec2I(256, 256), true, false);
-	renderTarget->SetRenderTexture(renderTexture, 0);
 
+	auto renderPass = graphics->CreateRenderPass((const LLGI::G3::Texture**)&renderTexture, 1, nullptr);
+	
 	auto texture = graphics->CreateTexture(LLGI::Vec2I(256, 256), false, false);
 
 	auto texture_buf = (LLGI::Color8*)texture->Lock();
@@ -157,14 +157,15 @@ void main()
 		color1.A = 255;
 
 		commandList->Begin();
-		commandList->SetRenderTarget(renderTarget);
+		commandList->BeginRenderPass(renderPass);
 		commandList->SetScissor(0, 0, 256, 256);
-		commandList->Clear(renderTarget, color1);
+		commandList->Clear(color1);
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib);
 		commandList->SetPipelineState(pip);
 		commandList->SetTexture(texture, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
+		commandList->EndRenderPass();
 
 		LLGI::Color8 color2;
 		color2.R = count % 255;
@@ -172,14 +173,15 @@ void main()
 		color2.B = 0;
 		color2.A = 255;
 
-		commandList->SetRenderTarget(graphics->GetCurrentScreen());
+		commandList->BeginRenderPass(graphics->GetCurrentScreen());
 		commandList->SetScissor(0, 0, 1280, 720);
-		commandList->Clear(graphics->GetCurrentScreen(), color2);
+		commandList->Clear(color2);
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib);
 		commandList->SetPipelineState(pip);
 		commandList->SetTexture(renderTexture, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
+		commandList->EndRenderPass();
 
 		commandList->End();
 
@@ -190,7 +192,7 @@ void main()
 	}
 
 	LLGI::SafeRelease(renderTexture);
-	LLGI::SafeRelease(renderTarget);
+	LLGI::SafeRelease(renderPass);
 	LLGI::SafeRelease(texture);
 	LLGI::SafeRelease(shader_vs);
 	LLGI::SafeRelease(shader_ps);

@@ -55,13 +55,25 @@ void CommandListDX12::End()
 	commandList->Close();
 }
 
-void CommandListDX12::Clear(RenderTarget* renderTarget, const Color8& color)
+void CommandListDX12::Clear(const Color8& color)
 {
-	auto rt = (RenderTargetDX12*)renderTarget;
+	auto rt = renderPass_;
+	if (rt == nullptr) return;
 
 	float color_[] = { color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f };
 
 	commandList->ClearRenderTargetView(rt->handleRTV, color_, 0, nullptr);
+}
+
+void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
+{
+	SafeAddRef(renderPass);
+	renderPass_ = CreateSharedPtr((RenderPassDX12*)renderPass);
+}
+
+void CommandListDX12::EndRenderPass()
+{
+	renderPass_.reset();
 }
 
 }

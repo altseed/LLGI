@@ -10,12 +10,12 @@ namespace LLGI
 namespace G3
 {
 
-class RenderTargetDX12
-	: public RenderTarget
+class RenderPassDX12
+	: public RenderPass
 {
 public:
 	D3D12_CPU_DESCRIPTOR_HANDLE handleRTV;
-	ID3D12Resource* renderTarget;
+	ID3D12Resource* RenderPass;
 };
 
 class GraphicsDX12
@@ -28,7 +28,7 @@ private:
 		;
 	ID3D12CommandQueue* commandQueue_ = nullptr;
 
-	RenderTargetDX12 currentScreen;
+	RenderPassDX12 currentScreen;
 
 public:
 	GraphicsDX12(ID3D12Device* device, std::function<std::tuple< D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*>()> getScreenFunc, ID3D12CommandQueue* commandQueue);
@@ -36,7 +36,7 @@ public:
 
 	void Execute(CommandList* commandList) override;
 
-	RenderTarget* GetCurrentScreen() override;
+	RenderPass* GetCurrentScreen() override;
 	VertexBuffer* CreateVertexBuffer(int32_t size) override;
 	CommandList* CreateCommandList() override;
 
