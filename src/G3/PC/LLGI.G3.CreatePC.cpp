@@ -7,6 +7,11 @@
 #include "../DX12/LLGI.G3.CompilerDX12.h"
 #endif
 
+#ifdef __APPLE__
+#include "../Metal/LLGI.G3.PlatformMetal.h"
+#include "../Metal/LLGI.G3.CompilerMetal.h"
+#endif
+
 namespace LLGI
 {
 namespace G3
@@ -14,6 +19,7 @@ namespace G3
 
 Platform* CreatePlatform(DeviceType platform)
 {
+#ifdef _WIN32
 	Vec2I windowSize;
 	windowSize.X = 1280;
 	windowSize.Y = 720;
@@ -24,13 +30,24 @@ Platform* CreatePlatform(DeviceType platform)
 		return nullptr;
 	}
 	return obj;
+#endif
+
+#ifdef __APPLE__
+    auto obj = new PlatformMetal();
+    return obj;
+#endif
 }
 
 Compiler* CreateCompiler(DeviceType device)
 {
+#ifdef _WIN32
 	auto obj = new CompilerDX12();
-
 	return obj;
+#endif
+
+#ifdef __APPLE__
+    return nullptr;
+#endif
 }
 
 }
