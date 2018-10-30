@@ -29,11 +29,16 @@ void GraphicsDX12::Execute(CommandList* commandList)
 	commandQueue_->ExecuteCommandLists(1, (ID3D12CommandList**)(&cl_internal));
 }
 
-RenderPass* GraphicsDX12::GetCurrentScreen()
+RenderPass* GraphicsDX12::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared)
 {
 	auto currentParam = getScreenFunc_();
 	currentScreen.handleRTV = std::get<0>(currentParam);
 	currentScreen.RenderPass = std::get<1>(currentParam);
+	currentScreen.SetClearColor(clearColor);
+	currentScreen.SetIsColorCleared(isColorCleared);
+	currentScreen.SetIsDepthCleared(isDepthCleared);
+	currentScreen.screenWindowSize = windowSize_;
+
 	return &currentScreen;
 }
 

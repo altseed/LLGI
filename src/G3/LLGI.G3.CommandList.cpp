@@ -16,11 +16,6 @@ void CommandList::End()
 
 }
 
-void CommandList::Clear(const Color8& color)
-{
-
-}
-
 void CommandList::SetScissor(int32_t x, int32_t y, int32_t width, int32_t height)
 {
 

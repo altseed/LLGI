@@ -368,6 +368,8 @@ Graphics* PlatformDX12::CreateGraphics()
 		getScreenFunc,
 		commandQueue);
 
+	graphics->SetWindowSize(Vec2I(1280, 720));
+
 	return graphics;
 }
 

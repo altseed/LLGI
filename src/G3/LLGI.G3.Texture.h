@@ -18,7 +18,7 @@ public:
 
 	virtual void* Lock();
 	virtual void Unlock();
-
+	virtual Vec2I GetSizeAs2D();
 	virtual bool IsRenderTexture() const;
 	virtual bool IsDepthTexture() const;
 };

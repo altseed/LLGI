@@ -155,11 +155,11 @@ void main()
 		color1.G = count % 255;
 		color1.B = 0;
 		color1.A = 255;
+		renderPass->SetIsColorCleared(true);
+		renderPass->SetClearColor(color1);
 
 		commandList->Begin();
 		commandList->BeginRenderPass(renderPass);
-		commandList->SetScissor(0, 0, 256, 256);
-		commandList->Clear(color1);
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib);
 		commandList->SetPipelineState(pip);
@@ -173,9 +173,7 @@ void main()
 		color2.B = 0;
 		color2.A = 255;
 
-		commandList->BeginRenderPass(graphics->GetCurrentScreen());
-		commandList->SetScissor(0, 0, 1280, 720);
-		commandList->Clear(color2);
+		commandList->BeginRenderPass(graphics->GetCurrentScreen(color2));
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib);
 		commandList->SetPipelineState(pip);

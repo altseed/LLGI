@@ -69,6 +69,23 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 {
 	SafeAddRef(renderPass);
 	renderPass_ = CreateSharedPtr((RenderPassDX12*)renderPass);
+
+	if (renderPass != nullptr)
+	{
+		// Reset scissor
+		D3D12_RECT rect;
+		rect.top = 0;
+		rect.left = 0;
+		rect.right = renderPass_->screenWindowSize.X;
+		rect.bottom = renderPass_->screenWindowSize.Y;
+		commandList->RSSetScissorRects(1, &rect);
+
+		// Clear color
+		if (renderPass_->GetIsColorCleared())
+		{
+			Clear(renderPass_->GetClearColor());
+		}
+	}
 }
 
 void CommandListDX12::EndRenderPass()
