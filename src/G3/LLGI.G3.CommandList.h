@@ -22,12 +22,6 @@ public:
 	virtual void Begin();
 	virtual void End();
 
-	/**
-		@brief Clear RenderPass
-		@note
-		This function is composed of SetRenderPass and Clear on seviral environment.
-	*/
-	virtual void Clear(const Color8& color);
 
 	virtual void SetScissor(int32_t x, int32_t y, int32_t width, int32_t height);
 	virtual void Draw(int32_t pritimiveCount);

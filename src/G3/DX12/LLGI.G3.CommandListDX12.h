@@ -27,7 +27,7 @@ public:
 
 	void Begin() override;
 	void End() override;
-	void Clear(const Color8& color) override;
+	void Clear(const Color8& color);
 	void BeginRenderPass(RenderPass* renderPass) override;
 	void EndRenderPass() override;
 

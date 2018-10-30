@@ -9,11 +9,11 @@ namespace LLGI
 {
 namespace G3
 {
-
 class RenderPassDX12
 	: public RenderPass
 {
 public:
+	Vec2I screenWindowSize;
 	D3D12_CPU_DESCRIPTOR_HANDLE handleRTV;
 	ID3D12Resource* RenderPass;
 };
@@ -36,7 +36,7 @@ public:
 
 	void Execute(CommandList* commandList) override;
 
-	RenderPass* GetCurrentScreen() override;
+	RenderPass* GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) override;
 	VertexBuffer* CreateVertexBuffer(int32_t size) override;
 	CommandList* CreateCommandList() override;
 

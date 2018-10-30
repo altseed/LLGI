@@ -130,9 +130,7 @@ void main()
 		color.A = 255;
 
 		commandList->Begin();
-		commandList->BeginRenderPass(graphics->GetCurrentScreen());
-		commandList->SetScissor(0, 0, 1280, 720);
-		commandList->Clear(color);
+		commandList->BeginRenderPass(graphics->GetCurrentScreen(color, true));
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib);
 		commandList->SetPipelineState(pip);

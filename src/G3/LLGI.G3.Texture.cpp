@@ -14,6 +14,11 @@ void Texture::Unlock()
 {
 }
 
+Vec2I Texture::GetSizeAs2D()
+{
+	return Vec2I();
+}
+
 bool Texture::IsRenderTexture() const
 {
 	return false;
