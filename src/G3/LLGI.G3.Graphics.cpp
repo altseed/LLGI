@@ -70,5 +70,10 @@ Texture* Graphics::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDe
 	return nullptr;
 }
 
+Texture* Graphics::CreateTexture(uint64_t id)
+{
+	return nullptr;
+}
+
 }
 }
