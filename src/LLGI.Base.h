@@ -187,6 +187,17 @@ void SafeRelease(T& t)
 	}
 }
 
+template <class T>
+void SafeDelete(T& t)
+{
+	if (t != NULL)
+	{
+		delete t;
+		t = NULL;
+	}
+}
+
+
 class ReferenceObject
 {
 private:

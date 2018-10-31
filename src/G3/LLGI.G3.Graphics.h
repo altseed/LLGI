@@ -64,6 +64,7 @@ public:
 	virtual ConstantBuffer* CreateConstantBuffer(int32_t size);
 	virtual RenderPass* CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture) { return nullptr; }
 	virtual Texture* CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer);
+	virtual Texture* CreateTexture(uint64_t id);
 };
 
 }
