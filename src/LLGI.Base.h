@@ -80,6 +80,31 @@ enum class TopologyType
 	Line,
 };
 
+enum class TextureWrapMode
+{
+	Clamp,
+	Repeat,
+};
+
+enum class TextureMinMagFilter
+{
+	Nearest,
+	Linear,
+};
+
+enum class DepthFuncType
+{
+	Never,
+	Less,
+	Equal,
+	LessEqual,
+	Greater,
+	NotEqual,
+	GreaterEqual,
+	Always,
+};
+
+
 struct Vec2I
 {
 	int32_t X;
