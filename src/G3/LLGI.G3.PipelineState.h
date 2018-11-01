@@ -32,6 +32,7 @@ public:
 	bool IsDepthTestEnabled = false;
 	bool IsDepthWriteEnabled = false;
 	bool IsStencilTestEnabled = false;
+	DepthFuncType DepthFunc = DepthFuncType::Less;
 
 	std::array<VertexLayoutFormat, 16> VertexLayouts;
 	int32_t VertexLayoutCount = 0;

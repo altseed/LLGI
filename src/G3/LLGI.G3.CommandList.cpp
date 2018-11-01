@@ -46,7 +46,7 @@ void CommandList::SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageT
 
 }
 
-void CommandList::SetTexture(Texture* texture, int32_t unit, ShaderStageType shaderStage)
+void CommandList::SetTexture(Texture* texture, TextureWrapMode wrapMode, TextureMinMagFilter minmagFilter, int32_t unit, ShaderStageType shaderStage)
 {
 
 }
