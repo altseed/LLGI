@@ -122,6 +122,7 @@ void main()
 	while (count < 1000)
 	{
 		platform->NewFrame();
+		graphics->NewFrame();
 
 		LLGI::Color8 color;
 		color.R = count % 255;

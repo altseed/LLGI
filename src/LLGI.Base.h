@@ -104,6 +104,11 @@ enum class DepthFuncType
 	Always,
 };
 
+enum class ConstantBufferType
+{
+	LongTime, //! this constant buffer is not almost changed
+	ShortTime, //! this constant buffer is disposed or rewrite by a frame. If shorttime, this constant buffer must be disposed by a frame.
+};
 
 struct Vec2I
 {

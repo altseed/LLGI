@@ -149,6 +149,7 @@ void main()
 	while (count < 1000)
 	{
 		platform->NewFrame();
+		graphics->NewFrame();
 
 		LLGI::Color8 color1;
 		color1.R = 0;
@@ -163,7 +164,7 @@ void main()
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib);
 		commandList->SetPipelineState(pip);
-		commandList->SetTexture(texture, 0, LLGI::ShaderStageType::Pixel);
+		commandList->SetTexture(texture, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 		commandList->EndRenderPass();
 
@@ -173,11 +174,11 @@ void main()
 		color2.B = 0;
 		color2.A = 255;
 
-		commandList->BeginRenderPass(graphics->GetCurrentScreen(color2));
+		commandList->BeginRenderPass(graphics->GetCurrentScreen(color2, true));
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib);
 		commandList->SetPipelineState(pip);
-		commandList->SetTexture(renderTexture, 0, LLGI::ShaderStageType::Pixel);
+		commandList->SetTexture(renderTexture, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 		commandList->EndRenderPass();
 
