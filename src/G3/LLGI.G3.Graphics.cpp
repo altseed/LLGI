@@ -20,6 +20,11 @@ void RenderPass::SetClearColor(const Color8& color)
 	color_ = color;
 }
 
+void Graphics::NewFrame()
+{
+
+}
+
 void Graphics::SetWindowSize(const Vec2I& windowSize)
 {
 	windowSize_ = windowSize;
@@ -60,7 +65,7 @@ CommandList* Graphics::CreateCommandList()
 	return nullptr;
 }
 
-ConstantBuffer* Graphics::CreateConstantBuffer(int32_t size)
+ConstantBuffer* Graphics::CreateConstantBuffer(int32_t size, ConstantBufferType type)
 {
 	return nullptr;
 }

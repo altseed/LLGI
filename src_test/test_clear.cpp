@@ -11,6 +11,7 @@ void test_clear_update()
 	while (count < 1000)
 	{
 		platform->NewFrame();
+		graphics->NewFrame();
 
 		LLGI::Color8 color;
 		color.R = count % 255;
@@ -51,6 +52,7 @@ void test_clear()
 	while (count < 1000)
 	{
 		platform->NewFrame();
+		graphics->NewFrame();
 
 		// It need to create a command buffer between NewFrame and Present.
 		// Because get current screen returns other values by every frame.

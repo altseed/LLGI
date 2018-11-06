@@ -148,6 +148,7 @@ void main()
 	while (count < 1000)
 	{
 		platform->NewFrame();
+		graphics->NewFrame();
 
 		LLGI::Color8 color;
 		color.R = count % 255;
@@ -160,7 +161,7 @@ void main()
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib);
 		commandList->SetPipelineState(pip);
-		commandList->SetTexture(texture, 0, LLGI::ShaderStageType::Pixel);
+		commandList->SetTexture(texture, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 		commandList->EndRenderPass();
 		commandList->End();
@@ -184,7 +185,7 @@ void main()
 	LLGI::SafeRelease(compiler);
 }
 
-void test_simple_constant_rectangle()
+void test_simple_constant_rectangle(LLGI::ConstantBufferType type)
 {
 	auto code_gl_vs = R"(
 #version 440 core
@@ -249,8 +250,8 @@ void main()
 	auto vb = graphics->CreateVertexBuffer(sizeof(SimpleVertex) * 4);
 	auto ib = graphics->CreateIndexBuffer(2, 6);
 	auto pip = graphics->CreatePiplineState();
-	auto cb_vs = graphics->CreateConstantBuffer(sizeof(float) * 4);
-	auto cb_ps = graphics->CreateConstantBuffer(sizeof(float) * 4);
+	LLGI::G3::ConstantBuffer* cb_vs = nullptr;
+	LLGI::G3::ConstantBuffer* cb_ps = nullptr;
 
 	LLGI::G3::Shader* shader_vs = nullptr;
 	LLGI::G3::Shader* shader_ps = nullptr;
@@ -307,17 +308,23 @@ void main()
 	ib_buf[5] = 3;
 	ib->Unlock();
 
-	auto cb_vs_buf = (float*)cb_vs->Lock();
-	cb_vs_buf[0] = 0.2f;
-	cb_vs_buf[1] = 0.0f;
-	cb_vs_buf[2] = 0.0f;
-	cb_vs_buf[3] = 0.0f;
+	if (type == LLGI::ConstantBufferType::LongTime)
+	{
+		cb_vs = graphics->CreateConstantBuffer(sizeof(float) * 4);
+		cb_ps = graphics->CreateConstantBuffer(sizeof(float) * 4);
 
-	auto cb_ps_buf = (float*)cb_ps->Lock();
-	cb_ps_buf[0] = 0.0f;
-	cb_ps_buf[1] = -1.0f;
-	cb_ps_buf[2] = -1.0f;
-	cb_ps_buf[3] = 0.0f;
+		auto cb_vs_buf = (float*)cb_vs->Lock();
+		cb_vs_buf[0] = 0.2f;
+		cb_vs_buf[1] = 0.0f;
+		cb_vs_buf[2] = 0.0f;
+		cb_vs_buf[3] = 0.0f;
+
+		auto cb_ps_buf = (float*)cb_ps->Lock();
+		cb_ps_buf[0] = 0.0f;
+		cb_ps_buf[1] = -1.0f;
+		cb_ps_buf[2] = -1.0f;
+		cb_ps_buf[3] = 0.0f;
+	}
 
 	pip->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
 	pip->VertexLayouts[1] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
@@ -331,6 +338,26 @@ void main()
 	while (count < 1000)
 	{
 		platform->NewFrame();
+		graphics->NewFrame();
+
+		if (type == LLGI::ConstantBufferType::ShortTime)
+		{
+			cb_vs = graphics->CreateConstantBuffer(sizeof(float) * 4, type);
+			cb_ps = graphics->CreateConstantBuffer(sizeof(float) * 4, type);
+
+			auto cb_vs_buf = (float*)cb_vs->Lock();
+			cb_vs_buf[0] = (count % 100) / 100.0f;
+			cb_vs_buf[1] = 0.0f;
+			cb_vs_buf[2] = 0.0f;
+			cb_vs_buf[3] = 0.0f;
+
+			auto cb_ps_buf = (float*)cb_ps->Lock();
+			cb_ps_buf[0] = 0.0f;
+			cb_ps_buf[1] = -1.0f;
+			cb_ps_buf[2] = -1.0f;
+			cb_ps_buf[3] = 0.0f;
+		}
+
 
 		LLGI::Color8 color;
 		color.R = count % 255;
@@ -354,6 +381,12 @@ void main()
 
 		platform->Present();
 		count++;
+
+		if (type == LLGI::ConstantBufferType::ShortTime)
+		{
+			LLGI::SafeRelease(cb_vs);
+			LLGI::SafeRelease(cb_ps);
+		}
 	}
 
 	LLGI::SafeRelease(cb_vs);
@@ -491,6 +524,7 @@ void main()
 	while (count < 1000)
 	{
 		platform->NewFrame();
+		graphics->NewFrame();
 
 		LLGI::Color8 color;
 		color.R = count % 255;
@@ -651,12 +685,12 @@ int main()
 	//test_empty();
 
 	// About clear
-	test_clear();
+	//test_clear();
 	//test_clear_update();
 
 	//test_renderPass();
 	//test_simple_texture_rectangle();
-	//test_simple_constant_rectangle();
+	test_simple_constant_rectangle(LLGI::ConstantBufferType::ShortTime);
 	//test_simple_rectangle();
 	//test_compile();
 

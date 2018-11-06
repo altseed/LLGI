@@ -45,6 +45,10 @@ public:
 	Graphics() = default;
 	virtual ~Graphics() = default;
 
+	/**
+		@brief	Start new frame
+	*/
+	virtual void NewFrame();
 	virtual void SetWindowSize(const Vec2I& windowSize);
 
 	virtual void Execute(CommandList* commandList);
@@ -61,7 +65,7 @@ public:
 	virtual Shader* CreateShader(DataStructure* data, int32_t count);
 	virtual PipelineState* CreatePiplineState();
 	virtual CommandList* CreateCommandList();
-	virtual ConstantBuffer* CreateConstantBuffer(int32_t size);
+	virtual ConstantBuffer* CreateConstantBuffer(int32_t size, ConstantBufferType type = ConstantBufferType::LongTime);
 	virtual RenderPass* CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture) { return nullptr; }
 	virtual Texture* CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer);
 	virtual Texture* CreateTexture(uint64_t id);
