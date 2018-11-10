@@ -54,6 +54,11 @@ public:
 	virtual void Execute(CommandList* commandList);
 
 	/**
+	@brief	to prevent instances to be disposed before finish rendering, finish all renderings.
+	*/
+	virtual void WaitFinish() {}
+
+	/**
 		@brief get render pass of screen to show on a display.
 		@note
 		Don't release and addref it.
