@@ -9,31 +9,48 @@ namespace LLGI
 namespace G3
 {
 
-struct CommandBuffer_Impl;
+struct CommandList_Impl;
 
 struct Graphics_Impl
 {
-	id<MTLDevice> device;
-	id<MTLCommandQueue> commandQueue;
-	void Execute(CommandBuffer_Impl* commandBuffer);
+	id<MTLDevice> device = nullptr;
+	id<MTLCommandQueue> commandQueue = nullptr;
+
+	Graphics_Impl();
+	virtual ~Graphics_Impl();
+	bool Initialize();
+	void Execute(CommandList_Impl* commandBuffer);
 };
 
 struct RenderPass_Impl
 {
 	MTLRenderPassDescriptor* renderPassDescriptor;
+	Color8 clearColor;
+	bool isColorCleared;
+	bool isDepthCleared;
 
 	bool Initialize();
 };
 
-struct CommandBuffer_Impl
+struct CommandList_Impl
 {
-	id<MTLCommandBuffer> commandBuffer;
-	id<MTLRenderCommandEncoder> renderEncoder;
+	Graphics_Impl* graphics_ = nullptr;
+	id<MTLCommandBuffer> commandBuffer = nullptr;
+	id<MTLRenderCommandEncoder> renderEncoder = nullptr;
+
+	CommandList_Impl();
+	~CommandList_Impl();
 
 	bool Initialize(Graphics_Impl* graphics);
 
+	void Begin();
+	void End();
 	void BeginRenderPass(RenderPass_Impl* renderPass);
 	void EndRenderPass();
+};
+
+struct Shader_Impl
+{
 };
 
 struct PipelineState_Impl
@@ -46,10 +63,18 @@ struct PipelineState_Impl
 struct Buffer_Impl
 {
 	id<MTLBuffer> buffer;
+	int32_t size_;
 
 	bool Initialize(Graphics_Impl* graphics, int32_t size);
 
 	void* GetBuffer();
+};
+
+struct Texture_Impl
+{
+	id<MTLTexture> texture;
+
+	bool Initialize(Graphics_Impl* graphics, const Vec2I& size);
 };
 
 } // namespace G3
