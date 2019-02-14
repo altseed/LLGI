@@ -8,15 +8,13 @@ namespace LLGI
 namespace G3
 {
 
-class Shader
-	: public ReferenceObject
+class Shader : public ReferenceObject
 {
-	private:
-	public:
-
+private:
+public:
 	Shader() = default;
 	virtual ~Shader() = default;
 };
 
-}
-}
+} // namespace G3
+} // namespace LLGI

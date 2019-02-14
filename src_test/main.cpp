@@ -2,7 +2,7 @@
 #include "test.h"
 
 #ifdef _WIN32
-#pragma comment (lib, "d3dcompiler.lib")
+#pragma comment(lib, "d3dcompiler.lib")
 #endif
 
 void test_simple_texture_rectangle()
@@ -161,7 +161,8 @@ void main()
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib);
 		commandList->SetPipelineState(pip);
-		commandList->SetTexture(texture, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+		commandList->SetTexture(
+			texture, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 		commandList->EndRenderPass();
 		commandList->End();
@@ -288,7 +289,7 @@ void main()
 
 	auto vb_buf = (SimpleVertex*)vb->Lock();
 	vb_buf[0].Pos = LLGI::Vec3F(-0.5, 0.5, 0.5);
-	vb_buf[1].Pos = LLGI::Vec3F( 0.5, 0.5, 0.5);
+	vb_buf[1].Pos = LLGI::Vec3F(0.5, 0.5, 0.5);
 	vb_buf[2].Pos = LLGI::Vec3F(0.5, -0.5, 0.5);
 	vb_buf[3].Pos = LLGI::Vec3F(-0.5, -0.5, 0.5);
 
@@ -357,7 +358,6 @@ void main()
 			cb_ps_buf[2] = -1.0f;
 			cb_ps_buf[3] = 0.0f;
 		}
-
 
 		LLGI::Color8 color;
 		color.R = count % 255;
@@ -511,14 +511,14 @@ void main()
 	ib_buf[4] = 2;
 	ib_buf[5] = 3;
 	ib->Unlock();
-	
+
 	pip->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
 	pip->VertexLayouts[1] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
 	pip->VertexLayouts[2] = LLGI::VertexLayoutFormat::R8G8B8A8_UNORM;
 	pip->VertexLayoutCount = 3;
 
 	pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs);
-	pip->SetShader(LLGI::ShaderStageType::Pixel , shader_ps);
+	pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps);
 	pip->Compile();
 
 	while (count < 1000)
@@ -594,7 +594,7 @@ VS_Output main( const VS_Input Input )
 
 )";
 
-auto code_hlsl_ps = R"(
+	auto code_hlsl_ps = R"(
 
 struct PS_Input
 {
@@ -682,18 +682,17 @@ void test_renderPass();
 int main()
 {
 	// Empty
-	//test_empty();
+	// test_empty();
 
 	// About clear
-	//test_clear();
-	//test_clear_update();
+	// test_clear();
+	// test_clear_update();
 
-	//test_renderPass();
-	//test_simple_texture_rectangle();
+	// test_renderPass();
+	// test_simple_texture_rectangle();
 	test_simple_constant_rectangle(LLGI::ConstantBufferType::ShortTime);
-	//test_simple_rectangle();
-	//test_compile();
-
+	// test_simple_rectangle();
+	// test_compile();
 
 	return 0;
 }

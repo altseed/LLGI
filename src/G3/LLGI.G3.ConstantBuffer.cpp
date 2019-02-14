@@ -6,24 +6,13 @@ namespace LLGI
 namespace G3
 {
 
-void* ConstantBuffer::Lock()
-{
-	return nullptr;
-}
+void* ConstantBuffer::Lock() { return nullptr; }
 
-void* ConstantBuffer::Lock(int32_t offset, int32_t size)
-{
-	return nullptr;
-}
+void* ConstantBuffer::Lock(int32_t offset, int32_t size) { return nullptr; }
 
-void ConstantBuffer::Unlock()
-{
-}
+void ConstantBuffer::Unlock() {}
 
-int32_t ConstantBuffer::GetSize()
-{
-	return 0;
-}
+int32_t ConstantBuffer::GetSize() { return 0; }
 
-}
-}
+} // namespace G3
+} // namespace LLGI

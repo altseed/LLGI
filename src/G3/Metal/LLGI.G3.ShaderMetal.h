@@ -8,15 +8,13 @@ namespace LLGI
 namespace G3
 {
 
-class ShaderMetal
-	: public Shader
+class ShaderMetal : public Shader
 {
-	private:
-	public:
-
+private:
+public:
 	ShaderMetal() = default;
 	virtual ~ShaderMetal() = default;
 };
 
-}
-}
+} // namespace G3
+} // namespace LLGI

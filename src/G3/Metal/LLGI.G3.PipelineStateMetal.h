@@ -7,19 +7,16 @@ namespace LLGI
 namespace G3
 {
 
-class PipelineStateMetal
-    : public PipelineState
-    {
-    private:
-    public:
-        PipelineStateMetal() = default;
-        virtual ~PipelineStateMetal() = default;
-        
-        void SetShader(ShaderStageType stage, Shader* shader) override;
-        void Compile() override;
-    };
-    
+class PipelineStateMetal : public PipelineState
+{
+private:
+public:
+	PipelineStateMetal() = default;
+	virtual ~PipelineStateMetal() = default;
 
-    
-}
-}
+	void SetShader(ShaderStageType stage, Shader* shader) override;
+	void Compile() override;
+};
+
+} // namespace G3
+} // namespace LLGI

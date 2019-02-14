@@ -8,18 +8,15 @@ namespace LLGI
 namespace G3
 {
 
-class CompilerMetal
-    : public Compiler
+class CompilerMetal : public Compiler
 {
 private:
-    
 public:
-    void Initialize() override;
-    void Compile(CompilerResult& result, const char* code, ShaderStageType shaderStage) override;
-    
-    DeviceType GetDeviceType() const override { return DeviceType::Metal; }
+	void Initialize() override;
+	void Compile(CompilerResult& result, const char* code, ShaderStageType shaderStage) override;
 
+	DeviceType GetDeviceType() const override { return DeviceType::Metal; }
 };
-    
-}
-}
+
+} // namespace G3
+} // namespace LLGI

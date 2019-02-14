@@ -5,18 +5,11 @@ namespace LLGI
 namespace G3
 {
 
-void Platform::NewFrame()
-{
-}
+void Platform::NewFrame() {}
 
-void Platform::Present()
-{
-}
+void Platform::Present() {}
 
-Graphics* Platform::CreateGraphics()
-{
-	return nullptr;
-}
+Graphics* Platform::CreateGraphics() { return nullptr; }
 
-}
-}
+} // namespace G3
+} // namespace LLGI

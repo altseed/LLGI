@@ -8,8 +8,7 @@ namespace LLGI
 namespace G3
 {
 
-class RenderPass
-	: public ReferenceObject
+class RenderPass : public ReferenceObject
 {
 private:
 	bool isColorCleared_ = false;
@@ -23,9 +22,9 @@ public:
 	virtual ~RenderPass() = default;
 
 	virtual bool GetIsColorCleared() const { return isColorCleared_; }
-				 
+
 	virtual bool GetIsDepthCleared() const { return isDepthCleared_; }
-				 
+
 	virtual Color8 GetClearColor() const { return color_; }
 
 	virtual void SetIsColorCleared(bool isColorCleared);
@@ -35,8 +34,7 @@ public:
 	virtual void SetClearColor(const Color8& color);
 };
 
-class Graphics
-	: public ReferenceObject
+class Graphics : public ReferenceObject
 {
 protected:
 	Vec2I windowSize_;
@@ -76,5 +74,5 @@ public:
 	virtual Texture* CreateTexture(uint64_t id);
 };
 
-}
-}
+} // namespace G3
+} // namespace LLGI

@@ -98,7 +98,6 @@ void main()
 	vb_buf[2].UV = LLGI::Vec2F(1.0f, 1.0f);
 	vb_buf[3].UV = LLGI::Vec2F(0.0f, 1.0f);
 
-
 	vb->Unlock();
 
 	auto ib_buf = (uint16_t*)ib->Lock();

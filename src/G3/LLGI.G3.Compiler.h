@@ -15,8 +15,7 @@ struct CompilerResult
 	std::vector<std::vector<uint8_t>> Binary;
 };
 
-class Compiler
-	: public ReferenceObject
+class Compiler : public ReferenceObject
 {
 private:
 public:
@@ -29,5 +28,5 @@ public:
 	virtual DeviceType GetDeviceType() const { return DeviceType::Default; }
 };
 
-}
-}
+} // namespace G3
+} // namespace LLGI

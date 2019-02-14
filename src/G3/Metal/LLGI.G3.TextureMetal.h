@@ -8,8 +8,7 @@ namespace LLGI
 namespace G3
 {
 
-class TextureMetal
-	: public Texture
+class TextureMetal : public Texture
 {
 private:
 public:
@@ -23,5 +22,5 @@ public:
 	bool IsDepthTexture() const override;
 };
 
-}
-}
+} // namespace G3
+} // namespace LLGI
