@@ -7,37 +7,7 @@
 namespace LLGI {
 namespace G3{
     
-    void Graphics_Impl::Execute(CommandBuffer_Impl* commandBuffer)
-    {
-        [commandBuffer->commandBuffer commit];
-    }
-    
-    bool RenderPass_Impl::Initialize()
-    {
-        renderPassDescriptor = [[MTLRenderPassDescriptor alloc] init];
-        return true;
-    }
-    
-    bool CommandBuffer_Impl::Initialize(Graphics_Impl* graphics)
-    {
-        commandBuffer = [graphics->commandQueue commandBuffer];
-        return true;
-    }
-    
-    void CommandBuffer_Impl::BeginRenderPass(RenderPass_Impl* renderPass)
-    {
-        renderEncoder = [commandBuffer
-                         renderCommandEncoderWithDescriptor:renderPass->renderPassDescriptor];
-    }
-    
-    void CommandBuffer_Impl::EndRenderPass()
-    {
-        if(renderEncoder)
-        {
-            [renderEncoder endEncoding];
-            renderEncoder = nullptr;
-        }
-    }
+
 
     void PipelineState_Impl::Compile(Graphics_Impl* graphics)
     {
@@ -56,6 +26,8 @@ namespace G3{
                   length:size
                   options:MTLResourceOptionCPUCacheModeDefault];
         
+        size_ = size;
+        
         return true;
     }
     
@@ -63,6 +35,23 @@ namespace G3{
     void* Buffer_Impl::GetBuffer()
     {
         return buffer.contents;
+    }
+    
+    
+    bool Texture_Impl::Initialize(Graphics_Impl* graphics, const Vec2I& size)
+    {
+        MTLTextureDescriptor *textureDescriptor = [
+                                                   MTLTextureDescriptor
+                                                   texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
+                                                   width:size.X
+                                                   height:size.Y
+                                                   mipmapped:YES];
+        
+        texture = [
+                                   graphics->device
+                                   newTextureWithDescriptor:textureDescriptor];
+        
+        return true;
     }
 }
 }

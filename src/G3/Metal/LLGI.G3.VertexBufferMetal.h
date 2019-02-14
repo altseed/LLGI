@@ -1,15 +1,30 @@
 #pragma once
 
-#inlucde "../LLGI.G3.VertexBuffer.h"
+#include "../LLGI.G3.VertexBuffer.h"
 
-namespace LLGI namespace G3
+namespace LLGI
+{
+namespace G3
 {
 
-struct VertexBufferMetal_Impl;
+struct Buffer_Impl;
 
-class VertexBufferMetal : public VertexBufferList
+class VertexBufferMetal : public VertexBuffer
 {
+private:
+	Buffer_Impl* impl = nullptr;
+
+public:
+	VertexBufferMetal();
+	virtual ~VertexBufferMetal();
+
+	bool Initialize(Graphics* graphics, int32_t size);
+
+	void* Lock() override;
+	void* Lock(int32_t offset, int32_t size) override;
+	void Unlock() override;
+	int32_t GetSize() override;
 };
 
-} // namespace LLGInamespaceG3
-}
+} // namespace G3
+} // namespace LLGI
