@@ -8,8 +8,7 @@ namespace LLGI
 namespace G3
 {
 
-class ConstantBuffer
-	: public ReferenceObject
+class ConstantBuffer : public ReferenceObject
 {
 private:
 public:
@@ -22,5 +21,5 @@ public:
 	virtual int32_t GetSize();
 };
 
-}
-}
+} // namespace G3
+} // namespace LLGI

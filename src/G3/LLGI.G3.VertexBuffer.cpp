@@ -6,24 +6,13 @@ namespace LLGI
 namespace G3
 {
 
-void* VertexBuffer::Lock()
-{
-	return nullptr;
-}
+void* VertexBuffer::Lock() { return nullptr; }
 
-void* VertexBuffer::Lock(int32_t offset, int32_t size)
-{
-	return nullptr;
-}
+void* VertexBuffer::Lock(int32_t offset, int32_t size) { return nullptr; }
 
-void VertexBuffer::Unlock()
-{
-}
+void VertexBuffer::Unlock() {}
 
-int32_t VertexBuffer::GetSize()
-{
-	return 0;
-}
+int32_t VertexBuffer::GetSize() { return 0; }
 
-}
-}
+} // namespace G3
+} // namespace LLGI

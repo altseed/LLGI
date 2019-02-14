@@ -8,8 +8,7 @@ namespace LLGI
 namespace G3
 {
 
-class IndexBuffer
-	: public ReferenceObject
+class IndexBuffer : public ReferenceObject
 {
 private:
 public:
@@ -23,5 +22,5 @@ public:
 	virtual int32_t GetCount();
 };
 
-}
-}
+} // namespace G3
+} // namespace LLGI

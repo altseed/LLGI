@@ -8,12 +8,10 @@ namespace LLGI
 namespace G3
 {
 
-class VertexBuffer
-	: public ReferenceObject
+class VertexBuffer : public ReferenceObject
 {
-	private:
-	public:
-
+private:
+public:
 	VertexBuffer() = default;
 	virtual ~VertexBuffer() = default;
 
@@ -23,5 +21,5 @@ class VertexBuffer
 	virtual int32_t GetSize();
 };
 
-}
-}
+} // namespace G3
+} // namespace LLGI

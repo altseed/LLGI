@@ -10,8 +10,7 @@ namespace G3
 
 Platform* CreatePlatform(DeviceType platform);
 
-class Platform
-	: public ReferenceObject
+class Platform : public ReferenceObject
 {
 private:
 public:
@@ -24,5 +23,5 @@ public:
 	virtual DeviceType GetDeviceType() const { return DeviceType::Default; }
 };
 
-}
-}
+} // namespace G3
+} // namespace LLGI

@@ -8,8 +8,7 @@ namespace LLGI
 namespace G3
 {
 
-class Texture
-	: public ReferenceObject
+class Texture : public ReferenceObject
 {
 private:
 public:
@@ -23,5 +22,5 @@ public:
 	virtual bool IsDepthTexture() const;
 };
 
-}
-}
+} // namespace G3
+} // namespace LLGI

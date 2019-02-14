@@ -2,16 +2,14 @@
 
 #inlucde "../LLGI.G3.CommandList.h"
 
-namespace LLGI
-namespace G3
+namespace LLGI namespace G3
 {
 
 struct CommandListMetal_Impl;
-    
-class CommandListMetal
-    : public CommandList
+
+class CommandListMetal : public CommandList
 {
 };
-    
-}
+
+} // namespace LLGInamespaceG3
 }

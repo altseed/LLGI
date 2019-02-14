@@ -6,13 +6,9 @@ namespace LLGI
 namespace G3
 {
 
-void PipelineState::SetShader(ShaderStageType stage, Shader* shader)
-{
-}
+void PipelineState::SetShader(ShaderStageType stage, Shader* shader) {}
 
-void PipelineState::Compile()
-{
-}
+void PipelineState::Compile() {}
 
-}
-}
+} // namespace G3
+} // namespace LLGI

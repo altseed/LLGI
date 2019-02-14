@@ -1,6 +1,5 @@
 #include "test.h"
 
-
 void test_renderPass()
 {
 	auto code_gl_vs = R"(
@@ -61,7 +60,7 @@ void main()
 	auto renderTexture = graphics->CreateTexture(LLGI::Vec2I(256, 256), true, false);
 
 	auto renderPass = graphics->CreateRenderPass((const LLGI::G3::Texture**)&renderTexture, 1, nullptr);
-	
+
 	auto texture = graphics->CreateTexture(LLGI::Vec2I(256, 256), false, false);
 
 	auto texture_buf = (LLGI::Color8*)texture->Lock();
@@ -164,7 +163,8 @@ void main()
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib);
 		commandList->SetPipelineState(pip);
-		commandList->SetTexture(texture, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+		commandList->SetTexture(
+			texture, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 		commandList->EndRenderPass();
 
@@ -178,7 +178,8 @@ void main()
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib);
 		commandList->SetPipelineState(pip);
-		commandList->SetTexture(renderTexture, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+		commandList->SetTexture(
+			renderTexture, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 		commandList->EndRenderPass();
 

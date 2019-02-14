@@ -8,11 +8,10 @@ namespace G3
 {
 
 struct GraphicsMetal_Impl;
-    
-class GraphicsMetal
-    : public Graphics
+
+class GraphicsMetal : public Graphics
 {
 };
-    
-}
-}
+
+} // namespace G3
+} // namespace LLGI

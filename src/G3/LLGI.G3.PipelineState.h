@@ -8,8 +8,7 @@ namespace LLGI
 namespace G3
 {
 
-class PipelineState
-	: public ReferenceObject
+class PipelineState : public ReferenceObject
 {
 private:
 public:
@@ -41,5 +40,5 @@ public:
 	virtual void Compile();
 };
 
-}
-}
+} // namespace G3
+} // namespace LLGI
