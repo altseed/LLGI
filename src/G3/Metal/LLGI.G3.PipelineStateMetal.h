@@ -7,9 +7,13 @@ namespace LLGI
 namespace G3
 {
 
+struct PipelineState_Impl;
+
 class PipelineStateMetal : public PipelineState
 {
 private:
+	PipelineState_Impl* impl = nullptr;
+
 public:
 	PipelineStateMetal() = default;
 	virtual ~PipelineStateMetal() = default;

@@ -10,6 +10,7 @@ namespace G3
 {
 
 struct CommandList_Impl;
+struct Buffer_Impl;
 
 struct Graphics_Impl
 {
@@ -47,6 +48,8 @@ struct CommandList_Impl
 	void End();
 	void BeginRenderPass(RenderPass_Impl* renderPass);
 	void EndRenderPass();
+	void SetScissor(int32_t x, int32_t y, int32_t width, int32_t height);
+	void SetVertexBuffer(Buffer_Impl* vertexBuffer, int32_t stride, int32_t offset);
 };
 
 struct Shader_Impl
@@ -62,8 +65,11 @@ struct PipelineState_Impl
 
 struct Buffer_Impl
 {
-	id<MTLBuffer> buffer;
+	id<MTLBuffer> buffer = nullptr;
 	int32_t size_;
+
+	Buffer_Impl();
+	virtual ~Buffer_Impl();
 
 	bool Initialize(Graphics_Impl* graphics, int32_t size);
 

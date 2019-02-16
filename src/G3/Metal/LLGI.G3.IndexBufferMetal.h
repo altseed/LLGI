@@ -27,6 +27,8 @@ public:
 	void Unlock() override;
 	int32_t GetStride() override;
 	int32_t GetCount() override;
+
+	Buffer_Impl* GetImpl() const { return impl; }
 };
 
 } // namespace G3
