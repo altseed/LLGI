@@ -9,8 +9,7 @@ namespace LLGI
 {
 namespace G3
 {
-class RenderPassDX12
-	: public RenderPass
+class RenderPassDX12 : public RenderPass
 {
 public:
 	Vec2I screenWindowSize;
@@ -18,20 +17,22 @@ public:
 	ID3D12Resource* RenderPass;
 };
 
-class GraphicsDX12
-	: public Graphics
+class GraphicsDX12 : public Graphics
 {
 private:
 	ID3D12Device* device_ = nullptr;
-	std::function<std::tuple< D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*>()> getScreenFunc_;
+	std::function<std::tuple<D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*>()> getScreenFunc_;
 
-		;
+	const D3D12_COMMAND_LIST_TYPE commandListType_ = D3D12_COMMAND_LIST_TYPE_DIRECT;
 	ID3D12CommandQueue* commandQueue_ = nullptr;
+	ID3D12CommandAllocator* commandAllocator_ = nullptr;
 
 	RenderPassDX12 currentScreen;
 
 public:
-	GraphicsDX12(ID3D12Device* device, std::function<std::tuple< D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*>()> getScreenFunc, ID3D12CommandQueue* commandQueue);
+	GraphicsDX12(ID3D12Device* device,
+				 std::function<std::tuple<D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*>()> getScreenFunc,
+				 ID3D12CommandQueue* commandQueue);
 	virtual ~GraphicsDX12();
 
 	void Execute(CommandList* commandList) override;
@@ -42,7 +43,6 @@ public:
 
 	ID3D12Device* GetDevice();
 };
-	
 
-}
-}
+} // namespace G3
+} // namespace LLGI
