@@ -8,11 +8,13 @@ namespace G3
 {
 
 struct CommandList_Impl;
+class IndexBuffer;
 
 class CommandListMetal : public CommandList
 {
 	CommandList_Impl* impl = nullptr;
 	Graphics* graphics_ = nullptr;
+	IndexBuffer* currentIndexBuffer = nullptr;
 
 public:
 	CommandListMetal();

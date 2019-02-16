@@ -3,18 +3,14 @@
 
 #import <MetalKit/MetalKit.h>
 
-namespace LLGI {
-namespace G3 {
-    
-void PipelineStateMetal::SetShader(ShaderStageType stage, Shader* shader)
-    {
-        throw "Not inplemented";
-    }
-    
-void PipelineStateMetal::Compile()
-    {
-        throw "Not inplemented";
-    }
-    
+namespace LLGI
+{
+namespace G3
+{
+
+void PipelineStateMetal::SetShader(ShaderStageType stage, Shader* shader) { throw "Not inplemented"; }
+
+void PipelineStateMetal::Compile() { throw "Not inplemented"; }
+
 }
 }

@@ -24,6 +24,8 @@ public:
 	void* Lock(int32_t offset, int32_t size) override;
 	void Unlock() override;
 	int32_t GetSize() override;
+
+	Buffer_Impl* GetImpl() const { return impl; }
 };
 
 } // namespace G3
