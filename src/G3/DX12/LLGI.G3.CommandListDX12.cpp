@@ -7,62 +7,51 @@ namespace LLGI
 namespace G3
 {
 
-CommandListDX12::CommandListDX12()
-{
-
-}
+CommandListDX12::CommandListDX12() {}
 
 CommandListDX12::~CommandListDX12()
 {
-	SafeRelease(commandAllocator);
-	SafeRelease(commandList);
+	SafeRelease(commandAllocator_);
+	SafeRelease(commandList_);
 }
 
-bool CommandListDX12::Initialize(GraphicsDX12* graphics)
+bool CommandListDX12::Initialize(GraphicsDX12* graphics, ID3D12CommandAllocator* commandAllocator)
 {
 	SafeAddRef(graphics);
 	graphics_ = CreateSharedPtr(graphics);
+	SafeAddRef(commandAllocator);
+	commandAllocator_ = CreateSharedPtr(commandAllocator);
 
 	HRESULT hr;
-
-	hr = graphics_->GetDevice()->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
+	hr = graphics_->GetDevice()->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator, NULL, IID_PPV_ARGS(&commandList_));
 	if (FAILED(hr))
 	{
 		goto FAILED_EXIT;
 	}
-
-	hr = graphics_->GetDevice()->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator, NULL, IID_PPV_ARGS(&commandList));
-	if (FAILED(hr))
-	{
-		goto FAILED_EXIT;
-	}
-	commandList->Close();
+	commandList_->Close();
 
 	return true;
+
 FAILED_EXIT:;
+	SafeRelease(commandList_);
 	SafeRelease(commandAllocator);
-	SafeRelease(commandList);
+	SafeRelease(graphics);
 	return false;
 }
 
-void CommandListDX12::Begin()
-{
-	commandList->Reset(commandAllocator, nullptr);
-}
+void CommandListDX12::Begin() { commandList_->Reset(commandAllocator_.get(), nullptr); }
 
-void CommandListDX12::End()
-{
-	commandList->Close();
-}
+void CommandListDX12::End() { commandList_->Close(); }
 
 void CommandListDX12::Clear(const Color8& color)
 {
 	auto rt = renderPass_;
-	if (rt == nullptr) return;
+	if (rt == nullptr)
+		return;
 
-	float color_[] = { color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f };
+	float color_[] = {color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f};
 
-	commandList->ClearRenderTargetView(rt->handleRTV, color_, 0, nullptr);
+	commandList_->ClearRenderTargetView(rt->handleRTV, color_, 0, nullptr);
 }
 
 void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
@@ -78,7 +67,7 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 		rect.left = 0;
 		rect.right = renderPass_->screenWindowSize.X;
 		rect.bottom = renderPass_->screenWindowSize.Y;
-		commandList->RSSetScissorRects(1, &rect);
+		commandList_->RSSetScissorRects(1, &rect);
 
 		// Clear color
 		if (renderPass_->GetIsColorCleared())
@@ -88,10 +77,7 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 	}
 }
 
-void CommandListDX12::EndRenderPass()
-{
-	renderPass_.reset();
-}
+void CommandListDX12::EndRenderPass() { renderPass_.reset(); }
 
-}
-}
+} // namespace G3
+} // namespace LLGI
