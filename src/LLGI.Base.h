@@ -21,6 +21,7 @@ enum class DeviceType
 	Default,
 	DirectX12,
     Metal,
+	Vulkan,
 };
 
 enum class ErrorCode
