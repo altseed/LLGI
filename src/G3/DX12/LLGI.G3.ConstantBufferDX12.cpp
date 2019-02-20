@@ -34,16 +34,16 @@ bool ConstantBufferDX12::Initialize(GraphicsDX12* graphics, int32_t size)
 	graphics_ = CreateSharedPtr(graphics);
 
 	auto hr = graphics_->GetDevice()->CreateCommittedResource(
-		&heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&ConstantBuffer));
+		&heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&constantBuffer));
 	if (FAILED(hr))
 	{
 		goto FAILED_EXIT;
 	}
-	SafeAddRef(ConstantBuffer);
+	SafeAddRef(constantBuffer);
 	return true;
 
 FAILED_EXIT:
-	SafeRelease(ConstantBuffer);
+	SafeRelease(constantBuffer);
 	return false;
 }
 
@@ -61,7 +61,7 @@ FAILED_EXIT:
 	return nullptr;
 }
 
-void ConstantBufferDX12::Unlock() { ConstantBuffer->Unmap(0, nullptr); }
+void ConstantBufferDX12::Unlock() { constantBuffer->Unmap(0, nullptr); }
 
 int32_t ConstantBufferDX12::GetSize() { return sizeof(float) * 9; }
 

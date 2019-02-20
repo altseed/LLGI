@@ -34,7 +34,7 @@ bool IndexBufferDX12::Initialize(GraphicsDX12* graphics, int32_t size)
 	graphics_ = CreateSharedPtr(graphics);
 
 	auto hr = graphics_->GetDevice()->CreateCommittedResource(
-		&heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&IndexBuffer));
+		&heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&indexBuffer));
 	if (FAILED(hr))
 	{
 		goto FAILED_EXIT;
