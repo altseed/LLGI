@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "../LLGI.G3.VertexBuffer.h"
+#include "../LLGI.G3.IndexBuffer.h"
 #include "LLGI.G3.BaseDX12.h"
 #include "LLGI.G3.GraphicsDX12.h"
 
@@ -12,32 +12,24 @@ namespace LLGI
 namespace G3
 {
 
-struct Vertex3D
-{
-	XMFLOAT3 Position;
-	XMFLOAT3 Normal;
-	XMFLOAT4 Color;
-};
-
-class VertexBufferDX12 : public VertexBuffer
+class IndexBufferDX12 : public IndexBuffer
 {
 private:
 	std::shared_ptr<GraphicsDX12> graphics_;
 
-	ID3D12Resource* vertexBuffer = nullptr;
-
-	Vertex3D* mapped;
+	ID3D12Resource* indexBuffer = nullptr;
 
 public:
 	bool Initialize(GraphicsDX12* graphics, int32_t size);
 
-	VertexBufferDX12();
-	virtual ~VertexBufferDX12() = default;
+	IndexBufferDX12();
+	virtual ~IndexBufferDX12() = default;
 
 	virtual void* Lock();
 	virtual void* Lock(int32_t offset, int32_t size);
 	virtual void Unlock();
-	virtual int32_t GetSize();
+	virtual int32_t GetStride();
+	virtual int32_t GetCount();
 };
 
 } // namespace G3

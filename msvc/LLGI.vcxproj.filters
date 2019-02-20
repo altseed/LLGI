@@ -50,6 +50,12 @@
     <ClInclude Include="..\src\G3\DX12\LLGI.G3.VertexBufferDX12.h">
       <Filter>G3\DX12</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\G3\DX12\LLGI.G3.ConstantBufferDX12.h">
+      <Filter>G3\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\G3\DX12\LLGI.G3.IndexBufferDX12.h">
+      <Filter>G3\DX12</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="G3">
@@ -109,6 +115,12 @@
       <Filter>G3\DX12</Filter>
     </ClCompile>
     <ClCompile Include="..\src\G3\DX12\LLGI.G3.VertexBufferDX12.cpp">
+      <Filter>G3\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\G3\DX12\LLGI.G3.ConstantBufferDX12.cpp">
+      <Filter>G3\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\G3\DX12\LLGI.G3.IndexBufferDX12.cpp">
       <Filter>G3\DX12</Filter>
     </ClCompile>
   </ItemGroup>

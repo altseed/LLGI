@@ -1,15 +1,15 @@
 
-#include "LLGI.G3.VertexBufferDX12.h"
-#include "../LLGI.G3.VertexBuffer.h"
+#include "LLGI.G3.ConstantBufferDX12.h"
+#include "../LLGI.G3.ConstantBuffer.h"
 
 namespace LLGI
 {
 namespace G3
 {
 
-VertexBufferDX12::VertexBufferDX12() {}
+ConstantBufferDX12::ConstantBufferDX12() {}
 
-bool VertexBufferDX12::Initialize(GraphicsDX12* graphics, int32_t size)
+bool ConstantBufferDX12::Initialize(GraphicsDX12* graphics, int32_t size)
 {
 	D3D12_HEAP_PROPERTIES heapProperties;
 	D3D12_RESOURCE_DESC resourceDesc;
@@ -21,7 +21,7 @@ bool VertexBufferDX12::Initialize(GraphicsDX12* graphics, int32_t size)
 	heapProperties.VisibleNodeMask = 0;
 
 	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	resourceDesc.Width = size * sizeof(Vertex3D);
+	// resourceDesc.Width = size * sizeof(Constant3D);
 	resourceDesc.Height = 1;
 	resourceDesc.DepthOrArraySize = 1;
 	resourceDesc.MipLevels = 1;
@@ -34,48 +34,36 @@ bool VertexBufferDX12::Initialize(GraphicsDX12* graphics, int32_t size)
 	graphics_ = CreateSharedPtr(graphics);
 
 	auto hr = graphics_->GetDevice()->CreateCommittedResource(
-		&heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&vertexBuffer));
+		&heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&ConstantBuffer));
 	if (FAILED(hr))
 	{
 		goto FAILED_EXIT;
 	}
-	SafeAddRef(vertexBuffer);
+	SafeAddRef(ConstantBuffer);
 	return true;
 
 FAILED_EXIT:
-	SafeRelease(vertexBuffer);
+	SafeRelease(ConstantBuffer);
 	return false;
 }
 
-void* VertexBufferDX12::Lock()
+void* ConstantBufferDX12::Lock()
 {
-	auto hr = vertexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mapped));
-	if (FAILED(hr))
-	{
-		goto FAILED_EXIT;
-	}
-	return mapped;
 
 FAILED_EXIT:
 	return nullptr;
 }
 
-void* VertexBufferDX12::Lock(int32_t offset, int32_t size)
+void* ConstantBufferDX12::Lock(int32_t offset, int32_t size)
 {
-	auto hr = vertexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mapped));
-	if (FAILED(hr))
-	{
-		goto FAILED_EXIT;
-	}
-	return mapped + offset;
 
 FAILED_EXIT:
 	return nullptr;
 }
 
-void VertexBufferDX12::Unlock() { vertexBuffer->Unmap(0, nullptr); }
+void ConstantBufferDX12::Unlock() { ConstantBuffer->Unmap(0, nullptr); }
 
-int32_t VertexBufferDX12::GetSize() { return sizeof(float) * 9; }
+int32_t ConstantBufferDX12::GetSize() { return sizeof(float) * 9; }
 
 } // namespace G3
 } // namespace LLGI
