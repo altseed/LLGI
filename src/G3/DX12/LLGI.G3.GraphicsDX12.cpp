@@ -16,13 +16,6 @@ GraphicsDX12::GraphicsDX12(ID3D12Device* device,
 	SafeAddRef(commandQueue_);
 
 	HRESULT hr;
-	// Create Command Queue
-	D3D12_COMMAND_QUEUE_DESC cq_desc = {};
-	cq_desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-	cq_desc.Type = commandListType_;
-	hr = device->CreateCommandQueue(&cq_desc, IID_PPV_ARGS(&commandQueue));
-	assert(SUCCEEDED(hr));
-
 	// Create Command Allocator
 	hr = device->CreateCommandAllocator(commandListType_, IID_PPV_ARGS(&commandAllocator_));
 	assert(SUCCEEDED(hr));

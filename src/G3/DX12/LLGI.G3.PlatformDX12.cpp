@@ -19,7 +19,8 @@ LRESULT LLGI_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 void PlatformDX12::Wait()
 {
-	if (fence == nullptr) return;
+	if (fence == nullptr)
+		return;
 
 	HRESULT hr;
 
@@ -49,7 +50,6 @@ PlatformDX12::PlatformDX12()
 	{
 		RenderPass[i] = nullptr;
 	}
-
 }
 
 PlatformDX12::~PlatformDX12()
@@ -88,7 +88,7 @@ bool PlatformDX12::Initialize(Vec2I windowSize)
 
 	WNDCLASSEX wcex;
 	memset(&wcex, 0, sizeof(WNDCLASSEX));
-	
+
 	wcex.cbSize = sizeof(WNDCLASSEX);
 	wcex.style = CS_CLASSDC;
 	wcex.lpfnWndProc = (WNDPROC)LLGI_WndProc;
@@ -98,17 +98,7 @@ bool PlatformDX12::Initialize(Vec2I windowSize)
 	RegisterClassExA(&wcex);
 
 	hwnd = CreateWindowA(
-		"DirectX12", 
-		"DirectX12", 
-		WS_OVERLAPPEDWINDOW, 
-		100, 
-		100, 
-		1280, 
-		720, 
-		NULL, 
-		NULL, 
-		wcex.hInstance, 
-		NULL);
+		"DirectX12", "DirectX12", WS_OVERLAPPEDWINDOW, 100, 100, windowSize.X, windowSize.Y, NULL, NULL, wcex.hInstance, NULL);
 
 	ShowWindow(hwnd, SW_SHOWDEFAULT);
 	UpdateWindow(hwnd);
@@ -119,9 +109,9 @@ bool PlatformDX12::Initialize(Vec2I windowSize)
 	UINT flagsDXGI = 0;
 
 #if defined(_DEBUG)
-	ID3D12Debug *debug_ = nullptr;
+	ID3D12Debug* debug_ = nullptr;
 	hr = D3D12GetDebugInterface(IID_PPV_ARGS(&debug_));
-	if (FAILED(hr)) 
+	if (FAILED(hr))
 	{
 		goto FAILED_EXIT;
 	}
@@ -142,25 +132,20 @@ bool PlatformDX12::Initialize(Vec2I windowSize)
 	}
 
 	// device
-	hr = D3D12CreateDevice(
-		nullptr,
-		D3D_FEATURE_LEVEL_11_1,
-		__uuidof(ID3D12Device),
-		(void**)&device);
+	hr = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_1, __uuidof(ID3D12Device), (void**)&device);
 
 	if (FAILED(hr))
 	{
 		goto FAILED_EXIT;
 	}
 
-	// Command queue
-
+	// Create Command Queue
 	D3D12_COMMAND_QUEUE_DESC descCommandQueue;
 	ZeroMemory(&descCommandQueue, sizeof(descCommandQueue));
-	descCommandQueue.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 	descCommandQueue.Priority = 0;
-	descCommandQueue.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	descCommandQueue.NodeMask = 0;
+	descCommandQueue.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+	descCommandQueue.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 	hr = device->CreateCommandQueue(&descCommandQueue, IID_PPV_ARGS(&commandQueue));
 	if (FAILED(hr))
 	{
@@ -201,7 +186,7 @@ bool PlatformDX12::Initialize(Vec2I windowSize)
 	{
 		goto FAILED_EXIT;
 	}
-	
+
 	hr = swapChain_->QueryInterface(&swapChain);
 	if (FAILED(hr))
 	{
@@ -210,7 +195,7 @@ bool PlatformDX12::Initialize(Vec2I windowSize)
 	}
 	SafeRelease(swapChain_);
 
-	// Command
+	// Create Command Allocator
 	hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
 	if (FAILED(hr))
 	{
@@ -261,7 +246,6 @@ bool PlatformDX12::Initialize(Vec2I windowSize)
 		device->CreateRenderTargetView(RenderPass[i], nullptr, handleRTV[i]);
 	}
 
-
 	return true;
 
 FAILED_EXIT:;
@@ -290,7 +274,6 @@ FAILED_EXIT:;
 
 	return false;
 }
-
 
 void PlatformDX12::NewFrame()
 {
@@ -326,9 +309,8 @@ void PlatformDX12::NewFrame()
 	commandListStart->OMSetRenderTargets(1, &(handleRTV[frameIndex]), FALSE, nullptr);
 	commandListStart->Close();
 
-	ID3D12CommandList* commandList[] = { commandListStart };
+	ID3D12CommandList* commandList[] = {commandListStart};
 	commandQueue->ExecuteCommandLists(1, commandList);
-
 }
 
 void PlatformDX12::Present()
@@ -347,7 +329,7 @@ void PlatformDX12::Present()
 	commandListPresent->ResourceBarrier(1, &barrier);
 	commandListPresent->Close();
 
-	ID3D12CommandList* commandList[] = { commandListPresent };
+	ID3D12CommandList* commandList[] = {commandListPresent};
 	commandQueue->ExecuteCommandLists(1, commandList);
 
 	swapChain->Present(1, 0);
@@ -356,27 +338,21 @@ void PlatformDX12::Present()
 
 Graphics* PlatformDX12::CreateGraphics()
 {
-	std::function<std::tuple< D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*>()> getScreenFunc = [this]() ->std::tuple< D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*>
-	{
-		std::tuple< D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*> ret(handleRTV[frameIndex], RenderPass[frameIndex]);
-		
+	std::function<std::tuple<D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*>()> getScreenFunc =
+		[this]() -> std::tuple<D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*> {
+		std::tuple<D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*> ret(handleRTV[frameIndex], RenderPass[frameIndex]);
+
 		return ret;
 	};
 
-	auto graphics = new GraphicsDX12(
-		device,
-		getScreenFunc,
-		commandQueue);
+	auto graphics = new GraphicsDX12(device, getScreenFunc, commandQueue);
 
 	graphics->SetWindowSize(Vec2I(1280, 720));
 
 	return graphics;
 }
 
-ID3D12Device* PlatformDX12::GetDevice()
-{
-	return device;
-}
+ID3D12Device* PlatformDX12::GetDevice() { return device; }
 
-}
-}
+} // namespace G3
+} // namespace LLGI
