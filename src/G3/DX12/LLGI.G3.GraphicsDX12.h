@@ -39,6 +39,7 @@ public:
 
 	RenderPass* GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) override;
 	VertexBuffer* CreateVertexBuffer(int32_t size) override;
+	IndexBuffer* CreateIndexBuffer(int32_t stride, int32_t count) override;
 	CommandList* CreateCommandList() override;
 
 	ID3D12Device* GetDevice();

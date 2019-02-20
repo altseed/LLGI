@@ -202,6 +202,7 @@ bool PlatformDX12::Initialize(Vec2I windowSize)
 		goto FAILED_EXIT;
 	}
 
+	// Create Command List
 	hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator, NULL, IID_PPV_ARGS(&commandListStart));
 	if (FAILED(hr))
 	{

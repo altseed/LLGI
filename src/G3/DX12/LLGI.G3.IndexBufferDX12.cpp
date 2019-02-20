@@ -9,10 +9,10 @@ namespace G3
 
 IndexBufferDX12::IndexBufferDX12() {}
 
-bool IndexBufferDX12::Initialize(GraphicsDX12* graphics, int32_t size)
+bool IndexBufferDX12::Initialize(GraphicsDX12* graphics, int32_t stride, int32_t count)
 {
-	D3D12_HEAP_PROPERTIES heapProperties;
-	D3D12_RESOURCE_DESC resourceDesc;
+	D3D12_HEAP_PROPERTIES heapProperties = {};
+	D3D12_RESOURCE_DESC resourceDesc = {};
 
 	heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
 	heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
@@ -21,7 +21,7 @@ bool IndexBufferDX12::Initialize(GraphicsDX12* graphics, int32_t size)
 	heapProperties.VisibleNodeMask = 0;
 
 	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	// resourceDesc.Width = size * sizeof(Index3D);
+	resourceDesc.Width = stride * count;
 	resourceDesc.Height = 1;
 	resourceDesc.DepthOrArraySize = 1;
 	resourceDesc.MipLevels = 1;
@@ -49,6 +49,12 @@ FAILED_EXIT:
 
 void* IndexBufferDX12::Lock()
 {
+	auto hr = indexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mapped));
+	if (FAILED(hr))
+	{
+		goto FAILED_EXIT;
+	}
+	return mapped;
 
 FAILED_EXIT:
 	return nullptr;
@@ -56,12 +62,22 @@ FAILED_EXIT:
 
 void* IndexBufferDX12::Lock(int32_t offset, int32_t size)
 {
+	auto hr = indexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mapped));
+	if (FAILED(hr))
+	{
+		goto FAILED_EXIT;
+	}
+	return mapped + offset;
 
 FAILED_EXIT:
 	return nullptr;
 }
 
-void IndexBufferDX12::Unlock() { indexBuffer->Unmap(0, nullptr); }
+void IndexBufferDX12::Unlock()
+{
+	indexBuffer->Unmap(0, nullptr);
+	mapped = nullptr;
+}
 
 } // namespace G3
 } // namespace LLGI
