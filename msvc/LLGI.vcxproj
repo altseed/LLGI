@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{F4EDDDD6-1631-4F44-B685-733D95ECD678}</ProjectGuid>
     <RootNamespace>LLGI</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -113,7 +113,9 @@
     <ClInclude Include="..\src\G3\DX12\LLGI.G3.BaseDX12.h" />
     <ClInclude Include="..\src\G3\DX12\LLGI.G3.CommandListDX12.h" />
     <ClInclude Include="..\src\G3\DX12\LLGI.G3.CompilerDX12.h" />
+    <ClInclude Include="..\src\G3\DX12\LLGI.G3.ConstantBufferDX12.h" />
     <ClInclude Include="..\src\G3\DX12\LLGI.G3.GraphicsDX12.h" />
+    <ClInclude Include="..\src\G3\DX12\LLGI.G3.IndexBufferDX12.h" />
     <ClInclude Include="..\src\G3\DX12\LLGI.G3.PlatformDX12.h" />
     <ClInclude Include="..\src\G3\DX12\LLGI.G3.VertexBufferDX12.h" />
     <ClInclude Include="..\src\G3\LLGI.G3.CommandList.h" />
@@ -131,7 +133,9 @@
   <ItemGroup>
     <ClCompile Include="..\src\G3\DX12\LLGI.G3.CommandListDX12.cpp" />
     <ClCompile Include="..\src\G3\DX12\LLGI.G3.CompilerDX12.cpp" />
+    <ClCompile Include="..\src\G3\DX12\LLGI.G3.ConstantBufferDX12.cpp" />
     <ClCompile Include="..\src\G3\DX12\LLGI.G3.GraphicsDX12.cpp" />
+    <ClCompile Include="..\src\G3\DX12\LLGI.G3.IndexBufferDX12.cpp" />
     <ClCompile Include="..\src\G3\DX12\LLGI.G3.PlatformDX12.cpp" />
     <ClCompile Include="..\src\G3\DX12\LLGI.G3.VertexBufferDX12.cpp" />
     <ClCompile Include="..\src\G3\LLGI.G3.CommandList.cpp" />
