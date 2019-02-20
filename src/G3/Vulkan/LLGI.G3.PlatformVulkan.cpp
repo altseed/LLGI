@@ -23,33 +23,6 @@ LRESULT LLGI_WndProc_Vulkan(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 #endif
 
-void PlatformDX12::Wait()
-{
-	if (fence == nullptr)
-		return;
-
-	HRESULT hr;
-
-	auto fenceValue_ = fenceValue;
-	hr = commandQueue->Signal(fence, fenceValue_);
-	if (FAILED(hr))
-	{
-		return;
-	}
-
-	fenceValue++;
-
-	if (fence->GetCompletedValue() < fenceValue_)
-	{
-		hr = fence->SetEventOnCompletion(fenceValue_, fenceEvent);
-		if (FAILED(hr))
-		{
-			return;
-		}
-		WaitForSingleObject(fenceEvent, INFINITE);
-	}
-}
-
 #ifdef _DEBUG
 VkBool32 PlatformVulkan::DebugMessageCallback(VkDebugReportFlagsEXT flags,
 											  VkDebugReportObjectTypeEXT objType,
@@ -116,10 +89,10 @@ bool PlatformVulkan::CreateSwapChain(Vec2I windowSize, bool isVSyncEnabled)
 	}
 
 	// decide the number of swapchain
-	swapBufferCount = caps.minImageCount + 1;
-	if ((caps.maxImageCount > 0) && (swapBufferCount > caps.maxImageCount))
+	auto desiredSwapBufferCount = caps.minImageCount + 1;
+	if ((caps.maxImageCount > 0) && (desiredSwapBufferCount > caps.maxImageCount))
 	{
-		swapBufferCount = caps.maxImageCount;
+		desiredSwapBufferCount = caps.maxImageCount;
 	}
 
 	// deside a transform
@@ -132,7 +105,7 @@ bool PlatformVulkan::CreateSwapChain(Vec2I windowSize, bool isVSyncEnabled)
 	// create swapchain
 	vk::SwapchainCreateInfoKHR swapchainCreateInfo;
 	swapchainCreateInfo.surface = surface;
-	swapchainCreateInfo.minImageCount = swapBufferCount;
+	swapchainCreateInfo.minImageCount = desiredSwapBufferCount;
 	swapchainCreateInfo.imageFormat = surfaceFormat;
 	swapchainCreateInfo.imageColorSpace = surfaceColorSpace;
 	swapchainCreateInfo.imageExtent = swapchainExtent;
@@ -156,11 +129,11 @@ bool PlatformVulkan::CreateSwapChain(Vec2I windowSize, bool isVSyncEnabled)
 	// remove old swap chain
 	if (oldSwapChain)
 	{
-		for (uint32_t i = 0; i < swapBufferCount; i++)
+		for (uint32_t i = 0; i < swapBuffers.size(); i++)
 		{
-			g_VkDevice.destroyImageView(m_images[i].view);
+			vkDevice.destroyImageView(swapBuffers[i].view);
 		}
-		g_VkDevice.destroySwapchainKHR(oldSwapchain);
+		vkDevice.destroySwapchainKHR(oldSwapChain);
 	}
 
 	vk::ImageViewCreateInfo viewCreateInfo;
@@ -171,49 +144,125 @@ bool PlatformVulkan::CreateSwapChain(Vec2I windowSize, bool isVSyncEnabled)
 	viewCreateInfo.viewType = vk::ImageViewType::e2D;
 
 	auto swapChainImages = vkDevice.getSwapchainImagesKHR(swapchain);
-	m_imageCount = static_cast<uint32_t>(swapChainImages.size());
+	swapBufferCount = static_cast<uint32_t>(swapChainImages.size());
 
-	m_images.resize(m_imageCount);
-	for (uint32_t i = 0; i < m_imageCount; i++)
+	swapBuffers.resize(swapBufferCount);
+	for (uint32_t i = 0; i < swapBuffers.size(); i++)
 	{
-		m_images[i].image = swapChainImages[i];
+		swapBuffers[i].image = swapChainImages[i];
 		viewCreateInfo.image = swapChainImages[i];
-		m_images[i].view = vkDevice.createImageView(viewCreateInfo);
-		m_images[i].fence = vk::Fence();
+		swapBuffers[i].view = vkDevice.createImageView(viewCreateInfo);
+		swapBuffers[i].fence = vk::Fence();
 	}
 
 	return true;
+}
+
+uint32_t PlatformVulkan::AcquireNextImage(vk::Semaphore& semaphore)
+{
+	auto resultValue = vkDevice.acquireNextImageKHR(swapchain, UINT64_MAX, semaphore, vk::Fence());
+	assert(resultValue.result == vk::Result::eSuccess);
+
+	frameIndex = resultValue.value;
+	return frameIndex;
+}
+
+vk::Result PlatformVulkan::Present(vk::Semaphore semaphore)
+{
+	vk::PresentInfoKHR presentInfo;
+	presentInfo.swapchainCount = 1;
+	presentInfo.pSwapchains = &swapchain;
+	presentInfo.pImageIndices = &frameIndex;
+	presentInfo.waitSemaphoreCount = semaphore ? 1 : 0;
+	presentInfo.pWaitSemaphores = &semaphore;
+	return vkQueue.presentKHR(presentInfo);
+}
+
+void PlatformVulkan::SetImageLayout(vk::CommandBuffer cmdbuffer,
+									vk::Image image,
+									vk::ImageLayout oldImageLayout,
+									vk::ImageLayout newImageLayout,
+									vk::ImageSubresourceRange subresourceRange)
+{
+	// setup image barrior object
+	vk::ImageMemoryBarrier imageMemoryBarrier;
+	imageMemoryBarrier.oldLayout = oldImageLayout;
+	imageMemoryBarrier.newLayout = newImageLayout;
+	imageMemoryBarrier.image = image;
+	imageMemoryBarrier.subresourceRange = subresourceRange;
+
+	// current layout
+	if (oldImageLayout == vk::ImageLayout::ePreinitialized)
+		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eHostWrite;
+	else if (oldImageLayout == vk::ImageLayout::eTransferDstOptimal)
+		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+	else if (oldImageLayout == vk::ImageLayout::eColorAttachmentOptimal)
+		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+	else if (oldImageLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal)
+		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+	else if (oldImageLayout == vk::ImageLayout::eTransferSrcOptimal)
+		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eTransferRead;
+	else if (oldImageLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
+		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eShaderRead;
+
+	// next layout
+	if (newImageLayout == vk::ImageLayout::eTransferDstOptimal)
+		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+	else if (newImageLayout == vk::ImageLayout::eTransferSrcOptimal)
+		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eTransferRead; // | imageMemoryBarrier.srcAccessMask;
+	else if (newImageLayout == vk::ImageLayout::eColorAttachmentOptimal)
+		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+	else if (newImageLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal)
+		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+	else if (newImageLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
+		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+
+	// Put barrier on top
+	// Put barrier inside setup command buffer
+	cmdbuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe,
+							  vk::PipelineStageFlagBits::eTopOfPipe,
+							  vk::DependencyFlags(),
+							  nullptr,
+							  nullptr,
+							  imageMemoryBarrier);
 }
 
 PlatformVulkan::PlatformVulkan() {}
 
 PlatformVulkan::~PlatformVulkan()
 {
-	Wait();
-
-	SafeRelease(descriptorHeapRTV);
-
-	for (int32_t i = 0; i < SwapBufferCount; i++)
-	{
-		SafeRelease(RenderPass[i]);
-	}
-
-	SafeRelease(commandAllocator);
-	SafeRelease(commandListStart);
-	SafeRelease(commandListPresent);
-	SafeRelease(commandQueue);
-	SafeRelease(fence);
-	SafeRelease(device);
-	SafeRelease(dxgiFactory);
-	SafeRelease(swapChain);
-
-	if (fenceEvent != nullptr)
-	{
-		CloseHandle(fenceEvent);
-		fenceEvent = nullptr;
-	}
-
 	// destroy vulkan
+
+	if (vkDevice != nullptr)
+	{
+		if (vkPresentComplete != nullptr)
+		{
+			vkDevice.destroySemaphore(vkPresentComplete);
+		}
+
+		if (vkRenderComplete != nullptr)
+		{
+			vkDevice.destroySemaphore(vkRenderComplete);
+		}
+		vkPresentComplete = nullptr;
+		vkRenderComplete = nullptr;
+	}
+
+	if (vkDevice != nullptr && swapchain != nullptr)
+	{
+		for (auto& swapBuffer : swapBuffers)
+		{
+			vkDevice.destroyImageView(swapBuffer.view);
+			vkDevice.destroyFence(swapBuffer.fence);
+		}
+		swapBuffers.clear();
+
+		vkDevice.destroySwapchainKHR(swapchain);
+		vkInstance.destroySurfaceKHR(surface);
+
+		swapchain = nullptr;
+		surface = nullptr;
+	}
 
 	if (vkQueue)
 	{
@@ -226,6 +275,7 @@ PlatformVulkan::~PlatformVulkan()
 		vkDevice.destroyCommandPool(vkCmdPool);
 		vkDevice.destroyPipelineCache(vkPipelineCache);
 		vkDevice.destroy();
+		vkDevice = nullptr;
 	}
 
 #if defined(_DEBUG)
@@ -344,8 +394,6 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 	queueCreateInfo.queueCount = 1;
 	queueCreateInfo.pQueuePriorities = queuePriorities;
 
-	auto deviceFeatures = vkPhysicalDevice.getFeatures();
-
 	const std::vector<const char*> enabledExtensions = {
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 #if defined(_DEBUG)
@@ -419,11 +467,47 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 	surfaceColorSpace = surfaceFormats[0].colorSpace;
 
 	// create swapchain
-	assert(0);
+	if (!CreateSwapChain(windowSize, true))
+	{
+		goto FAILED_EXIT;
+	}
+
+	// create semaphore
+	vk::SemaphoreCreateInfo semaphoreCreateInfo;
+
+	vkPresentComplete = vkDevice.createSemaphore(semaphoreCreateInfo);
+
+	vkRenderComplete = vkDevice.createSemaphore(semaphoreCreateInfo);
+
+	if (!vkPresentComplete || !vkRenderComplete)
+	{
+		goto FAILED_EXIT;
+	}
+
+	// create command buffer
+	vk::CommandBufferAllocateInfo allocInfo;
+	allocInfo.commandPool = vkCmdPool;
+	allocInfo.commandBufferCount = swapBufferCount;
+	vkCmdBuffers = vkDevice.allocateCommandBuffers(allocInfo);
 
 	return true;
 
 FAILED_EXIT:;
+
+	if (vkDevice != nullptr)
+	{
+		if (vkPresentComplete != nullptr)
+		{
+			vkDevice.destroySemaphore(vkPresentComplete);
+		}
+
+		if (vkRenderComplete != nullptr)
+		{
+			vkDevice.destroySemaphore(vkRenderComplete);
+		}
+		vkPresentComplete = nullptr;
+		vkRenderComplete = nullptr;
+	}
 
 	if (vkInstance)
 	{
@@ -458,64 +542,19 @@ void PlatformVulkan::NewFrame()
 		}
 	}
 
-	frameIndex = swapChain->GetCurrentBackBufferIndex();
+	AcquireNextImage(vkPresentComplete);
 
-	commandListStart->Reset(commandAllocator, nullptr);
+	// reset commands
+	auto& cmdBuffer = vkCmdBuffers[frameIndex];
 
-	D3D12_RESOURCE_BARRIER barrier;
-	ZeroMemory(&barrier, sizeof(barrier));
-	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrier.Transition.pResource = RenderPass[frameIndex];
-	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	commandListStart->ResourceBarrier(1, &barrier);
-	commandListStart->OMSetRenderTargets(1, &(handleRTV[frameIndex]), FALSE, nullptr);
-	commandListStart->Close();
-
-	ID3D12CommandList* commandList[] = {commandListStart};
-	commandQueue->ExecuteCommandLists(1, commandList);
+	cmdBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
+	vk::CommandBufferBeginInfo cmdBufInfo;
+	cmdBuffer.begin(cmdBufInfo);
 }
 
-void PlatformVulkan::Present()
-{
-	commandListPresent->Reset(commandAllocator, nullptr);
+void PlatformVulkan::Present() { Present(vkRenderComplete); }
 
-	D3D12_RESOURCE_BARRIER barrier;
-	ZeroMemory(&barrier, sizeof(barrier));
-	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrier.Transition.pResource = RenderPass[frameIndex];
-	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-
-	commandListPresent->ResourceBarrier(1, &barrier);
-	commandListPresent->Close();
-
-	ID3D12CommandList* commandList[] = {commandListPresent};
-	commandQueue->ExecuteCommandLists(1, commandList);
-
-	swapChain->Present(1, 0);
-	Wait();
-}
-
-Graphics* PlatformVulkan::CreateGraphics()
-{
-	std::function<std::tuple<D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*>()> getScreenFunc =
-		[this]() -> std::tuple<D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*> {
-		std::tuple<D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*> ret(handleRTV[frameIndex], RenderPass[frameIndex]);
-
-		return ret;
-	};
-
-	auto graphics = new GraphicsDX12(device, getScreenFunc, commandQueue);
-
-	graphics->SetWindowSize(Vec2I(1280, 720));
-
-	return graphics;
-}
+Graphics* PlatformVulkan::CreateGraphics() { return nullptr; }
 
 } // namespace G3
 } // namespace LLGI

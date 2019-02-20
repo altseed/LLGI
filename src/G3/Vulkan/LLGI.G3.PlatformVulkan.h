@@ -14,14 +14,22 @@ class PlatformVulkan : public Platform
 private:
 #ifdef _DEBUG
 	static VkBool32 DebugMessageCallback(VkDebugReportFlagsEXT flags,
-								  VkDebugReportObjectTypeEXT objType,
-								  uint64_t srcObject,
-								  size_t location,
-								  int32_t msgCode,
-								  const char* pLayerPrefix,
-								  const char* pMsg,
-								  void* pUserData);
+										 VkDebugReportObjectTypeEXT objType,
+										 uint64_t srcObject,
+										 size_t location,
+										 int32_t msgCode,
+										 const char* pLayerPrefix,
+										 const char* pMsg,
+										 void* pUserData);
 #endif
+
+	class SwapBuffer
+	{
+	public:
+		vk::Image image;
+		vk::ImageView view;
+		vk::Fence fence;
+	};
 
 	int32_t swapBufferCount = 2;
 
@@ -32,12 +40,21 @@ private:
 	vk::Queue vkQueue;
 	vk::CommandPool vkCmdPool;
 
+	//! to check to finish present
+	vk::Semaphore vkPresentComplete;
+
+	//! to check to finish render
+	vk::Semaphore vkRenderComplete;
+	std::vector<vk::CommandBuffer> vkCmdBuffers;
+
 	vk::SurfaceKHR surface;
 	vk::SwapchainKHR swapchain;
 	vk::PresentInfoKHR presentInfo;
 
 	vk::Format surfaceFormat;
 	vk::ColorSpaceKHR surfaceColorSpace;
+
+	std::vector<SwapBuffer> swapBuffers;
 
 #ifdef _WIN32
 	HWND hwnd = nullptr;
@@ -50,28 +67,26 @@ private:
 	PFN_vkDebugReportMessageEXT debugReportMessage = nullptr;
 	VkDebugReportCallbackEXT debugReportCallback;
 #endif
-
-	ID3D12Device* device = nullptr;
-	IDXGIFactory4* dxgiFactory = nullptr;
-	ID3D12CommandQueue* commandQueue = nullptr;
-	ID3D12Fence* fence = nullptr;
-	HANDLE fenceEvent = nullptr;
-	IDXGISwapChain3* swapChain = nullptr;
-
-	ID3D12DescriptorHeap* descriptorHeapRTV = nullptr;
-	D3D12_CPU_DESCRIPTOR_HANDLE handleRTV[SwapBufferCount];
-	ID3D12Resource* RenderPass[SwapBufferCount];
-
-	ID3D12CommandAllocator* commandAllocator = nullptr;
-	ID3D12GraphicsCommandList* commandListStart = nullptr;
-	ID3D12GraphicsCommandList* commandListPresent = nullptr;
-	UINT64 fenceValue = 1;
-
-	int32_t frameIndex = 0;
-
-	void Wait();
+	uint32_t frameIndex = 0;
 
 	bool CreateSwapChain(Vec2I windowSize, bool isVSyncEnabled);
+
+	/*!
+		@brief	get swap buffer index
+		@param	semaphore	the signaling semaphore to be waited for other functions
+	*/
+	uint32_t AcquireNextImage(vk::Semaphore& semaphore);
+
+	/**
+		@brief	the semaphore to wait for before present
+	*/
+	vk::Result Present(vk::Semaphore semaphore);
+
+	void SetImageLayout(vk::CommandBuffer cmdbuffer,
+		vk::Image image,
+		vk::ImageLayout oldImageLayout,
+		vk::ImageLayout newImageLayout,
+		vk::ImageSubresourceRange subresourceRange);
 
 public:
 	PlatformVulkan();
