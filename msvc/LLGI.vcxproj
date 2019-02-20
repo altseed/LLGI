@@ -116,6 +116,7 @@
     <ClInclude Include="..\src\G3\DX12\LLGI.G3.ConstantBufferDX12.h" />
     <ClInclude Include="..\src\G3\DX12\LLGI.G3.GraphicsDX12.h" />
     <ClInclude Include="..\src\G3\DX12\LLGI.G3.IndexBufferDX12.h" />
+    <ClInclude Include="..\src\G3\DX12\LLGI.G3.PipelineStateDX12.h" />
     <ClInclude Include="..\src\G3\DX12\LLGI.G3.PlatformDX12.h" />
     <ClInclude Include="..\src\G3\DX12\LLGI.G3.VertexBufferDX12.h" />
     <ClInclude Include="..\src\G3\LLGI.G3.CommandList.h" />
@@ -136,6 +137,7 @@
     <ClCompile Include="..\src\G3\DX12\LLGI.G3.ConstantBufferDX12.cpp" />
     <ClCompile Include="..\src\G3\DX12\LLGI.G3.GraphicsDX12.cpp" />
     <ClCompile Include="..\src\G3\DX12\LLGI.G3.IndexBufferDX12.cpp" />
+    <ClCompile Include="..\src\G3\DX12\LLGI.G3.PipelineStateDX12.cpp" />
     <ClCompile Include="..\src\G3\DX12\LLGI.G3.PlatformDX12.cpp" />
     <ClCompile Include="..\src\G3\DX12\LLGI.G3.VertexBufferDX12.cpp" />
     <ClCompile Include="..\src\G3\LLGI.G3.CommandList.cpp" />

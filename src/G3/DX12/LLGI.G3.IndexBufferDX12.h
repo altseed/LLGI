@@ -19,8 +19,12 @@ private:
 
 	ID3D12Resource* indexBuffer = nullptr;
 
+	uint16_t* mapped;
+	int32_t stride;
+	int32_t count;
+
 public:
-	bool Initialize(GraphicsDX12* graphics, int32_t size);
+	bool Initialize(GraphicsDX12* graphics, int32_t stride, int32_t count);
 
 	IndexBufferDX12();
 	virtual ~IndexBufferDX12() = default;
@@ -28,8 +32,8 @@ public:
 	virtual void* Lock();
 	virtual void* Lock(int32_t offset, int32_t size);
 	virtual void Unlock();
-	virtual int32_t GetStride();
-	virtual int32_t GetCount();
+	virtual int32_t GetStride() { return stride; }
+	virtual int32_t GetCount() { return count; }
 };
 
 } // namespace G3

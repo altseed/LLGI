@@ -500,7 +500,6 @@ void main()
 	vb_buf[1].Color = LLGI::Color8(255, 255, 0, 255);
 	vb_buf[2].Color = LLGI::Color8(0, 255, 0, 255);
 	vb_buf[3].Color = LLGI::Color8(0, 0, 255, 255);
-
 	vb->Unlock();
 
 	auto ib_buf = (uint16_t*)ib->Lock();

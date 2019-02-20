@@ -1,5 +1,6 @@
 #include "LLGI.G3.GraphicsDX12.h"
 #include "LLGI.G3.CommandListDX12.h"
+#include "LLGI.G3.IndexBufferDX12.h"
 #include "LLGI.G3.VertexBufferDX12.h"
 
 namespace LLGI
@@ -60,6 +61,18 @@ VertexBuffer* GraphicsDX12::CreateVertexBuffer(int32_t size)
 	// vertexView.BufferLocation = obj->GetGPUVirtualAddress();
 	// vertexView.StrideInBytes = sizeof(Vertex3D);
 	// vertexView.SizeInBytes = size * sizeof(Vertex3D);
+
+	return obj;
+}
+
+IndexBuffer* GraphicsDX12::CreateIndexBuffer(int32_t stride, int32_t count)
+{
+	auto obj = new IndexBufferDX12();
+	if (!obj->Initialize(this, stride, count))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
 
 	return obj;
 }
