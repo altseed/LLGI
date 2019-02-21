@@ -19,11 +19,13 @@ private:
 	std::shared_ptr<Shader> vertexShader;
 	std::shared_ptr<Shader> pixelShader;
 
+	ID3D12Resource* pipelineState_ = nullptr;
+	std::shared_ptr<GraphicsDX12> graphics_;
+
 public:
 	PipelineStateDX12() = default;
+	PipelineStateDX12(GraphicsDX12* graphics);
 	virtual ~PipelineStateDX12();
-
-	bool Initialize();
 
 	void SetShader(ShaderStageType stage, Shader* shader) override;
 	void Compile() override;

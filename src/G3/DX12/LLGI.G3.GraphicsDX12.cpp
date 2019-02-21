@@ -1,6 +1,8 @@
 #include "LLGI.G3.GraphicsDX12.h"
 #include "LLGI.G3.CommandListDX12.h"
 #include "LLGI.G3.IndexBufferDX12.h"
+#include "LLGI.G3.PipelineStateDX12.h"
+#include "LLGI.G3.ShaderDX12.h"
 #include "LLGI.G3.VertexBufferDX12.h"
 
 namespace LLGI
@@ -77,6 +79,17 @@ IndexBuffer* GraphicsDX12::CreateIndexBuffer(int32_t stride, int32_t count)
 	return obj;
 }
 
+Shader* GraphicsDX12::CreateShader(DataStructure* data, int32_t count)
+{
+	auto obj = new ShaderDX12();
+	if (!obj->Initialize(data, count))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
+	return obj;
+}
+
 CommandList* GraphicsDX12::CreateCommandList()
 {
 	auto obj = new CommandListDX12();
@@ -87,6 +100,8 @@ CommandList* GraphicsDX12::CreateCommandList()
 	}
 	return obj;
 }
+
+PipelineState* GraphicsDX12::CreatePiplineState() { return new PipelineStateDX12(this); }
 
 ID3D12Device* GraphicsDX12::GetDevice() { return device_; }
 
