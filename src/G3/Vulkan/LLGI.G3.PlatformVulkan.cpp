@@ -336,6 +336,35 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 #endif
 	};
 
+	auto exitWithError = [this]() -> void {
+		if (vkDevice != nullptr)
+		{
+			if (vkPresentComplete != nullptr)
+			{
+				vkDevice.destroySemaphore(vkPresentComplete);
+			}
+
+			if (vkRenderComplete != nullptr)
+			{
+				vkDevice.destroySemaphore(vkRenderComplete);
+			}
+			vkPresentComplete = nullptr;
+			vkRenderComplete = nullptr;
+		}
+
+		if (vkInstance)
+		{
+			vkInstance.destroy();
+			vkInstance = nullptr;
+		}
+
+		if (vkDevice)
+		{
+			vkDevice.destroy();
+			vkDevice = nullptr;
+		}
+	};
+
 	// create instance
 	vk::InstanceCreateInfo instanceCreateInfo;
 	instanceCreateInfo.pApplicationInfo = &appInfo;
@@ -351,7 +380,8 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 	vkInstance = vk::createInstance(instanceCreateInfo);
 	if (!vkInstance)
 	{
-		goto FAILED_EXIT;
+		exitWithError();
+		return false;
 	}
 
 	// get physics device
@@ -385,7 +415,8 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 
 	if (graphicsQueueInd < 0)
 	{
-		goto FAILED_EXIT;
+		exitWithError();
+		return false;
 	}
 
 	float queuePriorities[] = {0.0f};
@@ -413,7 +444,8 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 
 	if (!vkDevice)
 	{
-		goto FAILED_EXIT;
+		exitWithError();
+		return false;
 	}
 
 #if defined(_DEBUG)
@@ -431,7 +463,8 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 	VkResult err = createDebugReportCallback((VkInstance)vkInstance, &dbgCreateInfo, nullptr, &debugReportCallback);
 	if (err)
 	{
-		goto FAILED_EXIT;
+		exitWithError();
+		return false;
 	}
 #endif
 
@@ -453,7 +486,8 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 
 	if (!surface)
 	{
-		goto FAILED_EXIT;
+		exitWithError();
+		return false;
 	}
 
 	// get supported formats
@@ -469,7 +503,8 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 	// create swapchain
 	if (!CreateSwapChain(windowSize, true))
 	{
-		goto FAILED_EXIT;
+		exitWithError();
+		return false;
 	}
 
 	// create semaphore
@@ -481,7 +516,8 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 
 	if (!vkPresentComplete || !vkRenderComplete)
 	{
-		goto FAILED_EXIT;
+		exitWithError();
+		return false;
 	}
 
 	// create command buffer
@@ -491,37 +527,6 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 	vkCmdBuffers = vkDevice.allocateCommandBuffers(allocInfo);
 
 	return true;
-
-FAILED_EXIT:;
-
-	if (vkDevice != nullptr)
-	{
-		if (vkPresentComplete != nullptr)
-		{
-			vkDevice.destroySemaphore(vkPresentComplete);
-		}
-
-		if (vkRenderComplete != nullptr)
-		{
-			vkDevice.destroySemaphore(vkRenderComplete);
-		}
-		vkPresentComplete = nullptr;
-		vkRenderComplete = nullptr;
-	}
-
-	if (vkInstance)
-	{
-		vkInstance.destroy();
-		vkInstance = nullptr;
-	}
-
-	if (vkDevice)
-	{
-		vkDevice.destroy();
-		vkDevice = nullptr;
-	}
-
-	return false;
 }
 
 void PlatformVulkan::NewFrame()
