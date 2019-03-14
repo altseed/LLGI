@@ -17,5 +17,12 @@ namespace G3
 {
 
 class GraphicsVulkan;
-}
+
+void SetImageLayout(vk::CommandBuffer cmdbuffer,
+					vk::Image image,
+					vk::ImageLayout oldImageLayout,
+					vk::ImageLayout newImageLayout,
+					vk::ImageSubresourceRange subresourceRange);
+
+} // namespace G3
 } // namespace LLGI

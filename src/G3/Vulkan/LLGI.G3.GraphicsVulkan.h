@@ -12,9 +12,31 @@ namespace G3
 class RenderPassVulkan : public RenderPass
 {
 private:
+	GraphicsVulkan* graphics_ = nullptr;
+	bool isStrongRef_ = false;
+	Vec2I imageSize_;
 public:
+	vk::RenderPass renderPass;
+
+	vk::Framebuffer frameBuffer;
+
 	std::array<vk::Image, 4> colorBuffers;
 	vk::Image depthBuffer;
+
+	RenderPassVulkan(GraphicsVulkan* graphics, bool isStrongRef);
+	virtual ~RenderPassVulkan();
+
+	/**
+		@brief	initialize for screen
+	*/
+	bool Initialize(const vk::Image& imageColor,
+					const vk::Image& imageDepth,
+					const vk::ImageView& imageColorView,
+					const vk::ImageView& imageDepthView,
+					Vec2I imageSize,
+					vk::Format format);
+
+	Vec2I GetImageSize() const;
 };
 
 class TempMemoryPool
@@ -22,10 +44,20 @@ class TempMemoryPool
 public:
 };
 
+class PlatformView
+{
+public:
+	std::vector<vk::Image> colors;
+	std::vector<vk::Image> depths;
+	std::vector<vk::ImageView> colorViews;
+	std::vector<vk::ImageView> depthViews;
+	Vec2I imageSize;
+	vk::Format format;
+};
+
 class PlatformStatus
 {
 public:
-	vk::Image colorBuffer;
 	int currentSwapBufferIndex;
 };
 
@@ -34,7 +66,7 @@ class GraphicsVulkan : public Graphics
 private:
 	int32_t swapBufferCount_ = 0;
 	int32_t currentSwapBufferIndex = -1;
-	std::shared_ptr<RenderPassVulkan> currentRenderPass = nullptr;
+	std::vector<std::shared_ptr<RenderPassVulkan>> renderPasses;
 	vk::Image currentColorBuffer;
 
 	vk::Device vkDevice;
@@ -45,7 +77,7 @@ private:
 public:
 	GraphicsVulkan(const vk::Device& device,
 				   const vk::CommandPool& commandPool,
-				   int32_t swapBufferCount,
+				   const PlatformView& platformView,
 				   std::function<void(PlatformStatus&)> getStatus);
 
 	virtual ~GraphicsVulkan();

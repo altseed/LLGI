@@ -10,6 +10,26 @@ namespace LLGI
 namespace G3
 {
 
+uint32_t GetMemoryTypeIndex(uint32_t bits, const vk::MemoryPropertyFlags& properties, vk::PhysicalDevice vkPhysicalDevice)
+{
+	uint32_t result = 0;
+	vk::PhysicalDeviceMemoryProperties deviceMemoryProperties = vkPhysicalDevice.getMemoryProperties();
+	for (uint32_t i = 0; i < 32; i++)
+	{
+		if ((bits & 1) == 1)
+		{
+			if ((deviceMemoryProperties.memoryTypes[i].propertyFlags & properties) == properties)
+			{
+				return i;
+			}
+		}
+		bits >>= 1;
+	}
+
+	assert(!"NOT found memory type.\n");
+	return 0xffffffff;
+}
+
 #ifdef _WIN32
 LRESULT LLGI_WndProc_Vulkan(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -269,6 +289,16 @@ PlatformVulkan::~PlatformVulkan()
 		vkQueue.waitIdle();
 	}
 
+	if (depthStencilBuffer.image != nullptr)
+	{
+		vkDevice.destroyImageView(depthStencilBuffer.view);
+		vkDevice.destroyImage(depthStencilBuffer.image);
+		vkDevice.freeMemory(depthStencilBuffer.devMem);
+
+		depthStencilBuffer.image = nullptr;
+		depthStencilBuffer.view = nullptr;
+	}
+
 	if (vkDevice)
 	{
 		vkDevice.waitIdle();
@@ -525,6 +555,75 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 	allocInfo.commandPool = vkCmdPool;
 	allocInfo.commandBufferCount = swapBufferCount;
 	vkCmdBuffers = vkDevice.allocateCommandBuffers(allocInfo);
+
+	// create depth buffer
+	{
+		// check a format whether specified format is supported
+		vk::Format depthFormat = vk::Format::eD32SfloatS8Uint;
+		vk::FormatProperties formatProps = vkPhysicalDevice.getFormatProperties(depthFormat);
+		assert(formatProps.optimalTilingFeatures & vk::FormatFeatureFlagBits::eDepthStencilAttachment);
+
+		vk::ImageAspectFlags aspect = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
+
+		// create an image
+		vk::ImageCreateInfo imageCreateInfo;
+		imageCreateInfo.imageType = vk::ImageType::e2D;
+		imageCreateInfo.extent = vk::Extent3D(windowSize.X, windowSize.Y, 1);
+		imageCreateInfo.format = depthFormat;
+		imageCreateInfo.mipLevels = 1;
+		imageCreateInfo.arrayLayers = 1;
+		imageCreateInfo.usage = vk::ImageUsageFlagBits::eDepthStencilAttachment;
+		depthStencilBuffer.image = vkDevice.createImage(imageCreateInfo);
+
+		// allocate memory
+		vk::MemoryRequirements memReqs = vkDevice.getImageMemoryRequirements(depthStencilBuffer.image);
+		vk::MemoryAllocateInfo memAlloc;
+		memAlloc.allocationSize = memReqs.size;
+		memAlloc.memoryTypeIndex = GetMemoryTypeIndex(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal, vkPhysicalDevice);
+		depthStencilBuffer.devMem = vkDevice.allocateMemory(memAlloc);
+		vkDevice.bindImageMemory(depthStencilBuffer.image, depthStencilBuffer.devMem, 0);
+
+		// create view
+		vk::ImageViewCreateInfo viewCreateInfo;
+		viewCreateInfo.viewType = vk::ImageViewType::e2D;
+		viewCreateInfo.format = depthFormat;
+		viewCreateInfo.components = {
+			vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eG, vk::ComponentSwizzle::eB, vk::ComponentSwizzle::eA};
+		viewCreateInfo.subresourceRange.aspectMask = aspect;
+		viewCreateInfo.subresourceRange.levelCount = 1;
+		viewCreateInfo.subresourceRange.layerCount = 1;
+		viewCreateInfo.image = depthStencilBuffer.image;
+		depthStencilBuffer.view = vkDevice.createImageView(viewCreateInfo);
+
+		// change layout
+		{
+			vk::CommandBufferBeginInfo cmdBufferBeginInfo;
+			vk::BufferCopy copyRegion;
+
+			// start to store commands
+			vkCmdBuffers[0].begin(cmdBufferBeginInfo);
+
+			vk::ImageSubresourceRange subresourceRange;
+			subresourceRange.aspectMask = aspect;
+			subresourceRange.levelCount = 1;
+			subresourceRange.layerCount = 1;
+			SetImageLayout(vkCmdBuffers[0],
+						   depthStencilBuffer.image,
+						   vk::ImageLayout::eUndefined,
+						   vk::ImageLayout::eDepthStencilAttachmentOptimal,
+						   subresourceRange);
+
+			vkCmdBuffers[0].end();
+
+			// submit and wait
+			vk::SubmitInfo copySubmitInfo;
+			copySubmitInfo.commandBufferCount = 1;
+			copySubmitInfo.pCommandBuffers = &vkCmdBuffers[0];
+
+			vkQueue.submit(copySubmitInfo, VK_NULL_HANDLE);
+			vkQueue.waitIdle();
+		}
+	}
 
 	return true;
 }

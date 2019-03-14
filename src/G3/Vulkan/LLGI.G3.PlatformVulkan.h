@@ -31,6 +31,13 @@ private:
 		vk::Fence fence;
 	};
 
+	struct DepthStencilBuffer
+	{
+		vk::Image image;
+		vk::ImageView view;
+		vk::DeviceMemory devMem;
+	};
+
 	int32_t swapBufferCount = 2;
 
 	vk::Instance vkInstance;
@@ -53,6 +60,9 @@ private:
 
 	vk::Format surfaceFormat;
 	vk::ColorSpaceKHR surfaceColorSpace;
+
+	//! depth buffer
+	DepthStencilBuffer depthStencilBuffer;
 
 	std::vector<SwapBuffer> swapBuffers;
 
