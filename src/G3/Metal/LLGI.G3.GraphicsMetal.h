@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../LLGI.G3.Graphics.h"
+#import <MetalKit/MetalKit.h>
+#include <functional>
 
 namespace LLGI
 {
@@ -10,27 +12,44 @@ namespace G3
 struct Graphics_Impl;
 struct RenderPass_Impl;
 
+class GraphicsMetal;
+class RenderPassMetal;
+    
 class RenderPassMetal : public RenderPass
 {
+    GraphicsMetal* graphics_ = nullptr;
+    bool isStrongRef_ = false;
 	RenderPass_Impl* impl = nullptr;
 
 public:
-	RenderPassMetal() = default;
+    RenderPassMetal(GraphicsMetal* graphics, bool isStrongRef);
 
-	virtual ~RenderPassMetal() = default;
+    virtual ~RenderPassMetal();
 
+    void SetIsColorCleared(bool isColorCleared) override;
+    
+    void SetIsDepthCleared(bool isDepthCleared) override;
+    
+    void SetClearColor(const Color8& color) override;
+    
 	RenderPass_Impl* GetImpl() const;
 };
 
+struct GraphicsView
+{
+    id<CAMetalDrawable> drawable;
+};
+    
 class GraphicsMetal : public Graphics
 {
 	Graphics_Impl* impl = nullptr;
-
+    std::function<GraphicsView()> getGraphicsView_;
+    
 public:
 	GraphicsMetal();
 	virtual ~GraphicsMetal();
 
-	bool Initialize();
+    bool Initialize(std::function<GraphicsView()> getGraphicsView);
 
 	void NewFrame() override;
 

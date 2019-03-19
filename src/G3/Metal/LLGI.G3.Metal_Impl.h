@@ -16,7 +16,8 @@ struct Graphics_Impl
 {
 	id<MTLDevice> device = nullptr;
 	id<MTLCommandQueue> commandQueue = nullptr;
-
+    id<CAMetalDrawable> drawable;
+    
 	Graphics_Impl();
 	virtual ~Graphics_Impl();
 	bool Initialize();
@@ -30,6 +31,8 @@ struct RenderPass_Impl
 	bool isColorCleared;
 	bool isDepthCleared;
 
+    RenderPass_Impl();
+    ~RenderPass_Impl();
 	bool Initialize();
 };
 

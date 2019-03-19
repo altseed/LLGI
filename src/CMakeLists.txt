@@ -16,7 +16,7 @@ endif()
 
 if(BUILD_METAL)
   file(GLOB files_metal G3/Metal/*.h G3/Metal/*.cpp G3/Metal/*.mm)
-  list(APPEND grouped_files ${files_metal})
+  list(APPEND files ${files_metal})
 endif()
 
 foreach(FILE ${files}) 
@@ -38,6 +38,8 @@ foreach(FILE ${files})
        set(GROUP "Files${GROUP}")
     elseif("${FILE}" MATCHES ".*\\.h")
        set(GROUP "Files${GROUP}")
+    elseif("${FILE}" MATCHES ".*\\.mm")
+        set(GROUP "Files${GROUP}")
     endif()
 
     source_group("${GROUP}" FILES "${FILE}")

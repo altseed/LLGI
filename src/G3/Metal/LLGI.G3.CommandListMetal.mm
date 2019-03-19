@@ -24,8 +24,6 @@ CommandList_Impl::~CommandList_Impl()
 	{
 		[renderEncoder release];
 	}
-
-	SafeRelease(currentIndexBuffer);
 }
 
 bool CommandList_Impl::Initialize(Graphics_Impl* graphics)
@@ -91,6 +89,7 @@ CommandListMetal::CommandListMetal() { impl = new CommandList_Impl(); }
 
 CommandListMetal::~CommandListMetal()
 {
+    SafeRelease(currentIndexBuffer);
 	SafeDelete(impl);
 	SafeRelease(graphics_);
 }
@@ -101,7 +100,7 @@ bool CommandListMetal::Initialize(Graphics* graphics)
 	SafeRelease(graphics_);
 	graphics_ = graphics;
 
-	auto graphics_metal_ = (GraphicsMetal*)graphics;
+	auto graphics_metal_ = static_cast<GraphicsMetal*>(graphics);
 	return impl->Initialize(graphics_metal_->GetImpl());
 }
 

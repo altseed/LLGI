@@ -31,6 +31,20 @@ bool Graphics_Impl::Initialize()
 }
 
 void Graphics_Impl::Execute(CommandList_Impl* commandBuffer) { [commandBuffer->commandBuffer commit]; }
+    
+RenderPass_Impl::RenderPass_Impl()
+{
+    
+}
+    
+RenderPass_Impl::~RenderPass_Impl()
+{
+    if (renderPassDescriptor != nullptr)
+    {
+        [renderPassDescriptor release];
+        renderPassDescriptor = nullptr;
+    }
+}
 
 bool RenderPass_Impl::Initialize()
 {
@@ -38,15 +52,65 @@ bool RenderPass_Impl::Initialize()
 	return true;
 }
 
+RenderPassMetal::RenderPassMetal(GraphicsMetal* graphics, bool isStrongRef)
+    : graphics_(graphics)
+    , isStrongRef_(isStrongRef)
+{
+    if(isStrongRef_)
+    {
+        SafeAddRef(graphics_);
+    }
+    
+    impl = new RenderPass_Impl();
+    impl->Initialize();
+}
+    
+RenderPassMetal::~RenderPassMetal()
+{
+    SafeDelete(impl);
+    
+    if(isStrongRef_)
+    {
+        SafeRelease(graphics_);
+    }
+}
+    
+void RenderPassMetal::SetIsColorCleared(bool isColorCleared)
+{
+    impl->isColorCleared = isColorCleared;
+    RenderPass::SetIsColorCleared(isColorCleared);
+}
+    
+void RenderPassMetal::SetIsDepthCleared(bool isDepthCleared)
+{
+    impl->isDepthCleared = isDepthCleared;
+    RenderPass::SetIsDepthCleared(isDepthCleared);
+}
+    
+void RenderPassMetal::SetClearColor(const Color8& color)
+{
+    impl->clearColor = color;
+    RenderPass::SetClearColor(color);
+}
+    
 GraphicsMetal::GraphicsMetal() { impl = new Graphics_Impl(); }
 
 GraphicsMetal::~GraphicsMetal() { SafeDelete(impl); }
 
-bool GraphicsMetal::Initialize() { return impl->Initialize(); }
+bool GraphicsMetal::Initialize(std::function<GraphicsView()> getGraphicsView)
+    {
+        getGraphicsView_ = getGraphicsView;
+        return impl->Initialize();
+        
+    }
 
 void GraphicsMetal::NewFrame()
 {
-	// None
+    if(getGraphicsView_ != nullptr)
+    {
+        auto view = getGraphicsView_();
+        impl->drawable = view.drawable;
+    }
 }
 
 void GraphicsMetal::SetWindowSize(const Vec2I& windowSize) { throw "Not inplemented"; }
