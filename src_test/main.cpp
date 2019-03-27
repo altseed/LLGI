@@ -678,9 +678,10 @@ void main()
 void test_empty(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 
 // About clear
-void test_clear();
-void test_clear_update();
+void test_clear(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
+void test_clear_update(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 
+// About renderPass
 void test_renderPass();
 
 int main()
@@ -692,11 +693,13 @@ int main()
 	// test_clear();
 	// test_clear_update();
 
-	// test_renderPass();
+    // About compile
+    // test_compile();
+
 	// test_simple_texture_rectangle();
 	// test_simple_constant_rectangle(LLGI::ConstantBufferType::ShortTime);
 	// test_simple_rectangle();
-	// test_compile();
+    // test_renderPass();
 
 	return 0;
 }

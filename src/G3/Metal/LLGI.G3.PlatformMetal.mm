@@ -147,6 +147,7 @@ struct PlatformMetal_Impl
 		gc();
         
         drawable = layer.nextDrawable;
+        
 	}
 
 	void preset()

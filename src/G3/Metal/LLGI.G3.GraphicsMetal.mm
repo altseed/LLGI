@@ -53,7 +53,7 @@ RenderPass_Impl::~RenderPass_Impl()
 bool RenderPass_Impl::Initialize()
 {
 	renderPassDescriptor = [[MTLRenderPassDescriptor alloc] init];
-	return true;
+    return true;
 }
 
 RenderPassMetal::RenderPassMetal(GraphicsMetal* graphics, bool isStrongRef)
@@ -109,10 +109,15 @@ GraphicsMetal::~GraphicsMetal() { SafeDelete(impl); }
 bool GraphicsMetal::Initialize(std::function<GraphicsView()> getGraphicsView)
 {
     getGraphicsView_ = getGraphicsView;
-        
-    renderPass_ = std::make_shared<RenderPassMetal>(this, false);
 
-    return impl->Initialize();
+    if(!impl->Initialize())
+    {
+        return false;
+    }
+
+    renderPass_ = std::make_shared<RenderPassMetal>(this, false);
+    
+    return true;
 }
 
 void GraphicsMetal::NewFrame()

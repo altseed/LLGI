@@ -65,7 +65,6 @@ void CommandList_Impl::EndRenderPass()
 	if (renderEncoder)
 	{
 		[renderEncoder endEncoding];
-		[renderEncoder release];
 		renderEncoder = nullptr;
 	}
 }
@@ -136,7 +135,7 @@ void CommandListMetal::SetTexture(
 
 void CommandListMetal::BeginRenderPass(RenderPass* renderPass)
 {
-	auto renderPass_ = (RenderPass_Impl*)renderPass;
+	auto renderPass_ = static_cast<RenderPassMetal*>(renderPass)->GetImpl();
 	impl->BeginRenderPass(renderPass_);
 }
 
