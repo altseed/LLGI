@@ -49,6 +49,11 @@ public:
 	virtual void NewFrame();
 	virtual void SetWindowSize(const Vec2I& windowSize);
 
+	/**
+		@brief	Execute commands
+		@note
+		Don't release before finish executing commands.
+	*/
 	virtual void Execute(CommandList* commandList);
 
 	/**

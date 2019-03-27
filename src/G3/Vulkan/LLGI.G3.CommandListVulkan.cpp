@@ -142,5 +142,11 @@ void CommandListVulkan::EndRenderPass()
 	cmdBuffer.endRenderPass();
 }
 
+vk::CommandBuffer CommandListVulkan::GetCommandBuffer() const
+{
+	auto& cmdBuffer = commandBuffers[graphics_->GetCurrentSwapBufferIndex()];
+	return cmdBuffer;
+}
+
 } // namespace G3
 } // namespace LLGI

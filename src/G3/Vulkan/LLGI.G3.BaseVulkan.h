@@ -18,6 +18,18 @@ namespace G3
 
 class GraphicsVulkan;
 
+class Buffer
+{
+	std::shared_ptr<GraphicsVulkan> graphics_;
+
+public:
+	vk::Buffer buffer;
+	vk::DeviceMemory devMem;
+
+	Buffer(GraphicsVulkan* graphics);
+	virtual ~Buffer();
+};
+
 void SetImageLayout(vk::CommandBuffer cmdbuffer,
 					vk::Image image,
 					vk::ImageLayout oldImageLayout,

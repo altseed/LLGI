@@ -15,6 +15,7 @@ private:
 	GraphicsVulkan* graphics_ = nullptr;
 	bool isStrongRef_ = false;
 	Vec2I imageSize_;
+
 public:
 	vk::RenderPass renderPass;
 
@@ -70,13 +71,17 @@ private:
 	vk::Image currentColorBuffer;
 
 	vk::Device vkDevice;
+	vk::Queue vkQueue;
 	vk::CommandPool vkCmdPool;
+	vk::PhysicalDevice vkPysicalDevice;
 
 	std::function<void(PlatformStatus&)> getStatus_;
 
 public:
 	GraphicsVulkan(const vk::Device& device,
+				   const vk::Queue& quque,
 				   const vk::CommandPool& commandPool,
+				   const vk::PhysicalDevice& pysicalDevice,
 				   const PlatformView& platformView,
 				   std::function<void(PlatformStatus&)> getStatus);
 
@@ -103,9 +108,11 @@ public:
 
 	vk::Device GetDevice() const { return vkDevice; }
 	vk::CommandPool GetCommandPool() const { return vkCmdPool; }
+	vk::Queue GetQueue() const { return vkQueue; }
 
 	int32_t GetCurrentSwapBufferIndex() const;
 	int32_t GetSwapBufferCount() const;
+	uint32_t GetMemoryTypeIndex(uint32_t bits, const vk::MemoryPropertyFlags& properties);
 };
 
 } // namespace G3

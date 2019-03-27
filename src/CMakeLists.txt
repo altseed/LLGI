@@ -12,6 +12,7 @@ endif()
 if(BUILD_VULKAN)
   file(GLOB files_vulkan G3/Vulkan/*.h G3/Vulkan/*.cpp)
   list(APPEND files ${files_vulkan})
+  add_definitions(-DENABLE_VULKAN)
 endif()
 
 if(BUILD_METAL)

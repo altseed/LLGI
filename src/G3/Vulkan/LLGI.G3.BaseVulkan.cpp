@@ -1,9 +1,27 @@
 #include "LLGI.G3.BaseVulkan.h"
+#include "LLGI.G3.GraphicsVulkan.h"
 
 namespace LLGI
 {
 namespace G3
 {
+
+Buffer::Buffer(GraphicsVulkan* graphics)
+{
+	SafeAddRef(graphics);
+	graphics_ = CreateSharedPtr(graphics);
+}
+
+Buffer::~Buffer()
+{
+	if (buffer != nullptr)
+	{
+		graphics_->GetDevice().destroyBuffer(buffer);
+		graphics_->GetDevice().freeMemory(devMem);
+		buffer = nullptr;
+	}
+}
+
 void SetImageLayout(vk::CommandBuffer cmdbuffer,
 					vk::Image image,
 					vk::ImageLayout oldImageLayout,

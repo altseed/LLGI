@@ -2,6 +2,10 @@
 #include "../LLGI.G3.Compiler.h"
 #include "../LLGI.G3.Platform.h"
 
+#ifdef ENABLE_VULKAN
+#include "../Vulkan/LLGI.G3.PlatformVulkan.h"
+#endif
+
 #ifdef _WIN32
 #include "../DX12/LLGI.G3.CompilerDX12.h"
 #include "../DX12/LLGI.G3.PlatformDX12.h"
@@ -17,25 +21,45 @@ namespace LLGI
 namespace G3
 {
 
-Platform* CreatePlatform(DeviceType platform)
+Platform* CreatePlatform(DeviceType platformDeviceType)
 {
 #ifdef _WIN32
 	Vec2I windowSize;
 	windowSize.X = 1280;
 	windowSize.Y = 720;
-	auto obj = new PlatformDX12();
-	if (!obj->Initialize(windowSize))
+
+	if (platformDeviceType == DeviceType::Default || platformDeviceType == DeviceType::DirectX12)
 	{
-		SafeRelease(obj);
-		return nullptr;
+		auto platform = new PlatformDX12();
+		if (!platform->Initialize(windowSize))
+		{
+			SafeRelease(platform);
+			return nullptr;
+		}
+		return platform;
 	}
-	return obj;
+
+#ifdef ENABLE_VULKAN
+	if (platformDeviceType == DeviceType::Vulkan)
+	{
+		auto platform = new PlatformVulkan();
+		if (!platform->Initialize(windowSize))
+		{
+			SafeRelease(platform);
+			return nullptr;
+		}
+		return platform;
+	}
+#endif
+
 #endif
 
 #ifdef __APPLE__
 	auto obj = new PlatformMetal();
 	return obj;
 #endif
+
+	return nullptr;
 }
 
 Compiler* CreateCompiler(DeviceType device)

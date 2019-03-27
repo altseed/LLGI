@@ -3,6 +3,11 @@
 
 #ifdef _WIN32
 #pragma comment(lib, "d3dcompiler.lib")
+
+#ifdef ENABLE_VULKAN
+#pragma comment(lib, "vulkan-1.lib")
+#endif
+
 #endif
 
 void test_simple_texture_rectangle()
@@ -670,7 +675,7 @@ void main()
 }
 
 // Empty
-void test_empty();
+void test_empty(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 
 // About clear
 void test_clear();
@@ -681,7 +686,7 @@ void test_renderPass();
 int main()
 {
 	// Empty
-	// test_empty();
+	test_empty(LLGI::DeviceType::Vulkan);
 
 	// About clear
 	// test_clear();
@@ -689,7 +694,7 @@ int main()
 
 	// test_renderPass();
 	// test_simple_texture_rectangle();
-	test_simple_constant_rectangle(LLGI::ConstantBufferType::ShortTime);
+	// test_simple_constant_rectangle(LLGI::ConstantBufferType::ShortTime);
 	// test_simple_rectangle();
 	// test_compile();
 

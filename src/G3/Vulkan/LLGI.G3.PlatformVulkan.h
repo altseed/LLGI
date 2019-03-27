@@ -47,6 +47,8 @@ private:
 	vk::Queue vkQueue;
 	vk::CommandPool vkCmdPool;
 
+	Vec2I windowSize_;
+
 	//! to check to finish present
 	vk::Semaphore vkPresentComplete;
 

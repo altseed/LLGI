@@ -33,6 +33,7 @@ public:
 		Texture* texture, TextureWrapMode wrapMode, TextureMinMagFilter minmagFilter, int32_t unit, ShaderStageType shaderStage) override;
 	void BeginRenderPass(RenderPass* renderPass) override;
 	void EndRenderPass() override;
+	vk::CommandBuffer GetCommandBuffer() const;
 };
 
 } // namespace G3

@@ -1,4 +1,5 @@
 #include "LLGI.G3.GraphicsVulkan.h"
+#include "LLGI.G3.CommandListVulkan.h"
 
 namespace LLGI
 {
@@ -130,14 +131,16 @@ bool RenderPassVulkan::Initialize(const vk::Image& imageColor,
 Vec2I RenderPassVulkan::GetImageSize() const { return imageSize_; }
 
 GraphicsVulkan::GraphicsVulkan(const vk::Device& device,
+							   const vk::Queue& quque,
 							   const vk::CommandPool& commandPool,
+							   const vk::PhysicalDevice& pysicalDevice,
 							   const PlatformView& platformView,
 							   std::function<void(PlatformStatus&)> getStatus)
-	: vkDevice(device), vkCmdPool(commandPool), getStatus_(getStatus)
+	: vkDevice(device), vkQueue(quque), vkCmdPool(commandPool), vkPysicalDevice(pysicalDevice), getStatus_(getStatus)
 {
 	swapBufferCount_ = platformView.colors.size();
 
-	for (size_t i = 0; i < swapBufferCount_; i++)
+	for (size_t i = 0; i < static_cast<size_t>(swapBufferCount_); i++)
 	{
 		auto renderPass = std::make_shared<RenderPassVulkan>(this, false);
 		renderPass->Initialize(platformView.colors[i],
@@ -164,9 +167,18 @@ void GraphicsVulkan::NewFrame()
 
 void GraphicsVulkan::SetWindowSize(const Vec2I& windowSize) { throw "Not inplemented"; }
 
-void GraphicsVulkan::Execute(CommandList* commandList) { throw "Not inplemented"; }
+void GraphicsVulkan::Execute(CommandList* commandList)
+{
+	auto commandList_ = static_cast<CommandListVulkan*>(commandList);
 
-void GraphicsVulkan::WaitFinish() { throw "Not inplemented"; }
+	vk::SubmitInfo copySubmitInfo;
+	copySubmitInfo.commandBufferCount = 1;
+	copySubmitInfo.pCommandBuffers = &(commandList_->GetCommandBuffer());
+
+	vkQueue.submit(copySubmitInfo, VK_NULL_HANDLE);
+}
+
+void GraphicsVulkan::WaitFinish() { vkQueue.waitIdle(); }
 
 RenderPass* GraphicsVulkan::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared)
 {
@@ -189,6 +201,7 @@ PipelineState* GraphicsVulkan::CreatePiplineState() { throw "Not inplemented"; }
 CommandList* GraphicsVulkan::CreateCommandList() { throw "Not inplemented"; }
 
 ConstantBuffer* GraphicsVulkan::CreateConstantBuffer(int32_t size, ConstantBufferType type) { throw "Not inplemented"; }
+
 RenderPass* GraphicsVulkan::CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture)
 {
 	throw "Not inplemented";
@@ -204,6 +217,26 @@ int32_t GraphicsVulkan::GetCurrentSwapBufferIndex() const
 }
 
 int32_t GraphicsVulkan::GetSwapBufferCount() const { return swapBufferCount_; }
+
+uint32_t GraphicsVulkan::GetMemoryTypeIndex(uint32_t bits, const vk::MemoryPropertyFlags& properties)
+{
+	uint32_t result = 0;
+	vk::PhysicalDeviceMemoryProperties deviceMemoryProperties = vkPysicalDevice.getMemoryProperties();
+	for (uint32_t i = 0; i < 32; i++)
+	{
+		if ((bits & 1) == 1)
+		{
+			if ((deviceMemoryProperties.memoryTypes[i].propertyFlags & properties) == properties)
+			{
+				return i;
+			}
+		}
+		bits >>= 1;
+	}
+
+	assert(!"NOT found memory type.\n");
+	return 0xffffffff;
+}
 
 } // namespace G3
 } // namespace LLGI
