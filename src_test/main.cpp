@@ -686,7 +686,7 @@ void test_renderPass();
 int main()
 {
 	// Empty
-	test_empty(LLGI::DeviceType::Vulkan);
+	test_empty();
 
 	// About clear
 	// test_clear();

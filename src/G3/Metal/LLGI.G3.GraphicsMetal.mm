@@ -1,6 +1,10 @@
 #include "LLGI.G3.GraphicsMetal.h"
 #include "LLGI.G3.CommandListMetal.h"
 #include "LLGI.G3.Metal_Impl.h"
+#include "LLGI.G3.VertexBufferMetal.h"
+#include "LLGI.G3.IndexBufferMetal.h"
+#include "LLGI.G3.ConstantBufferMetal.h"
+
 #import <MetalKit/MetalKit.h>
 
 namespace LLGI
@@ -93,16 +97,23 @@ void RenderPassMetal::SetClearColor(const Color8& color)
     RenderPass::SetClearColor(color);
 }
     
+RenderPass_Impl* RenderPassMetal::GetImpl() const
+{
+    return impl;
+}
+    
 GraphicsMetal::GraphicsMetal() { impl = new Graphics_Impl(); }
 
 GraphicsMetal::~GraphicsMetal() { SafeDelete(impl); }
 
 bool GraphicsMetal::Initialize(std::function<GraphicsView()> getGraphicsView)
-    {
-        getGraphicsView_ = getGraphicsView;
-        return impl->Initialize();
+{
+    getGraphicsView_ = getGraphicsView;
         
-    }
+    renderPass_ = std::make_shared<RenderPassMetal>(this, false);
+
+    return impl->Initialize();
+}
 
 void GraphicsMetal::NewFrame()
 {
@@ -123,11 +134,34 @@ void GraphicsMetal::Execute(CommandList* commandList)
 
 void GraphicsMetal::WaitFinish() { throw "Not inplemented"; }
 
-RenderPass* GraphicsMetal::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) { throw "Not inplemented"; }
+RenderPass* GraphicsMetal::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) {
+    
+    renderPass_->SetClearColor(clearColor);
+    renderPass_->SetIsColorCleared(isColorCleared);
+    renderPass_->SetIsDepthCleared(isDepthCleared);
+    renderPass_->GetImpl()->renderPassDescriptor.colorAttachments[0].texture = impl->drawable.texture;
+    return renderPass_.get();
+}
 
-VertexBuffer* GraphicsMetal::CreateVertexBuffer(int32_t size) { throw "Not inplemented"; }
+VertexBuffer* GraphicsMetal::CreateVertexBuffer(int32_t size) {
+    auto ret = new VertexBufferMetal();
+    if(ret->Initialize(this, size))
+    {
+        return ret;
+    }
+    SafeRelease(ret);
+    return nullptr;
+}
 
-IndexBuffer* GraphicsMetal::CreateIndexBuffer(int32_t stride, int32_t count) { throw "Not inplemented"; }
+IndexBuffer* GraphicsMetal::CreateIndexBuffer(int32_t stride, int32_t count) {
+    auto ret = new IndexBufferMetal();
+    if(ret->Initialize(this, stride, count))
+    {
+        return ret;
+    }
+    SafeRelease(ret);
+    return nullptr;
+}
 
 Shader* GraphicsMetal::CreateShader(DataStructure* data, int32_t count) { throw "Not inplemented"; }
 

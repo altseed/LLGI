@@ -43,6 +43,7 @@ struct GraphicsView
 class GraphicsMetal : public Graphics
 {
 	Graphics_Impl* impl = nullptr;
+    std::shared_ptr<RenderPassMetal> renderPass_ = nullptr;
     std::function<GraphicsView()> getGraphicsView_;
     
 public:

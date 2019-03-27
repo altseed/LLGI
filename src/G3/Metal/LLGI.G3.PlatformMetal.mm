@@ -173,7 +173,14 @@ void PlatformMetal::Present() { impl->preset(); }
 Graphics* PlatformMetal::CreateGraphics() {
     auto ret = new GraphicsMetal();
     
-    if(ret->Initialize())
+    auto getGraphicsView = [this]() -> GraphicsView
+    {
+        GraphicsView view;
+        view.drawable = this->impl->drawable;
+        return view;
+    };
+    
+    if(ret->Initialize(getGraphicsView))
     {
         return ret;
     }
