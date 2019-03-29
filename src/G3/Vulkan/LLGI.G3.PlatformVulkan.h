@@ -90,6 +90,8 @@ private:
 	*/
 	uint32_t AcquireNextImage(vk::Semaphore& semaphore);
 
+	vk::Fence GetSubmitFence(bool destroy = false);
+
 	/**
 		@brief	the semaphore to wait for before present
 	*/

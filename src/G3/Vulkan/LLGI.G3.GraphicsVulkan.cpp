@@ -40,6 +40,9 @@ bool RenderPassVulkan::Initialize(const vk::Image& imageColor,
 								  vk::Format format)
 {
 	imageSize_ = imageSize;
+	
+	bool hasDepth = true;
+	bool isPresentMode = true;
 
 	// settings
 	std::array<vk::AttachmentDescription, 2> attachmentDescs;
@@ -47,24 +50,37 @@ bool RenderPassVulkan::Initialize(const vk::Image& imageColor,
 
 	// color buffer
 	attachmentDescs[0].format = format;
+	attachmentDescs[0].samples = vk::SampleCountFlagBits::e1;
 	attachmentDescs[0].loadOp = vk::AttachmentLoadOp::eDontCare;
 	// attachmentDescs[0].loadOp = vk::AttachmentLoadOp::eClear;
 	attachmentDescs[0].storeOp = vk::AttachmentStoreOp::eStore;
-	attachmentDescs[0].initialLayout = vk::ImageLayout::eColorAttachmentOptimal;
-	attachmentDescs[0].finalLayout = vk::ImageLayout::eColorAttachmentOptimal;
-	// attachmentDescs[0].initialLayout = vk::ImageLayout::eUndefined;
-	// attachmentDescs[0].finalLayout = vk::ImageLayout::ePresentSrcKHR;
+	attachmentDescs[0].stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+	attachmentDescs[0].stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+	attachmentDescs[0].initialLayout = vk::ImageLayout::eUndefined;
 
+	if (isPresentMode)
+	{
+		attachmentDescs[0].finalLayout = vk::ImageLayout::ePresentSrcKHR;	
+	}
+	else
+	{
+		attachmentDescs[0].finalLayout = vk::ImageLayout::eColorAttachmentOptimal;	
+	}
+	
 	// depth buffer
-	attachmentDescs[1].format = vk::Format::eD32SfloatS8Uint;
-	attachmentDescs[1].loadOp = vk::AttachmentLoadOp::eDontCare;
-	// attachmentDescs[1].loadOp = vk::AttachmentLoadOp::eClear;
-	attachmentDescs[1].storeOp = vk::AttachmentStoreOp::eDontCare;
-	attachmentDescs[1].initialLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-	attachmentDescs[1].finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-	// attachmentDescs[1].initialLayout = vk::ImageLayout::eUndefined;
-	// attachmentDescs[1].finalLayout = vk::ImageLayout::eUndefined;
-
+	if (hasDepth)
+	{
+		attachmentDescs[1].format = vk::Format::eD32SfloatS8Uint;
+		attachmentDescs[1].samples = vk::SampleCountFlagBits::e1;
+		attachmentDescs[1].loadOp = vk::AttachmentLoadOp::eDontCare;
+		// attachmentDescs[1].loadOp = vk::AttachmentLoadOp::eClear;
+		attachmentDescs[1].storeOp = vk::AttachmentStoreOp::eStore;
+		attachmentDescs[1].stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+		attachmentDescs[1].stencilStoreOp = vk::AttachmentStoreOp::eStore;
+		attachmentDescs[1].initialLayout = vk::ImageLayout::eUndefined;
+		attachmentDescs[1].finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+	}
+	
 	vk::AttachmentReference& colorReference = attachmentRefs[0];
 	colorReference.attachment = 0;
 	colorReference.layout = vk::ImageLayout::eColorAttachmentOptimal;
@@ -85,12 +101,24 @@ bool RenderPassVulkan::Initialize(const vk::Image& imageColor,
 	std::array<vk::SubpassDependency, 1> subpassDepends;
 	{
 		vk::SubpassDependency& dependency = subpassDepends[0];
+		
+		/*
+		//monsho
 		dependency.srcSubpass = 0;
 		dependency.dstSubpass = VK_SUBPASS_EXTERNAL;
 		dependency.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
 		dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead;
-		dependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 		dependency.srcStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
+		dependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+		*/
+		
+		// based on imgui
+		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+		dependency.dstSubpass = 0;
+		dependency.srcAccessMask = static_cast<vk::AccessFlagBits>(0);
+		dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+		dependency.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+		dependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 	}
 
 	{
@@ -99,8 +127,13 @@ bool RenderPassVulkan::Initialize(const vk::Image& imageColor,
 		renderPassInfo.pAttachments = attachmentDescs.data();
 		renderPassInfo.subpassCount = (uint32_t)subpasses.size();
 		renderPassInfo.pSubpasses = subpasses.data();
-		renderPassInfo.dependencyCount = (uint32_t)subpassDepends.size();
-		renderPassInfo.pDependencies = subpassDepends.data();
+
+		// based on official
+		//renderPassInfo.dependencyCount = (uint32_t)subpassDepends.size();
+		//renderPassInfo.pDependencies = subpassDepends.data();
+		renderPassInfo.dependencyCount = 0;
+		renderPassInfo.pDependencies = nullptr;
+
 		renderPass = graphics_->GetDevice().createRenderPass(renderPassInfo);
 		if (renderPass == nullptr)
 		{

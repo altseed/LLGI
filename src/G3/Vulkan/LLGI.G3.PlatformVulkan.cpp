@@ -85,7 +85,7 @@ bool PlatformVulkan::CreateSwapChain(Vec2I windowSize, bool isVSyncEnabled)
 
 	auto caps = vkPhysicalDevice.getSurfaceCapabilitiesKHR(surface);
 	vk::Extent2D swapchainExtent(windowSize.X, windowSize.Y);
-	if (static_cast<int32_t>(caps.currentExtent.width) > -1 && static_cast<int32_t>(caps.currentExtent.height) > -1)
+	if (caps.currentExtent.width != 0xFFFFFFFF)
 	{
 		swapchainExtent = caps.currentExtent;
 	}
@@ -182,6 +182,26 @@ uint32_t PlatformVulkan::AcquireNextImage(vk::Semaphore& semaphore)
 
 	frameIndex = resultValue.value;
 	return frameIndex;
+}
+
+vk::Fence PlatformVulkan::GetSubmitFence(bool destroy)
+{
+	auto& image = swapBuffers[frameIndex];
+	while (image.fence)
+	{
+		vk::Result fenceRes = vkDevice.waitForFences(image.fence, VK_TRUE, INT_MAX);
+		if (fenceRes == vk::Result::eSuccess)
+		{
+			if (destroy)
+			{
+				vkDevice.destroyFence(image.fence);
+			}
+			image.fence = vk::Fence();
+		}
+	}
+
+	image.fence = vkDevice.createFence(vk::FenceCreateFlags());
+	return image.fence;
 }
 
 vk::Result PlatformVulkan::Present(vk::Semaphore semaphore)
@@ -377,7 +397,15 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 	hInstance = wcex.hInstance;
 	RegisterClassExA(&wcex);
 
-	hwnd = CreateWindowA("Vulkan", "Vulkan", WS_OVERLAPPEDWINDOW, 100, 100, 1280, 720, NULL, NULL, wcex.hInstance, NULL);
+	auto wflags = WS_OVERLAPPEDWINDOW;
+	RECT rect;
+	rect.left = rect.top = 0;
+	rect.right = windowSize.X;
+	rect.bottom = windowSize.Y;
+	::AdjustWindowRect(&rect, wflags, false);
+
+	hwnd = CreateWindowA(
+		"Vulkan", "Vulkan", wflags, 100, 100, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, wcex.hInstance, NULL);
 
 	ShowWindow(hwnd, SW_SHOWDEFAULT);
 	UpdateWindow(hwnd);
@@ -434,7 +462,8 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 		vkInstance = vk::createInstance(instanceCreateInfo);
 
 		// get physics device
-		vkPhysicalDevice = vkInstance.enumeratePhysicalDevices()[0];
+		auto physicalDevices = vkInstance.enumeratePhysicalDevices();
+		vkPhysicalDevice = physicalDevices[0];
 
 		struct Version
 		{
@@ -448,6 +477,12 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 		vk::PhysicalDeviceFeatures deviceFeatures = vkPhysicalDevice.getFeatures();
 		vk::PhysicalDeviceMemoryProperties deviceMemoryProperties = vkPhysicalDevice.getMemoryProperties();
 
+		// create surface
+		vk::Win32SurfaceCreateInfoKHR surfaceCreateInfo;
+		surfaceCreateInfo.hinstance = hInstance;
+		surfaceCreateInfo.hwnd = hwnd;
+		surface = vkInstance.createWin32SurfaceKHR(surfaceCreateInfo);
+
 		// create device
 
 		// find queue for graphics
@@ -455,7 +490,7 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 		for (size_t i = 0; i < vkPhysicalDevice.getQueueFamilyProperties().size(); i++)
 		{
 			auto& queueProp = vkPhysicalDevice.getQueueFamilyProperties()[i];
-			if (queueProp.queueFlags & vk::QueueFlagBits::eGraphics)
+			if (queueProp.queueFlags & vk::QueueFlagBits::eGraphics && vkPhysicalDevice.getSurfaceSupportKHR(i, surface))
 			{
 				graphicsQueueInd = i;
 				break;
@@ -520,12 +555,6 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 		cmdPoolInfo.queueFamilyIndex = graphicsQueueInd;
 		cmdPoolInfo.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
 		vkCmdPool = vkDevice.createCommandPool(cmdPoolInfo);
-
-		// create surface
-		vk::Win32SurfaceCreateInfoKHR surfaceCreateInfo;
-		surfaceCreateInfo.hinstance = hInstance;
-		surfaceCreateInfo.hwnd = hwnd;
-		surface = vkInstance.createWin32SurfaceKHR(surfaceCreateInfo);
 
 		// get supported formats
 		auto surfaceFormats = vkPhysicalDevice.getSurfaceFormatsKHR(surface);
@@ -598,7 +627,8 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 			viewCreateInfo.image = depthStencilBuffer.image;
 			depthStencilBuffer.view = vkDevice.createImageView(viewCreateInfo);
 
-			// change layout
+			// change layout(nt needed?)
+			/*
 			{
 				vk::CommandBufferBeginInfo cmdBufferBeginInfo;
 				vk::BufferCopy copyRegion;
@@ -626,6 +656,7 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 				vkQueue.submit(copySubmitInfo, VK_NULL_HANDLE);
 				vkQueue.waitIdle();
 			}
+			*/
 		}
 
 		windowSize_ = windowSize;
@@ -660,16 +691,44 @@ void PlatformVulkan::NewFrame()
 	}
 
 	AcquireNextImage(vkPresentComplete);
+}
 
-	// reset commands
+void PlatformVulkan::Present()
+{
+
+	// waiting command
 	auto& cmdBuffer = vkCmdBuffers[frameIndex];
 
 	cmdBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
 	vk::CommandBufferBeginInfo cmdBufInfo;
 	cmdBuffer.begin(cmdBufInfo);
-}
+	cmdBuffer.end();
 
-void PlatformVulkan::Present() { Present(vkRenderComplete); }
+	{
+		vk::PipelineStageFlags pipelineStages = vk::PipelineStageFlagBits::eBottomOfPipe;
+		vk::SubmitInfo submitInfo;
+		submitInfo.pWaitDstStageMask = &pipelineStages;
+
+		// send semaphore to be need to wait
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &vkPresentComplete;
+
+		// set command
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &cmdBuffer;
+
+		// set a semaphore which notify to finish to execute commands
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = &vkRenderComplete;
+
+		vk::Fence fence = GetSubmitFence(true);
+		vkQueue.submit(submitInfo, fence);
+		vk::Result fenceRes = vkDevice.waitForFences(fence, VK_TRUE, INT_MAX);
+		assert(fenceRes == vk::Result::eSuccess);
+	}
+
+	Present(vkRenderComplete);
+}
 
 Graphics* PlatformVulkan::CreateGraphics()
 {
