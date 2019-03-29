@@ -1,3 +1,4 @@
+
 #include "LLGI.G3.PlatformVulkan.h"
 #include "LLGI.G3.GraphicsVulkan.h"
 #include <iostream>
@@ -84,7 +85,7 @@ bool PlatformVulkan::CreateSwapChain(Vec2I windowSize, bool isVSyncEnabled)
 
 	auto caps = vkPhysicalDevice.getSurfaceCapabilitiesKHR(surface);
 	vk::Extent2D swapchainExtent(windowSize.X, windowSize.Y);
-	if (caps.currentExtent.width > -1 && caps.currentExtent.height > -1)
+	if (static_cast<int32_t>(caps.currentExtent.width) > -1 && static_cast<int32_t>(caps.currentExtent.height) > -1)
 	{
 		swapchainExtent = caps.currentExtent;
 	}
@@ -243,47 +244,88 @@ void PlatformVulkan::SetImageLayout(vk::CommandBuffer cmdbuffer,
 							  imageMemoryBarrier);
 }
 
+void PlatformVulkan::Reset()
+{
+	if (vkInstance != nullptr)
+	{
+		if (surface != nullptr)
+		{
+			vkInstance.destroySurfaceKHR(surface);
+			surface = nullptr;
+		}
+	}
+
+	if (vkDevice != nullptr)
+	{
+		for (auto& swapBuffer : swapBuffers)
+		{
+			if (swapBuffer.view != nullptr)
+			{
+				vkDevice.destroyImageView(swapBuffer.view);
+			}
+
+			if (swapBuffer.fence != nullptr)
+			{
+				vkDevice.destroyFence(swapBuffer.fence);
+			}
+		}
+		swapBuffers.clear();
+
+		if (swapchain != nullptr)
+		{
+			vkDevice.destroySwapchainKHR(swapchain);
+			swapchain = nullptr;
+		}
+
+		if (vkPipelineCache != nullptr)
+		{
+			vkDevice.destroyPipelineCache(vkPipelineCache);
+			vkPipelineCache = nullptr;
+		}
+
+		if (vkPresentComplete != nullptr)
+		{
+			vkDevice.destroySemaphore(vkPresentComplete);
+			vkPresentComplete = nullptr;
+		}
+
+		if (vkRenderComplete != nullptr)
+		{
+			vkDevice.destroySemaphore(vkRenderComplete);
+			vkRenderComplete = nullptr;
+		}
+
+		if (vkCmdPool != nullptr)
+		{
+			vkDevice.destroyCommandPool(vkCmdPool);
+			vkCmdPool = nullptr;
+		}
+	}
+
+	if (vkQueue)
+	{
+		vkQueue = nullptr;
+	}
+}
+
 PlatformVulkan::PlatformVulkan() {}
 
 PlatformVulkan::~PlatformVulkan()
 {
 	// destroy vulkan
 
-	if (vkDevice != nullptr)
-	{
-		if (vkPresentComplete != nullptr)
-		{
-			vkDevice.destroySemaphore(vkPresentComplete);
-		}
-
-		if (vkRenderComplete != nullptr)
-		{
-			vkDevice.destroySemaphore(vkRenderComplete);
-		}
-		vkPresentComplete = nullptr;
-		vkRenderComplete = nullptr;
-	}
-
-	if (vkDevice != nullptr && swapchain != nullptr)
-	{
-		for (auto& swapBuffer : swapBuffers)
-		{
-			vkDevice.destroyImageView(swapBuffer.view);
-			vkDevice.destroyFence(swapBuffer.fence);
-		}
-		swapBuffers.clear();
-
-		vkDevice.destroySwapchainKHR(swapchain);
-		vkInstance.destroySurfaceKHR(surface);
-
-		swapchain = nullptr;
-		surface = nullptr;
-	}
-
+	// wait
 	if (vkQueue)
 	{
 		vkQueue.waitIdle();
 	}
+
+	if (vkDevice)
+	{
+		vkDevice.waitIdle();
+	}
+
+	Reset();
 
 	if (depthStencilBuffer.image != nullptr)
 	{
@@ -297,9 +339,6 @@ PlatformVulkan::~PlatformVulkan()
 
 	if (vkDevice)
 	{
-		vkDevice.waitIdle();
-		vkDevice.destroyCommandPool(vkCmdPool);
-		vkDevice.destroyPipelineCache(vkPipelineCache);
 		vkDevice.destroy();
 		vkDevice = nullptr;
 	}
@@ -363,31 +402,18 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 	};
 
 	auto exitWithError = [this]() -> void {
-		if (vkDevice != nullptr)
-		{
-			if (vkPresentComplete != nullptr)
-			{
-				vkDevice.destroySemaphore(vkPresentComplete);
-			}
+		Reset();
 
-			if (vkRenderComplete != nullptr)
-			{
-				vkDevice.destroySemaphore(vkRenderComplete);
-			}
-			vkPresentComplete = nullptr;
-			vkRenderComplete = nullptr;
+		if (vkDevice)
+		{
+			vkDevice.destroy();
+			vkDevice = nullptr;
 		}
 
 		if (vkInstance)
 		{
 			vkInstance.destroy();
 			vkInstance = nullptr;
-		}
-
-		if (vkDevice)
-		{
-			vkDevice.destroy();
-			vkDevice = nullptr;
 		}
 	};
 
@@ -503,6 +529,7 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 
 		// get supported formats
 		auto surfaceFormats = vkPhysicalDevice.getSurfaceFormatsKHR(surface);
+
 		surfaceFormat = vk::Format::eR8G8B8A8Unorm;
 		if (surfaceFormats[0].format != vk::Format::eUndefined)
 		{
@@ -609,6 +636,7 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 	{
 		std::cout << "Initialize Failed : " << e.what() << std::endl;
 		std::cout << "Please install Vulkan client driver." << std::endl;
+		exitWithError();
 		return false;
 	}
 }

@@ -1,4 +1,5 @@
 
+
 #pragma once
 
 #include "../LLGI.G3.Platform.h"
@@ -26,26 +27,26 @@ private:
 	class SwapBuffer
 	{
 	public:
-		vk::Image image;
-		vk::ImageView view;
-		vk::Fence fence;
+		vk::Image image = nullptr;
+		vk::ImageView view = nullptr;
+		vk::Fence fence = nullptr;
 	};
 
 	struct DepthStencilBuffer
 	{
-		vk::Image image;
-		vk::ImageView view;
-		vk::DeviceMemory devMem;
+		vk::Image image = nullptr;
+		vk::ImageView view = nullptr;
+		vk::DeviceMemory devMem = nullptr;
 	};
 
 	int32_t swapBufferCount = 2;
 
-	vk::Instance vkInstance;
-	vk::PhysicalDevice vkPhysicalDevice;
-	vk::Device vkDevice;
-	vk::PipelineCache vkPipelineCache;
-	vk::Queue vkQueue;
-	vk::CommandPool vkCmdPool;
+	vk::Instance vkInstance = nullptr;
+	vk::PhysicalDevice vkPhysicalDevice = nullptr;
+	vk::Device vkDevice = nullptr;
+	vk::PipelineCache vkPipelineCache = nullptr;
+	vk::Queue vkQueue = nullptr;
+	vk::CommandPool vkCmdPool = nullptr;
 
 	Vec2I windowSize_;
 
@@ -56,8 +57,8 @@ private:
 	vk::Semaphore vkRenderComplete;
 	std::vector<vk::CommandBuffer> vkCmdBuffers;
 
-	vk::SurfaceKHR surface;
-	vk::SwapchainKHR swapchain;
+	vk::SurfaceKHR surface = nullptr;
+	vk::SwapchainKHR swapchain = nullptr;
 	vk::PresentInfoKHR presentInfo;
 
 	vk::Format surfaceFormat;
@@ -95,10 +96,12 @@ private:
 	vk::Result Present(vk::Semaphore semaphore);
 
 	void SetImageLayout(vk::CommandBuffer cmdbuffer,
-		vk::Image image,
-		vk::ImageLayout oldImageLayout,
-		vk::ImageLayout newImageLayout,
-		vk::ImageSubresourceRange subresourceRange);
+						vk::Image image,
+						vk::ImageLayout oldImageLayout,
+						vk::ImageLayout newImageLayout,
+						vk::ImageSubresourceRange subresourceRange);
+
+	void Reset();
 
 public:
 	PlatformVulkan();
