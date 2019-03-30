@@ -130,6 +130,16 @@
     <ClInclude Include="..\src\G3\LLGI.G3.Texture.h" />
     <ClInclude Include="..\src\G3\LLGI.G3.VertexBuffer.h" />
     <ClInclude Include="..\src\LLGI.Base.h" />
+    <ClInclude Include="..\src\LLGI.CommandList.h" />
+    <ClInclude Include="..\src\LLGI.Compiler.h" />
+    <ClInclude Include="..\src\LLGI.ConstantBuffer.h" />
+    <ClInclude Include="..\src\LLGI.Graphics.h" />
+    <ClInclude Include="..\src\LLGI.IndexBuffer.h" />
+    <ClInclude Include="..\src\LLGI.PipelineState.h" />
+    <ClInclude Include="..\src\LLGI.Platform.h" />
+    <ClInclude Include="..\src\LLGI.Shader.h" />
+    <ClInclude Include="..\src\LLGI.Texture.h" />
+    <ClInclude Include="..\src\LLGI.VertexBuffer.h" />
     <ClInclude Include="..\src\Win\LLGI.WindowWin.h" />
   </ItemGroup>
   <ItemGroup>
@@ -151,7 +161,17 @@
     <ClCompile Include="..\src\G3\LLGI.G3.Shader.cpp" />
     <ClCompile Include="..\src\G3\LLGI.G3.Texture.cpp" />
     <ClCompile Include="..\src\G3\LLGI.G3.VertexBuffer.cpp" />
-    <ClCompile Include="..\src\G3\PC\LLGI.G3.CreatePC.cpp" />
+    <ClCompile Include="..\src\LLGI.CommandList.cpp" />
+    <ClCompile Include="..\src\LLGI.Compiler.cpp" />
+    <ClCompile Include="..\src\LLGI.ConstantBuffer.cpp" />
+    <ClCompile Include="..\src\LLGI.Graphics.cpp" />
+    <ClCompile Include="..\src\LLGI.IndexBuffer.cpp" />
+    <ClCompile Include="..\src\LLGI.PipelineState.cpp" />
+    <ClCompile Include="..\src\LLGI.Platform.cpp" />
+    <ClCompile Include="..\src\LLGI.Shader.cpp" />
+    <ClCompile Include="..\src\LLGI.Texture.cpp" />
+    <ClCompile Include="..\src\LLGI.VertexBuffer.cpp" />
+    <ClCompile Include="..\src\PC\LLGI.CreatePC.cpp" />
     <ClCompile Include="..\src\Win\LLGI.WindowWin.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

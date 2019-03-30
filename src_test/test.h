@@ -1,16 +1,16 @@
 
 #pragma once
 
-#include <G3/LLGI.G3.CommandList.h>
-#include <G3/LLGI.G3.Compiler.h>
-#include <G3/LLGI.G3.ConstantBuffer.h>
-#include <G3/LLGI.G3.Graphics.h>
-#include <G3/LLGI.G3.IndexBuffer.h>
-#include <G3/LLGI.G3.PipelineState.h>
-#include <G3/LLGI.G3.Platform.h>
-#include <G3/LLGI.G3.Shader.h>
-#include <G3/LLGI.G3.Texture.h>
-#include <G3/LLGI.G3.VertexBuffer.h>
+#include <LLGI.CommandList.h>
+#include <LLGI.Compiler.h>
+#include <LLGI.ConstantBuffer.h>
+#include <LLGI.Graphics.h>
+#include <LLGI.IndexBuffer.h>
+#include <LLGI.PipelineState.h>
+#include <LLGI.Platform.h>
+#include <LLGI.Shader.h>
+#include <LLGI.Texture.h>
+#include <LLGI.VertexBuffer.h>
 
 #include <iostream>
 

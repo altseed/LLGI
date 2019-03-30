@@ -56,11 +56,11 @@ void main()
 
 )";
 
-	auto compiler = LLGI::G3::CreateCompiler(LLGI::DeviceType::Default);
+	auto compiler = LLGI::CreateCompiler(LLGI::DeviceType::Default);
 
 	int count = 0;
 
-	auto platform = LLGI::G3::CreatePlatform(LLGI::DeviceType::Default);
+	auto platform = LLGI::CreatePlatform(LLGI::DeviceType::Default);
 	auto graphics = platform->CreateGraphics();
 	auto commandList = graphics->CreateCommandList();
 	auto vb = graphics->CreateVertexBuffer(sizeof(SimpleVertex) * 4);
@@ -81,12 +81,12 @@ void main()
 	}
 	texture->Unlock();
 
-	LLGI::G3::Shader* shader_vs = nullptr;
-	LLGI::G3::Shader* shader_ps = nullptr;
+	LLGI::Shader* shader_vs = nullptr;
+	LLGI::Shader* shader_ps = nullptr;
 
 	{
-		LLGI::G3::CompilerResult result_vs;
-		LLGI::G3::CompilerResult result_ps;
+		LLGI::CompilerResult result_vs;
+		LLGI::CompilerResult result_ps;
 
 		compiler->Compile(result_vs, code_gl_vs, LLGI::ShaderStageType::Vertex);
 		compiler->Compile(result_ps, code_gl_ps, LLGI::ShaderStageType::Pixel);
@@ -246,25 +246,25 @@ void main()
 
 )";
 
-	auto compiler = LLGI::G3::CreateCompiler(LLGI::DeviceType::Default);
+	auto compiler = LLGI::CreateCompiler(LLGI::DeviceType::Default);
 
 	int count = 0;
 
-	auto platform = LLGI::G3::CreatePlatform(LLGI::DeviceType::Default);
+	auto platform = LLGI::CreatePlatform(LLGI::DeviceType::Default);
 	auto graphics = platform->CreateGraphics();
 	auto commandList = graphics->CreateCommandList();
 	auto vb = graphics->CreateVertexBuffer(sizeof(SimpleVertex) * 4);
 	auto ib = graphics->CreateIndexBuffer(2, 6);
 	auto pip = graphics->CreatePiplineState();
-	LLGI::G3::ConstantBuffer* cb_vs = nullptr;
-	LLGI::G3::ConstantBuffer* cb_ps = nullptr;
+	LLGI::ConstantBuffer* cb_vs = nullptr;
+	LLGI::ConstantBuffer* cb_ps = nullptr;
 
-	LLGI::G3::Shader* shader_vs = nullptr;
-	LLGI::G3::Shader* shader_ps = nullptr;
+	LLGI::Shader* shader_vs = nullptr;
+	LLGI::Shader* shader_ps = nullptr;
 
 	{
-		LLGI::G3::CompilerResult result_vs;
-		LLGI::G3::CompilerResult result_ps;
+		LLGI::CompilerResult result_vs;
+		LLGI::CompilerResult result_ps;
 
 		compiler->Compile(result_vs, code_gl_vs, LLGI::ShaderStageType::Vertex);
 		compiler->Compile(result_ps, code_gl_ps, LLGI::ShaderStageType::Pixel);
@@ -452,22 +452,22 @@ void main()
 
 )";
 
-	auto compiler = LLGI::G3::CreateCompiler(LLGI::DeviceType::Default);
+	auto compiler = LLGI::CreateCompiler(LLGI::DeviceType::Default);
 
 	int count = 0;
 
-	auto platform = LLGI::G3::CreatePlatform(LLGI::DeviceType::Default);
+	auto platform = LLGI::CreatePlatform(LLGI::DeviceType::Default);
 	auto graphics = platform->CreateGraphics();
 	auto commandList = graphics->CreateCommandList();
 	auto vb = graphics->CreateVertexBuffer(sizeof(SimpleVertex) * 4);
 	auto ib = graphics->CreateIndexBuffer(2, 6);
 	auto pip = graphics->CreatePiplineState();
-	LLGI::G3::Shader* shader_vs = nullptr;
-	LLGI::G3::Shader* shader_ps = nullptr;
+	LLGI::Shader* shader_vs = nullptr;
+	LLGI::Shader* shader_ps = nullptr;
 
 	{
-		LLGI::G3::CompilerResult result_vs;
-		LLGI::G3::CompilerResult result_ps;
+		LLGI::CompilerResult result_vs;
+		LLGI::CompilerResult result_ps;
 
 		compiler->Compile(result_vs, code_gl_vs, LLGI::ShaderStageType::Vertex);
 		compiler->Compile(result_ps, code_gl_ps, LLGI::ShaderStageType::Pixel);
@@ -565,10 +565,10 @@ void main()
 
 void test_compile()
 {
-	auto compiler = LLGI::G3::CreateCompiler(LLGI::DeviceType::Default);
+	auto compiler = LLGI::CreateCompiler(LLGI::DeviceType::Default);
 
-	LLGI::G3::CompilerResult result_vs;
-	LLGI::G3::CompilerResult result_ps;
+	LLGI::CompilerResult result_vs;
+	LLGI::CompilerResult result_ps;
 
 	auto code_hlsl_vs = R"(
 
@@ -680,6 +680,9 @@ void test_empty(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 // About clear
 void test_clear(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 void test_clear_update(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
+
+// Compile
+void test_compile(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 
 // About renderPass
 void test_renderPass();

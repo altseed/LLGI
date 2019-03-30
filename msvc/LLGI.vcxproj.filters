@@ -62,6 +62,16 @@
     <ClInclude Include="..\src\Win\LLGI.WindowWin.h">
       <Filter>Win</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\LLGI.CommandList.h" />
+    <ClInclude Include="..\src\LLGI.Compiler.h" />
+    <ClInclude Include="..\src\LLGI.ConstantBuffer.h" />
+    <ClInclude Include="..\src\LLGI.Graphics.h" />
+    <ClInclude Include="..\src\LLGI.IndexBuffer.h" />
+    <ClInclude Include="..\src\LLGI.PipelineState.h" />
+    <ClInclude Include="..\src\LLGI.Platform.h" />
+    <ClInclude Include="..\src\LLGI.Shader.h" />
+    <ClInclude Include="..\src\LLGI.Texture.h" />
+    <ClInclude Include="..\src\LLGI.VertexBuffer.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="G3">
@@ -70,11 +80,11 @@
     <Filter Include="G3\DX12">
       <UniqueIdentifier>{572c3c29-226f-4618-8b81-5c2bbcd7f652}</UniqueIdentifier>
     </Filter>
-    <Filter Include="G3\PC">
-      <UniqueIdentifier>{5b153f4c-e753-4f4e-ae3e-2b502c5912b2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Win">
       <UniqueIdentifier>{ba361f63-6439-4616-b9fb-610ae8e4a6e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PC">
+      <UniqueIdentifier>{6126c703-3b87-495d-a49d-b64e19bebece}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -111,9 +121,6 @@
     <ClCompile Include="..\src\G3\LLGI.G3.Compiler.cpp">
       <Filter>G3</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\G3\PC\LLGI.G3.CreatePC.cpp">
-      <Filter>G3\PC</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\G3\DX12\LLGI.G3.GraphicsDX12.cpp">
       <Filter>G3\DX12</Filter>
     </ClCompile>
@@ -137,6 +144,19 @@
     </ClCompile>
     <ClCompile Include="..\src\Win\LLGI.WindowWin.cpp">
       <Filter>Win</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\LLGI.CommandList.cpp" />
+    <ClCompile Include="..\src\LLGI.Compiler.cpp" />
+    <ClCompile Include="..\src\LLGI.ConstantBuffer.cpp" />
+    <ClCompile Include="..\src\LLGI.Graphics.cpp" />
+    <ClCompile Include="..\src\LLGI.IndexBuffer.cpp" />
+    <ClCompile Include="..\src\LLGI.PipelineState.cpp" />
+    <ClCompile Include="..\src\LLGI.Platform.cpp" />
+    <ClCompile Include="..\src\LLGI.Shader.cpp" />
+    <ClCompile Include="..\src\LLGI.Texture.cpp" />
+    <ClCompile Include="..\src\LLGI.VertexBuffer.cpp" />
+    <ClCompile Include="..\src\PC\LLGI.CreatePC.cpp">
+      <Filter>PC</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

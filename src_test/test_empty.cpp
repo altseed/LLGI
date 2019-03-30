@@ -4,7 +4,7 @@ void test_empty(LLGI::DeviceType deviceType)
 {
 	int count = 0;
 
-	auto platform = LLGI::G3::CreatePlatform(deviceType);
+	auto platform = LLGI::CreatePlatform(deviceType);
 	auto graphics = platform->CreateGraphics();
 
 	while (count < 1000)

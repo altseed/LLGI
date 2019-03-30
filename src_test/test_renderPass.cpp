@@ -46,11 +46,11 @@ void main()
 
 )";
 
-	auto compiler = LLGI::G3::CreateCompiler(LLGI::DeviceType::Default);
+	auto compiler = LLGI::CreateCompiler(LLGI::DeviceType::Default);
 
 	int count = 0;
 
-	auto platform = LLGI::G3::CreatePlatform(LLGI::DeviceType::Default);
+	auto platform = LLGI::CreatePlatform(LLGI::DeviceType::Default);
 	auto graphics = platform->CreateGraphics();
 	auto commandList = graphics->CreateCommandList();
 	auto vb = graphics->CreateVertexBuffer(sizeof(SimpleVertex) * 4);
@@ -59,7 +59,7 @@ void main()
 
 	auto renderTexture = graphics->CreateTexture(LLGI::Vec2I(256, 256), true, false);
 
-	auto renderPass = graphics->CreateRenderPass((const LLGI::G3::Texture**)&renderTexture, 1, nullptr);
+	auto renderPass = graphics->CreateRenderPass((const LLGI::Texture**)&renderTexture, 1, nullptr);
 
 	auto texture = graphics->CreateTexture(LLGI::Vec2I(256, 256), false, false);
 
@@ -76,12 +76,12 @@ void main()
 	}
 	texture->Unlock();
 
-	LLGI::G3::Shader* shader_vs = nullptr;
-	LLGI::G3::Shader* shader_ps = nullptr;
+	LLGI::Shader* shader_vs = nullptr;
+	LLGI::Shader* shader_ps = nullptr;
 
 	{
-		LLGI::G3::CompilerResult result_vs;
-		LLGI::G3::CompilerResult result_ps;
+		LLGI::CompilerResult result_vs;
+		LLGI::CompilerResult result_ps;
 
 		compiler->Compile(result_vs, code_gl_vs, LLGI::ShaderStageType::Vertex);
 		compiler->Compile(result_ps, code_gl_ps, LLGI::ShaderStageType::Pixel);

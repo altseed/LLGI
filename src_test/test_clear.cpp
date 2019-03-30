@@ -4,7 +4,7 @@ void test_clear_update(LLGI::DeviceType deviceType)
 {
 	int count = 0;
 
-	auto platform = LLGI::G3::CreatePlatform(deviceType);
+	auto platform = LLGI::CreatePlatform(deviceType);
 	auto graphics = platform->CreateGraphics();
 	auto commandList = graphics->CreateCommandList();
 
@@ -39,7 +39,7 @@ void test_clear(LLGI::DeviceType deviceType)
 {
 	int count = 0;
 
-	auto platform = LLGI::G3::CreatePlatform(deviceType);
+	auto platform = LLGI::CreatePlatform(deviceType);
 	auto graphics = platform->CreateGraphics();
 	auto commandList = graphics->CreateCommandList();
 
