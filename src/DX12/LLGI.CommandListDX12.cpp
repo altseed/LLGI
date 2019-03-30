@@ -1,10 +1,8 @@
 
-#include "LLGI.G3.CommandListDX12.h"
-#include "LLGI.G3.GraphicsDX12.h"
+#include "LLGI.CommandListDX12.h"
+#include "LLGI.GraphicsDX12.h"
 
 namespace LLGI
-{
-namespace G3
 {
 
 CommandListDX12::CommandListDX12() {}
@@ -79,5 +77,4 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 
 void CommandListDX12::EndRenderPass() { renderPass_.reset(); }
 
-} // namespace G3
 } // namespace LLGI

@@ -1,16 +1,13 @@
 
 #pragma once
 
-#include "../LLGI.G3.Compiler.h"
-#include "LLGI.G3.BaseDX12.h"
+#include "../LLGI.Compiler.h"
+#include "LLGI.BaseDX12.h"
 
 namespace LLGI
 {
-namespace G3
-{
 
-class CompilerDX12
-	: public Compiler
+class CompilerDX12 : public Compiler
 {
 
 private:
@@ -24,6 +21,4 @@ public:
 	DeviceType GetDeviceType() const override { return DeviceType::DirectX12; }
 };
 
-}
-}
-
+} // namespace LLGI

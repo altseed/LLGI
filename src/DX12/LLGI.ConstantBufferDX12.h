@@ -1,15 +1,13 @@
 
 #pragma once
 
-#include "../LLGI.G3.ConstantBuffer.h"
-#include "LLGI.G3.BaseDX12.h"
-#include "LLGI.G3.GraphicsDX12.h"
+#include "../LLGI.ConstantBuffer.h"
+#include "LLGI.BaseDX12.h"
+#include "LLGI.GraphicsDX12.h"
 
 using namespace DirectX;
 
 namespace LLGI
-{
-namespace G3
 {
 
 class ConstantBufferDX12 : public ConstantBuffer
@@ -31,5 +29,4 @@ public:
 	virtual int32_t GetSize();
 };
 
-} // namespace G3
 } // namespace LLGI

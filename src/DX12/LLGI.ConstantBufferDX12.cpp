@@ -1,10 +1,8 @@
 
-#include "LLGI.G3.ConstantBufferDX12.h"
-#include "../LLGI.G3.ConstantBuffer.h"
+#include "LLGI.ConstantBufferDX12.h"
+#include "../LLGI.ConstantBuffer.h"
 
 namespace LLGI
-{
-namespace G3
 {
 
 ConstantBufferDX12::ConstantBufferDX12() {}
@@ -65,5 +63,4 @@ void ConstantBufferDX12::Unlock() { constantBuffer->Unmap(0, nullptr); }
 
 int32_t ConstantBufferDX12::GetSize() { return sizeof(float) * 9; }
 
-} // namespace G3
 } // namespace LLGI

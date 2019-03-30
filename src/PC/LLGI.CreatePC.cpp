@@ -6,10 +6,10 @@
 #include "../Vulkan/LLGI.PlatformVulkan.h"
 #endif
 
-//#ifdef _WIN32
-//#include "../DX12/LLGI.G3.CompilerDX12.h"
-//#include "../DX12/LLGI.G3.PlatformDX12.h"
-//#endif
+#ifdef _WIN32
+#include "../DX12/LLGI.CompilerDX12.h"
+#include "../DX12/LLGI.PlatformDX12.h"
+#endif
 
 #ifdef __APPLE__
 #include "../Metal/LLGI.G3.CompilerMetal.h"
@@ -26,8 +26,7 @@ Platform* CreatePlatform(DeviceType platformDeviceType)
 	windowSize.Y = 720;
 
 #ifdef _WIN32
-	
-	/*
+
 	if (platformDeviceType == DeviceType::Default || platformDeviceType == DeviceType::DirectX12)
 	{
 		auto platform = new PlatformDX12();
@@ -38,7 +37,6 @@ Platform* CreatePlatform(DeviceType platformDeviceType)
 		}
 		return platform;
 	}
-	*/
 
 #ifdef ENABLE_VULKAN
 	if (platformDeviceType == DeviceType::Vulkan)
@@ -67,8 +65,8 @@ Compiler* CreateCompiler(DeviceType device)
 {
 	return nullptr;
 #ifdef _WIN32
-	//auto obj = new CompilerDX12();
-	//return obj;
+	// auto obj = new CompilerDX12();
+	// return obj;
 #endif
 
 #ifdef __APPLE__

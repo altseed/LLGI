@@ -690,19 +690,19 @@ void test_renderPass();
 int main()
 {
 	// Empty
-	test_empty();
+	// test_empty();
 
 	// About clear
-	// test_clear();
+	test_clear();
 	// test_clear_update();
 
-    // About compile
-    // test_compile();
+	// About compile
+	// test_compile();
 
 	// test_simple_texture_rectangle();
 	// test_simple_constant_rectangle(LLGI::ConstantBufferType::ShortTime);
 	// test_simple_rectangle();
-    // test_renderPass();
+	// test_renderPass();
 
 	return 0;
 }

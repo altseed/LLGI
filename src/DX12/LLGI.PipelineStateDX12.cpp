@@ -1,13 +1,11 @@
 
 #pragma once
 
-#include "LLGI.G3.PipelineStateDX12.h"
-#include "../LLGI.G3.PipelineState.h"
-#include "LLGI.G3.ShaderDX12.h"
+#include "LLGI.PipelineStateDX12.h"
+#include "../LLGI.PipelineState.h"
+#include "LLGI.ShaderDX12.h"
 
 namespace LLGI
-{
-namespace G3
 {
 
 PipelineStateDX12::PipelineStateDX12(GraphicsDX12* graphics)
@@ -107,5 +105,4 @@ FAILED_EXIT:
 	return;
 }
 
-} // namespace G3
 } // namespace LLGI

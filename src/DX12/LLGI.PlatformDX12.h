@@ -1,16 +1,13 @@
 
 #pragma once
 
-#include "../LLGI.G3.Platform.h"
-#include "LLGI.G3.BaseDX12.h"
+#include "../LLGI.Platform.h"
+#include "LLGI.BaseDX12.h"
 
 namespace LLGI
 {
-namespace G3
-{
-	
-class PlatformDX12
-	: public Platform
+
+class PlatformDX12 : public Platform
 {
 private:
 	static const int SwapBufferCount = 2;
@@ -42,14 +39,13 @@ public:
 
 	bool Initialize(Vec2I windowSize);
 
-	void NewFrame() override;
+	bool NewFrame() override;
 	void Present() override;
 	Graphics* CreateGraphics() override;
 
 	ID3D12Device* GetDevice();
 
-	 DeviceType GetDeviceType() const override { return DeviceType::DirectX12; }
+	DeviceType GetDeviceType() const override { return DeviceType::DirectX12; }
 };
 
-}
-}
+} // namespace LLGI

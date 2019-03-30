@@ -1,9 +1,7 @@
-#include "LLGI.G3.PlatformDX12.h"
-#include "LLGI.G3.GraphicsDX12.h"
+#include "LLGI.PlatformDX12.h"
+#include "LLGI.GraphicsDX12.h"
 
 namespace LLGI
-{
-namespace G3
 {
 
 LRESULT LLGI_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -276,7 +274,7 @@ FAILED_EXIT:;
 	return false;
 }
 
-void PlatformDX12::NewFrame()
+bool PlatformDX12::NewFrame()
 {
 	MSG msg;
 	ZeroMemory(&msg, sizeof(msg));
@@ -312,6 +310,8 @@ void PlatformDX12::NewFrame()
 
 	ID3D12CommandList* commandList[] = {commandListStart};
 	commandQueue->ExecuteCommandLists(1, commandList);
+
+	return true;
 }
 
 void PlatformDX12::Present()
@@ -355,5 +355,4 @@ Graphics* PlatformDX12::CreateGraphics()
 
 ID3D12Device* PlatformDX12::GetDevice() { return device; }
 
-} // namespace G3
 } // namespace LLGI

@@ -1,13 +1,11 @@
 
 #pragma once
 
-#include "../LLGI.G3.CommandList.h"
-#include "LLGI.G3.BaseDX12.h"
-#include "LLGI.G3.GraphicsDX12.h"
+#include "../LLGI.CommandList.h"
+#include "LLGI.BaseDX12.h"
+#include "LLGI.GraphicsDX12.h"
 
 namespace LLGI
-{
-namespace G3
 {
 
 class CommandListDX12 : public CommandList
@@ -33,5 +31,4 @@ public:
 	ID3D12GraphicsCommandList* GetCommandList() { return commandList_; }
 };
 
-} // namespace G3
 } // namespace LLGI

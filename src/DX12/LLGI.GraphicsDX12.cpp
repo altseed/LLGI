@@ -1,13 +1,11 @@
-#include "LLGI.G3.GraphicsDX12.h"
-#include "LLGI.G3.CommandListDX12.h"
-#include "LLGI.G3.IndexBufferDX12.h"
-#include "LLGI.G3.PipelineStateDX12.h"
-#include "LLGI.G3.ShaderDX12.h"
-#include "LLGI.G3.VertexBufferDX12.h"
+#include "LLGI.GraphicsDX12.h"
+#include "LLGI.CommandListDX12.h"
+#include "LLGI.IndexBufferDX12.h"
+#include "LLGI.PipelineStateDX12.h"
+#include "LLGI.ShaderDX12.h"
+#include "LLGI.VertexBufferDX12.h"
 
 namespace LLGI
-{
-namespace G3
 {
 
 GraphicsDX12::GraphicsDX12(ID3D12Device* device,
@@ -105,5 +103,4 @@ PipelineState* GraphicsDX12::CreatePiplineState() { return new PipelineStateDX12
 
 ID3D12Device* GraphicsDX12::GetDevice() { return device_; }
 
-} // namespace G3
 } // namespace LLGI

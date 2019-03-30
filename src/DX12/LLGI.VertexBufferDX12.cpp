@@ -1,10 +1,8 @@
 
-#include "LLGI.G3.VertexBufferDX12.h"
-#include "../LLGI.G3.VertexBuffer.h"
+#include "LLGI.VertexBufferDX12.h"
+#include "../LLGI.VertexBuffer.h"
 
 namespace LLGI
-{
-namespace G3
 {
 
 VertexBufferDX12::VertexBufferDX12() {}
@@ -80,5 +78,4 @@ void VertexBufferDX12::Unlock()
 
 int32_t VertexBufferDX12::GetSize() { return sizeof(float) * 9; }
 
-} // namespace G3
 } // namespace LLGI

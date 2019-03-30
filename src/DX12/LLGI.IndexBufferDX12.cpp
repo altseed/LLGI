@@ -1,10 +1,8 @@
 
-#include "LLGI.G3.IndexBufferDX12.h"
-#include "../LLGI.G3.IndexBuffer.h"
+#include "LLGI.IndexBufferDX12.h"
+#include "../LLGI.IndexBuffer.h"
 
 namespace LLGI
-{
-namespace G3
 {
 
 IndexBufferDX12::IndexBufferDX12() {}
@@ -79,5 +77,4 @@ void IndexBufferDX12::Unlock()
 	mapped = nullptr;
 }
 
-} // namespace G3
 } // namespace LLGI

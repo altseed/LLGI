@@ -1,14 +1,13 @@
 #pragma once
 
-#include "../LLGI.G3.Graphics.h"
-#include "LLGI.G3.BaseDX12.h"
+#include "../LLGI.Graphics.h"
+#include "LLGI.BaseDX12.h"
 
 #include <functional>
 
 namespace LLGI
 {
-namespace G3
-{
+
 class RenderPassDX12 : public RenderPass
 {
 public:
@@ -47,5 +46,4 @@ public:
 	ID3D12Device* GetDevice();
 };
 
-} // namespace G3
 } // namespace LLGI

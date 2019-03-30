@@ -1,15 +1,13 @@
 
 #pragma once
 
-#include "../LLGI.G3.Shader.h"
-#include "LLGI.G3.BaseDX12.h"
-#include "LLGI.G3.GraphicsDX12.h"
+#include "../LLGI.Shader.h"
+#include "LLGI.BaseDX12.h"
+#include "LLGI.GraphicsDX12.h"
 
 using namespace DirectX;
 
 namespace LLGI
-{
-namespace G3
 {
 
 class ShaderDX12 : public Shader
@@ -28,5 +26,4 @@ public:
 	int32_t GetCount() { return count_; }
 };
 
-} // namespace G3
 } // namespace LLGI
