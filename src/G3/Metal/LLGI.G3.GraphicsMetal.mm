@@ -1,6 +1,10 @@
 #include "LLGI.G3.GraphicsMetal.h"
 #include "LLGI.G3.CommandListMetal.h"
 #include "LLGI.G3.Metal_Impl.h"
+#include "LLGI.G3.VertexBufferMetal.h"
+#include "LLGI.G3.IndexBufferMetal.h"
+#include "LLGI.G3.ConstantBufferMetal.h"
+
 #import <MetalKit/MetalKit.h>
 
 namespace LLGI
@@ -31,22 +35,98 @@ bool Graphics_Impl::Initialize()
 }
 
 void Graphics_Impl::Execute(CommandList_Impl* commandBuffer) { [commandBuffer->commandBuffer commit]; }
+    
+RenderPass_Impl::RenderPass_Impl()
+{
+    
+}
+    
+RenderPass_Impl::~RenderPass_Impl()
+{
+    if (renderPassDescriptor != nullptr)
+    {
+        [renderPassDescriptor release];
+        renderPassDescriptor = nullptr;
+    }
+}
 
 bool RenderPass_Impl::Initialize()
 {
 	renderPassDescriptor = [[MTLRenderPassDescriptor alloc] init];
-	return true;
+    return true;
 }
 
+RenderPassMetal::RenderPassMetal(GraphicsMetal* graphics, bool isStrongRef)
+    : graphics_(graphics)
+    , isStrongRef_(isStrongRef)
+{
+    if(isStrongRef_)
+    {
+        SafeAddRef(graphics_);
+    }
+    
+    impl = new RenderPass_Impl();
+    impl->Initialize();
+}
+    
+RenderPassMetal::~RenderPassMetal()
+{
+    SafeDelete(impl);
+    
+    if(isStrongRef_)
+    {
+        SafeRelease(graphics_);
+    }
+}
+    
+void RenderPassMetal::SetIsColorCleared(bool isColorCleared)
+{
+    impl->isColorCleared = isColorCleared;
+    RenderPass::SetIsColorCleared(isColorCleared);
+}
+    
+void RenderPassMetal::SetIsDepthCleared(bool isDepthCleared)
+{
+    impl->isDepthCleared = isDepthCleared;
+    RenderPass::SetIsDepthCleared(isDepthCleared);
+}
+    
+void RenderPassMetal::SetClearColor(const Color8& color)
+{
+    impl->clearColor = color;
+    RenderPass::SetClearColor(color);
+}
+    
+RenderPass_Impl* RenderPassMetal::GetImpl() const
+{
+    return impl;
+}
+    
 GraphicsMetal::GraphicsMetal() { impl = new Graphics_Impl(); }
 
 GraphicsMetal::~GraphicsMetal() { SafeDelete(impl); }
 
-bool GraphicsMetal::Initialize() { return impl->Initialize(); }
+bool GraphicsMetal::Initialize(std::function<GraphicsView()> getGraphicsView)
+{
+    getGraphicsView_ = getGraphicsView;
+
+    if(!impl->Initialize())
+    {
+        return false;
+    }
+
+    renderPass_ = std::make_shared<RenderPassMetal>(this, false);
+    
+    return true;
+}
 
 void GraphicsMetal::NewFrame()
 {
-	// None
+    if(getGraphicsView_ != nullptr)
+    {
+        auto view = getGraphicsView_();
+        impl->drawable = view.drawable;
+    }
 }
 
 void GraphicsMetal::SetWindowSize(const Vec2I& windowSize) { throw "Not inplemented"; }
@@ -59,11 +139,34 @@ void GraphicsMetal::Execute(CommandList* commandList)
 
 void GraphicsMetal::WaitFinish() { throw "Not inplemented"; }
 
-RenderPass* GraphicsMetal::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) { throw "Not inplemented"; }
+RenderPass* GraphicsMetal::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) {
+    
+    renderPass_->SetClearColor(clearColor);
+    renderPass_->SetIsColorCleared(isColorCleared);
+    renderPass_->SetIsDepthCleared(isDepthCleared);
+    renderPass_->GetImpl()->renderPassDescriptor.colorAttachments[0].texture = impl->drawable.texture;
+    return renderPass_.get();
+}
 
-VertexBuffer* GraphicsMetal::CreateVertexBuffer(int32_t size) { throw "Not inplemented"; }
+VertexBuffer* GraphicsMetal::CreateVertexBuffer(int32_t size) {
+    auto ret = new VertexBufferMetal();
+    if(ret->Initialize(this, size))
+    {
+        return ret;
+    }
+    SafeRelease(ret);
+    return nullptr;
+}
 
-IndexBuffer* GraphicsMetal::CreateIndexBuffer(int32_t stride, int32_t count) { throw "Not inplemented"; }
+IndexBuffer* GraphicsMetal::CreateIndexBuffer(int32_t stride, int32_t count) {
+    auto ret = new IndexBufferMetal();
+    if(ret->Initialize(this, stride, count))
+    {
+        return ret;
+    }
+    SafeRelease(ret);
+    return nullptr;
+}
 
 Shader* GraphicsMetal::CreateShader(DataStructure* data, int32_t count) { throw "Not inplemented"; }
 

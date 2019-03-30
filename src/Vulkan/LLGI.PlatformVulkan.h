@@ -1,12 +1,15 @@
 
+
 #pragma once
 
-#include "../LLGI.G3.Platform.h"
-#include "LLGI.G3.BaseVulkan.h"
+#include "../LLGI.Platform.h"
+#include "LLGI.BaseVulkan.h"
+
+#ifdef _WIN32
+#include "../Win/LLGI.WindowWin.h"
+#endif
 
 namespace LLGI
-{
-namespace G3
 {
 
 class PlatformVulkan : public Platform
@@ -26,19 +29,28 @@ private:
 	class SwapBuffer
 	{
 	public:
-		vk::Image image;
-		vk::ImageView view;
-		vk::Fence fence;
+		vk::Image image = nullptr;
+		vk::ImageView view = nullptr;
+		vk::Fence fence = nullptr;
+	};
+
+	struct DepthStencilBuffer
+	{
+		vk::Image image = nullptr;
+		vk::ImageView view = nullptr;
+		vk::DeviceMemory devMem = nullptr;
 	};
 
 	int32_t swapBufferCount = 2;
 
-	vk::Instance vkInstance;
-	vk::PhysicalDevice vkPhysicalDevice;
-	vk::Device vkDevice;
-	vk::PipelineCache vkPipelineCache;
-	vk::Queue vkQueue;
-	vk::CommandPool vkCmdPool;
+	vk::Instance vkInstance = nullptr;
+	vk::PhysicalDevice vkPhysicalDevice = nullptr;
+	vk::Device vkDevice = nullptr;
+	vk::PipelineCache vkPipelineCache = nullptr;
+	vk::Queue vkQueue = nullptr;
+	vk::CommandPool vkCmdPool = nullptr;
+
+	Vec2I windowSize_;
 
 	//! to check to finish present
 	vk::Semaphore vkPresentComplete;
@@ -47,18 +59,20 @@ private:
 	vk::Semaphore vkRenderComplete;
 	std::vector<vk::CommandBuffer> vkCmdBuffers;
 
-	vk::SurfaceKHR surface;
-	vk::SwapchainKHR swapchain;
+	vk::SurfaceKHR surface = nullptr;
+	vk::SwapchainKHR swapchain = nullptr;
 	vk::PresentInfoKHR presentInfo;
 
 	vk::Format surfaceFormat;
 	vk::ColorSpaceKHR surfaceColorSpace;
 
+	//! depth buffer
+	DepthStencilBuffer depthStencilBuffer;
+
 	std::vector<SwapBuffer> swapBuffers;
 
 #ifdef _WIN32
-	HWND hwnd = nullptr;
-	HINSTANCE hInstance = nullptr;
+	std::shared_ptr<WindowWin> window = nullptr;
 #endif
 
 #ifdef _DEBUG
@@ -77,16 +91,20 @@ private:
 	*/
 	uint32_t AcquireNextImage(vk::Semaphore& semaphore);
 
+	vk::Fence GetSubmitFence(bool destroy = false);
+
 	/**
 		@brief	the semaphore to wait for before present
 	*/
 	vk::Result Present(vk::Semaphore semaphore);
 
 	void SetImageLayout(vk::CommandBuffer cmdbuffer,
-		vk::Image image,
-		vk::ImageLayout oldImageLayout,
-		vk::ImageLayout newImageLayout,
-		vk::ImageSubresourceRange subresourceRange);
+						vk::Image image,
+						vk::ImageLayout oldImageLayout,
+						vk::ImageLayout newImageLayout,
+						vk::ImageSubresourceRange subresourceRange);
+
+	void Reset();
 
 public:
 	PlatformVulkan();
@@ -94,12 +112,11 @@ public:
 
 	bool Initialize(Vec2I windowSize);
 
-	void NewFrame() override;
+	bool NewFrame() override;
 	void Present() override;
 	Graphics* CreateGraphics() override;
 
 	DeviceType GetDeviceType() const override { return DeviceType::Vulkan; }
 };
 
-} // namespace G3
 } // namespace LLGI

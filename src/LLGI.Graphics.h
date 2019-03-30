@@ -1,11 +1,9 @@
 
 #pragma once
 
-#include "../LLGI.Base.h"
+#include "LLGI.Base.h"
 
 namespace LLGI
-{
-namespace G3
 {
 
 class RenderPass : public ReferenceObject
@@ -79,5 +77,4 @@ public:
 	virtual Texture* CreateTexture(uint64_t id);
 };
 
-} // namespace G3
 } // namespace LLGI

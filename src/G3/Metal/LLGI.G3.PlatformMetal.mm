@@ -4,6 +4,7 @@
 
 #import "../LLGI.G3.Platform.h"
 #import "LLGI.G3.PlatformMetal.h"
+#import "LLGI.G3.GraphicsMetal.h"
 
 @interface LLGIApplication : NSApplication
 {
@@ -91,7 +92,8 @@ struct PlatformMetal_Impl
 	id<MTLCommandQueue> commandQueue;
 	id<MTLCommandBuffer> commandBuffer;
 	CAMetalLayer* layer;
-
+    id<CAMetalDrawable> drawable;
+    
 	PlatformMetal_Impl()
 	{
 		int width = 640;
@@ -143,12 +145,15 @@ struct PlatformMetal_Impl
 		}
 
 		gc();
+        
+        drawable = layer.nextDrawable;
+        
 	}
 
 	void preset()
 	{
 		commandBuffer = [commandQueue commandBuffer];
-		[commandBuffer presentDrawable:layer.nextDrawable];
+		[commandBuffer presentDrawable:drawable];
 		[commandBuffer commit];
 	}
 };
@@ -166,7 +171,24 @@ void PlatformMetal::NewFrame() { impl->newFrame(); }
 
 void PlatformMetal::Present() { impl->preset(); }
 
-Graphics* PlatformMetal::CreateGraphics() { return nullptr; }
+Graphics* PlatformMetal::CreateGraphics() {
+    auto ret = new GraphicsMetal();
+    
+    auto getGraphicsView = [this]() -> GraphicsView
+    {
+        GraphicsView view;
+        view.drawable = this->impl->drawable;
+        return view;
+    };
+    
+    if(ret->Initialize(getGraphicsView))
+    {
+        return ret;
+    }
+    
+    SafeRelease(ret);
+    return nullptr;
+}
 
 }
 }

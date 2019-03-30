@@ -116,9 +116,10 @@
   <ItemGroup>
     <ClCompile Include="..\src_test\main.cpp" />
     <ClCompile Include="..\src_test\test_clear.cpp" />
+    <ClCompile Include="..\src_test\test_compile.cpp" />
     <ClCompile Include="..\src_test\test_depth.cpp" />
     <ClCompile Include="..\src_test\test_empty.cpp" />
-    <ClCompile Include="..\src_test\test_rendertarget.cpp" />
+    <ClCompile Include="..\src_test\test_renderPass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="LLGI.vcxproj">

@@ -1,11 +1,9 @@
 
 #pragma once
 
-#include "../LLGI.Base.h"
+#include "LLGI.Base.h"
 
 namespace LLGI
-{
-namespace G3
 {
 
 Platform* CreatePlatform(DeviceType platformDeviceType);
@@ -17,11 +15,10 @@ public:
 	Platform() = default;
 	virtual ~Platform() = default;
 
-	virtual void NewFrame();
+	virtual bool NewFrame();
 	virtual void Present();
 	virtual Graphics* CreateGraphics();
 	virtual DeviceType GetDeviceType() const { return DeviceType::Default; }
 };
 
-} // namespace G3
 } // namespace LLGI

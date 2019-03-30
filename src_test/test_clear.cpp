@@ -1,10 +1,10 @@
 #include "test.h"
 
-void test_clear_update()
+void test_clear_update(LLGI::DeviceType deviceType)
 {
 	int count = 0;
 
-	auto platform = LLGI::G3::CreatePlatform(LLGI::DeviceType::Default);
+	auto platform = LLGI::CreatePlatform(deviceType);
 	auto graphics = platform->CreateGraphics();
 	auto commandList = graphics->CreateCommandList();
 
@@ -35,11 +35,11 @@ void test_clear_update()
 	LLGI::SafeRelease(platform);
 }
 
-void test_clear()
+void test_clear(LLGI::DeviceType deviceType)
 {
 	int count = 0;
 
-	auto platform = LLGI::G3::CreatePlatform(LLGI::DeviceType::Default);
+	auto platform = LLGI::CreatePlatform(deviceType);
 	auto graphics = platform->CreateGraphics();
 	auto commandList = graphics->CreateCommandList();
 

@@ -24,8 +24,6 @@ CommandList_Impl::~CommandList_Impl()
 	{
 		[renderEncoder release];
 	}
-
-	SafeRelease(currentIndexBuffer);
 }
 
 bool CommandList_Impl::Initialize(Graphics_Impl* graphics)
@@ -67,7 +65,6 @@ void CommandList_Impl::EndRenderPass()
 	if (renderEncoder)
 	{
 		[renderEncoder endEncoding];
-		[renderEncoder release];
 		renderEncoder = nullptr;
 	}
 }
@@ -91,6 +88,7 @@ CommandListMetal::CommandListMetal() { impl = new CommandList_Impl(); }
 
 CommandListMetal::~CommandListMetal()
 {
+    SafeRelease(currentIndexBuffer);
 	SafeDelete(impl);
 	SafeRelease(graphics_);
 }
@@ -101,7 +99,7 @@ bool CommandListMetal::Initialize(Graphics* graphics)
 	SafeRelease(graphics_);
 	graphics_ = graphics;
 
-	auto graphics_metal_ = (GraphicsMetal*)graphics;
+	auto graphics_metal_ = static_cast<GraphicsMetal*>(graphics);
 	return impl->Initialize(graphics_metal_->GetImpl());
 }
 
@@ -137,7 +135,7 @@ void CommandListMetal::SetTexture(
 
 void CommandListMetal::BeginRenderPass(RenderPass* renderPass)
 {
-	auto renderPass_ = (RenderPass_Impl*)renderPass;
+	auto renderPass_ = static_cast<RenderPassMetal*>(renderPass)->GetImpl();
 	impl->BeginRenderPass(renderPass_);
 }
 
