@@ -59,6 +59,9 @@
     <ClInclude Include="..\src\G3\DX12\LLGI.G3.PipelineStateDX12.h">
       <Filter>G3\DX12</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Win\LLGI.WindowWin.h">
+      <Filter>Win</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="G3">
@@ -69,6 +72,9 @@
     </Filter>
     <Filter Include="G3\PC">
       <UniqueIdentifier>{5b153f4c-e753-4f4e-ae3e-2b502c5912b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Win">
+      <UniqueIdentifier>{ba361f63-6439-4616-b9fb-610ae8e4a6e3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -128,6 +134,9 @@
     </ClCompile>
     <ClCompile Include="..\src\G3\DX12\LLGI.G3.PipelineStateDX12.cpp">
       <Filter>G3\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Win\LLGI.WindowWin.cpp">
+      <Filter>Win</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

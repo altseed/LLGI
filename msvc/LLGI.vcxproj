@@ -130,6 +130,7 @@
     <ClInclude Include="..\src\G3\LLGI.G3.Texture.h" />
     <ClInclude Include="..\src\G3\LLGI.G3.VertexBuffer.h" />
     <ClInclude Include="..\src\LLGI.Base.h" />
+    <ClInclude Include="..\src\Win\LLGI.WindowWin.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\G3\DX12\LLGI.G3.CommandListDX12.cpp" />
@@ -151,6 +152,7 @@
     <ClCompile Include="..\src\G3\LLGI.G3.Texture.cpp" />
     <ClCompile Include="..\src\G3\LLGI.G3.VertexBuffer.cpp" />
     <ClCompile Include="..\src\G3\PC\LLGI.G3.CreatePC.cpp" />
+    <ClCompile Include="..\src\Win\LLGI.WindowWin.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

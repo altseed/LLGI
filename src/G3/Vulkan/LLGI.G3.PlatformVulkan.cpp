@@ -32,19 +32,6 @@ uint32_t GetMemoryTypeIndex(uint32_t bits, const vk::MemoryPropertyFlags& proper
 	return 0xffffffff;
 }
 
-#ifdef _WIN32
-LRESULT LLGI_WndProc_Vulkan(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-	switch (msg)
-	{
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		return 0;
-	}
-	return DefWindowProc(hwnd, msg, wParam, lParam);
-}
-#endif
-
 #ifdef _DEBUG
 VkBool32 PlatformVulkan::DebugMessageCallback(VkDebugReportFlagsEXT flags,
 											  VkDebugReportObjectTypeEXT objType,
@@ -377,38 +364,16 @@ PlatformVulkan::~PlatformVulkan()
 
 	// destroy windows
 #ifdef _WIN32
-	DestroyWindow(hwnd);
-	UnregisterClassA("Vulkan", GetModuleHandle(NULL));
+	window->Terminate();
+	window.reset();
 #endif
 }
 
 bool PlatformVulkan::Initialize(Vec2I windowSize)
 {
 #ifdef _WIN32
-	// Windows
-	WNDCLASSEX wcex;
-	memset(&wcex, 0, sizeof(WNDCLASSEX));
-
-	wcex.cbSize = sizeof(WNDCLASSEX);
-	wcex.style = CS_CLASSDC;
-	wcex.lpfnWndProc = (WNDPROC)LLGI_WndProc_Vulkan;
-	wcex.lpszClassName = "Vulkan";
-	wcex.hInstance = GetModuleHandle(NULL);
-	hInstance = wcex.hInstance;
-	RegisterClassExA(&wcex);
-
-	auto wflags = WS_OVERLAPPEDWINDOW;
-	RECT rect;
-	rect.left = rect.top = 0;
-	rect.right = windowSize.X;
-	rect.bottom = windowSize.Y;
-	::AdjustWindowRect(&rect, wflags, false);
-
-	hwnd = CreateWindowA(
-		"Vulkan", "Vulkan", wflags, 100, 100, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, wcex.hInstance, NULL);
-
-	ShowWindow(hwnd, SW_SHOWDEFAULT);
-	UpdateWindow(hwnd);
+	window = std::make_shared<WindowWin>();
+	window->Initialize("Vulkan", windowSize);
 #endif
 
 	// initialize Vulkan context
@@ -479,8 +444,8 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 
 		// create surface
 		vk::Win32SurfaceCreateInfoKHR surfaceCreateInfo;
-		surfaceCreateInfo.hinstance = hInstance;
-		surfaceCreateInfo.hwnd = hwnd;
+		surfaceCreateInfo.hinstance = window->GetInstance();
+		surfaceCreateInfo.hwnd = window->GetHandle();
 		surface = vkInstance.createWin32SurfaceKHR(surfaceCreateInfo);
 
 		// create device
@@ -674,22 +639,7 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 
 void PlatformVulkan::NewFrame()
 {
-	MSG msg;
-	ZeroMemory(&msg, sizeof(msg));
-	while (msg.message != WM_QUIT)
-	{
-		if (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-			continue;
-		}
-		else
-		{
-			break;
-		}
-	}
-
+	window->DoEvent();
 	AcquireNextImage(vkPresentComplete);
 }
 

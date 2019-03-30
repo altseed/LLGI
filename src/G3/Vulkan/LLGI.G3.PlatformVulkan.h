@@ -5,6 +5,10 @@
 #include "../LLGI.G3.Platform.h"
 #include "LLGI.G3.BaseVulkan.h"
 
+#ifdef _WIN32
+#include "../../Win/LLGI.WindowWin.h"
+#endif
+
 namespace LLGI
 {
 namespace G3
@@ -70,8 +74,7 @@ private:
 	std::vector<SwapBuffer> swapBuffers;
 
 #ifdef _WIN32
-	HWND hwnd = nullptr;
-	HINSTANCE hInstance = nullptr;
+	std::shared_ptr<WindowWin> window = nullptr;
 #endif
 
 #ifdef _DEBUG

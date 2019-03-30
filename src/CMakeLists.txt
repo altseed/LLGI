@@ -5,6 +5,11 @@ file(GLOB files_pc G3/PC/*.h G3/PC/*.cpp)
 list(APPEND files ${files_pc})
 
 if(MSVC)
+  file(GLOB files_win Win/*.h Win/*.cpp)
+  list(APPEND files ${files_win})
+endif()
+
+if(MSVC)
   file(GLOB files_dx12 G3/DX12/*.h G3/DX12/*.cpp)
   list(APPEND files ${files_dx12})
 endif()
