@@ -3,7 +3,7 @@
 #include "../LLGI.G3.Platform.h"
 
 #ifdef ENABLE_VULKAN
-#include "../Vulkan/LLGI.G3.PlatformVulkan.h"
+#include "../../Vulkan/LLGI.PlatformVulkan.h"
 #endif
 
 #ifdef _WIN32
@@ -40,6 +40,7 @@ Platform* CreatePlatform(DeviceType platformDeviceType)
 	}
 
 #ifdef ENABLE_VULKAN
+	/*
 	if (platformDeviceType == DeviceType::Vulkan)
 	{
 		auto platform = new PlatformVulkan();
@@ -50,6 +51,7 @@ Platform* CreatePlatform(DeviceType platformDeviceType)
 		}
 		return platform;
 	}
+	*/
 #endif
 
 #endif

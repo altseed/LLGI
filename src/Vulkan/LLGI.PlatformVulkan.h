@@ -2,16 +2,14 @@
 
 #pragma once
 
-#include "../LLGI.G3.Platform.h"
-#include "LLGI.G3.BaseVulkan.h"
+#include "../LLGI.Platform.h"
+#include "LLGI.BaseVulkan.h"
 
 #ifdef _WIN32
-#include "../../Win/LLGI.WindowWin.h"
+#include "../Win/LLGI.WindowWin.h"
 #endif
 
 namespace LLGI
-{
-namespace G3
 {
 
 class PlatformVulkan : public Platform
@@ -114,12 +112,11 @@ public:
 
 	bool Initialize(Vec2I windowSize);
 
-	void NewFrame() override;
+	bool NewFrame() override;
 	void Present() override;
 	Graphics* CreateGraphics() override;
 
 	DeviceType GetDeviceType() const override { return DeviceType::Vulkan; }
 };
 
-} // namespace G3
 } // namespace LLGI

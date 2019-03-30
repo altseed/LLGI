@@ -1,6 +1,6 @@
 
-#include "LLGI.G3.PlatformVulkan.h"
-#include "LLGI.G3.GraphicsVulkan.h"
+#include "LLGI.PlatformVulkan.h"
+#include "LLGI.GraphicsVulkan.h"
 #include <iostream>
 
 #ifdef _WIN32
@@ -8,8 +8,6 @@
 #endif
 
 namespace LLGI
-{
-namespace G3
 {
 
 uint32_t GetMemoryTypeIndex(uint32_t bits, const vk::MemoryPropertyFlags& properties, vk::PhysicalDevice vkPhysicalDevice)
@@ -637,10 +635,16 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 	}
 }
 
-void PlatformVulkan::NewFrame()
+bool PlatformVulkan::NewFrame()
 {
-	window->DoEvent();
+	if (!window->DoEvent())
+	{
+		return false;
+	}
+
 	AcquireNextImage(vkPresentComplete);
+
+	return true;
 }
 
 void PlatformVulkan::Present()
@@ -701,5 +705,4 @@ Graphics* PlatformVulkan::CreateGraphics()
 	return graphics;
 }
 
-} // namespace G3
 } // namespace LLGI

@@ -1,13 +1,11 @@
 
 #pragma once
 
-#include "../LLGI.G3.IndexBuffer.h"
-#include "LLGI.G3.BaseVulkan.h"
-#include "LLGI.G3.GraphicsVulkan.h"
+#include "../LLGI.IndexBuffer.h"
+#include "LLGI.BaseVulkan.h"
+#include "LLGI.GraphicsVulkan.h"
 
 namespace LLGI
-{
-namespace G3
 {
 
 class IndexBufferVulkan : public IndexBuffer
@@ -33,5 +31,4 @@ public:
 	int32_t GetCount() override;
 };
 
-} // namespace G3
 } // namespace LLGI

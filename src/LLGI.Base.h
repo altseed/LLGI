@@ -286,6 +286,18 @@ static std::shared_ptr<T> CreateSharedPtr(T* p)
 	return std::shared_ptr<T>(p, ReferenceDeleter<T>());
 }
 
+class VertexBuffer;
+class IndexBuffer;
+class ConstantBuffer;
+class Shader;
+class PipelineState;
+class Texture;
+class Platform;
+class Graphics;
+class CommandList;
+class Compiler;
+class RenderPass;
+
 namespace G3
 {
 

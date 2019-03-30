@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "../../LLGI.Base.h"
+#include "../LLGI.Base.h"
 
 #ifdef _WIN32
 #define VK_PROTOTYPES
@@ -12,8 +12,6 @@
 #include <vulkan/vulkan.hpp>
 
 namespace LLGI
-{
-namespace G3
 {
 
 class GraphicsVulkan;
@@ -36,5 +34,4 @@ void SetImageLayout(vk::CommandBuffer cmdbuffer,
 					vk::ImageLayout newImageLayout,
 					vk::ImageSubresourceRange subresourceRange);
 
-} // namespace G3
 } // namespace LLGI

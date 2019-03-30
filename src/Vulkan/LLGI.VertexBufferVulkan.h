@@ -1,13 +1,11 @@
 
 #pragma once
 
-#include "../LLGI.G3.VertexBuffer.h"
-#include "LLGI.G3.BaseVulkan.h"
-#include "LLGI.G3.GraphicsVulkan.h"
+#include "../LLGI.VertexBuffer.h"
+#include "LLGI.BaseVulkan.h"
+#include "LLGI.GraphicsVulkan.h"
 
 namespace LLGI
-{
-namespace G3
 {
 
 class VertexBufferVulkan : public VertexBuffer
@@ -31,5 +29,4 @@ public:
 	int32_t GetSize() override;
 };
 
-} // namespace G3
 } // namespace LLGI

@@ -1,8 +1,10 @@
 # The project's name
-file(GLOB files G3/*.h G3/*.cpp)
+file(GLOB files *.h *.cpp)
+file(GLOB files_g3 G3/*.h G3/*.cpp)
 file(GLOB files_pc G3/PC/*.h G3/PC/*.cpp)
 
 list(APPEND files ${files_pc})
+list(APPEND files ${files_g3})
 
 if(MSVC)
   file(GLOB files_win Win/*.h Win/*.cpp)
@@ -15,7 +17,7 @@ if(MSVC)
 endif()
 
 if(BUILD_VULKAN)
-  file(GLOB files_vulkan G3/Vulkan/*.h G3/Vulkan/*.cpp)
+  file(GLOB files_vulkan Vulkan/*.h Vulkan/*.cpp)
   list(APPEND files ${files_vulkan})
   add_definitions(-DENABLE_VULKAN)
 endif()
