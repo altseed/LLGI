@@ -9,7 +9,9 @@ void test_empty(LLGI::DeviceType deviceType)
 
 	while (count < 1000)
 	{
-		platform->NewFrame();
+		if (!platform->NewFrame())
+			break;
+
 		platform->Present();
 		count++;
 	}

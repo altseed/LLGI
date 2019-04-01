@@ -49,8 +49,12 @@ bool RenderPassVulkan::Initialize(const vk::Image& imageColor,
 	// color buffer
 	attachmentDescs[0].format = format;
 	attachmentDescs[0].samples = vk::SampleCountFlagBits::e1;
-	attachmentDescs[0].loadOp = vk::AttachmentLoadOp::eDontCare;
-	// attachmentDescs[0].loadOp = vk::AttachmentLoadOp::eClear;
+	
+	//attachmentDescs[0].loadOp = vk::AttachmentLoadOp::eDontCare;
+	
+	// TODO : improve it
+	attachmentDescs[0].loadOp = vk::AttachmentLoadOp::eClear;
+	
 	attachmentDescs[0].storeOp = vk::AttachmentStoreOp::eStore;
 	attachmentDescs[0].stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
 	attachmentDescs[0].stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
@@ -59,6 +63,9 @@ bool RenderPassVulkan::Initialize(const vk::Image& imageColor,
 	if (isPresentMode)
 	{
 		attachmentDescs[0].finalLayout = vk::ImageLayout::ePresentSrcKHR;	
+	
+		// TODO : improve it
+		//attachmentDescs[0].finalLayout = vk::ImageLayout::eColorAttachmentOptimal;
 	}
 	else
 	{
@@ -70,8 +77,10 @@ bool RenderPassVulkan::Initialize(const vk::Image& imageColor,
 	{
 		attachmentDescs[1].format = vk::Format::eD32SfloatS8Uint;
 		attachmentDescs[1].samples = vk::SampleCountFlagBits::e1;
-		attachmentDescs[1].loadOp = vk::AttachmentLoadOp::eDontCare;
-		// attachmentDescs[1].loadOp = vk::AttachmentLoadOp::eClear;
+		
+		//attachmentDescs[1].loadOp = vk::AttachmentLoadOp::eDontCare;
+		// TODO : improve it
+		attachmentDescs[1].loadOp = vk::AttachmentLoadOp::eClear;
 		attachmentDescs[1].storeOp = vk::AttachmentStoreOp::eStore;
 		attachmentDescs[1].stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
 		attachmentDescs[1].stencilStoreOp = vk::AttachmentStoreOp::eStore;
@@ -166,8 +175,9 @@ GraphicsVulkan::GraphicsVulkan(const vk::Device& device,
 							   const vk::CommandPool& commandPool,
 							   const vk::PhysicalDevice& pysicalDevice,
 							   const PlatformView& platformView,
+							   std::function<void(vk::CommandBuffer&)> addCommand,
 							   std::function<void(PlatformStatus&)> getStatus)
-	: vkDevice(device), vkQueue(quque), vkCmdPool(commandPool), vkPysicalDevice(pysicalDevice), getStatus_(getStatus)
+	: vkDevice(device), vkQueue(quque), vkCmdPool(commandPool), vkPysicalDevice(pysicalDevice), addCommand_(addCommand), getStatus_(getStatus)
 {
 	swapBufferCount_ = platformView.colors.size();
 
@@ -193,7 +203,7 @@ void GraphicsVulkan::NewFrame()
 	PlatformStatus status;
 	getStatus_(status);
 
-	assert(currentSwapBufferIndex != status.currentSwapBufferIndex);
+	assert(currentSwapBufferIndex == status.currentSwapBufferIndex);
 }
 
 void GraphicsVulkan::SetWindowSize(const Vec2I& windowSize) { throw "Not inplemented"; }
@@ -201,12 +211,7 @@ void GraphicsVulkan::SetWindowSize(const Vec2I& windowSize) { throw "Not inpleme
 void GraphicsVulkan::Execute(CommandList* commandList)
 {
 	auto commandList_ = static_cast<CommandListVulkan*>(commandList);
-
-	vk::SubmitInfo copySubmitInfo;
-	copySubmitInfo.commandBufferCount = 1;
-	copySubmitInfo.pCommandBuffers = &(commandList_->GetCommandBuffer());
-
-	vkQueue.submit(copySubmitInfo, VK_NULL_HANDLE);
+	addCommand_(commandList_->GetCommandBuffer());
 }
 
 void GraphicsVulkan::WaitFinish() { vkQueue.waitIdle(); }
@@ -229,7 +234,16 @@ Shader* GraphicsVulkan::CreateShader(DataStructure* data, int32_t count) { throw
 
 PipelineState* GraphicsVulkan::CreatePiplineState() { throw "Not inplemented"; }
 
-CommandList* GraphicsVulkan::CreateCommandList() { throw "Not inplemented"; }
+CommandList* GraphicsVulkan::CreateCommandList() { 
+
+	auto commandList = new CommandListVulkan();
+	if (commandList->Initialize(this))
+	{
+		return commandList;
+	}
+	SafeRelease(commandList);
+	return nullptr;
+}
 
 ConstantBuffer* GraphicsVulkan::CreateConstantBuffer(int32_t size, ConstantBufferType type) { throw "Not inplemented"; }
 

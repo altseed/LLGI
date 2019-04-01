@@ -83,6 +83,7 @@ void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
 
 	auto& cmdBuffer = commandBuffers[graphics_->GetCurrentSwapBufferIndex()];
 
+	/*
 	// to make screen clear
 	SetImageLayout(
 		cmdBuffer, renderPass_->colorBuffers[0], vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, colorSubRange);
@@ -114,14 +115,19 @@ void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
 				   vk::ImageLayout::eTransferDstOptimal,
 				   vk::ImageLayout::eDepthStencilAttachmentOptimal,
 				   depthSubRange);
+	*/
+
+	vk::ClearValue clear_values[2];
+	clear_values[0].color = clearColor;
+	clear_values[1].depthStencil = clearDepth;
 
 	// begin renderpass
 	vk::RenderPassBeginInfo renderPassBeginInfo;
+	renderPassBeginInfo.framebuffer = renderPass_->frameBuffer;
 	renderPassBeginInfo.renderPass = renderPass_->renderPass;
 	renderPassBeginInfo.renderArea.extent = vk::Extent2D(renderPass_->GetImageSize().X, renderPass_->GetImageSize().Y);
-	renderPassBeginInfo.clearValueCount = 0;
-	renderPassBeginInfo.pClearValues = nullptr;
-	renderPassBeginInfo.framebuffer = renderPass_->frameBuffer;
+	renderPassBeginInfo.clearValueCount = 2;
+	renderPassBeginInfo.pClearValues = clear_values;
 	cmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
 
 	vk::Viewport viewport = vk::Viewport(

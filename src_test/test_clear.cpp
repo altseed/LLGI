@@ -10,7 +10,9 @@ void test_clear_update(LLGI::DeviceType deviceType)
 
 	while (count < 1000)
 	{
-		platform->NewFrame();
+		if (!platform->NewFrame())
+			break;
+
 		graphics->NewFrame();
 
 		LLGI::Color8 color;
@@ -51,7 +53,9 @@ void test_clear(LLGI::DeviceType deviceType)
 
 	while (count < 1000)
 	{
-		platform->NewFrame();
+		if (!platform->NewFrame())
+			break;
+
 		graphics->NewFrame();
 
 		// It need to create a command buffer between NewFrame and Present.

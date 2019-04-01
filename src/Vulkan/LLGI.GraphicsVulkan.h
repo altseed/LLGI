@@ -65,6 +65,7 @@ class GraphicsVulkan : public Graphics
 private:
 	int32_t swapBufferCount_ = 0;
 	int32_t currentSwapBufferIndex = -1;
+	
 	std::vector<std::shared_ptr<RenderPassVulkan>> renderPasses;
 	vk::Image currentColorBuffer;
 
@@ -73,6 +74,7 @@ private:
 	vk::CommandPool vkCmdPool;
 	vk::PhysicalDevice vkPysicalDevice;
 
+	std::function<void(vk::CommandBuffer&)> addCommand_;
 	std::function<void(PlatformStatus&)> getStatus_;
 
 public:
@@ -81,6 +83,7 @@ public:
 				   const vk::CommandPool& commandPool,
 				   const vk::PhysicalDevice& pysicalDevice,
 				   const PlatformView& platformView,
+				   std::function<void(vk::CommandBuffer&)> addCommand,
 				   std::function<void(PlatformStatus&)> getStatus);
 
 	virtual ~GraphicsVulkan();

@@ -200,12 +200,15 @@ vk::Result PlatformVulkan::Present(vk::Semaphore semaphore)
 	return vkQueue.presentKHR(presentInfo);
 }
 
-void PlatformVulkan::SetImageLayout(vk::CommandBuffer cmdbuffer,
-									vk::Image image,
-									vk::ImageLayout oldImageLayout,
-									vk::ImageLayout newImageLayout,
-									vk::ImageSubresourceRange subresourceRange)
+void PlatformVulkan::SetImageBarrior(vk::CommandBuffer cmdbuffer,
+									 vk::Image image,
+									 vk::ImageLayout oldImageLayout,
+									 vk::ImageLayout newImageLayout,
+									 vk::ImageSubresourceRange subresourceRange)
 {
+	assert(newImageLayout != vk::ImageLayout::eUndefined);
+	assert(newImageLayout != vk::ImageLayout::ePreinitialized);
+
 	// setup image barrior object
 	vk::ImageMemoryBarrier imageMemoryBarrier;
 	imageMemoryBarrier.oldLayout = oldImageLayout;
@@ -215,9 +218,7 @@ void PlatformVulkan::SetImageLayout(vk::CommandBuffer cmdbuffer,
 
 	// current layout
 	if (oldImageLayout == vk::ImageLayout::ePreinitialized)
-		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eHostWrite;
-	else if (oldImageLayout == vk::ImageLayout::eTransferDstOptimal)
-		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eHostWrite | vk::AccessFlagBits::eTransferWrite;
 	else if (oldImageLayout == vk::ImageLayout::eColorAttachmentOptimal)
 		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
 	else if (oldImageLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal)
@@ -226,23 +227,25 @@ void PlatformVulkan::SetImageLayout(vk::CommandBuffer cmdbuffer,
 		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eTransferRead;
 	else if (oldImageLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
 		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eShaderRead;
+	else if (oldImageLayout == vk::ImageLayout::ePresentSrcKHR)
+		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eMemoryRead;
 
 	// next layout
 	if (newImageLayout == vk::ImageLayout::eTransferDstOptimal)
-		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
 	else if (newImageLayout == vk::ImageLayout::eTransferSrcOptimal)
-		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eTransferRead; // | imageMemoryBarrier.srcAccessMask;
+		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
 	else if (newImageLayout == vk::ImageLayout::eColorAttachmentOptimal)
 		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
 	else if (newImageLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal)
 		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
 	else if (newImageLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
-		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eInputAttachmentRead;
 
 	// Put barrier on top
 	// Put barrier inside setup command buffer
-	cmdbuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe,
-							  vk::PipelineStageFlagBits::eTopOfPipe,
+	cmdbuffer.pipelineBarrier(vk::PipelineStageFlagBits::eAllCommands,
+							  vk::PipelineStageFlagBits::eAllCommands,
 							  vk::DependencyFlags(),
 							  nullptr,
 							  nullptr,
@@ -251,15 +254,6 @@ void PlatformVulkan::SetImageLayout(vk::CommandBuffer cmdbuffer,
 
 void PlatformVulkan::Reset()
 {
-	if (vkInstance != nullptr)
-	{
-		if (surface != nullptr)
-		{
-			vkInstance.destroySurfaceKHR(surface);
-			surface = nullptr;
-		}
-	}
-
 	if (vkDevice != nullptr)
 	{
 		for (auto& swapBuffer : swapBuffers)
@@ -304,6 +298,15 @@ void PlatformVulkan::Reset()
 		{
 			vkDevice.destroyCommandPool(vkCmdPool);
 			vkCmdPool = nullptr;
+		}
+	}
+
+	if (vkInstance != nullptr)
+	{
+		if (surface != nullptr)
+		{
+			vkInstance.destroySurfaceKHR(surface);
+			surface = nullptr;
 		}
 	}
 
@@ -591,7 +594,7 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 			depthStencilBuffer.view = vkDevice.createImageView(viewCreateInfo);
 
 			// change layout(nt needed?)
-			/*
+
 			{
 				vk::CommandBufferBeginInfo cmdBufferBeginInfo;
 				vk::BufferCopy copyRegion;
@@ -603,11 +606,11 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 				subresourceRange.aspectMask = aspect;
 				subresourceRange.levelCount = 1;
 				subresourceRange.layerCount = 1;
-				SetImageLayout(vkCmdBuffers[0],
-							   depthStencilBuffer.image,
-							   vk::ImageLayout::eUndefined,
-							   vk::ImageLayout::eDepthStencilAttachmentOptimal,
-							   subresourceRange);
+				SetImageBarrior(vkCmdBuffers[0],
+								depthStencilBuffer.image,
+								vk::ImageLayout::eUndefined,
+								vk::ImageLayout::eDepthStencilAttachmentOptimal,
+								subresourceRange);
 
 				vkCmdBuffers[0].end();
 
@@ -619,7 +622,6 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 				vkQueue.submit(copySubmitInfo, VK_NULL_HANDLE);
 				vkQueue.waitIdle();
 			}
-			*/
 		}
 
 		windowSize_ = windowSize;
@@ -643,19 +645,56 @@ bool PlatformVulkan::NewFrame()
 	}
 
 	AcquireNextImage(vkPresentComplete);
-
+	executedCommandCount = 0;
 	return true;
 }
 
 void PlatformVulkan::Present()
 {
 
-	// waiting command
+	// waiting or empty command
 	auto& cmdBuffer = vkCmdBuffers[frameIndex];
 
 	cmdBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
 	vk::CommandBufferBeginInfo cmdBufInfo;
 	cmdBuffer.begin(cmdBufInfo);
+
+	// typical driver causes errors without present command
+	if (executedCommandCount == 0)
+	{
+		vk::ClearColorValue clearColor(std::array<float, 4>{0, 0, 0, 0});
+		vk::ClearDepthStencilValue clearDepth(1.0f, 0);
+
+		vk::ImageSubresourceRange colorSubRange;
+		colorSubRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+		colorSubRange.levelCount = 1;
+		colorSubRange.layerCount = 1;
+
+		vk::ImageSubresourceRange depthSubRange;
+		depthSubRange.aspectMask = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
+		depthSubRange.levelCount = 1;
+		depthSubRange.layerCount = 1;
+
+		// to make screen clear
+		SetImageBarrior(
+			cmdBuffer, swapBuffers[frameIndex].image, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal, colorSubRange);
+		// SetImageLayout(cmdBuffer,
+		//			   depthStencilBuffer.image,
+		//				vk::ImageLayout::eDepthReadOnlyStencilAttachmentOptimal,
+		//			   vk::ImageLayout::eTransferDstOptimal,
+		//			   depthSubRange);
+
+		// cmdBuffer.clearColorImage(swapBuffers[frameIndex].image, vk::ImageLayout::eColorAttachmentOptimal, clearColor, colorSubRange);
+		// cmdBuffer.clearDepthStencilImage(depthStencilBuffer.image, vk::ImageLayout::eDepthStencilAttachmentOptimal, clearDepth,
+		// depthSubRange);
+
+		SetImageBarrior(cmdBuffer,
+						swapBuffers[frameIndex].image,
+						vk::ImageLayout::eColorAttachmentOptimal,
+						vk::ImageLayout::ePresentSrcKHR,
+						colorSubRange);
+	}
+
 	cmdBuffer.end();
 
 	{
@@ -700,7 +739,17 @@ Graphics* PlatformVulkan::CreateGraphics()
 	platformView.format = surfaceFormat;
 
 	auto getStatus = [this](PlatformStatus& status) -> void { status.currentSwapBufferIndex = this->frameIndex; };
-	auto graphics = new GraphicsVulkan(vkDevice, vkQueue, vkCmdPool, vkPhysicalDevice, platformView, getStatus);
+
+	auto addCommand = [this](vk::CommandBuffer& commandBuffer) -> void {
+		vk::SubmitInfo copySubmitInfo;
+		copySubmitInfo.commandBufferCount = 1;
+		copySubmitInfo.pCommandBuffers = &commandBuffer;
+		vkQueue.submit(copySubmitInfo, VK_NULL_HANDLE);
+
+		this->executedCommandCount++;
+	};
+
+	auto graphics = new GraphicsVulkan(vkDevice, vkQueue, vkCmdPool, vkPhysicalDevice, platformView, addCommand, getStatus);
 
 	return graphics;
 }
