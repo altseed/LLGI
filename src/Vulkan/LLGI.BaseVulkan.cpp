@@ -4,10 +4,15 @@
 namespace LLGI
 {
 
-Buffer::Buffer(GraphicsVulkan* graphics)
+Buffer::Buffer(GraphicsVulkan* graphics, bool hasStrongRef)
 {
-	SafeAddRef(graphics);
-	graphics_ = CreateSharedPtr(graphics);
+	hasStrongRef_ = hasStrongRef;
+	if (hasStrongRef)
+	{
+		SafeAddRef(graphics);
+	}
+
+	graphics_ = graphics;
 }
 
 Buffer::~Buffer()
@@ -17,6 +22,11 @@ Buffer::~Buffer()
 		graphics_->GetDevice().destroyBuffer(buffer);
 		graphics_->GetDevice().freeMemory(devMem);
 		buffer = nullptr;
+	}
+
+	if (hasStrongRef_)
+	{
+		SafeRelease(graphics_);
 	}
 }
 

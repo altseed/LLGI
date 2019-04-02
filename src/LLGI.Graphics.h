@@ -71,7 +71,14 @@ public:
 	virtual Shader* CreateShader(DataStructure* data, int32_t count);
 	virtual PipelineState* CreatePiplineState();
 	virtual CommandList* CreateCommandList();
+
+	/**
+		@brief	create a constant buffer
+		@param	size buffer size
+		@param	type LongTime - exists over two frames and unchanged frequently. ShortTime exists in a frame
+	*/
 	virtual ConstantBuffer* CreateConstantBuffer(int32_t size, ConstantBufferType type = ConstantBufferType::LongTime);
+
 	virtual RenderPass* CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture) { return nullptr; }
 	virtual Texture* CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer);
 	virtual Texture* CreateTexture(uint64_t id);

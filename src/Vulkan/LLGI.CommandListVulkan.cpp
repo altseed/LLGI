@@ -44,9 +44,28 @@ void CommandListVulkan::SetScissor(int32_t x, int32_t y, int32_t width, int32_t 
 	cmdBuffer.setScissor(0, scissor);
 }
 
-void CommandListVulkan::Draw(int32_t pritimiveCount) { throw "Not inplemented"; }
+void CommandListVulkan::Draw(int32_t pritimiveCount)
+{
+	throw "Not inplemented";
 
-void CommandListVulkan::SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride, int32_t offset) { throw "Not inplemented"; }
+	auto& cmdBuffer = commandBuffers[graphics_->GetCurrentSwapBufferIndex()];
+
+	//cmdBuffer.bindVertexBuffers
+
+	//cmdBuffer.bindIndexBuffer
+
+
+	int indexCountPerPrimitive = 3;
+	int indexOffset = 0;
+	int vertexOffset = 0;
+
+	cmdBuffer.drawIndexed(indexCountPerPrimitive * pritimiveCount, 1, indexOffset, vertexOffset, 0);
+}
+
+void CommandListVulkan::SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride, int32_t offset) { 
+	throw "Not inplemented"; 
+
+}
 
 void CommandListVulkan::SetIndexBuffer(IndexBuffer* indexBuffer) { throw "Not inplemented"; }
 

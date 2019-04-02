@@ -41,6 +41,8 @@ public:
 class TempMemoryPool
 {
 public:
+	std::unique_ptr<Buffer> buffer;
+	int offset = 0;
 };
 
 class PlatformView
@@ -67,6 +69,8 @@ private:
 	int32_t currentSwapBufferIndex = -1;
 	
 	std::vector<std::shared_ptr<RenderPassVulkan>> renderPasses;
+	std::vector<std::shared_ptr<TempMemoryPool>> tempMemoryPools;
+
 	vk::Image currentColorBuffer;
 
 	vk::Device vkDevice;
