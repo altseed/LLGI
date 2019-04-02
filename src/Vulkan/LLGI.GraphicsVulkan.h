@@ -41,6 +41,8 @@ public:
 class TempMemoryPool
 {
 public:
+	std::unique_ptr<Buffer> buffer;
+	int offset = 0;
 };
 
 class PlatformView
@@ -65,7 +67,10 @@ class GraphicsVulkan : public Graphics
 private:
 	int32_t swapBufferCount_ = 0;
 	int32_t currentSwapBufferIndex = -1;
+	
 	std::vector<std::shared_ptr<RenderPassVulkan>> renderPasses;
+	std::vector<std::shared_ptr<TempMemoryPool>> tempMemoryPools;
+
 	vk::Image currentColorBuffer;
 
 	vk::Device vkDevice;
@@ -73,6 +78,7 @@ private:
 	vk::CommandPool vkCmdPool;
 	vk::PhysicalDevice vkPysicalDevice;
 
+	std::function<void(vk::CommandBuffer&)> addCommand_;
 	std::function<void(PlatformStatus&)> getStatus_;
 
 public:
@@ -81,6 +87,7 @@ public:
 				   const vk::CommandPool& commandPool,
 				   const vk::PhysicalDevice& pysicalDevice,
 				   const PlatformView& platformView,
+				   std::function<void(vk::CommandBuffer&)> addCommand,
 				   std::function<void(PlatformStatus&)> getStatus);
 
 	virtual ~GraphicsVulkan();

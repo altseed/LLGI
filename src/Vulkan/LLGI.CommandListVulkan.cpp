@@ -44,9 +44,28 @@ void CommandListVulkan::SetScissor(int32_t x, int32_t y, int32_t width, int32_t 
 	cmdBuffer.setScissor(0, scissor);
 }
 
-void CommandListVulkan::Draw(int32_t pritimiveCount) { throw "Not inplemented"; }
+void CommandListVulkan::Draw(int32_t pritimiveCount)
+{
+	throw "Not inplemented";
 
-void CommandListVulkan::SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride, int32_t offset) { throw "Not inplemented"; }
+	auto& cmdBuffer = commandBuffers[graphics_->GetCurrentSwapBufferIndex()];
+
+	//cmdBuffer.bindVertexBuffers
+
+	//cmdBuffer.bindIndexBuffer
+
+
+	int indexCountPerPrimitive = 3;
+	int indexOffset = 0;
+	int vertexOffset = 0;
+
+	cmdBuffer.drawIndexed(indexCountPerPrimitive * pritimiveCount, 1, indexOffset, vertexOffset, 0);
+}
+
+void CommandListVulkan::SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride, int32_t offset) { 
+	throw "Not inplemented"; 
+
+}
 
 void CommandListVulkan::SetIndexBuffer(IndexBuffer* indexBuffer) { throw "Not inplemented"; }
 
@@ -83,6 +102,7 @@ void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
 
 	auto& cmdBuffer = commandBuffers[graphics_->GetCurrentSwapBufferIndex()];
 
+	/*
 	// to make screen clear
 	SetImageLayout(
 		cmdBuffer, renderPass_->colorBuffers[0], vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, colorSubRange);
@@ -114,14 +134,19 @@ void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
 				   vk::ImageLayout::eTransferDstOptimal,
 				   vk::ImageLayout::eDepthStencilAttachmentOptimal,
 				   depthSubRange);
+	*/
+
+	vk::ClearValue clear_values[2];
+	clear_values[0].color = clearColor;
+	clear_values[1].depthStencil = clearDepth;
 
 	// begin renderpass
 	vk::RenderPassBeginInfo renderPassBeginInfo;
+	renderPassBeginInfo.framebuffer = renderPass_->frameBuffer;
 	renderPassBeginInfo.renderPass = renderPass_->renderPass;
 	renderPassBeginInfo.renderArea.extent = vk::Extent2D(renderPass_->GetImageSize().X, renderPass_->GetImageSize().Y);
-	renderPassBeginInfo.clearValueCount = 0;
-	renderPassBeginInfo.pClearValues = nullptr;
-	renderPassBeginInfo.framebuffer = renderPass_->frameBuffer;
+	renderPassBeginInfo.clearValueCount = 2;
+	renderPassBeginInfo.pClearValues = clear_values;
 	cmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
 
 	vk::Viewport viewport = vk::Viewport(

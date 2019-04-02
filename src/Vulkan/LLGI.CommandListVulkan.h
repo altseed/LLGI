@@ -12,6 +12,15 @@ private:
 	std::shared_ptr<GraphicsVulkan> graphics_;
 	std::vector<vk::CommandBuffer> commandBuffers;
 
+	struct BindingVertex
+	{
+		VertexBuffer* buffer = nullptr;
+		int stride = 0;
+		int offset = 0;
+	};
+
+	std::array<BindingVertex, 1> bindingVertexes;
+
 public:
 	CommandListVulkan();
 	virtual ~CommandListVulkan();

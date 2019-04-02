@@ -71,6 +71,8 @@ private:
 
 	std::vector<SwapBuffer> swapBuffers;
 
+	int32_t executedCommandCount = 0;
+
 #ifdef _WIN32
 	std::shared_ptr<WindowWin> window = nullptr;
 #endif
@@ -98,7 +100,7 @@ private:
 	*/
 	vk::Result Present(vk::Semaphore semaphore);
 
-	void SetImageLayout(vk::CommandBuffer cmdbuffer,
+	void SetImageBarrior(vk::CommandBuffer cmdbuffer,
 						vk::Image image,
 						vk::ImageLayout oldImageLayout,
 						vk::ImageLayout newImageLayout,

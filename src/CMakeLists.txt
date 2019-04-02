@@ -1,10 +1,8 @@
 # The project's name
 file(GLOB files *.h *.cpp)
-file(GLOB files_g3 G3/*.h G3/*.cpp)
 file(GLOB files_pc PC/*.h PC/*.cpp)
 
 list(APPEND files ${files_pc})
-list(APPEND files ${files_g3})
 
 if(MSVC)
   file(GLOB files_win Win/*.h Win/*.cpp)
@@ -12,7 +10,7 @@ if(MSVC)
 endif()
 
 if(MSVC)
-  file(GLOB files_dx12 G3/DX12/*.h G3/DX12/*.cpp)
+  file(GLOB files_dx12 DX12/*.h DX12/*.cpp)
   list(APPEND files ${files_dx12})
 endif()
 
