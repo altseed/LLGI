@@ -27,6 +27,10 @@ public:
 	void Clear(const Color8& color);
 	void BeginRenderPass(RenderPass* renderPass) override;
 	void EndRenderPass() override;
+	void SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride, int32_t offset);
+	void SetIndexBuffer(IndexBuffer* indexBuffer);
+	void SetPipelineState(PipelineState* pipelineState);
+	void SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageType shaderStage);
 
 	ID3D12GraphicsCommandList* GetCommandList() { return commandList_; }
 };

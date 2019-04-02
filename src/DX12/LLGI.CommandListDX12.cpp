@@ -1,6 +1,9 @@
 
 #include "LLGI.CommandListDX12.h"
 #include "LLGI.GraphicsDX12.h"
+#include "LLGI.IndexBufferDX12.h"
+#include "LLGI.PipelineStateDX12.h"
+#include "LLGI.VertexBufferDX12.h"
 
 namespace LLGI
 {
@@ -12,6 +15,34 @@ CommandListDX12::~CommandListDX12()
 	SafeRelease(commandAllocator_);
 	SafeRelease(commandList_);
 }
+
+void CommandListDX12::SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride, int32_t offset)
+{
+	D3D12_VERTEX_BUFFER_VIEW vertexView;
+	vertexView.BufferLocation = (reinterpret_cast<VertexBufferDX12*>(vertexBuffer))->Get()->GetGPUVirtualAddress();
+	vertexView.StrideInBytes = sizeof(Vertex3D);
+	vertexView.SizeInBytes = stride;
+	commandList_->IASetVertexBuffers(0, 1, &vertexView);
+}
+
+void CommandListDX12::SetIndexBuffer(IndexBuffer* indexBuffer)
+{
+	D3D12_INDEX_BUFFER_VIEW indexView;
+	auto ib = (reinterpret_cast<IndexBufferDX12*>(indexBuffer));
+	indexView.BufferLocation = ib->Get()->GetGPUVirtualAddress();
+	indexView.SizeInBytes = sizeof(uint16_t) * ib->GetCount();
+	commandList_->IASetIndexBuffer(&indexView);
+}
+
+void CommandListDX12::SetPipelineState(PipelineState* pipelineState)
+{
+	auto ps = (reinterpret_cast<PipelineStateDX12*>(pipelineState));
+	commandList_->SetGraphicsRootSignature(ps->GetRootSignature());
+	auto p = ps->GetPipelineState();
+	commandList_->SetPipelineState(p);
+}
+
+void CommandListDX12::SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageType shaderStage) {}
 
 bool CommandListDX12::Initialize(GraphicsDX12* graphics, ID3D12CommandAllocator* commandAllocator)
 {

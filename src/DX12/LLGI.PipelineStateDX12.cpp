@@ -38,6 +38,8 @@ void PipelineStateDX12::SetShader(ShaderStageType stage, Shader* shader)
 
 void PipelineStateDX12::Compile()
 {
+	CreateRootSignature();
+
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateDesc = {};
 
 	auto vs = reinterpret_cast<ShaderDX12*>(vertexShader.get())->GetData();
@@ -56,33 +58,39 @@ void PipelineStateDX12::Compile()
 	D3D12_RASTERIZER_DESC rasterizerDesc = {};
 	rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 	rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
-	rasterizerDesc.FrontCounterClockwise = false;
+	rasterizerDesc.FrontCounterClockwise = FALSE;
 	rasterizerDesc.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
 	rasterizerDesc.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
 	rasterizerDesc.SlopeScaledDepthBias = D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
-	rasterizerDesc.DepthClipEnable = true;
-	rasterizerDesc.MultisampleEnable = false;
-	rasterizerDesc.AntialiasedLineEnable = false;
+	rasterizerDesc.DepthClipEnable = TRUE;
+	rasterizerDesc.MultisampleEnable = FALSE;
+	rasterizerDesc.AntialiasedLineEnable = FALSE;
 	rasterizerDesc.ForcedSampleCount = 0;
 	rasterizerDesc.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 
-	D3D12_BLEND_DESC blendDesc = {};
-	blendDesc.AlphaToCoverageEnable = false;
-	blendDesc.IndependentBlendEnable = false;
-	blendDesc.RenderTarget[0].BlendEnable = false;
-	blendDesc.RenderTarget[0].LogicOpEnable = false;
-	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
-	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ZERO;
-	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
-	blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
-	blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].LogicOp = D3D12_LOGIC_OP_NOOP;
-	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	// レンダーターゲットのブレンド設定.
+	D3D12_RENDER_TARGET_BLEND_DESC RTBSDesc = {FALSE,
+											   FALSE,
+											   D3D12_BLEND_ONE,
+											   D3D12_BLEND_ZERO,
+											   D3D12_BLEND_OP_ADD,
+											   D3D12_BLEND_ONE,
+											   D3D12_BLEND_ZERO,
+											   D3D12_BLEND_OP_ADD,
+											   D3D12_LOGIC_OP_NOOP,
+											   D3D12_COLOR_WRITE_ENABLE_ALL};
 
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = {};
+	// ブレンドステートの設定.
+	D3D12_BLEND_DESC blendDesc = {};
+	blendDesc.AlphaToCoverageEnable = FALSE;
+	blendDesc.IndependentBlendEnable = FALSE;
+	for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i)
+	{
+		blendDesc.RenderTarget[i] = RTBSDesc;
+	}
+
 	pipelineStateDesc.InputLayout = {elementDescs, _countof(elementDescs)};
-	// pipelineStateDesc.pRootSignature = RootSignature;
+	pipelineStateDesc.pRootSignature = RootSignature_;
 	pipelineStateDesc.VS = {vs->Data, (size_t)vs->Size};
 	pipelineStateDesc.PS = {ps->Data, (size_t)ps->Size};
 	pipelineStateDesc.RasterizerState = rasterizerDesc;
@@ -93,16 +101,51 @@ void PipelineStateDX12::Compile()
 	pipelineStateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	pipelineStateDesc.NumRenderTargets = 1;
 	pipelineStateDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	pipelineStateDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 	pipelineStateDesc.SampleDesc.Count = 1;
 
-	auto hr = graphics_->GetDevice()->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&pipelineState_));
+	auto hr = graphics_->GetDevice()->CreateGraphicsPipelineState(&pipelineStateDesc, IID_PPV_ARGS(&pipelineState_));
+	SafeAddRef(pipelineState_);
+
 	if (FAILED(hr))
 	{
 		goto FAILED_EXIT;
 	}
 
 FAILED_EXIT:
+	SafeRelease(pipelineState_);
 	return;
+}
+
+bool PipelineStateDX12::CreateRootSignature()
+{
+	D3D12_ROOT_SIGNATURE_DESC desc = {};
+	desc.NumParameters = 0;
+	desc.pParameters = nullptr;
+	desc.NumStaticSamplers = 0;
+	desc.pStaticSamplers = nullptr;
+	desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+	auto hr = D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1, &Signature_, nullptr);
+	SafeAddRef(Signature_);
+	if (FAILED(hr))
+	{
+		goto FAILED_EXIT;
+	}
+
+	hr = graphics_->GetDevice()->CreateRootSignature(
+		0, Signature_->GetBufferPointer(), Signature_->GetBufferSize(), IID_PPV_ARGS(&RootSignature_));
+	if (FAILED(hr))
+	{
+		goto FAILED_EXIT;
+		SafeRelease(Signature_);
+	}
+	SafeAddRef(RootSignature_);
+	return true;
+
+FAILED_EXIT:
+	SafeRelease(RootSignature_);
+	return false;
 }
 
 } // namespace LLGI

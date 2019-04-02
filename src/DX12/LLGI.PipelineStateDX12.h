@@ -17,8 +17,13 @@ private:
 	std::shared_ptr<Shader> vertexShader;
 	std::shared_ptr<Shader> pixelShader;
 
-	ID3D12Resource* pipelineState_ = nullptr;
+	ID3D12PipelineState* pipelineState_ = nullptr;
 	std::shared_ptr<GraphicsDX12> graphics_;
+
+	ID3DBlob* Signature_;
+	ID3D12RootSignature* RootSignature_;
+
+	bool CreateRootSignature();
 
 public:
 	PipelineStateDX12() = default;
@@ -27,6 +32,9 @@ public:
 
 	void SetShader(ShaderStageType stage, Shader* shader) override;
 	void Compile() override;
+
+	ID3D12PipelineState* GetPipelineState() { return pipelineState_; }
+	ID3D12RootSignature* GetRootSignature() { return RootSignature_; }
 };
 
 } // namespace LLGI

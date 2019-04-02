@@ -63,10 +63,9 @@ Platform* CreatePlatform(DeviceType platformDeviceType)
 
 Compiler* CreateCompiler(DeviceType device)
 {
-	return nullptr;
 #ifdef _WIN32
-	// auto obj = new CompilerDX12();
-	// return obj;
+	auto obj = new CompilerDX12();
+	return obj;
 #endif
 
 #ifdef __APPLE__

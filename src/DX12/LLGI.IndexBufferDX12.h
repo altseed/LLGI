@@ -32,6 +32,7 @@ public:
 	virtual void Unlock();
 	virtual int32_t GetStride() { return stride; }
 	virtual int32_t GetCount() { return count; }
+	ID3D12Resource* Get() { return indexBuffer; }
 };
 
 } // namespace LLGI

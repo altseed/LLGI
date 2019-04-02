@@ -452,6 +452,37 @@ void main()
 
 )";
 
+	auto code_dx_vs = R"(
+struct VS_INPUT{
+    float3 g_position : POSITION;
+    float4 g_color : COLOR;
+};
+struct VS_OUTPUT{
+    float4 g_position : SV_POSITION;
+    float4 g_color : COLOR;
+};
+
+VS_OUTPUT main(VS_INPUT input){
+    VS_OUTPUT output;
+
+    output.g_position = float4(input.g_position, 1.0f);
+    output.g_color = input.g_color;
+
+    return output;
+}
+)";
+
+	auto code_dx_ps = R"(
+struct PS_INPUT{
+    float4 Color    : COLOR;
+};
+
+float4 main(PS_INPUT input) : SV_TARGET{
+    return input.Color;
+}
+
+)";
+
 	auto compiler = LLGI::CreateCompiler(LLGI::DeviceType::Default);
 
 	int count = 0;
@@ -469,8 +500,8 @@ void main()
 		LLGI::CompilerResult result_vs;
 		LLGI::CompilerResult result_ps;
 
-		compiler->Compile(result_vs, code_gl_vs, LLGI::ShaderStageType::Vertex);
-		compiler->Compile(result_ps, code_gl_ps, LLGI::ShaderStageType::Pixel);
+		compiler->Compile(result_vs, code_dx_vs, LLGI::ShaderStageType::Vertex);
+		compiler->Compile(result_ps, code_dx_ps, LLGI::ShaderStageType::Pixel);
 
 		std::vector<LLGI::DataStructure> data_vs;
 		std::vector<LLGI::DataStructure> data_ps;
@@ -693,7 +724,7 @@ int main()
 	// test_empty();
 
 	// About clear
-	test_clear();
+	// test_clear();
 	// test_clear_update();
 
 	// About compile
@@ -701,7 +732,7 @@ int main()
 
 	// test_simple_texture_rectangle();
 	// test_simple_constant_rectangle(LLGI::ConstantBufferType::ShortTime);
-	// test_simple_rectangle();
+	test_simple_rectangle();
 	// test_renderPass();
 
 	return 0;

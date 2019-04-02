@@ -36,6 +36,7 @@ public:
 	virtual void* Lock(int32_t offset, int32_t size);
 	virtual void Unlock();
 	virtual int32_t GetSize();
+	ID3D12Resource* Get() { return vertexBuffer; }
 };
 
 } // namespace LLGI
