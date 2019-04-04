@@ -12,14 +12,17 @@ private:
 	std::shared_ptr<GraphicsVulkan> graphics_;
 	std::vector<vk::CommandBuffer> commandBuffers;
 
-	struct BindingVertex
+	struct BindingVertexBuffer
 	{
-		VertexBuffer* buffer = nullptr;
-		int stride = 0;
-		int offset = 0;
+		VertexBuffer* vertexBuffer = nullptr;
+		int32_t stride = 0;
+		int32_t offset = 0;
 	};
 
-	std::array<BindingVertex, 1> bindingVertexes;
+	BindingVertexBuffer bindingVertexBuffer;
+	IndexBuffer* currentIndexBuffer = nullptr;
+	PipelineState* currentPipelineState = nullptr;
+
 
 public:
 	CommandListVulkan();

@@ -1,8 +1,5 @@
 #include "LLGI.GraphicsVulkan.h"
 #include "LLGI.CommandListVulkan.h"
-#include "LLGI.IndexBufferVulkan.h"
-#include "LLGI.ShaderVulkan.h"
-#include "LLGI.VertexBufferVulkan.h"
 
 namespace LLGI
 {
@@ -41,7 +38,7 @@ bool RenderPassVulkan::Initialize(const vk::Image& imageColor,
 								  vk::Format format)
 {
 	imageSize_ = imageSize;
-
+	
 	bool hasDepth = true;
 	bool isPresentMode = true;
 
@@ -52,12 +49,12 @@ bool RenderPassVulkan::Initialize(const vk::Image& imageColor,
 	// color buffer
 	attachmentDescs[0].format = format;
 	attachmentDescs[0].samples = vk::SampleCountFlagBits::e1;
-
-	// attachmentDescs[0].loadOp = vk::AttachmentLoadOp::eDontCare;
-
+	
+	//attachmentDescs[0].loadOp = vk::AttachmentLoadOp::eDontCare;
+	
 	// TODO : improve it
 	attachmentDescs[0].loadOp = vk::AttachmentLoadOp::eClear;
-
+	
 	attachmentDescs[0].storeOp = vk::AttachmentStoreOp::eStore;
 	attachmentDescs[0].stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
 	attachmentDescs[0].stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
@@ -65,23 +62,23 @@ bool RenderPassVulkan::Initialize(const vk::Image& imageColor,
 
 	if (isPresentMode)
 	{
-		attachmentDescs[0].finalLayout = vk::ImageLayout::ePresentSrcKHR;
-
+		attachmentDescs[0].finalLayout = vk::ImageLayout::ePresentSrcKHR;	
+	
 		// TODO : improve it
-		// attachmentDescs[0].finalLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		//attachmentDescs[0].finalLayout = vk::ImageLayout::eColorAttachmentOptimal;
 	}
 	else
 	{
-		attachmentDescs[0].finalLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		attachmentDescs[0].finalLayout = vk::ImageLayout::eColorAttachmentOptimal;	
 	}
-
+	
 	// depth buffer
 	if (hasDepth)
 	{
 		attachmentDescs[1].format = vk::Format::eD32SfloatS8Uint;
 		attachmentDescs[1].samples = vk::SampleCountFlagBits::e1;
-
-		// attachmentDescs[1].loadOp = vk::AttachmentLoadOp::eDontCare;
+		
+		//attachmentDescs[1].loadOp = vk::AttachmentLoadOp::eDontCare;
 		// TODO : improve it
 		attachmentDescs[1].loadOp = vk::AttachmentLoadOp::eClear;
 		attachmentDescs[1].storeOp = vk::AttachmentStoreOp::eStore;
@@ -90,7 +87,7 @@ bool RenderPassVulkan::Initialize(const vk::Image& imageColor,
 		attachmentDescs[1].initialLayout = vk::ImageLayout::eUndefined;
 		attachmentDescs[1].finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 	}
-
+	
 	vk::AttachmentReference& colorReference = attachmentRefs[0];
 	colorReference.attachment = 0;
 	colorReference.layout = vk::ImageLayout::eColorAttachmentOptimal;
@@ -111,7 +108,7 @@ bool RenderPassVulkan::Initialize(const vk::Image& imageColor,
 	std::array<vk::SubpassDependency, 1> subpassDepends;
 	{
 		vk::SubpassDependency& dependency = subpassDepends[0];
-
+		
 		/*
 		//monsho
 		dependency.srcSubpass = 0;
@@ -121,7 +118,7 @@ bool RenderPassVulkan::Initialize(const vk::Image& imageColor,
 		dependency.srcStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
 		dependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 		*/
-
+		
 		// based on imgui
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 		dependency.dstSubpass = 0;
@@ -139,8 +136,8 @@ bool RenderPassVulkan::Initialize(const vk::Image& imageColor,
 		renderPassInfo.pSubpasses = subpasses.data();
 
 		// based on official
-		// renderPassInfo.dependencyCount = (uint32_t)subpassDepends.size();
-		// renderPassInfo.pDependencies = subpassDepends.data();
+		//renderPassInfo.dependencyCount = (uint32_t)subpassDepends.size();
+		//renderPassInfo.pDependencies = subpassDepends.data();
 		renderPassInfo.dependencyCount = 0;
 		renderPassInfo.pDependencies = nullptr;
 
@@ -180,12 +177,7 @@ GraphicsVulkan::GraphicsVulkan(const vk::Device& device,
 							   const PlatformView& platformView,
 							   std::function<void(vk::CommandBuffer&)> addCommand,
 							   std::function<void(PlatformStatus&)> getStatus)
-	: vkDevice(device)
-	, vkQueue(quque)
-	, vkCmdPool(commandPool)
-	, vkPysicalDevice(pysicalDevice)
-	, addCommand_(addCommand)
-	, getStatus_(getStatus)
+	: vkDevice(device), vkQueue(quque), vkCmdPool(commandPool), vkPysicalDevice(pysicalDevice), addCommand_(addCommand), getStatus_(getStatus)
 {
 	swapBufferCount_ = platformView.colors.size();
 
@@ -199,27 +191,6 @@ GraphicsVulkan::GraphicsVulkan(const vk::Device& device,
 							   platformView.imageSize,
 							   platformView.format);
 		renderPasses.push_back(renderPass);
-
-		auto tempMemoryPool = std::make_shared<TempMemoryPool>();
-
-		// allocate mamory
-		tempMemoryPool->buffer = std::unique_ptr<Buffer>(new Buffer(this, false));
-		{
-			vk::BufferCreateInfo IndexBufferInfo;
-			IndexBufferInfo.size = 1024 * 1024;
-			IndexBufferInfo.usage = vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst;
-			tempMemoryPool->buffer->buffer = GetDevice().createBuffer(IndexBufferInfo);
-
-			vk::MemoryRequirements memReqs = GetDevice().getBufferMemoryRequirements(tempMemoryPool->buffer->buffer);
-			vk::MemoryAllocateInfo memAlloc;
-			memAlloc.allocationSize = memReqs.size;
-			memAlloc.memoryTypeIndex =
-				GetMemoryTypeIndex(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible);
-			tempMemoryPool->buffer->devMem = GetDevice().allocateMemory(memAlloc);
-			GetDevice().bindBufferMemory(tempMemoryPool->buffer->buffer, tempMemoryPool->buffer->devMem, 0);
-		}
-
-		tempMemoryPools.push_back(tempMemoryPool);
 	}
 }
 
@@ -228,7 +199,6 @@ GraphicsVulkan::~GraphicsVulkan() {}
 void GraphicsVulkan::NewFrame()
 {
 	currentSwapBufferIndex = (currentSwapBufferIndex + 1) % swapBufferCount_;
-	tempMemoryPools[currentSwapBufferIndex]->offset = 0;
 
 	PlatformStatus status;
 	getStatus_(status);
@@ -256,47 +226,16 @@ RenderPass* GraphicsVulkan::GetCurrentScreen(const Color8& clearColor, bool isCo
 	return currentRenderPass.get();
 }
 
-VertexBuffer* GraphicsVulkan::CreateVertexBuffer(int32_t size)
-{
-	auto vb = new VertexBufferVulkan();
-	if (vb->Initialize(this, size))
-	{
-		return vb;
-	}
+VertexBuffer* GraphicsVulkan::CreateVertexBuffer(int32_t size) { throw "Not inplemented"; }
 
-	SafeRelease(vb);
-	return nullptr;
-}
+IndexBuffer* GraphicsVulkan::CreateIndexBuffer(int32_t stride, int32_t count) { throw "Not inplemented"; }
 
-IndexBuffer* GraphicsVulkan::CreateIndexBuffer(int32_t stride, int32_t count)
-{
-	auto ib = new IndexBufferVulkan();
-	if (ib->Initialize(this, stride, count))
-	{
-		return ib;
-	}
-
-	SafeRelease(ib);
-	return nullptr;
-}
-
-Shader* GraphicsVulkan::CreateShader(DataStructure* data, int32_t count)
-{
-	auto shader = new ShaderVulkan();
-
-	if (shader->Initialize(this, data, count))
-	{
-		return shader;
-	}
-
-	SafeRelease(shader);
-	return nullptr;
-}
+Shader* GraphicsVulkan::CreateShader(DataStructure* data, int32_t count) { throw "Not inplemented"; }
 
 PipelineState* GraphicsVulkan::CreatePiplineState() { throw "Not inplemented"; }
 
-CommandList* GraphicsVulkan::CreateCommandList()
-{
+CommandList* GraphicsVulkan::CreateCommandList() { 
+
 	auto commandList = new CommandListVulkan();
 	if (commandList->Initialize(this))
 	{

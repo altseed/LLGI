@@ -18,6 +18,7 @@ private:
 	int32_t memSize = 0;
 	int32_t count_ = 0;
 	int32_t stride_ = 0;
+
 public:
 	bool Initialize(GraphicsVulkan* graphics, int32_t stride, int32_t count);
 
@@ -29,6 +30,8 @@ public:
 	void Unlock() override;
 	int32_t GetStride() override;
 	int32_t GetCount() override;
+
+	vk::Buffer GetBuffer() { return gpuBuf->buffer; }
 };
 
 } // namespace LLGI

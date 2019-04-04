@@ -15,6 +15,7 @@ private:
 	std::array<Shader*, static_cast<int>(ShaderStageType::Max)> shaders;
 
 	vk::Pipeline pipeline = nullptr;
+	vk::PipelineLayout pipelineLayout = nullptr;
 
 public:
 	PipelineStateVulkan();
@@ -24,6 +25,10 @@ public:
 
 	void SetShader(ShaderStageType stage, Shader* shader) override;
 	void Compile() override;
+
+	vk::Pipeline GetPipeline() const { return pipeline; }
+
+	vk::PipelineLayout GetPipelineLayout() const { return pipelineLayout; }
 };
 
 } // namespace LLGI

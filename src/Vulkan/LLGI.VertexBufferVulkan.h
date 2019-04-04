@@ -27,6 +27,8 @@ public:
 	void* Lock(int32_t offset, int32_t size) override;
 	void Unlock() override;
 	int32_t GetSize() override;
+
+	vk::Buffer GetBuffer() { return gpuBuf->buffer; }
 };
 
 } // namespace LLGI

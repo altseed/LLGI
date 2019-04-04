@@ -15,18 +15,16 @@ namespace LLGI
 {
 
 class GraphicsVulkan;
-class ShaderVulkan;
 
 class Buffer
 {
-	GraphicsVulkan* graphics_ = nullptr;
-	bool hasStrongRef_ = false;
+	std::shared_ptr<GraphicsVulkan> graphics_;
 
 public:
 	vk::Buffer buffer;
 	vk::DeviceMemory devMem;
 
-	Buffer(GraphicsVulkan* graphics, bool hasStrongRef = true);
+	Buffer(GraphicsVulkan* graphics);
 	virtual ~Buffer();
 };
 

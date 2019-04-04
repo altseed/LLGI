@@ -1,5 +1,8 @@
 #include "LLGI.CommandListVulkan.h"
 #include "LLGI.GraphicsVulkan.h"
+#include "LLGI.IndexBufferVulkan.h"
+#include "LLGI.PipelineStateVulkan.h"
+#include "LLGI.VertexBufferVulkan.h"
 
 namespace LLGI
 {
@@ -46,30 +49,58 @@ void CommandListVulkan::SetScissor(int32_t x, int32_t y, int32_t width, int32_t 
 
 void CommandListVulkan::Draw(int32_t pritimiveCount)
 {
-	throw "Not inplemented";
+	assert(bindingVertexBuffer.vertexBuffer != nullptr);
+	assert(currentIndexBuffer != nullptr);
+	assert(currentPipelineState != nullptr);
+
+	auto vb = static_cast<VertexBufferVulkan*>(bindingVertexBuffer.vertexBuffer);
+	auto ib = static_cast<IndexBufferVulkan*>(currentIndexBuffer);
+	auto pip = static_cast<PipelineStateVulkan*>(currentPipelineState);
 
 	auto& cmdBuffer = commandBuffers[graphics_->GetCurrentSwapBufferIndex()];
 
-	//cmdBuffer.bindVertexBuffers
+	// assign a vertex buffer
+	vk::DeviceSize vertexOffsets = bindingVertexBuffer.offset;
+	cmdBuffer.bindVertexBuffers(0, 1, &(vb->GetBuffer()), &vertexOffsets);
 
-	//cmdBuffer.bindIndexBuffer
+	// assign an index vuffer
+	vk::DeviceSize indexOffset = 0;
+	vk::IndexType indexType = vk::IndexType::eUint16;
 
+	if (ib->GetStride() == 2)
+		indexType = vk::IndexType::eUint16;
+	if (ib->GetStride() == 4)
+		indexType = vk::IndexType::eUint32;
 
-	int indexCountPerPrimitive = 3;
-	int indexOffset = 0;
-	int vertexOffset = 0;
+	cmdBuffer.bindIndexBuffer(ib->GetBuffer(), indexOffset, indexType);
 
-	cmdBuffer.drawIndexed(indexCountPerPrimitive * pritimiveCount, 1, indexOffset, vertexOffset, 0);
+	// TODO
+	// cmdBuffer.bindDescriptorSets
+	// cmdBuffer.pushConstants ?
+
+	// assign a pipeline
+	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pip->GetPipeline());
+
+	// draw
+	int indexPerPrim = 0;
+	if (pip->Topology == TopologyType::Triangle)
+		indexPerPrim = 3;
+	if (pip->Topology == TopologyType::Line)
+		indexPerPrim = 2;
+
+	cmdBuffer.drawIndexed(indexPerPrim * pritimiveCount, 1, 0, 0, 1);
 }
 
-void CommandListVulkan::SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride, int32_t offset) { 
-	throw "Not inplemented"; 
-
+void CommandListVulkan::SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride, int32_t offset)
+{
+	bindingVertexBuffer.vertexBuffer = vertexBuffer;
+	bindingVertexBuffer.stride = stride;
+	bindingVertexBuffer.offset = offset;
 }
 
-void CommandListVulkan::SetIndexBuffer(IndexBuffer* indexBuffer) { throw "Not inplemented"; }
+void CommandListVulkan::SetIndexBuffer(IndexBuffer* indexBuffer) { currentIndexBuffer = indexBuffer; }
 
-void CommandListVulkan::SetPipelineState(PipelineState* pipelineState) { throw "Not inplemented"; }
+void CommandListVulkan::SetPipelineState(PipelineState* pipelineState) { currentPipelineState = pipelineState; }
 
 void CommandListVulkan::SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageType shaderStage) { throw "Not inplemented"; }
 
