@@ -11,6 +11,7 @@ void CompilerMetal::Initialize() {}
 
 void CompilerMetal::Compile(CompilerResult& result, const char* code, ShaderStageType shaderStage)
 {
+    // Metal doesn't support to save a library as binary file (with external tool, it can)
 	NSString* code_ = [[NSString alloc] initWithUTF8String:code];
 
 	id<MTLDevice> device = MTLCreateSystemDefaultDevice();

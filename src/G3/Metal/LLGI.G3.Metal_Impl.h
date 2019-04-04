@@ -57,6 +57,11 @@ struct CommandList_Impl
 
 struct Shader_Impl
 {
+    id<MTLLibrary> library = nullptr;
+    
+    Shader_Impl();
+    ~Shader_Impl();
+    bool Initialize(Graphics_Impl* graphics, void* data, int size);
 };
 
 struct PipelineState_Impl
