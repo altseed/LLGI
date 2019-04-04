@@ -31,6 +31,8 @@ void CommandListVulkan::Begin()
 	cmdBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
 	vk::CommandBufferBeginInfo cmdBufInfo;
 	cmdBuffer.begin(cmdBufInfo);
+
+	CommandList::Begin();
 }
 
 void CommandListVulkan::End()
@@ -49,30 +51,48 @@ void CommandListVulkan::SetScissor(int32_t x, int32_t y, int32_t width, int32_t 
 
 void CommandListVulkan::Draw(int32_t pritimiveCount)
 {
-	assert(bindingVertexBuffer.vertexBuffer != nullptr);
-	assert(currentIndexBuffer != nullptr);
-	assert(currentPipelineState != nullptr);
+	BindingVertexBuffer vb_;
+	IndexBuffer* ib_ = nullptr;
+	PipelineState* pip_ = nullptr;
 
-	auto vb = static_cast<VertexBufferVulkan*>(bindingVertexBuffer.vertexBuffer);
-	auto ib = static_cast<IndexBufferVulkan*>(currentIndexBuffer);
-	auto pip = static_cast<PipelineStateVulkan*>(currentPipelineState);
+	bool isVBDirtied = false;
+	bool isIBDirtied = false;
+
+	GetCurrentVertexBuffer(vb_, isVBDirtied);
+	GetCurrentIndexBuffer(ib_, isIBDirtied);
+	GetCurrentPipelineState(pip_);
+
+	assert(vb_.vertexBuffer != nullptr);
+	assert(ib_ != nullptr);
+	assert(pip_ != nullptr);
+
+
+	auto vb = static_cast<VertexBufferVulkan*>(vb_.vertexBuffer);
+	auto ib = static_cast<IndexBufferVulkan*>(ib_);
+	auto pip = static_cast<PipelineStateVulkan*>(pip_);
 
 	auto& cmdBuffer = commandBuffers[graphics_->GetCurrentSwapBufferIndex()];
 
 	// assign a vertex buffer
-	vk::DeviceSize vertexOffsets = bindingVertexBuffer.offset;
-	cmdBuffer.bindVertexBuffers(0, 1, &(vb->GetBuffer()), &vertexOffsets);
+	if (isVBDirtied)
+	{
+		vk::DeviceSize vertexOffsets = vb_.offset;
+		cmdBuffer.bindVertexBuffers(0, 1, &(vb->GetBuffer()), &vertexOffsets);
+	}
 
 	// assign an index vuffer
-	vk::DeviceSize indexOffset = 0;
-	vk::IndexType indexType = vk::IndexType::eUint16;
+	if (isIBDirtied)
+	{
+		vk::DeviceSize indexOffset = 0;
+		vk::IndexType indexType = vk::IndexType::eUint16;
 
-	if (ib->GetStride() == 2)
-		indexType = vk::IndexType::eUint16;
-	if (ib->GetStride() == 4)
-		indexType = vk::IndexType::eUint32;
+		if (ib->GetStride() == 2)
+			indexType = vk::IndexType::eUint16;
+		if (ib->GetStride() == 4)
+			indexType = vk::IndexType::eUint32;
 
-	cmdBuffer.bindIndexBuffer(ib->GetBuffer(), indexOffset, indexType);
+		cmdBuffer.bindIndexBuffer(ib->GetBuffer(), indexOffset, indexType);
+	}
 
 	// TODO
 	// cmdBuffer.bindDescriptorSets
@@ -89,18 +109,9 @@ void CommandListVulkan::Draw(int32_t pritimiveCount)
 		indexPerPrim = 2;
 
 	cmdBuffer.drawIndexed(indexPerPrim * pritimiveCount, 1, 0, 0, 1);
+
+	CommandList::Draw(pritimiveCount);
 }
-
-void CommandListVulkan::SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride, int32_t offset)
-{
-	bindingVertexBuffer.vertexBuffer = vertexBuffer;
-	bindingVertexBuffer.stride = stride;
-	bindingVertexBuffer.offset = offset;
-}
-
-void CommandListVulkan::SetIndexBuffer(IndexBuffer* indexBuffer) { currentIndexBuffer = indexBuffer; }
-
-void CommandListVulkan::SetPipelineState(PipelineState* pipelineState) { currentPipelineState = pipelineState; }
 
 void CommandListVulkan::SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageType shaderStage) { throw "Not inplemented"; }
 

@@ -12,18 +12,6 @@ private:
 	std::shared_ptr<GraphicsVulkan> graphics_;
 	std::vector<vk::CommandBuffer> commandBuffers;
 
-	struct BindingVertexBuffer
-	{
-		VertexBuffer* vertexBuffer = nullptr;
-		int32_t stride = 0;
-		int32_t offset = 0;
-	};
-
-	BindingVertexBuffer bindingVertexBuffer;
-	IndexBuffer* currentIndexBuffer = nullptr;
-	PipelineState* currentPipelineState = nullptr;
-
-
 public:
 	CommandListVulkan();
 	virtual ~CommandListVulkan();
@@ -35,9 +23,6 @@ public:
 
 	void SetScissor(int32_t x, int32_t y, int32_t width, int32_t height) override;
 	void Draw(int32_t pritimiveCount) override;
-	void SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride, int32_t offset) override;
-	void SetIndexBuffer(IndexBuffer* indexBuffer) override;
-	void SetPipelineState(PipelineState* pipelineState) override;
 	void SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageType shaderStage) override;
 	void SetTexture(
 		Texture* texture, TextureWrapMode wrapMode, TextureMinMagFilter minmagFilter, int32_t unit, ShaderStageType shaderStage) override;

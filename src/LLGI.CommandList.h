@@ -11,7 +11,28 @@ class IndexBuffer;
 
 class CommandList : public ReferenceObject
 {
+protected:
+	struct BindingVertexBuffer
+	{
+		VertexBuffer* vertexBuffer = nullptr;
+		int32_t stride = 0;
+		int32_t offset = 0;
+	};
+
 private:
+
+	BindingVertexBuffer bindingVertexBuffer;
+	IndexBuffer* currentIndexBuffer = nullptr;
+	PipelineState* currentPipelineState = nullptr;
+
+	bool isVertexBufferDirtied = true;
+	bool isCurrentIndexBufferDirtied = true;
+
+protected:
+	void GetCurrentVertexBuffer(BindingVertexBuffer& buffer, bool& isDirtied);
+	void GetCurrentIndexBuffer(IndexBuffer*& buffer, bool& isDirtied); 
+	void GetCurrentPipelineState(PipelineState*& pipelineState);
+
 public:
 	CommandList() = default;
 	virtual ~CommandList() = default;
