@@ -130,7 +130,7 @@ bool PlatformDX12::Initialize(Vec2I windowSize)
 	}
 
 	// device
-	hr = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_1, __uuidof(ID3D12Device), (void**)&device);
+	hr = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), (void**)&device);
 
 	if (FAILED(hr))
 	{
