@@ -21,7 +21,7 @@ if(BUILD_VULKAN)
 endif()
 
 if(BUILD_METAL)
-  file(GLOB files_metal G3/Metal/*.h G3/Metal/*.cpp G3/Metal/*.mm)
+  file(GLOB files_metal Metal/*.h Metal/*.cpp Metal/*.mm)
   list(APPEND files ${files_metal})
 endif()
 

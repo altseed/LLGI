@@ -1,10 +1,8 @@
-#include "LLGI.G3.CompilerMetal.h"
+#include "LLGI.CompilerMetal.h"
 
 #import <MetalKit/MetalKit.h>
 
 namespace LLGI
-{
-namespace G3
 {
 
 void CompilerMetal::Initialize() {}
@@ -25,5 +23,4 @@ void CompilerMetal::Compile(CompilerResult& result, const char* code, ShaderStag
 	}
 }
 
-}
 }

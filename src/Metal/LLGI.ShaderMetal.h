@@ -1,12 +1,11 @@
 
 #pragma once
 
-#include "../LLGI.G3.Shader.h"
+#include "../LLGI.Shader.h"
 
 namespace LLGI
 {
-namespace G3
-{
+
 
 class ShaderMetal : public Shader
 {
@@ -16,5 +15,5 @@ public:
 	virtual ~ShaderMetal() = default;
 };
 
-} // namespace G3
+    
 } // namespace LLGI

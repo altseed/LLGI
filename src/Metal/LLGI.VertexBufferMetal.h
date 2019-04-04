@@ -1,11 +1,10 @@
 #pragma once
 
-#include "../LLGI.G3.VertexBuffer.h"
+#include "../LLGI.VertexBuffer.h"
 
 namespace LLGI
 {
-namespace G3
-{
+
 
 struct Buffer_Impl;
 
@@ -28,5 +27,5 @@ public:
 	Buffer_Impl* GetImpl() const { return impl; }
 };
 
-} // namespace G3
+    
 } // namespace LLGI

@@ -1,11 +1,9 @@
 
 #pragma once
 
-#include "../LLGI.G3.Texture.h"
+#include "../LLGI.Texture.h"
 
 namespace LLGI
-{
-namespace G3
 {
 
 class TextureMetal : public Texture
@@ -22,5 +20,5 @@ public:
 	bool IsDepthTexture() const override;
 };
 
-} // namespace G3
+    
 } // namespace LLGI

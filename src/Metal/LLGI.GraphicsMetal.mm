@@ -1,15 +1,13 @@
-#include "LLGI.G3.GraphicsMetal.h"
-#include "LLGI.G3.CommandListMetal.h"
-#include "LLGI.G3.Metal_Impl.h"
-#include "LLGI.G3.VertexBufferMetal.h"
-#include "LLGI.G3.IndexBufferMetal.h"
-#include "LLGI.G3.ConstantBufferMetal.h"
+#include "LLGI.GraphicsMetal.h"
+#include "LLGI.CommandListMetal.h"
+#include "LLGI.Metal_Impl.h"
+#include "LLGI.VertexBufferMetal.h"
+#include "LLGI.IndexBufferMetal.h"
+#include "LLGI.ConstantBufferMetal.h"
 
 #import <MetalKit/MetalKit.h>
 
 namespace LLGI
-{
-namespace G3
 {
 
 Graphics_Impl::Graphics_Impl() {}
@@ -196,5 +194,5 @@ Texture* GraphicsMetal::CreateTexture(const Vec2I& size, bool isRenderPass, bool
 Texture* GraphicsMetal::CreateTexture(uint64_t id) { throw "Not inplemented"; }
 
 Graphics_Impl* GraphicsMetal::GetImpl() const { return impl; }
-}
+
 }

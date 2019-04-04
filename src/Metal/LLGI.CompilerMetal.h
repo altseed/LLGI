@@ -1,13 +1,11 @@
 
 #pragma once
 
-#include "../LLGI.G3.Compiler.h"
+#include "../LLGI.Compiler.h"
 
 namespace LLGI
 {
-namespace G3
-{
-
+    
 class CompilerMetal : public Compiler
 {
 private:
@@ -18,5 +16,4 @@ public:
 	DeviceType GetDeviceType() const override { return DeviceType::Metal; }
 };
 
-} // namespace G3
 } // namespace LLGI

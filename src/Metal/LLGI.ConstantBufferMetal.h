@@ -1,10 +1,8 @@
 #pragma once
 
-#include "../LLGI.G3.ConstantBuffer.h"
+#include "../LLGI.ConstantBuffer.h"
 
 namespace LLGI
-{
-namespace G3
 {
 
 struct Buffer_Impl;
@@ -29,5 +27,4 @@ public:
 	int32_t GetSize() override;
 };
 
-} // namespace G3
 } // namespace LLGI

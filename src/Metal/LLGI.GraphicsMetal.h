@@ -1,12 +1,10 @@
 #pragma once
 
-#include "../LLGI.G3.Graphics.h"
+#include "../LLGI.Graphics.h"
 #import <MetalKit/MetalKit.h>
 #include <functional>
 
 namespace LLGI
-{
-namespace G3
 {
 
 struct Graphics_Impl;
@@ -83,5 +81,4 @@ public:
 	Graphics_Impl* GetImpl() const;
 };
 
-} // namespace G3
 } // namespace LLGI

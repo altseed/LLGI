@@ -1,12 +1,10 @@
 #pragma once
 
-#include "../LLGI.G3.Graphics.h"
+#include "../LLGI.Graphics.h"
 
 #import <MetalKit/MetalKit.h>
 
 namespace LLGI
-{
-namespace G3
 {
 
 struct CommandList_Impl;
@@ -91,5 +89,4 @@ struct Texture_Impl
 	bool Initialize(Graphics_Impl* graphics, const Vec2I& size);
 };
 
-} // namespace G3
 } // namespace LLGI

@@ -12,8 +12,8 @@
 #endif
 
 #ifdef __APPLE__
-#include "../Metal/LLGI.G3.CompilerMetal.h"
-#include "../Metal/LLGI.G3.PlatformMetal.h"
+#include "../Metal/LLGI.CompilerMetal.h"
+#include "../Metal/LLGI.PlatformMetal.h"
 #endif
 
 namespace LLGI

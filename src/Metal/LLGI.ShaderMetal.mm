@@ -1,12 +1,11 @@
-#include "LLGI.G3.ShaderMetal.h"
-#include "LLGI.G3.Metal_Impl.h"
+#include "LLGI.ShaderMetal.h"
+#include "LLGI.Metal_Impl.h"
 #import <MetalKit/MetalKit.h>
 #include <iostream>
 
 namespace LLGI
 {
-namespace G3
-{
+
     
 Shader_Impl::Shader_Impl()
 {
@@ -41,4 +40,4 @@ Shader_Impl::~Shader_Impl()
 
     
 }
-}
+

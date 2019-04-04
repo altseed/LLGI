@@ -1,10 +1,8 @@
 #pragma once
 
-#include "../LLGI.G3.CommandList.h"
+#include "../LLGI.CommandList.h"
 
 namespace LLGI
-{
-namespace G3
 {
 
 struct CommandList_Impl;
@@ -38,5 +36,4 @@ public:
 	CommandList_Impl* GetImpl();
 };
 
-} // namespace G3
 } // namespace LLGI

@@ -1,11 +1,10 @@
 #pragma once
 
-#include "../LLGI.G3.IndexBuffer.h"
+#include "../LLGI.IndexBuffer.h"
 
 namespace LLGI
 {
-namespace G3
-{
+
 
 struct Buffer_Impl;
 
@@ -31,5 +30,4 @@ public:
 	Buffer_Impl* GetImpl() const { return impl; }
 };
 
-} // namespace G3
 } // namespace LLGI

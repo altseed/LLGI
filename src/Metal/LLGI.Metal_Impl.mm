@@ -2,11 +2,9 @@
 #import <Cocoa/Cocoa.h>
 #import <MetalKit/MetalKit.h>
 
-#import "LLGI.G3.Metal_Impl.h"
+#import "LLGI.Metal_Impl.h"
 
 namespace LLGI
-{
-namespace G3
 {
 
 void PipelineState_Impl::Compile(Graphics_Impl* graphics)
@@ -50,5 +48,5 @@ bool Texture_Impl::Initialize(Graphics_Impl* graphics, const Vec2I& size)
 
 	return true;
 }
-}
+
 }

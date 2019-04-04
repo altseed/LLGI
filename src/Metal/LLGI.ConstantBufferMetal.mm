@@ -1,11 +1,9 @@
-#include "LLGI.G3.ConstantBufferMetal.h"
-#include "LLGI.G3.Metal_Impl.h"
+#include "LLGI.ConstantBufferMetal.h"
+#include "LLGI.Metal_Impl.h"
 
 #import <MetalKit/MetalKit.h>
 
 namespace LLGI
-{
-namespace G3
 {
 
 ConstantBufferMetal::ConstantBufferMetal() { impl = new Buffer_Impl(); }
@@ -26,5 +24,4 @@ void ConstantBufferMetal::Unlock() { throw "Not inplemented"; }
 
 int32_t ConstantBufferMetal::GetSize() { throw "Not inplemented"; }
 
-}
 }

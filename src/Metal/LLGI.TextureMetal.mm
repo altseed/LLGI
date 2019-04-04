@@ -1,9 +1,8 @@
-#include "LLGI.G3.TextureMetal.h"
+#include "LLGI.TextureMetal.h"
 
 namespace LLGI
 {
-namespace G3
-{
+
 
 void* TextureMetal::Lock()
 {
@@ -31,5 +30,4 @@ bool TextureMetal::IsDepthTexture() const
 	return false;
 }
 
-}
 }

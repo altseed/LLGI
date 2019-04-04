@@ -1,14 +1,12 @@
-#include "LLGI.G3.CommandListMetal.h"
-#include "LLGI.G3.GraphicsMetal.h"
-#include "LLGI.G3.IndexBufferMetal.h"
-#include "LLGI.G3.Metal_Impl.h"
-#include "LLGI.G3.VertexBufferMetal.h"
+#include "LLGI.CommandListMetal.h"
+#include "LLGI.GraphicsMetal.h"
+#include "LLGI.IndexBufferMetal.h"
+#include "LLGI.Metal_Impl.h"
+#include "LLGI.VertexBufferMetal.h"
 
 #import <MetalKit/MetalKit.h>
 
 namespace LLGI
-{
-namespace G3
 {
 
 CommandList_Impl::CommandList_Impl() {}
@@ -143,5 +141,4 @@ void CommandListMetal::EndRenderPass() { impl->EndRenderPass(); }
 
 CommandList_Impl* CommandListMetal::GetImpl() { return impl; }
 
-}
 }

@@ -1,12 +1,10 @@
 #pragma once
 
-#include "../LLGI.G3.PipelineState.h"
+#include "../LLGI.PipelineState.h"
 
 namespace LLGI
 {
-namespace G3
-{
-
+    
 struct PipelineState_Impl;
 
 class PipelineStateMetal : public PipelineState
@@ -22,5 +20,4 @@ public:
 	void Compile() override;
 };
 
-} // namespace G3
 } // namespace LLGI

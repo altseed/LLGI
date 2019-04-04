@@ -1,12 +1,11 @@
 
 #pragma once
 
-#include "../LLGI.G3.Platform.h"
+#include "../LLGI.Platform.h"
 
 namespace LLGI
 {
-namespace G3
-{
+
 
 struct PlatformMetal_Impl;
 
@@ -17,10 +16,9 @@ class PlatformMetal : public Platform
 public:
 	PlatformMetal();
 	~PlatformMetal();
-	void NewFrame() override;
+	bool NewFrame() override;
 	void Present() override;
 	Graphics* CreateGraphics() override;
 };
 
-} // namespace G3
 } // namespace LLGI

@@ -1,11 +1,9 @@
-#include "LLGI.G3.VertexBufferMetal.h"
-#include "LLGI.G3.Metal_Impl.h"
+#include "LLGI.VertexBufferMetal.h"
+#include "LLGI.Metal_Impl.h"
 
 #import <MetalKit/MetalKit.h>
 
 namespace LLGI
-{
-namespace G3
 {
 
 VertexBufferMetal::VertexBufferMetal() { impl = new Buffer_Impl(); }
@@ -33,5 +31,4 @@ void VertexBufferMetal::Unlock() {}
 
 int32_t VertexBufferMetal::GetSize() { return impl->size_; }
 
-}
 }

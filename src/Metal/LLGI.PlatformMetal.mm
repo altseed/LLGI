@@ -2,9 +2,9 @@
 #import <Cocoa/Cocoa.h>
 #import <MetalKit/MetalKit.h>
 
-#import "../LLGI.G3.Platform.h"
-#import "LLGI.G3.PlatformMetal.h"
-#import "LLGI.G3.GraphicsMetal.h"
+#import "../LLGI.Platform.h"
+#import "LLGI.PlatformMetal.h"
+#import "LLGI.GraphicsMetal.h"
 
 @interface LLGIApplication : NSApplication
 {
@@ -58,9 +58,7 @@
 
 namespace LLGI
 {
-namespace G3
-{
-
+    
 struct Cocoa_Impl
 {
 	static void initialize()
@@ -167,7 +165,7 @@ PlatformMetal::PlatformMetal()
 
 PlatformMetal::~PlatformMetal() { delete impl; }
 
-void PlatformMetal::NewFrame() { impl->newFrame(); }
+bool PlatformMetal::NewFrame() { impl->newFrame(); }
 
 void PlatformMetal::Present() { impl->preset(); }
 
@@ -190,5 +188,4 @@ Graphics* PlatformMetal::CreateGraphics() {
     return nullptr;
 }
 
-}
 }

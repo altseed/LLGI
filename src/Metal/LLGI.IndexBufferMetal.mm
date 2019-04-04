@@ -1,12 +1,11 @@
-#include "LLGI.G3.IndexBufferMetal.h"
-#include "LLGI.G3.Metal_Impl.h"
+#include "LLGI.IndexBufferMetal.h"
+#include "LLGI.Metal_Impl.h"
 
 #import <MetalKit/MetalKit.h>
 
 namespace LLGI
 {
-namespace G3
-{
+
 
 IndexBufferMetal::IndexBufferMetal() { impl = new Buffer_Impl(); }
 
@@ -37,5 +36,4 @@ int32_t IndexBufferMetal::GetStride() { return stride_; }
 
 int32_t IndexBufferMetal::GetCount() { return count_; }
 
-}
 }
