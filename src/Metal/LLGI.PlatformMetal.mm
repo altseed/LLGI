@@ -3,8 +3,8 @@
 #import <MetalKit/MetalKit.h>
 
 #import "../LLGI.Platform.h"
-#import "LLGI.PlatformMetal.h"
 #import "LLGI.GraphicsMetal.h"
+#import "LLGI.PlatformMetal.h"
 
 @interface LLGIApplication : NSApplication
 {
@@ -58,7 +58,7 @@
 
 namespace LLGI
 {
-    
+
 struct Cocoa_Impl
 {
 	static void initialize()
@@ -90,8 +90,8 @@ struct PlatformMetal_Impl
 	id<MTLCommandQueue> commandQueue;
 	id<MTLCommandBuffer> commandBuffer;
 	CAMetalLayer* layer;
-    id<CAMetalDrawable> drawable;
-    
+	id<CAMetalDrawable> drawable;
+
 	PlatformMetal_Impl()
 	{
 		int width = 640;
@@ -104,6 +104,7 @@ struct PlatformMetal_Impl
 												 defer:NO];
 
 		window.title = @"LLGI";
+		window.releasedWhenClosed = false;
 		[window center];
 		[window orderFrontRegardless];
 
@@ -120,7 +121,16 @@ struct PlatformMetal_Impl
 		commandQueue = [device newCommandQueue];
 	}
 
-	~PlatformMetal_Impl() { [pool drain]; }
+	~PlatformMetal_Impl()
+	{
+		if (window != nullptr)
+		{
+			[window release];
+			window = nullptr;
+		}
+
+		[pool drain];
+	}
 
 	void gc()
 	{
@@ -128,7 +138,7 @@ struct PlatformMetal_Impl
 		pool = [[NSAutoreleasePool alloc] init];
 	}
 
-	void newFrame()
+	bool newFrame()
 	{
 		for (;;)
 		{
@@ -143,9 +153,15 @@ struct PlatformMetal_Impl
 		}
 
 		gc();
-        
-        drawable = layer.nextDrawable;
-        
+
+		if (!window.isVisible)
+		{
+			return false;
+		}
+
+		drawable = layer.nextDrawable;
+
+		return true;
 	}
 
 	void preset()
@@ -165,27 +181,27 @@ PlatformMetal::PlatformMetal()
 
 PlatformMetal::~PlatformMetal() { delete impl; }
 
-bool PlatformMetal::NewFrame() { impl->newFrame(); }
+bool PlatformMetal::NewFrame() { return impl->newFrame(); }
 
 void PlatformMetal::Present() { impl->preset(); }
 
-Graphics* PlatformMetal::CreateGraphics() {
-    auto ret = new GraphicsMetal();
-    
-    auto getGraphicsView = [this]() -> GraphicsView
-    {
-        GraphicsView view;
-        view.drawable = this->impl->drawable;
-        return view;
-    };
-    
-    if(ret->Initialize(getGraphicsView))
-    {
-        return ret;
-    }
-    
-    SafeRelease(ret);
-    return nullptr;
+Graphics* PlatformMetal::CreateGraphics()
+{
+	auto ret = new GraphicsMetal();
+
+	auto getGraphicsView = [this]() -> GraphicsView {
+		GraphicsView view;
+		view.drawable = this->impl->drawable;
+		return view;
+	};
+
+	if (ret->Initialize(getGraphicsView))
+	{
+		return ret;
+	}
+
+	SafeRelease(ret);
+	return nullptr;
 }
 
 }

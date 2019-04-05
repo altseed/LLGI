@@ -1,4 +1,5 @@
 #include "LLGI.VertexBufferMetal.h"
+#include "LLGI.GraphicsMetal.h"
 #include "LLGI.Metal_Impl.h"
 
 #import <MetalKit/MetalKit.h>
@@ -12,8 +13,8 @@ VertexBufferMetal::~VertexBufferMetal() { SafeDelete(impl); }
 
 bool VertexBufferMetal::Initialize(Graphics* graphics, int32_t size)
 {
-	auto graphics_ = (Graphics_Impl*)graphics;
-	return impl->Initialize(graphics_, size);
+	auto graphics_ = static_cast<GraphicsMetal*>(graphics);
+	return impl->Initialize(graphics_->GetImpl(), size);
 }
 
 void* VertexBufferMetal::Lock() { return impl->GetBuffer(); }

@@ -5,7 +5,7 @@
 
 namespace LLGI
 {
-    
+
 class CompilerMetal : public Compiler
 {
 private:

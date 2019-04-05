@@ -69,7 +69,8 @@ Compiler* CreateCompiler(DeviceType device)
 #endif
 
 #ifdef __APPLE__
-	return nullptr;
+    auto obj = new CompilerMetal();
+    return obj;
 #endif
 }
 

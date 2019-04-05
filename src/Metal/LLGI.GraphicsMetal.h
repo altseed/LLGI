@@ -12,43 +12,43 @@ struct RenderPass_Impl;
 
 class GraphicsMetal;
 class RenderPassMetal;
-    
+
 class RenderPassMetal : public RenderPass
 {
-    GraphicsMetal* graphics_ = nullptr;
-    bool isStrongRef_ = false;
+	GraphicsMetal* graphics_ = nullptr;
+	bool isStrongRef_ = false;
 	RenderPass_Impl* impl = nullptr;
 
 public:
-    RenderPassMetal(GraphicsMetal* graphics, bool isStrongRef);
+	RenderPassMetal(GraphicsMetal* graphics, bool isStrongRef);
 
-    virtual ~RenderPassMetal();
+	virtual ~RenderPassMetal();
 
-    void SetIsColorCleared(bool isColorCleared) override;
-    
-    void SetIsDepthCleared(bool isDepthCleared) override;
-    
-    void SetClearColor(const Color8& color) override;
-    
+	void SetIsColorCleared(bool isColorCleared) override;
+
+	void SetIsDepthCleared(bool isDepthCleared) override;
+
+	void SetClearColor(const Color8& color) override;
+
 	RenderPass_Impl* GetImpl() const;
 };
 
 struct GraphicsView
 {
-    id<CAMetalDrawable> drawable;
+	id<CAMetalDrawable> drawable;
 };
-    
+
 class GraphicsMetal : public Graphics
 {
 	Graphics_Impl* impl = nullptr;
-    std::shared_ptr<RenderPassMetal> renderPass_ = nullptr;
-    std::function<GraphicsView()> getGraphicsView_;
-    
+	std::shared_ptr<RenderPassMetal> renderPass_ = nullptr;
+	std::function<GraphicsView()> getGraphicsView_;
+
 public:
 	GraphicsMetal();
 	virtual ~GraphicsMetal();
 
-    bool Initialize(std::function<GraphicsView()> getGraphicsView);
+	bool Initialize(std::function<GraphicsView()> getGraphicsView);
 
 	void NewFrame() override;
 

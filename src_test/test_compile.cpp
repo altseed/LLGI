@@ -3,7 +3,7 @@
 
 void test_compile(LLGI::DeviceType deviceType)
 {
-	auto compiler = LLGI::CreateCompiler(LLGI::DeviceType::Default);
+	auto compiler = LLGI::CreateCompiler(deviceType);
 
 	LLGI::CompilerResult result_vs;
 	LLGI::CompilerResult result_ps;
@@ -95,10 +95,51 @@ void main()
 
 )";
 
+	auto code_metal_vs = R"(
+
+    struct VertexIn {
+        metal::packed_float3 position;
+        metal::packed_float2 uv;
+    };
+    
+    struct VertexOut {
+        metal::float4 position [[position]];
+        metal::float2 uv;
+    };
+    
+    vertex VertexOut vertex_shader_function(const device VertexIn *vertex_array [[buffer(0)]], unsigned int vid [[vertex_id]]) {
+        
+        VertexOut vo;
+        vo.position = metal::float4(vertex_array[vid].position, 1.0);
+        vo.uv = vertex_array[vid].uv;
+        return vo;
+    }
+    
+)";
+
+	auto code_metal_ps = R"(
+
+    
+    struct VertexOut {
+        metal::float4 position [[position]];
+        metal::float2 uv;
+    };
+    
+    fragment metal::half4 basic_fragment(VertexOut input [[stage_in]]) {
+        return metal::half4(1.0);
+    }
+    
+    )";
+
 	if (compiler->GetDeviceType() == LLGI::DeviceType::DirectX12)
 	{
 		compiler->Compile(result_vs, code_hlsl_vs, LLGI::ShaderStageType::Vertex);
 		compiler->Compile(result_ps, code_hlsl_ps, LLGI::ShaderStageType::Pixel);
+	}
+	else if (compiler->GetDeviceType() == LLGI::DeviceType::Metal)
+	{
+		compiler->Compile(result_vs, code_metal_vs, LLGI::ShaderStageType::Vertex);
+		compiler->Compile(result_ps, code_metal_ps, LLGI::ShaderStageType::Pixel);
 	}
 	else
 	{

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../LLGI.Graphics.h"
+#include "../LLGI.PipelineState.h"
 
 #import <MetalKit/MetalKit.h>
 
@@ -14,8 +15,8 @@ struct Graphics_Impl
 {
 	id<MTLDevice> device = nullptr;
 	id<MTLCommandQueue> commandQueue = nullptr;
-    id<CAMetalDrawable> drawable;
-    
+	id<CAMetalDrawable> drawable;
+
 	Graphics_Impl();
 	virtual ~Graphics_Impl();
 	bool Initialize();
@@ -29,8 +30,8 @@ struct RenderPass_Impl
 	bool isColorCleared;
 	bool isDepthCleared;
 
-    RenderPass_Impl();
-    ~RenderPass_Impl();
+	RenderPass_Impl();
+	~RenderPass_Impl();
 	bool Initialize();
 };
 
@@ -55,18 +56,23 @@ struct CommandList_Impl
 
 struct Shader_Impl
 {
-    id<MTLLibrary> library = nullptr;
-    
-    Shader_Impl();
-    ~Shader_Impl();
-    bool Initialize(Graphics_Impl* graphics, void* data, int size);
+	id<MTLLibrary> library = nullptr;
+
+	Shader_Impl();
+	~Shader_Impl();
+	bool Initialize(Graphics_Impl* graphics, void* data, int size);
 };
 
 struct PipelineState_Impl
 {
 	id<MTLRenderPipelineState> pipelineState;
+	id<MTLDepthStencilState> depthStencilState = nullptr;
+	MTLRenderPipelineDescriptor* pipelineStateDescriptor = nullptr;
 
-	void Compile(Graphics_Impl* graphics);
+	PipelineState_Impl();
+	~PipelineState_Impl();
+
+	void Compile(PipelineState* self, Graphics_Impl* graphics);
 };
 
 struct Buffer_Impl

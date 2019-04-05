@@ -3,7 +3,6 @@
 namespace LLGI
 {
 
-
 void* TextureMetal::Lock()
 {
 	throw "Not inplemented";

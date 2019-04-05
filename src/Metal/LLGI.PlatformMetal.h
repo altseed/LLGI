@@ -6,7 +6,6 @@
 namespace LLGI
 {
 
-
 struct PlatformMetal_Impl;
 
 class PlatformMetal : public Platform

@@ -7,14 +7,6 @@
 namespace LLGI
 {
 
-void PipelineState_Impl::Compile(Graphics_Impl* graphics)
-{
-	MTLRenderPipelineDescriptor* pipelineStateDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
-
-	NSError* pipelineError = nil;
-	pipelineState = [graphics->device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor error:&pipelineError];
-}
-
 Buffer_Impl::Buffer_Impl() {}
 
 Buffer_Impl::~Buffer_Impl()
@@ -28,7 +20,7 @@ Buffer_Impl::~Buffer_Impl()
 
 bool Buffer_Impl::Initialize(Graphics_Impl* graphics, int32_t size)
 {
-	buffer = [graphics->device newBufferWithBytes:nil length:size options:MTLResourceOptionCPUCacheModeDefault];
+	buffer = [graphics->device newBufferWithLength:size options:MTLResourceOptionCPUCacheModeDefault];
 
 	size_ = size;
 

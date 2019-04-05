@@ -9,7 +9,7 @@ void CompilerMetal::Initialize() {}
 
 void CompilerMetal::Compile(CompilerResult& result, const char* code, ShaderStageType shaderStage)
 {
-    // Metal doesn't support to save a library as binary file (with external tool, it can)
+	// Metal doesn't support to save a library as binary file (with external tool, it can)
 	NSString* code_ = [[NSString alloc] initWithUTF8String:code];
 
 	id<MTLDevice> device = MTLCreateSystemDefaultDevice();
@@ -21,6 +21,27 @@ void CompilerMetal::Compile(CompilerResult& result, const char* code, ShaderStag
 		result.Message = libraryError.localizedDescription.UTF8String;
 		return;
 	}
+
+	std::vector<char> buffer;
+
+	// header
+	buffer.push_back('m');
+	buffer.push_back('t');
+	buffer.push_back('l');
+	buffer.push_back('c');
+	buffer.push_back('o');
+	buffer.push_back('d');
+	buffer.push_back('e');
+
+	auto len = strlen(code) + 1;
+	for (int i = 0; i < len; i++)
+	{
+		buffer.push_back(code[i]);
+	}
+
+	result.Binary.resize(1);
+	result.Binary[0].resize(buffer.size());
+	memcpy(result.Binary[0].data(), buffer.data(), buffer.size());
 }
 
 }

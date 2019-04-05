@@ -25,6 +25,8 @@ public:
 	void Unlock() override;
 
 	int32_t GetSize() override;
+
+	Buffer_Impl* GetImpl() const { return impl; }
 };
 
 } // namespace LLGI

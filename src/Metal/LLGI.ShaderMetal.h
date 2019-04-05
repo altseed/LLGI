@@ -6,14 +6,21 @@
 namespace LLGI
 {
 
+class GraphicsMetal;
+struct Shader_Impl;
 
 class ShaderMetal : public Shader
 {
 private:
+	GraphicsMetal* graphics_ = nullptr;
+	Shader_Impl* impl = nullptr;
+
 public:
-	ShaderMetal() = default;
-	virtual ~ShaderMetal() = default;
+	ShaderMetal();
+	virtual ~ShaderMetal();
+	bool Initialize(GraphicsMetal* graphics, DataStructure* data, int32_t count);
+
+	Shader_Impl* GetImpl() { return impl; }
 };
 
-    
 } // namespace LLGI

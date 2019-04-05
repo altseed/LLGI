@@ -5,7 +5,6 @@
 namespace LLGI
 {
 
-
 struct Buffer_Impl;
 
 class IndexBufferMetal : public IndexBuffer

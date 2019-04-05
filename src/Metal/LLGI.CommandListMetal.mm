@@ -2,6 +2,7 @@
 #include "LLGI.GraphicsMetal.h"
 #include "LLGI.IndexBufferMetal.h"
 #include "LLGI.Metal_Impl.h"
+#include "LLGI.PipelineStateMetal.h"
 #include "LLGI.VertexBufferMetal.h"
 
 #import <MetalKit/MetalKit.h>
@@ -15,7 +16,8 @@ CommandList_Impl::~CommandList_Impl()
 {
 	if (commandBuffer != nullptr)
 	{
-		[commandBuffer release];
+		//[commandBuffer release];
+		commandBuffer = nullptr;
 	}
 
 	if (renderEncoder != nullptr)
@@ -86,7 +88,6 @@ CommandListMetal::CommandListMetal() { impl = new CommandList_Impl(); }
 
 CommandListMetal::~CommandListMetal()
 {
-    SafeRelease(currentIndexBuffer);
 	SafeDelete(impl);
 	SafeRelease(graphics_);
 }
@@ -101,27 +102,70 @@ bool CommandListMetal::Initialize(Graphics* graphics)
 	return impl->Initialize(graphics_metal_->GetImpl());
 }
 
-void CommandListMetal::Begin() { impl->Begin(); }
+void CommandListMetal::Begin()
+{
+	impl->Begin();
+
+	CommandList::Begin();
+}
 
 void CommandListMetal::End() { impl->End(); }
 
 void CommandListMetal::SetScissor(int32_t x, int32_t y, int32_t width, int32_t height) { impl->SetScissor(x, y, width, height); }
 
-void CommandListMetal::Draw(int32_t pritimiveCount) { throw "Not inplemented"; }
-
-void CommandListMetal::SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride, int32_t offset)
+void CommandListMetal::Draw(int32_t pritimiveCount)
 {
-	auto vertexBuffer_metal_ = (VertexBufferMetal*)vertexBuffer;
-	impl->SetVertexBuffer(vertexBuffer_metal_->GetImpl(), stride, offset);
-}
 
-void CommandListMetal::SetIndexBuffer(IndexBuffer* indexBuffer) {
-    // index buffer is specfied on Draw.
-    throw "Not inplemented";
+	throw "Not inplemented";
+
+	BindingVertexBuffer vb_;
+	IndexBuffer* ib_ = nullptr;
+	PipelineState* pip_ = nullptr;
+
+	bool isVBDirtied = false;
+	bool isIBDirtied = false;
+
+	GetCurrentVertexBuffer(vb_, isVBDirtied);
+	GetCurrentIndexBuffer(ib_, isIBDirtied);
+	GetCurrentPipelineState(pip_);
+
+	assert(vb_.vertexBuffer != nullptr);
+	assert(ib_ != nullptr);
+	assert(pip_ != nullptr);
+
+	auto vb = static_cast<VertexBufferMetal*>(vb_.vertexBuffer);
+	auto ib = static_cast<IndexBufferMetal*>(ib_);
+	auto pip = static_cast<PipelineStateMetal*>(pip_);
+
+	if (isVBDirtied)
+	{
+		impl->SetVertexBuffer(vb->GetImpl(), vb_.stride, vb_.offset);
+	}
     
-}
+    [impl->renderEncoder setRenderPipelineState:pip->GetImpl()->pipelineState];
+    
+    // draw
+    int indexPerPrim = 0;
+    if (pip->Topology == TopologyType::Triangle)
+        indexPerPrim = 3;
+    if (pip->Topology == TopologyType::Line)
+        indexPerPrim = 2;
 
-void CommandListMetal::SetPipelineState(PipelineState* pipelineState) { throw "Not inplemented"; }
+    MTLPrimitiveType topology = MTLPrimitiveTypeTriangle;
+    MTLIndexType indexType = MTLIndexTypeUInt32;
+    
+    if(pip->Topology == TopologyType::Line)
+    {
+        topology = MTLPrimitiveTypeLine;
+    }
+    
+    if(ib->GetStride() == 2)
+    {
+        indexType = MTLIndexTypeUInt16;
+    }
+    
+    [impl->renderEncoder drawIndexedPrimitives:topology indexCount:pritimiveCount * indexPerPrim indexType:indexType indexBuffer:ib->GetImpl()->buffer indexBufferOffset:0];
+}
 
 void CommandListMetal::SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageType shaderStage) { throw "Not inplemented"; }
 

@@ -5,7 +5,6 @@
 namespace LLGI
 {
 
-
 struct Buffer_Impl;
 
 class VertexBufferMetal : public VertexBuffer
@@ -27,5 +26,4 @@ public:
 	Buffer_Impl* GetImpl() const { return impl; }
 };
 
-    
 } // namespace LLGI

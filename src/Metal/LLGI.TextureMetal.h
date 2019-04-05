@@ -20,5 +20,4 @@ public:
 	bool IsDepthTexture() const override;
 };
 
-    
 } // namespace LLGI

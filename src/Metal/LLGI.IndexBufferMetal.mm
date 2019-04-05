@@ -1,4 +1,5 @@
 #include "LLGI.IndexBufferMetal.h"
+#include "LLGI.GraphicsMetal.h"
 #include "LLGI.Metal_Impl.h"
 
 #import <MetalKit/MetalKit.h>
@@ -6,17 +7,16 @@
 namespace LLGI
 {
 
-
 IndexBufferMetal::IndexBufferMetal() { impl = new Buffer_Impl(); }
 
 IndexBufferMetal::~IndexBufferMetal() { SafeDelete(impl); }
 
 bool IndexBufferMetal::Initialize(Graphics* graphics, int32_t stride, int32_t count)
 {
-	auto graphics_ = (Graphics_Impl*)graphics;
+	auto graphics_ = static_cast<GraphicsMetal*>(graphics);
 	stride_ = stride;
 	count_ = count;
-	return impl->Initialize(graphics_, stride * count);
+	return impl->Initialize(graphics_->GetImpl(), stride * count);
 }
 
 void* IndexBufferMetal::Lock() { return impl->GetBuffer(); }
