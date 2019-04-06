@@ -297,6 +297,7 @@ class Graphics;
 class CommandList;
 class Compiler;
 class RenderPass;
+class RenderPassPipelineState;
 
 namespace G3
 {

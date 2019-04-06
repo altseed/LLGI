@@ -1,6 +1,8 @@
 
 #include "test.h"
 
+#include <map>
+
 void test_simple_rectangle()
 {
 	auto code_gl_vs = R"(
@@ -124,7 +126,6 @@ void test_simple_rectangle()
 	auto commandList = graphics->CreateCommandList();
 	auto vb = graphics->CreateVertexBuffer(sizeof(SimpleVertex) * 4);
 	auto ib = graphics->CreateIndexBuffer(2, 6);
-	auto pip = graphics->CreatePiplineState();
 	LLGI::Shader* shader_vs = nullptr;
 	LLGI::Shader* shader_ps = nullptr;
 
@@ -192,14 +193,7 @@ void test_simple_rectangle()
 	ib_buf[5] = 3;
 	ib->Unlock();
 
-	pip->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
-	pip->VertexLayouts[1] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
-	pip->VertexLayouts[2] = LLGI::VertexLayoutFormat::R8G8B8A8_UNORM;
-	pip->VertexLayoutCount = 3;
-
-	pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs);
-	pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps);
-	pip->Compile();
+	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pips;
 
 	while (count < 1000)
 	{
@@ -212,11 +206,30 @@ void test_simple_rectangle()
 		color.B = 0;
 		color.A = 255;
 
+		auto renderPass = graphics->GetCurrentScreen(color, true);
+		auto renderPassPipelineState = LLGI::CreateSharedPtr(renderPass->CreateRenderPassPipelineState());
+
+		if (pips.count(renderPassPipelineState) == 0)
+		{
+			auto pip = graphics->CreatePiplineState();
+			pip->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
+			pip->VertexLayouts[1] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
+			pip->VertexLayouts[2] = LLGI::VertexLayoutFormat::R8G8B8A8_UNORM;
+			pip->VertexLayoutCount = 3;
+
+			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs);
+			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps);
+			pip->SetRenderPassPipelineState(renderPassPipelineState.get());
+			pip->Compile();
+
+			pips[renderPassPipelineState] = LLGI::CreateSharedPtr(pip);
+		}
+
 		commandList->Begin();
-		commandList->BeginRenderPass(graphics->GetCurrentScreen(color, true));
+		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib);
-		commandList->SetPipelineState(pip);
+		commandList->SetPipelineState(pips[renderPassPipelineState].get());
 		commandList->Draw(2);
 		commandList->EndRenderPass();
 		commandList->End();
@@ -227,9 +240,10 @@ void test_simple_rectangle()
 		count++;
 	}
 
+	pips.clear();
+
 	LLGI::SafeRelease(shader_vs);
 	LLGI::SafeRelease(shader_ps);
-	LLGI::SafeRelease(pip);
 	LLGI::SafeRelease(ib);
 	LLGI::SafeRelease(vb);
 	LLGI::SafeRelease(commandList);

@@ -8,7 +8,9 @@ namespace LLGI
 
 class PipelineState : public ReferenceObject
 {
-private:
+protected:
+	std::shared_ptr<RenderPassPipelineState> renderPassPipelineState_ = nullptr;
+
 public:
 	PipelineState() = default;
 	virtual ~PipelineState() = default;
@@ -35,6 +37,9 @@ public:
 	int32_t VertexLayoutCount = 0;
 
 	virtual void SetShader(ShaderStageType stage, Shader* shader);
+
+	virtual void SetRenderPassPipelineState(RenderPassPipelineState* renderPassPipelineState);
+
 	virtual void Compile();
 };
 

@@ -9,6 +9,8 @@ void RenderPass::SetIsDepthCleared(bool isDepthCleared) { isDepthCleared_ = isDe
 
 void RenderPass::SetClearColor(const Color8& color) { color_ = color; }
 
+RenderPassPipelineState* RenderPass::CreateRenderPassPipelineState() { return nullptr; }
+
 void Graphics::NewFrame() {}
 
 void Graphics::SetWindowSize(const Vec2I& windowSize) { windowSize_ = windowSize; }

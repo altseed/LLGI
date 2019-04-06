@@ -30,6 +30,25 @@ public:
 	virtual void SetIsDepthCleared(bool isDepthCleared);
 
 	virtual void SetClearColor(const Color8& color);
+
+	/**
+		@brief	create a RenderPassPipelineState
+		@note
+		This is a function to create an object.
+		But it is very fast. So it can call it in everyframe.
+	*/
+	virtual RenderPassPipelineState* CreateRenderPassPipelineState();
+};
+
+/**
+	@brief	A class to send a data for RenderPass
+*/
+class RenderPassPipelineState : ReferenceObject
+{
+private:
+public:
+	RenderPassPipelineState() = default;
+	virtual ~RenderPassPipelineState() = default;
 };
 
 class Graphics : public ReferenceObject
