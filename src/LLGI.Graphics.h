@@ -43,7 +43,7 @@ public:
 /**
 	@brief	A class to send a data for RenderPass
 */
-class RenderPassPipelineState : ReferenceObject
+class RenderPassPipelineState : public ReferenceObject
 {
 private:
 public:

@@ -1,9 +1,37 @@
 
 #include "test.h"
 
+#include <fstream>
+#include <iostream>
 #include <map>
 
-void test_simple_rectangle()
+std::vector<uint8_t> LoadData(const char* path)
+{
+	std::vector<uint8_t> ret;
+
+#ifdef _WIN32
+	FILE* fp = nullptr;
+	fopen_s(&fp, path, "rb");
+
+#else
+	FILE* fp = fopen(path, "rb");
+#endif
+
+	if (fp == nullptr)
+		return ret;
+
+	fseek(fp, 0, SEEK_END);
+	auto size = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+
+	ret.resize(size);
+	fread(ret.data(), 1, size, fp);
+	fclose(fp);
+
+	return ret;
+}
+
+void test_simple_rectangle(LLGI::DeviceType deviceType)
 {
 	auto code_gl_vs = R"(
 #version 440 core
@@ -117,11 +145,11 @@ void test_simple_rectangle()
     
     )";
 
-	auto compiler = LLGI::CreateCompiler(LLGI::DeviceType::Default);
+	auto compiler = LLGI::CreateCompiler(deviceType);
 
 	int count = 0;
 
-	auto platform = LLGI::CreatePlatform(LLGI::DeviceType::Default);
+	auto platform = LLGI::CreatePlatform(deviceType);
 	auto graphics = platform->CreateGraphics();
 	auto commandList = graphics->CreateCommandList();
 	auto vb = graphics->CreateVertexBuffer(sizeof(SimpleVertex) * 4);
@@ -133,7 +161,10 @@ void test_simple_rectangle()
 		LLGI::CompilerResult result_vs;
 		LLGI::CompilerResult result_ps;
 
-		if (compiler->GetDeviceType() == LLGI::DeviceType::DirectX12)
+		if (compiler == nullptr)
+		{
+		}
+		else if (compiler->GetDeviceType() == LLGI::DeviceType::DirectX12)
 		{
 			compiler->Compile(result_vs, code_dx_vs, LLGI::ShaderStageType::Vertex);
 			compiler->Compile(result_ps, code_dx_ps, LLGI::ShaderStageType::Pixel);
@@ -152,24 +183,46 @@ void test_simple_rectangle()
 		std::vector<LLGI::DataStructure> data_vs;
 		std::vector<LLGI::DataStructure> data_ps;
 
-		for (auto& b : result_vs.Binary)
+		if (compiler == nullptr)
 		{
-			LLGI::DataStructure d;
-			d.Data = b.data();
-			d.Size = b.size();
-			data_vs.push_back(d);
-		}
+			auto binary_vs = LoadData("Shaders/SPIRV/simple_rectangle.vert.spv");
+			auto binary_ps = LoadData("Shaders/SPIRV/simple_rectangle.frag.spv");
 
-		for (auto& b : result_ps.Binary)
+			LLGI::DataStructure d_vs;
+			LLGI::DataStructure d_ps;
+
+			d_vs.Data = binary_vs.data();
+			d_vs.Size = binary_vs.size();
+			d_ps.Data = binary_ps.data();
+			d_ps.Size = binary_ps.size();
+
+			data_vs.push_back(d_vs);
+			data_ps.push_back(d_ps);
+
+			shader_vs = graphics->CreateShader(data_vs.data(), data_vs.size());
+			shader_ps = graphics->CreateShader(data_ps.data(), data_ps.size());
+		}
+		else
 		{
-			LLGI::DataStructure d;
-			d.Data = b.data();
-			d.Size = b.size();
-			data_ps.push_back(d);
-		}
+			for (auto& b : result_vs.Binary)
+			{
+				LLGI::DataStructure d;
+				d.Data = b.data();
+				d.Size = b.size();
+				data_vs.push_back(d);
+			}
 
-		shader_vs = graphics->CreateShader(data_vs.data(), data_vs.size());
-		shader_ps = graphics->CreateShader(data_ps.data(), data_ps.size());
+			for (auto& b : result_ps.Binary)
+			{
+				LLGI::DataStructure d;
+				d.Data = b.data();
+				d.Size = b.size();
+				data_ps.push_back(d);
+			}
+
+			shader_vs = graphics->CreateShader(data_vs.data(), data_vs.size());
+			shader_ps = graphics->CreateShader(data_ps.data(), data_ps.size());
+		}
 	}
 
 	auto vb_buf = (SimpleVertex*)vb->Lock();
@@ -197,7 +250,9 @@ void test_simple_rectangle()
 
 	while (count < 1000)
 	{
-		platform->NewFrame();
+		if (!platform->NewFrame())
+			break;
+
 		graphics->NewFrame();
 
 		LLGI::Color8 color;
@@ -217,6 +272,7 @@ void test_simple_rectangle()
 			pip->VertexLayouts[2] = LLGI::VertexLayoutFormat::R8G8B8A8_UNORM;
 			pip->VertexLayoutCount = 3;
 
+			pip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan
 			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs);
 			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps);
 			pip->SetRenderPassPipelineState(renderPassPipelineState.get());

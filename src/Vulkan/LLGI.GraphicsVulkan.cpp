@@ -1,5 +1,9 @@
 #include "LLGI.GraphicsVulkan.h"
 #include "LLGI.CommandListVulkan.h"
+#include "LLGI.IndexBufferVulkan.h"
+#include "LLGI.PipelineStateVulkan.h"
+#include "LLGI.ShaderVulkan.h"
+#include "LLGI.VertexBufferVulkan.h"
 
 namespace LLGI
 {
@@ -14,11 +18,6 @@ RenderPassVulkan::RenderPassVulkan(GraphicsVulkan* graphics, bool isStrongRef) :
 
 RenderPassVulkan::~RenderPassVulkan()
 {
-	if (renderPass != nullptr)
-	{
-		graphics_->GetDevice().destroyRenderPass(renderPass);
-	}
-
 	if (frameBuffer != nullptr)
 	{
 		graphics_->GetDevice().destroyFramebuffer(frameBuffer);
@@ -38,122 +37,18 @@ bool RenderPassVulkan::Initialize(const vk::Image& imageColor,
 								  vk::Format format)
 {
 	imageSize_ = imageSize;
-	
+
 	bool hasDepth = true;
 	bool isPresentMode = true;
 
-	// settings
-	std::array<vk::AttachmentDescription, 2> attachmentDescs;
-	std::array<vk::AttachmentReference, 2> attachmentRefs;
-
-	// color buffer
-	attachmentDescs[0].format = format;
-	attachmentDescs[0].samples = vk::SampleCountFlagBits::e1;
-	
-	//attachmentDescs[0].loadOp = vk::AttachmentLoadOp::eDontCare;
-	
-	// TODO : improve it
-	attachmentDescs[0].loadOp = vk::AttachmentLoadOp::eClear;
-	
-	attachmentDescs[0].storeOp = vk::AttachmentStoreOp::eStore;
-	attachmentDescs[0].stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-	attachmentDescs[0].stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-	attachmentDescs[0].initialLayout = vk::ImageLayout::eUndefined;
-
-	if (isPresentMode)
-	{
-		attachmentDescs[0].finalLayout = vk::ImageLayout::ePresentSrcKHR;	
-	
-		// TODO : improve it
-		//attachmentDescs[0].finalLayout = vk::ImageLayout::eColorAttachmentOptimal;
-	}
-	else
-	{
-		attachmentDescs[0].finalLayout = vk::ImageLayout::eColorAttachmentOptimal;	
-	}
-	
-	// depth buffer
-	if (hasDepth)
-	{
-		attachmentDescs[1].format = vk::Format::eD32SfloatS8Uint;
-		attachmentDescs[1].samples = vk::SampleCountFlagBits::e1;
-		
-		//attachmentDescs[1].loadOp = vk::AttachmentLoadOp::eDontCare;
-		// TODO : improve it
-		attachmentDescs[1].loadOp = vk::AttachmentLoadOp::eClear;
-		attachmentDescs[1].storeOp = vk::AttachmentStoreOp::eStore;
-		attachmentDescs[1].stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-		attachmentDescs[1].stencilStoreOp = vk::AttachmentStoreOp::eStore;
-		attachmentDescs[1].initialLayout = vk::ImageLayout::eUndefined;
-		attachmentDescs[1].finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-	}
-	
-	vk::AttachmentReference& colorReference = attachmentRefs[0];
-	colorReference.attachment = 0;
-	colorReference.layout = vk::ImageLayout::eColorAttachmentOptimal;
-
-	vk::AttachmentReference& depthReference = attachmentRefs[1];
-	depthReference.attachment = 1;
-	depthReference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-
-	std::array<vk::SubpassDescription, 1> subpasses;
-	{
-		vk::SubpassDescription& subpass = subpasses[0];
-		subpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
-		subpass.colorAttachmentCount = 1;
-		subpass.pColorAttachments = &attachmentRefs[0];
-		subpass.pDepthStencilAttachment = &attachmentRefs[1];
-	}
-
-	std::array<vk::SubpassDependency, 1> subpassDepends;
-	{
-		vk::SubpassDependency& dependency = subpassDepends[0];
-		
-		/*
-		//monsho
-		dependency.srcSubpass = 0;
-		dependency.dstSubpass = VK_SUBPASS_EXTERNAL;
-		dependency.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
-		dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead;
-		dependency.srcStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
-		dependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-		*/
-		
-		// based on imgui
-		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-		dependency.dstSubpass = 0;
-		dependency.srcAccessMask = static_cast<vk::AccessFlagBits>(0);
-		dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
-		dependency.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-		dependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-	}
-
-	{
-		vk::RenderPassCreateInfo renderPassInfo;
-		renderPassInfo.attachmentCount = (uint32_t)attachmentDescs.size();
-		renderPassInfo.pAttachments = attachmentDescs.data();
-		renderPassInfo.subpassCount = (uint32_t)subpasses.size();
-		renderPassInfo.pSubpasses = subpasses.data();
-
-		// based on official
-		//renderPassInfo.dependencyCount = (uint32_t)subpassDepends.size();
-		//renderPassInfo.pDependencies = subpassDepends.data();
-		renderPassInfo.dependencyCount = 0;
-		renderPassInfo.pDependencies = nullptr;
-
-		renderPass = graphics_->GetDevice().createRenderPass(renderPassInfo);
-		if (renderPass == nullptr)
-		{
-			return false;
-		}
-	}
+	this->renderPassPipelineState = graphics_->CreateRenderPassPipelineState(isPresentMode, hasDepth, format);
 
 	std::array<vk::ImageView, 2> views;
 	views[0] = imageColorView;
 	views[1] = imageDepthView;
 
 	vk::FramebufferCreateInfo framebufferCreateInfo;
-	framebufferCreateInfo.renderPass = renderPass;
+	framebufferCreateInfo.renderPass = renderPassPipelineState->GetRenderPass();
 	framebufferCreateInfo.attachmentCount = static_cast<uint32_t>(views.size());
 	framebufferCreateInfo.pAttachments = views.data();
 	framebufferCreateInfo.width = imageSize.X;
@@ -170,6 +65,25 @@ bool RenderPassVulkan::Initialize(const vk::Image& imageColor,
 
 Vec2I RenderPassVulkan::GetImageSize() const { return imageSize_; }
 
+RenderPassPipelineState* RenderPassVulkan::CreateRenderPassPipelineState()
+{
+	auto ret = renderPassPipelineState.get();
+	SafeAddRef(ret);
+	return ret;
+}
+
+RenderPassPipelineStateVulkan::RenderPassPipelineStateVulkan(GraphicsVulkan* graphics) { graphics_ = graphics; }
+
+RenderPassPipelineStateVulkan::~RenderPassPipelineStateVulkan()
+{
+	if (renderPass != nullptr)
+	{
+		graphics_->GetDevice().destroyRenderPass(renderPass);
+	}
+}
+
+vk::RenderPass RenderPassPipelineStateVulkan::GetRenderPass() const { return renderPass; }
+
 GraphicsVulkan::GraphicsVulkan(const vk::Device& device,
 							   const vk::Queue& quque,
 							   const vk::CommandPool& commandPool,
@@ -177,7 +91,12 @@ GraphicsVulkan::GraphicsVulkan(const vk::Device& device,
 							   const PlatformView& platformView,
 							   std::function<void(vk::CommandBuffer&)> addCommand,
 							   std::function<void(PlatformStatus&)> getStatus)
-	: vkDevice(device), vkQueue(quque), vkCmdPool(commandPool), vkPysicalDevice(pysicalDevice), addCommand_(addCommand), getStatus_(getStatus)
+	: vkDevice(device)
+	, vkQueue(quque)
+	, vkCmdPool(commandPool)
+	, vkPysicalDevice(pysicalDevice)
+	, addCommand_(addCommand)
+	, getStatus_(getStatus)
 {
 	swapBufferCount_ = platformView.colors.size();
 
@@ -226,15 +145,58 @@ RenderPass* GraphicsVulkan::GetCurrentScreen(const Color8& clearColor, bool isCo
 	return currentRenderPass.get();
 }
 
-VertexBuffer* GraphicsVulkan::CreateVertexBuffer(int32_t size) { throw "Not inplemented"; }
+VertexBuffer* GraphicsVulkan::CreateVertexBuffer(int32_t size)
+{
+	auto obj = new VertexBufferVulkan();
+	if (!obj->Initialize(this, size))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
 
-IndexBuffer* GraphicsVulkan::CreateIndexBuffer(int32_t stride, int32_t count) { throw "Not inplemented"; }
+	return obj;
+}
 
-Shader* GraphicsVulkan::CreateShader(DataStructure* data, int32_t count) { throw "Not inplemented"; }
+IndexBuffer* GraphicsVulkan::CreateIndexBuffer(int32_t stride, int32_t count)
+{
 
-PipelineState* GraphicsVulkan::CreatePiplineState() { throw "Not inplemented"; }
+	auto obj = new IndexBufferVulkan();
+	if (!obj->Initialize(this, stride, count))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
 
-CommandList* GraphicsVulkan::CreateCommandList() { 
+	return obj;
+}
+
+Shader* GraphicsVulkan::CreateShader(DataStructure* data, int32_t count)
+{
+	auto obj = new ShaderVulkan();
+	if (!obj->Initialize(this, data, count))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
+	return obj;
+}
+
+PipelineState* GraphicsVulkan::CreatePiplineState()
+{
+
+	auto pipelineState = new PipelineStateVulkan();
+
+	if (pipelineState->Initialize(this))
+	{
+		return pipelineState;
+	}
+
+	SafeRelease(pipelineState);
+	return nullptr;
+}
+
+CommandList* GraphicsVulkan::CreateCommandList()
+{
 
 	auto commandList = new CommandListVulkan();
 	if (commandList->Initialize(this))
@@ -254,6 +216,137 @@ RenderPass* GraphicsVulkan::CreateRenderPass(const Texture** textures, int32_t t
 Texture* GraphicsVulkan::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer) { throw "Not inplemented"; }
 
 Texture* GraphicsVulkan::CreateTexture(uint64_t id) { throw "Not inplemented"; }
+
+std::shared_ptr<RenderPassPipelineStateVulkan>
+GraphicsVulkan::CreateRenderPassPipelineState(bool isPresentMode, bool hasDepth, vk::Format format)
+{
+	RenderPassPipelineStateVulkanKey key;
+	key.isPresentMode = isPresentMode;
+	key.hasDepth = hasDepth;
+	key.format = format;
+
+	// already?
+	{
+		auto it = renderPassPipelineStates.find(key);
+
+		if (it != renderPassPipelineStates.end())
+		{
+			auto ret = it->second.lock();
+
+			if (ret != nullptr)
+				return ret;
+		}
+	}
+
+	// settings
+	std::array<vk::AttachmentDescription, 2> attachmentDescs;
+	std::array<vk::AttachmentReference, 2> attachmentRefs;
+
+	// color buffer
+	attachmentDescs[0].format = format;
+	attachmentDescs[0].samples = vk::SampleCountFlagBits::e1;
+
+	// attachmentDescs[0].loadOp = vk::AttachmentLoadOp::eDontCare;
+
+	// TODO : improve it
+	attachmentDescs[0].loadOp = vk::AttachmentLoadOp::eClear;
+
+	attachmentDescs[0].storeOp = vk::AttachmentStoreOp::eStore;
+	attachmentDescs[0].stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+	attachmentDescs[0].stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+	attachmentDescs[0].initialLayout = vk::ImageLayout::eUndefined;
+
+	if (isPresentMode)
+	{
+		attachmentDescs[0].finalLayout = vk::ImageLayout::ePresentSrcKHR;
+	}
+	else
+	{
+		attachmentDescs[0].finalLayout = vk::ImageLayout::eColorAttachmentOptimal;
+	}
+
+	// depth buffer
+	if (hasDepth)
+	{
+		attachmentDescs[1].format = vk::Format::eD32SfloatS8Uint;
+		attachmentDescs[1].samples = vk::SampleCountFlagBits::e1;
+
+		// attachmentDescs[1].loadOp = vk::AttachmentLoadOp::eDontCare;
+		// TODO : improve it
+		attachmentDescs[1].loadOp = vk::AttachmentLoadOp::eClear;
+		attachmentDescs[1].storeOp = vk::AttachmentStoreOp::eStore;
+		attachmentDescs[1].stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+		attachmentDescs[1].stencilStoreOp = vk::AttachmentStoreOp::eStore;
+		attachmentDescs[1].initialLayout = vk::ImageLayout::eUndefined;
+		attachmentDescs[1].finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+	}
+
+	vk::AttachmentReference& colorReference = attachmentRefs[0];
+	colorReference.attachment = 0;
+	colorReference.layout = vk::ImageLayout::eColorAttachmentOptimal;
+
+	vk::AttachmentReference& depthReference = attachmentRefs[1];
+	depthReference.attachment = 1;
+	depthReference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+
+	std::array<vk::SubpassDescription, 1> subpasses;
+	{
+		vk::SubpassDescription& subpass = subpasses[0];
+		subpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
+		subpass.colorAttachmentCount = 1;
+		subpass.pColorAttachments = &attachmentRefs[0];
+		subpass.pDepthStencilAttachment = &attachmentRefs[1];
+	}
+
+	std::array<vk::SubpassDependency, 1> subpassDepends;
+	{
+		vk::SubpassDependency& dependency = subpassDepends[0];
+
+		/*
+		//monsho
+		dependency.srcSubpass = 0;
+		dependency.dstSubpass = VK_SUBPASS_EXTERNAL;
+		dependency.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+		dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead;
+		dependency.srcStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
+		dependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+		*/
+
+		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+		dependency.dstSubpass = 0;
+		dependency.srcAccessMask = static_cast<vk::AccessFlagBits>(0);
+		dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+		dependency.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+		dependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+	}
+
+	{
+		vk::RenderPassCreateInfo renderPassInfo;
+		renderPassInfo.attachmentCount = (uint32_t)attachmentDescs.size();
+		renderPassInfo.pAttachments = attachmentDescs.data();
+		renderPassInfo.subpassCount = (uint32_t)subpasses.size();
+		renderPassInfo.pSubpasses = subpasses.data();
+
+		// based on official
+		// renderPassInfo.dependencyCount = (uint32_t)subpassDepends.size();
+		// renderPassInfo.pDependencies = subpassDepends.data();
+		renderPassInfo.dependencyCount = 0;
+		renderPassInfo.pDependencies = nullptr;
+
+		auto renderPass = GetDevice().createRenderPass(renderPassInfo);
+		if (renderPass == nullptr)
+		{
+			return nullptr;
+		}
+
+		std::shared_ptr<RenderPassPipelineStateVulkan> ret = std::make_shared<RenderPassPipelineStateVulkan>(this);
+		ret->renderPass = renderPass;
+
+		renderPassPipelineStates[key] = ret;
+
+		return ret;
+	}
+}
 
 int32_t GraphicsVulkan::GetCurrentSwapBufferIndex() const
 {

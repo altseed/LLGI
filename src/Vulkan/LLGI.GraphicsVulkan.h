@@ -3,9 +3,13 @@
 #include "../LLGI.Graphics.h"
 #include "LLGI.BaseVulkan.h"
 #include <functional>
+#include <unordered_map>
 
 namespace LLGI
 {
+
+class RenderPassVulkan;
+class RenderPassPipelineStateVulkan;
 
 class RenderPassVulkan : public RenderPass
 {
@@ -15,7 +19,7 @@ private:
 	Vec2I imageSize_;
 
 public:
-	vk::RenderPass renderPass;
+	std::shared_ptr<RenderPassPipelineStateVulkan> renderPassPipelineState;
 
 	vk::Framebuffer frameBuffer;
 
@@ -36,6 +40,46 @@ public:
 					vk::Format format);
 
 	Vec2I GetImageSize() const;
+
+	RenderPassPipelineState* CreateRenderPassPipelineState() override;
+};
+
+class RenderPassPipelineStateVulkan : public RenderPassPipelineState
+{
+private:
+	GraphicsVulkan* graphics_ = nullptr;
+
+public:
+	RenderPassPipelineStateVulkan(GraphicsVulkan* graphics);
+
+	virtual ~RenderPassPipelineStateVulkan();
+
+	vk::RenderPass renderPass;
+
+	vk::RenderPass GetRenderPass() const;
+};
+
+struct RenderPassPipelineStateVulkanKey
+{
+	bool isPresentMode;
+	bool hasDepth;
+	vk::Format format;
+
+	bool operator==(const RenderPassPipelineStateVulkanKey& value) const
+	{
+		return (isPresentMode == value.isPresentMode && hasDepth == value.hasDepth && format == value.format);
+	}
+
+	struct Hash
+	{
+		typedef std::size_t result_type;
+
+		std::size_t operator()(const RenderPassPipelineStateVulkanKey& key) const
+		{
+			return std::hash<std::int32_t>()(static_cast<int>(key.format)) + std::hash<bool>()(key.isPresentMode) +
+				   std::hash<bool>()(key.hasDepth);
+		}
+	};
 };
 
 class TempMemoryPool
@@ -65,7 +109,12 @@ class GraphicsVulkan : public Graphics
 private:
 	int32_t swapBufferCount_ = 0;
 	int32_t currentSwapBufferIndex = -1;
-	
+
+	std::unordered_map<RenderPassPipelineStateVulkanKey,
+					   std::weak_ptr<RenderPassPipelineStateVulkan>,
+					   RenderPassPipelineStateVulkanKey::Hash>
+		renderPassPipelineStates;
+
 	std::vector<std::shared_ptr<RenderPassVulkan>> renderPasses;
 	vk::Image currentColorBuffer;
 
@@ -106,6 +155,8 @@ public:
 	RenderPass* CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture) override;
 	Texture* CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer) override;
 	Texture* CreateTexture(uint64_t id) override;
+
+	std::shared_ptr<RenderPassPipelineStateVulkan> CreateRenderPassPipelineState(bool isPresentMode, bool hasDepth, vk::Format format);
 
 	vk::Device GetDevice() const { return vkDevice; }
 	vk::CommandPool GetCommandPool() const { return vkCmdPool; }

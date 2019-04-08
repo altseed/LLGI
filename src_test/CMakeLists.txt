@@ -18,3 +18,5 @@ endif()
 
 target_include_directories(LLGI_Test PUBLIC ../src/)
 target_link_libraries(LLGI_Test LLGI)
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)

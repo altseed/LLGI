@@ -18,7 +18,7 @@ void test_clear(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 void test_clear_update(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 
 // Render
-void test_simple_rectangle();
+void test_simple_rectangle(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 
 void test_simple_texture_rectangle();
 
@@ -33,17 +33,17 @@ void test_renderPass();
 int main()
 {
 	// Empty
-	// test_empty();
+	test_empty();
 
 	// About clear
 	// test_clear();
-	// test_clear_update();
+	//test_clear_update();
 
 	// About compile
 	// test_compile();
 
 	// Render
-	test_simple_rectangle();
+	// test_simple_rectangle();
 	// test_simple_constant_rectangle(LLGI::ConstantBufferType::ShortTime);
 	// test_simple_texture_rectangle();
 

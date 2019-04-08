@@ -64,14 +64,26 @@ Platform* CreatePlatform(DeviceType platformDeviceType)
 Compiler* CreateCompiler(DeviceType device)
 {
 #ifdef _WIN32
-	auto obj = new CompilerDX12();
-	return obj;
+	if (device == DeviceType::Default || device == DeviceType::DirectX12)
+	{
+		auto obj = new CompilerDX12();
+		return obj;
+	}
+#endif
+
+#ifdef ENABLE_VULKAN
+	if (device == DeviceType::Vulkan)
+	{
+		return nullptr;
+	}
 #endif
 
 #ifdef __APPLE__
-    auto obj = new CompilerMetal();
-    return obj;
+	auto obj = new CompilerMetal();
+	return obj;
 #endif
+
+	return nullptr;
 }
 
 } // namespace LLGI

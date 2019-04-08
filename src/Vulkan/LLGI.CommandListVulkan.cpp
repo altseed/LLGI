@@ -108,7 +108,7 @@ void CommandListVulkan::Draw(int32_t pritimiveCount)
 	if (pip->Topology == TopologyType::Line)
 		indexPerPrim = 2;
 
-	cmdBuffer.drawIndexed(indexPerPrim * pritimiveCount, 1, 0, 0, 1);
+	cmdBuffer.drawIndexed(indexPerPrim * pritimiveCount, 1, 0, 0, 0);
 
 	CommandList::Draw(pritimiveCount);
 }
@@ -185,7 +185,7 @@ void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
 	// begin renderpass
 	vk::RenderPassBeginInfo renderPassBeginInfo;
 	renderPassBeginInfo.framebuffer = renderPass_->frameBuffer;
-	renderPassBeginInfo.renderPass = renderPass_->renderPass;
+	renderPassBeginInfo.renderPass = renderPass_->renderPassPipelineState->GetRenderPass();
 	renderPassBeginInfo.renderArea.extent = vk::Extent2D(renderPass_->GetImageSize().X, renderPass_->GetImageSize().Y);
 	renderPassBeginInfo.clearValueCount = 2;
 	renderPassBeginInfo.pClearValues = clear_values;

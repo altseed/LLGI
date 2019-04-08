@@ -392,6 +392,7 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 #endif
 #ifdef _DEBUG
 		VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
+		VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 #endif
 	};
 
@@ -741,6 +742,7 @@ Graphics* PlatformVulkan::CreateGraphics()
 	auto getStatus = [this](PlatformStatus& status) -> void { status.currentSwapBufferIndex = this->frameIndex; };
 
 	auto addCommand = [this](vk::CommandBuffer& commandBuffer) -> void {
+
 		vk::SubmitInfo copySubmitInfo;
 		copySubmitInfo.commandBufferCount = 1;
 		copySubmitInfo.pCommandBuffers = &commandBuffer;

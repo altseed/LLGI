@@ -4,7 +4,7 @@
 namespace LLGI
 {
 
-PipelineStateVulkan::PipelineStateVulkan() {}
+PipelineStateVulkan::PipelineStateVulkan() { shaders.fill(0); }
 
 PipelineStateVulkan ::~PipelineStateVulkan()
 {
@@ -289,9 +289,9 @@ void PipelineStateVulkan::Compile()
 
 	graphicsPipelineInfo.pDynamicState = &dynamicStateInfo;
 
-	// render pass TODO
-	// graphicsPipelineInfo.renderPass
-	assert(0);
+	// setup a render pass
+	assert(renderPassPipelineState_ != nullptr);
+	graphicsPipelineInfo.renderPass = static_cast<RenderPassPipelineStateVulkan*>(renderPassPipelineState_.get())->GetRenderPass();
 
 	// pipeline layout
 	vk::PipelineLayoutCreateInfo layoutInfo = {};
@@ -301,6 +301,7 @@ void PipelineStateVulkan::Compile()
 	layoutInfo.pPushConstantRanges = nullptr;
 
 	pipelineLayout = graphics_->GetDevice().createPipelineLayout(layoutInfo);
+	graphicsPipelineInfo.layout = pipelineLayout;
 
 	// setup a pipeline
 	pipeline = graphics_->GetDevice().createGraphicsPipeline(nullptr, graphicsPipelineInfo);
