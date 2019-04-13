@@ -11,6 +11,10 @@ class CommandListVulkan : public CommandList
 private:
 	std::shared_ptr<GraphicsVulkan> graphics_;
 	std::vector<vk::CommandBuffer> commandBuffers;
+	std::array<ConstantBuffer*, static_cast<int>(ShaderStageType::Max)> constantBuffers;
+
+
+	vk::DescriptorPool descriptorPool = nullptr;
 
 public:
 	CommandListVulkan();

@@ -1,4 +1,5 @@
 #include "LLGI.CommandListVulkan.h"
+#include "LLGI.ConstantBufferVulkan.h"
 #include "LLGI.GraphicsVulkan.h"
 #include "LLGI.IndexBufferVulkan.h"
 #include "LLGI.PipelineStateVulkan.h"
@@ -7,9 +8,24 @@
 namespace LLGI
 {
 
-CommandListVulkan::CommandListVulkan() {}
+CommandListVulkan::CommandListVulkan() { constantBuffers.fill(nullptr); }
 
-CommandListVulkan::~CommandListVulkan() { commandBuffers.clear(); }
+CommandListVulkan::~CommandListVulkan()
+{
+
+	if (descriptorPool != nullptr)
+	{
+		graphics_->GetDevice().destroyDescriptorPool(descriptorPool);
+		descriptorPool = nullptr;
+	}
+
+	for (auto& c : constantBuffers)
+	{
+		SafeRelease(c);
+	}
+
+	commandBuffers.clear();
+}
 
 bool CommandListVulkan::Initialize(GraphicsVulkan* graphics)
 {
@@ -20,6 +36,19 @@ bool CommandListVulkan::Initialize(GraphicsVulkan* graphics)
 	allocInfo.commandPool = graphics->GetCommandPool();
 	allocInfo.commandBufferCount = graphics->GetSwapBufferCount();
 	commandBuffers = graphics->GetDevice().allocateCommandBuffers(allocInfo);
+
+	std::array<vk::DescriptorPoolSize, 3> poolSizes;
+	poolSizes[0].type = vk::DescriptorType::eUniformBuffer;
+	poolSizes[0].descriptorCount = static_cast<uint32_t>(graphics_->GetSwapBufferCount());
+	poolSizes[1].type = vk::DescriptorType::eCombinedImageSampler;
+	poolSizes[1].descriptorCount = static_cast<uint32_t>(graphics_->GetSwapBufferCount());
+
+	vk::DescriptorPoolCreateInfo poolInfo;
+	poolInfo.poolSizeCount = 2;
+	poolInfo.pPoolSizes = poolSizes.data();
+	poolInfo.maxSets = 1024 * poolSizes[0].descriptorCount;
+
+	descriptorPool = graphics_->GetDevice().createDescriptorPool(poolInfo);
 
 	return true;
 }
@@ -66,7 +95,6 @@ void CommandListVulkan::Draw(int32_t pritimiveCount)
 	assert(ib_ != nullptr);
 	assert(pip_ != nullptr);
 
-
 	auto vb = static_cast<VertexBufferVulkan*>(vb_.vertexBuffer);
 	auto ib = static_cast<IndexBufferVulkan*>(ib_);
 	auto pip = static_cast<PipelineStateVulkan*>(pip_);
@@ -94,10 +122,48 @@ void CommandListVulkan::Draw(int32_t pritimiveCount)
 		cmdBuffer.bindIndexBuffer(ib->GetBuffer(), indexOffset, indexType);
 	}
 
-	// TODO
-	// cmdBuffer.bindDescriptorSets
-	// cmdBuffer.pushConstants ?
+	/*
+	std::vector<vk::DescriptorSetLayout> layouts(2);
+	vk::DescriptorSetAllocateInfo allocateInfo;
+	allocateInfo.descriptorPool = descriptorPool;
+	allocateInfo.descriptorSetCount = graphics_->GetSwapBufferCount();
+	allocateInfo.pSetLayouts = layouts.data();	// OK?
 
+	std::vector<vk::DescriptorSet> descriptorSets = graphics_->GetDevice().allocateDescriptorSets(allocateInfo);
+	
+	std::array<vk::WriteDescriptorSet, 2> writeDescriptorSet;
+
+	std::array<vk::DescriptorBufferInfo, 2> descriptorBufferInfos;
+	descriptorBufferInfos[0].buffer = (static_cast<ConstantBufferVulkan*>(constantBuffers[0])->GetBuffer());
+	descriptorBufferInfos[0].offset = 0;
+	descriptorBufferInfos[0].range = constantBuffers[0]->GetSize();
+
+	writeDescriptorSet[0].descriptorType = vk::DescriptorType::eUniformBufferDynamic;
+	writeDescriptorSet[0].dstSet = descriptorSets[0];
+	writeDescriptorSet[0].dstBinding = 0;
+	writeDescriptorSet[0].dstArrayElement = 0;
+	writeDescriptorSet[0].pBufferInfo = &(descriptorBufferInfos[0]);
+	writeDescriptorSet[0].descriptorCount = 1;
+
+	descriptorBufferInfos[1].buffer = (static_cast<ConstantBufferVulkan*>(constantBuffers[1])->GetBuffer());
+	descriptorBufferInfos[1].offset = 0;
+	descriptorBufferInfos[1].range = constantBuffers[1]->GetSize();
+
+	writeDescriptorSet[1].descriptorType = vk::DescriptorType::eUniformBufferDynamic;
+	writeDescriptorSet[1].dstSet = descriptorSets[1];
+	writeDescriptorSet[1].dstBinding = 0;
+	writeDescriptorSet[1].dstArrayElement = 0;
+	writeDescriptorSet[1].pBufferInfo = &(descriptorBufferInfos[1]);
+	writeDescriptorSet[1].descriptorCount = 1;
+
+	graphics_->GetDevice().updateDescriptorSets(writeDescriptorSet, nullptr);
+	
+	std::array<uint32_t, 2> offsets;
+	offsets.fill(0);
+	cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pip->GetPipelineLayout(), 0, descriptorSets, offsets);
+	*/
+	
+	
 	// assign a pipeline
 	cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pip->GetPipeline());
 
@@ -113,7 +179,14 @@ void CommandListVulkan::Draw(int32_t pritimiveCount)
 	CommandList::Draw(pritimiveCount);
 }
 
-void CommandListVulkan::SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageType shaderStage) { throw "Not inplemented"; }
+void CommandListVulkan::SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageType shaderStage)
+{
+
+	auto ind = static_cast<int>(shaderStage);
+	SafeAddRef(constantBuffer);
+	SafeRelease(constantBuffers[ind]);
+	constantBuffers[ind] = constantBuffer;
+}
 
 void CommandListVulkan::SetTexture(
 	Texture* texture, TextureWrapMode wrapMode, TextureMinMagFilter minmagFilter, int32_t unit, ShaderStageType shaderStage)

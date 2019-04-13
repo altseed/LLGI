@@ -22,7 +22,7 @@ void test_simple_rectangle(LLGI::DeviceType deviceType = LLGI::DeviceType::Defau
 
 void test_simple_texture_rectangle();
 
-void test_simple_constant_rectangle(LLGI::ConstantBufferType type);
+void test_simple_constant_rectangle(LLGI::ConstantBufferType type, LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 
 // Compile
 void test_compile(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
@@ -37,14 +37,14 @@ int main()
 
 	// About clear
 	// test_clear();
-	//test_clear_update();
+	// test_clear_update();
 
 	// About compile
 	// test_compile();
 
 	// Render
 	// test_simple_rectangle();
-	// test_simple_constant_rectangle(LLGI::ConstantBufferType::ShortTime);
+	// test_simple_constant_rectangle(LLGI::ConstantBufferType::LongTime);
 	// test_simple_texture_rectangle();
 
 	// About renderPass

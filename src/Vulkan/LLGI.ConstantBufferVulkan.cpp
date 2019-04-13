@@ -7,8 +7,11 @@ ConstantBufferVulkan::ConstantBufferVulkan() {}
 
 ConstantBufferVulkan::~ConstantBufferVulkan() {}
 
-bool ConstantBufferVulkan::Initialize(GraphicsVulkan* graphics, int32_t size)
+bool ConstantBufferVulkan::Initialize(GraphicsVulkan* graphics, int32_t size, ConstantBufferType type)
 {
+	if (type == ConstantBufferType::ShortTime)
+		return false;
+
 	// TODO : shortTime
 	SafeAddRef(graphics);
 	graphics_ = CreateSharedPtr(graphics);

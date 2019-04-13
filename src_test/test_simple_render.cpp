@@ -490,7 +490,7 @@ void main()
 	LLGI::SafeRelease(compiler);
 }
 
-void test_simple_constant_rectangle(LLGI::ConstantBufferType type)
+void test_simple_constant_rectangle(LLGI::ConstantBufferType type, LLGI::DeviceType deviceType)
 {
 	auto code_gl_vs = R"(
 #version 440 core
@@ -545,31 +545,50 @@ void main()
 
 )";
 
-	auto compiler = LLGI::CreateCompiler(LLGI::DeviceType::Default);
+	auto compiler = LLGI::CreateCompiler(deviceType);
 
 	int count = 0;
 
-	auto platform = LLGI::CreatePlatform(LLGI::DeviceType::Default);
+	auto platform = LLGI::CreatePlatform(deviceType);
 	auto graphics = platform->CreateGraphics();
 	auto commandList = graphics->CreateCommandList();
 	auto vb = graphics->CreateVertexBuffer(sizeof(SimpleVertex) * 4);
 	auto ib = graphics->CreateIndexBuffer(2, 6);
-	auto pip = graphics->CreatePiplineState();
 	LLGI::ConstantBuffer* cb_vs = nullptr;
 	LLGI::ConstantBuffer* cb_ps = nullptr;
 
 	LLGI::Shader* shader_vs = nullptr;
 	LLGI::Shader* shader_ps = nullptr;
 
+	std::vector<LLGI::DataStructure> data_vs;
+	std::vector<LLGI::DataStructure> data_ps;
+
+	if (compiler == nullptr)
+	{
+		auto binary_vs = LoadData("Shaders/SPIRV/simple_constant_rectangle.vert.spv");
+		auto binary_ps = LoadData("Shaders/SPIRV/simple_constant_rectangle.frag.spv");
+
+		LLGI::DataStructure d_vs;
+		LLGI::DataStructure d_ps;
+
+		d_vs.Data = binary_vs.data();
+		d_vs.Size = binary_vs.size();
+		d_ps.Data = binary_ps.data();
+		d_ps.Size = binary_ps.size();
+
+		data_vs.push_back(d_vs);
+		data_ps.push_back(d_ps);
+
+		shader_vs = graphics->CreateShader(data_vs.data(), data_vs.size());
+		shader_ps = graphics->CreateShader(data_ps.data(), data_ps.size());
+	}
+	else
 	{
 		LLGI::CompilerResult result_vs;
 		LLGI::CompilerResult result_ps;
 
 		compiler->Compile(result_vs, code_gl_vs, LLGI::ShaderStageType::Vertex);
 		compiler->Compile(result_ps, code_gl_ps, LLGI::ShaderStageType::Pixel);
-
-		std::vector<LLGI::DataStructure> data_vs;
-		std::vector<LLGI::DataStructure> data_ps;
 
 		for (auto& b : result_vs.Binary)
 		{
@@ -631,18 +650,15 @@ void main()
 		cb_ps_buf[3] = 0.0f;
 	}
 
-	pip->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
-	pip->VertexLayouts[1] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
-	pip->VertexLayouts[2] = LLGI::VertexLayoutFormat::R8G8B8A8_UNORM;
-	pip->VertexLayoutCount = 3;
-
-	pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs);
-	pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps);
-	pip->Compile();
+	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pips;
 
 	while (count < 1000)
 	{
-		platform->NewFrame();
+		if (!platform->NewFrame())
+		{
+			break;
+		}
+
 		graphics->NewFrame();
 
 		if (type == LLGI::ConstantBufferType::ShortTime)
@@ -669,11 +685,31 @@ void main()
 		color.B = 0;
 		color.A = 255;
 
+		auto renderPass = graphics->GetCurrentScreen(color, true);
+		auto renderPassPipelineState = LLGI::CreateSharedPtr(renderPass->CreateRenderPassPipelineState());
+
+		if (pips.count(renderPassPipelineState) == 0)
+		{
+			auto pip = graphics->CreatePiplineState();
+			pip->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
+			pip->VertexLayouts[1] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
+			pip->VertexLayouts[2] = LLGI::VertexLayoutFormat::R8G8B8A8_UNORM;
+			pip->VertexLayoutCount = 3;
+
+			pip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan
+			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs);
+			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps);
+			pip->SetRenderPassPipelineState(renderPassPipelineState.get());
+			pip->Compile();
+
+			pips[renderPassPipelineState] = LLGI::CreateSharedPtr(pip);
+		}
+
 		commandList->Begin();
-		commandList->BeginRenderPass(graphics->GetCurrentScreen(color, true));
+		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib);
-		commandList->SetPipelineState(pip);
+		commandList->SetPipelineState(pips[renderPassPipelineState].get());
 		commandList->SetConstantBuffer(cb_vs, LLGI::ShaderStageType::Vertex);
 		commandList->SetConstantBuffer(cb_ps, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
@@ -693,11 +729,12 @@ void main()
 		}
 	}
 
+	pips.clear();
+
 	LLGI::SafeRelease(cb_vs);
 	LLGI::SafeRelease(cb_ps);
 	LLGI::SafeRelease(shader_vs);
 	LLGI::SafeRelease(shader_ps);
-	LLGI::SafeRelease(pip);
 	LLGI::SafeRelease(ib);
 	LLGI::SafeRelease(vb);
 	LLGI::SafeRelease(commandList);

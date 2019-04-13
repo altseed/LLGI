@@ -13,6 +13,12 @@ PipelineStateVulkan ::~PipelineStateVulkan()
 		SafeRelease(shader);
 	}
 
+	if (descriptorSetLayout != nullptr)
+	{
+		graphics_->GetDevice().destroyDescriptorSetLayout(descriptorSetLayout);
+		descriptorSetLayout = nullptr;
+	}
+
 	if (pipelineLayout != nullptr)
 	{
 		graphics_->GetDevice().destroyPipelineLayout(pipelineLayout);
@@ -293,10 +299,29 @@ void PipelineStateVulkan::Compile()
 	assert(renderPassPipelineState_ != nullptr);
 	graphicsPipelineInfo.renderPass = static_cast<RenderPassPipelineStateVulkan*>(renderPassPipelineState_.get())->GetRenderPass();
 
-	// pipeline layout
+	// uniform layout info
+	std::array<vk::DescriptorSetLayoutBinding, 2> uboLayoutBindings;
+	uboLayoutBindings[0].binding = 0;
+	uboLayoutBindings[0].descriptorType = vk::DescriptorType::eUniformBufferDynamic;
+	uboLayoutBindings[0].descriptorCount = 2;
+	uboLayoutBindings[0].stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
+	uboLayoutBindings[0].pImmutableSamplers = nullptr;
+
+	uboLayoutBindings[1].binding = 1;
+	uboLayoutBindings[1].descriptorType = vk::DescriptorType::eCombinedImageSampler;
+	uboLayoutBindings[1].descriptorCount = 2;
+	uboLayoutBindings[1].stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
+	uboLayoutBindings[1].pImmutableSamplers = nullptr;
+
+	vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutInfo;
+	descriptorSetLayoutInfo.bindingCount = 2;
+	descriptorSetLayoutInfo.pBindings = uboLayoutBindings.data();
+
+	descriptorSetLayout = graphics_->GetDevice().createDescriptorSetLayout(descriptorSetLayoutInfo);
+
 	vk::PipelineLayoutCreateInfo layoutInfo = {};
-	layoutInfo.setLayoutCount = 0;
-	layoutInfo.pSetLayouts = nullptr;
+	layoutInfo.setLayoutCount = 1;
+	layoutInfo.pSetLayouts = &descriptorSetLayout;
 	layoutInfo.pushConstantRangeCount = 0;
 	layoutInfo.pPushConstantRanges = nullptr;
 

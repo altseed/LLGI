@@ -20,6 +20,8 @@ bool ShaderVulkan::Initialize(GraphicsVulkan* graphics, DataStructure* data, int
 {
 	if (count != 1)
 		return false;
+	if (data[0].Size == 0)
+		return false;
 
 	buffer.resize(data[0].Size);
 	memcpy(buffer.data(), data[0].Data, data[0].Size);
@@ -36,7 +38,6 @@ bool ShaderVulkan::Initialize(GraphicsVulkan* graphics, DataStructure* data, int
 
 	return true;
 }
-
 
 vk::ShaderModule ShaderVulkan::GetShaderModule() const { return shaderModule; }
 

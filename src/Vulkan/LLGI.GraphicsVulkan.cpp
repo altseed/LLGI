@@ -1,5 +1,6 @@
 #include "LLGI.GraphicsVulkan.h"
 #include "LLGI.CommandListVulkan.h"
+#include "LLGI.ConstantBufferVulkan.h"
 #include "LLGI.IndexBufferVulkan.h"
 #include "LLGI.PipelineStateVulkan.h"
 #include "LLGI.ShaderVulkan.h"
@@ -207,7 +208,15 @@ CommandList* GraphicsVulkan::CreateCommandList()
 	return nullptr;
 }
 
-ConstantBuffer* GraphicsVulkan::CreateConstantBuffer(int32_t size, ConstantBufferType type) { throw "Not inplemented"; }
+ConstantBuffer* GraphicsVulkan::CreateConstantBuffer(int32_t size, ConstantBufferType type) { 
+	auto obj = new ConstantBufferVulkan();
+	if (!obj->Initialize(this, size, type))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
+	return obj;
+}
 
 RenderPass* GraphicsVulkan::CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture)
 {
