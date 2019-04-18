@@ -17,11 +17,14 @@ private:
 	vk::DeviceMemory devMem = nullptr;
 	Vec2I textureSize;
 
+	std::unique_ptr<Buffer> cpuBuf;
+	std::unique_ptr<Buffer> gpuBuf;
+
 public:
 	TextureVulkan();
 	virtual ~TextureVulkan();
 
-	bool Initialize(const Vec2I &size, bool isRenderPass, bool isDepthBuffer);
+	bool Initialize(const Vec2I& size, bool isRenderPass, bool isDepthBuffer);
 
 	void* Lock() override;
 	void Unlock() override;

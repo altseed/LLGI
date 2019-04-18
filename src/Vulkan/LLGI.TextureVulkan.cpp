@@ -23,22 +23,73 @@ TextureVulkan::~TextureVulkan()
 
 bool TextureVulkan::Initialize(const Vec2I& size, bool isRenderPass, bool isDepthBuffer)
 {
-	// TODO many things
+	// image
+	vk::ImageCreateInfo imageCreateInfo;
 
-	vk::ImageCreateInfo createInfo;
+	imageCreateInfo.imageType = vk::ImageType::e2D;
+	imageCreateInfo.extent.width = size.X;
+	imageCreateInfo.extent.height = size.Y;
+	imageCreateInfo.extent.depth = 1;
+	imageCreateInfo.mipLevels = 1;
+	imageCreateInfo.arrayLayers = 1;
+	imageCreateInfo.format = vk::Format::eR8G8B8A8Unorm;
+	imageCreateInfo.tiling = vk::ImageTiling::eOptimal;
+	imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
+	imageCreateInfo.usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled;
+	imageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
+	imageCreateInfo.samples = vk::SampleCountFlagBits::e1;
+	imageCreateInfo.flags = (vk::ImageCreateFlagBits)0;
 
-	createInfo.imageType = vk::ImageType::e2D;
-	createInfo.extent.width = size.X;
-	createInfo.extent.height = size.Y;
-	createInfo.extent.depth = 1;
-	createInfo.mipLevels = 1;
-	createInfo.arrayLayers = 1;
-	createInfo.format = vk::Format::eR8G8B8A8Unorm;
-	createInfo.tiling = vk::ImageTiling::eOptimal;
+	image = graphics_->GetDevice().createImage(imageCreateInfo);
+
+	// get device
+	auto& device = graphics_->GetDevice();
+
+	// calculate size
+	auto memorySize = size.X * size.Y * 4;
+
+	// create a buffer on cpu
+	{
+		vk::BufferCreateInfo bufferInfo;
+		bufferInfo.size = memorySize;
+		bufferInfo.usage = vk::BufferUsageFlagBits::eTransferSrc;
+		cpuBuf->buffer = graphics_->GetDevice().createBuffer(bufferInfo);
+
+		vk::MemoryRequirements memReqs = graphics_->GetDevice().getBufferMemoryRequirements(cpuBuf->buffer);
+		vk::MemoryAllocateInfo memAlloc;
+		memAlloc.allocationSize = memReqs.size;
+		memAlloc.memoryTypeIndex = graphics_->GetMemoryTypeIndex(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible);
+		cpuBuf->devMem = graphics_->GetDevice().allocateMemory(memAlloc);
+		graphics_->GetDevice().bindBufferMemory(cpuBuf->buffer, cpuBuf->devMem, 0);
+	}
+
+	// create a buffer on gpu
+	{
+		vk::MemoryRequirements memReqs = device.getImageMemoryRequirements(image); 
+		vk::MemoryAllocateInfo memAlloc;
+		memAlloc.allocationSize = memReqs.size;
+		memAlloc.memoryTypeIndex = graphics_->GetMemoryTypeIndex(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
+		devMem = device.allocateMemory(memAlloc);
+		graphics_->GetDevice().bindImageMemory(image, devMem, 0);
+	}
+
+	// create a texture view
+	{
+		vk::ImageViewCreateInfo imageViewInfo;
+		imageViewInfo.image = image;
+		imageViewInfo.viewType = vk::ImageViewType::e2D;
+		imageViewInfo.format = vk::Format::eR8G8B8A8Unorm;
+		imageViewInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+		imageViewInfo.subresourceRange.baseMipLevel = 0;
+		imageViewInfo.subresourceRange.levelCount = 1;
+		imageViewInfo.subresourceRange.baseArrayLayer = 0;
+		imageViewInfo.subresourceRange.layerCount = 1;
+		view = device.createImageView(imageViewInfo);
+	}
 
 	textureSize = size;
 
-	return false;
+	return true;
 }
 
 void* TextureVulkan::Lock() { throw "Not inplemented"; }

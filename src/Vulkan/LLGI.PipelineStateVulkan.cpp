@@ -4,7 +4,14 @@
 namespace LLGI
 {
 
-PipelineStateVulkan::PipelineStateVulkan() { shaders.fill(0); }
+PipelineStateVulkan::PipelineStateVulkan()
+{
+	shaders.fill(0);
+	for (auto i = 0; i < descriptorSetLayouts.size(); i++)
+	{
+		descriptorSetLayouts[i] = nullptr;
+	}
+}
 
 PipelineStateVulkan ::~PipelineStateVulkan()
 {
@@ -13,10 +20,10 @@ PipelineStateVulkan ::~PipelineStateVulkan()
 		SafeRelease(shader);
 	}
 
-	if (descriptorSetLayout != nullptr)
+	for (auto i = 0; i < descriptorSetLayouts.size(); i++)
 	{
-		graphics_->GetDevice().destroyDescriptorSetLayout(descriptorSetLayout);
-		descriptorSetLayout = nullptr;
+		graphics_->GetDevice().destroyDescriptorSetLayout(descriptorSetLayouts[i]);
+		descriptorSetLayouts[i] = nullptr;
 	}
 
 	if (pipelineLayout != nullptr)
@@ -303,13 +310,13 @@ void PipelineStateVulkan::Compile()
 	std::array<vk::DescriptorSetLayoutBinding, 2> uboLayoutBindings;
 	uboLayoutBindings[0].binding = 0;
 	uboLayoutBindings[0].descriptorType = vk::DescriptorType::eUniformBufferDynamic;
-	uboLayoutBindings[0].descriptorCount = 2;
+	uboLayoutBindings[0].descriptorCount = 1;
 	uboLayoutBindings[0].stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
 	uboLayoutBindings[0].pImmutableSamplers = nullptr;
 
 	uboLayoutBindings[1].binding = 1;
 	uboLayoutBindings[1].descriptorType = vk::DescriptorType::eCombinedImageSampler;
-	uboLayoutBindings[1].descriptorCount = 2;
+	uboLayoutBindings[1].descriptorCount = 1;
 	uboLayoutBindings[1].stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
 	uboLayoutBindings[1].pImmutableSamplers = nullptr;
 
@@ -317,11 +324,12 @@ void PipelineStateVulkan::Compile()
 	descriptorSetLayoutInfo.bindingCount = 2;
 	descriptorSetLayoutInfo.pBindings = uboLayoutBindings.data();
 
-	descriptorSetLayout = graphics_->GetDevice().createDescriptorSetLayout(descriptorSetLayoutInfo);
+	descriptorSetLayouts[0] = graphics_->GetDevice().createDescriptorSetLayout(descriptorSetLayoutInfo);
+	descriptorSetLayouts[1] = graphics_->GetDevice().createDescriptorSetLayout(descriptorSetLayoutInfo);
 
 	vk::PipelineLayoutCreateInfo layoutInfo = {};
-	layoutInfo.setLayoutCount = 1;
-	layoutInfo.pSetLayouts = &descriptorSetLayout;
+	layoutInfo.setLayoutCount = 2;
+	layoutInfo.pSetLayouts = descriptorSetLayouts.data();
 	layoutInfo.pushConstantRangeCount = 0;
 	layoutInfo.pPushConstantRanges = nullptr;
 

@@ -16,7 +16,7 @@ private:
 
 	vk::Pipeline pipeline = nullptr;
 	vk::PipelineLayout pipelineLayout = nullptr;
-	vk::DescriptorSetLayout descriptorSetLayout = nullptr;
+	std::array<vk::DescriptorSetLayout, 2> descriptorSetLayouts;
 
 public:
 	PipelineStateVulkan();
@@ -31,7 +31,7 @@ public:
 
 	vk::PipelineLayout GetPipelineLayout() const { return pipelineLayout; }
 
-	vk::DescriptorSetLayout GetDescriptorSetLayout() const { return descriptorSetLayout; }
+	const std::array<vk::DescriptorSetLayout, 2>& GetDescriptorSetLayout() const { return descriptorSetLayouts; }
 };
 
 } // namespace LLGI
