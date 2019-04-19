@@ -66,7 +66,7 @@ void PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 			vertexOffset += sizeof(float);
 		}
 
-		if (self_->VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UNORM)
+        if (self_->VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UNORM)
 		{
 			vertexDescriptor.attributes[i].format = MTLVertexFormatChar4Normalized;
 			vertexDescriptor.attributes[i].bufferIndex = 0;
@@ -84,8 +84,8 @@ void PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 	auto vs = static_cast<ShaderMetal*>(self_->GetShaders()[static_cast<int>(ShaderStageType::Vertex)]);
 	auto ps = static_cast<ShaderMetal*>(self_->GetShaders()[static_cast<int>(ShaderStageType::Pixel)]);
 
-	id<MTLFunction> vf = [vs->GetImpl()->library newFunctionWithName:@"main"];
-	id<MTLFunction> pf = [ps->GetImpl()->library newFunctionWithName:@"main"];
+	id<MTLFunction> vf = [vs->GetImpl()->library newFunctionWithName:@"vs_main"];
+	id<MTLFunction> pf = [ps->GetImpl()->library newFunctionWithName:@"ps_main"];
 	pipelineStateDescriptor.vertexFunction = vf;
 	pipelineStateDescriptor.fragmentFunction = pf;
 
@@ -169,13 +169,19 @@ void PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 		colorAttachment.blendingEnabled = false;
 	}
 
-	// TODO [pipelineStateDescriptor.colorAttachments objectAtIndexedSubscript:0].pixelFormat = MTLPixelFormatBGRA8Unorm;
+	auto renderPassPipelineStateMetal_ = static_cast<RenderPassPipelineStateMetal*>(self_->GetRenderPassPipelineState());
+
+	[pipelineStateDescriptor.colorAttachments objectAtIndexedSubscript:0].pixelFormat =
+		renderPassPipelineStateMetal_->GetImpl()->pixelFormat;
 
 	NSError* pipelineError = nil;
 	pipelineState = [graphics->device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor error:&pipelineError];
 }
 
-PipelineStateMetal::PipelineStateMetal() { impl = new PipelineState_Impl(); }
+PipelineStateMetal::PipelineStateMetal() {
+    impl = new PipelineState_Impl();
+    shaders.fill(nullptr);
+}
 
 PipelineStateMetal::~PipelineStateMetal()
 {
@@ -207,7 +213,6 @@ void PipelineStateMetal::SetShader(ShaderStageType stage, Shader* shader)
 
 void PipelineStateMetal::Compile()
 {
-	throw "Not inplemented";
 	impl->Compile(this, graphics_->GetImpl());
 }
 

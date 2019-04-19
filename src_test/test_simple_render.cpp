@@ -111,7 +111,7 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
     struct VertexIn {
         metal::packed_float3 position;
         metal::packed_float2 uv;
-        metal::packed_float4 color;
+        metal::packed_uchar4 color;
     };
     
     struct VertexOut {
@@ -120,11 +120,11 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
         metal::float4 color;
     };
     
-    vertex VertexOut main(const device VertexIn *vertex_array [[buffer(0)]], unsigned int vid [[vertex_id]]) {
+    vertex VertexOut vs_main(const device VertexIn *vertex_array [[buffer(0)]], unsigned int vid [[vertex_id]]) {
         
         VertexOut vo;
         vo.position = metal::float4(vertex_array[vid].position, 1.0);
-        vo.color = vertex_array[vid].color;
+        vo.color = (metal::float4)vertex_array[vid].color / 255.0;  // TODO FIX IT
         return vo;
     }
     
@@ -136,10 +136,10 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
     struct VertexOut {
         metal::float4 position [[position]];
         metal::float2 uv;
-        metal::packed_float4 color;
+        metal::float4 color;
     };
     
-    fragment metal::half4 main(VertexOut input [[stage_in]]) {
+    fragment metal::half4 ps_main(VertexOut input [[stage_in]]) {
         return metal::half4(input.color);
     }
     
@@ -179,6 +179,9 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 			compiler->Compile(result_vs, code_gl_vs, LLGI::ShaderStageType::Vertex);
 			compiler->Compile(result_ps, code_gl_ps, LLGI::ShaderStageType::Pixel);
 		}
+        
+        if(result_vs.Message != "") std::cout << result_vs.Message << std::endl;
+        if(result_ps.Message != "") std::cout << result_ps.Message << std::endl;
 
 		std::vector<LLGI::DataStructure> data_vs;
 		std::vector<LLGI::DataStructure> data_ps;

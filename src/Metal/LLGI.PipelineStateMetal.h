@@ -10,6 +10,8 @@ struct PipelineState_Impl;
 
 class PipelineStateMetal : public PipelineState
 {
+	friend struct PipelineState_Impl;
+
 private:
 	GraphicsMetal* graphics_ = nullptr;
 	PipelineState_Impl* impl = nullptr;
@@ -24,6 +26,8 @@ public:
 	void Compile() override;
 
 	std::array<Shader*, static_cast<int>(ShaderStageType::Max)> GetShaders() const { return shaders; }
+
+	RenderPassPipelineState* GetRenderPassPipelineState() const { return renderPassPipelineState_.get(); }
 
 	PipelineState_Impl* GetImpl() { return impl; }
 };

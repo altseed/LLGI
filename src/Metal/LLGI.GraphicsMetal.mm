@@ -3,6 +3,7 @@
 #include "LLGI.ConstantBufferMetal.h"
 #include "LLGI.IndexBufferMetal.h"
 #include "LLGI.Metal_Impl.h"
+#include "LLGI.PipelineStateMetal.h"
 #include "LLGI.ShaderMetal.h"
 #include "LLGI.VertexBufferMetal.h"
 
@@ -93,6 +94,24 @@ void RenderPassMetal::SetClearColor(const Color8& color)
 
 RenderPass_Impl* RenderPassMetal::GetImpl() const { return impl; }
 
+RenderPassPipelineState* RenderPassMetal::CreateRenderPassPipelineState()
+{
+	if (renderPassPipelineState == nullptr)
+	{
+		renderPassPipelineState = graphics_->CreateRenderPassPipelineState(GetImpl()->pixelFormat);
+	}
+
+	auto ret = renderPassPipelineState.get();
+	SafeAddRef(ret);
+	return ret;
+}
+
+RenderPassPipelineStateMetal::RenderPassPipelineStateMetal() { impl = new RenderPassPipelineState_Impl(); }
+
+RenderPassPipelineStateMetal::~RenderPassPipelineStateMetal() { SafeDelete(impl); }
+
+RenderPassPipelineState_Impl* RenderPassPipelineStateMetal::GetImpl() const { return impl; }
+
 GraphicsMetal::GraphicsMetal() { impl = new Graphics_Impl(); }
 
 GraphicsMetal::~GraphicsMetal() { SafeDelete(impl); }
@@ -174,7 +193,17 @@ Shader* GraphicsMetal::CreateShader(DataStructure* data, int32_t count)
 	return nullptr;
 }
 
-PipelineState* GraphicsMetal::CreatePiplineState() { throw "Not inplemented"; }
+PipelineState* GraphicsMetal::CreatePiplineState()
+{
+	auto pipelineState = new PipelineStateMetal();
+	if (pipelineState->Initialize(this))
+	{
+		return pipelineState;
+	}
+
+	SafeRelease(pipelineState);
+	return nullptr;
+}
 
 CommandList* GraphicsMetal::CreateCommandList()
 {
@@ -198,6 +227,32 @@ RenderPass* GraphicsMetal::CreateRenderPass(const Texture** textures, int32_t te
 Texture* GraphicsMetal::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer) { throw "Not inplemented"; }
 
 Texture* GraphicsMetal::CreateTexture(uint64_t id) { throw "Not inplemented"; }
+
+std::shared_ptr<RenderPassPipelineStateMetal> GraphicsMetal::CreateRenderPassPipelineState(MTLPixelFormat format)
+{
+	RenderPassPipelineStateMetalKey key;
+	key.format = format;
+
+	// already?
+	{
+		auto it = renderPassPipelineStates.find(key);
+
+		if (it != renderPassPipelineStates.end())
+		{
+			auto ret = it->second.lock();
+
+			if (ret != nullptr)
+				return ret;
+		}
+	}
+
+	std::shared_ptr<RenderPassPipelineStateMetal> ret = std::make_shared<RenderPassPipelineStateMetal>();
+	ret->GetImpl()->pixelFormat = format;
+
+	renderPassPipelineStates[key] = ret;
+
+	return ret;
+}
 
 Graphics_Impl* GraphicsMetal::GetImpl() const { return impl; }
 

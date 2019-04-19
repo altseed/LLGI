@@ -29,10 +29,16 @@ struct RenderPass_Impl
 	Color8 clearColor;
 	bool isColorCleared;
 	bool isDepthCleared;
+	MTLPixelFormat pixelFormat = MTLPixelFormatBGRA8Unorm;
 
 	RenderPass_Impl();
 	~RenderPass_Impl();
 	bool Initialize();
+};
+
+struct RenderPassPipelineState_Impl
+{
+	MTLPixelFormat pixelFormat = MTLPixelFormatBGRA8Unorm;
 };
 
 struct CommandList_Impl

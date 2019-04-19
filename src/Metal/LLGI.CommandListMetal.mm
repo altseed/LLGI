@@ -115,9 +115,6 @@ void CommandListMetal::SetScissor(int32_t x, int32_t y, int32_t width, int32_t h
 
 void CommandListMetal::Draw(int32_t pritimiveCount)
 {
-
-	throw "Not inplemented";
-
 	BindingVertexBuffer vb_;
 	IndexBuffer* ib_ = nullptr;
 	PipelineState* pip_ = nullptr;
@@ -141,30 +138,34 @@ void CommandListMetal::Draw(int32_t pritimiveCount)
 	{
 		impl->SetVertexBuffer(vb->GetImpl(), vb_.stride, vb_.offset);
 	}
-    
-    [impl->renderEncoder setRenderPipelineState:pip->GetImpl()->pipelineState];
-    
-    // draw
-    int indexPerPrim = 0;
-    if (pip->Topology == TopologyType::Triangle)
-        indexPerPrim = 3;
-    if (pip->Topology == TopologyType::Line)
-        indexPerPrim = 2;
 
-    MTLPrimitiveType topology = MTLPrimitiveTypeTriangle;
-    MTLIndexType indexType = MTLIndexTypeUInt32;
-    
-    if(pip->Topology == TopologyType::Line)
-    {
-        topology = MTLPrimitiveTypeLine;
-    }
-    
-    if(ib->GetStride() == 2)
-    {
-        indexType = MTLIndexTypeUInt16;
-    }
-    
-    [impl->renderEncoder drawIndexedPrimitives:topology indexCount:pritimiveCount * indexPerPrim indexType:indexType indexBuffer:ib->GetImpl()->buffer indexBufferOffset:0];
+	[impl->renderEncoder setRenderPipelineState:pip->GetImpl()->pipelineState];
+
+	// draw
+	int indexPerPrim = 0;
+	if (pip->Topology == TopologyType::Triangle)
+		indexPerPrim = 3;
+	if (pip->Topology == TopologyType::Line)
+		indexPerPrim = 2;
+
+	MTLPrimitiveType topology = MTLPrimitiveTypeTriangle;
+	MTLIndexType indexType = MTLIndexTypeUInt32;
+
+	if (pip->Topology == TopologyType::Line)
+	{
+		topology = MTLPrimitiveTypeLine;
+	}
+
+	if (ib->GetStride() == 2)
+	{
+		indexType = MTLIndexTypeUInt16;
+	}
+
+	[impl->renderEncoder drawIndexedPrimitives:topology
+									indexCount:pritimiveCount * indexPerPrim
+									 indexType:indexType
+								   indexBuffer:ib->GetImpl()->buffer
+							 indexBufferOffset:0];
 }
 
 void CommandListMetal::SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageType shaderStage) { throw "Not inplemented"; }
