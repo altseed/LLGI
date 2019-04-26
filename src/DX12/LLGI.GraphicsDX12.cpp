@@ -26,6 +26,7 @@ GraphicsDX12::~GraphicsDX12()
 {
 	SafeRelease(device_);
 	SafeRelease(commandQueue_);
+	SafeRelease(commandAllocator_);
 }
 
 void GraphicsDX12::Execute(CommandList* commandList)

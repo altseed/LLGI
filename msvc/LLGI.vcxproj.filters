@@ -2,36 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="..\src\LLGI.Base.h" />
-    <ClInclude Include="..\src\G3\LLGI.G3.CommandList.h">
-      <Filter>G3</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\G3\LLGI.G3.ConstantBuffer.h">
-      <Filter>G3</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\G3\LLGI.G3.Graphics.h">
-      <Filter>G3</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\G3\LLGI.G3.IndexBuffer.h">
-      <Filter>G3</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\G3\LLGI.G3.PipelineState.h">
-      <Filter>G3</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\G3\LLGI.G3.Platform.h">
-      <Filter>G3</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\G3\LLGI.G3.Shader.h">
-      <Filter>G3</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\G3\LLGI.G3.VertexBuffer.h">
-      <Filter>G3</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\G3\LLGI.G3.Texture.h">
-      <Filter>G3</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\G3\LLGI.G3.Compiler.h">
-      <Filter>G3</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Win\LLGI.WindowWin.h">
       <Filter>Win</Filter>
     </ClInclude>
@@ -77,9 +47,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="G3">
-      <UniqueIdentifier>{905ccd25-b91d-40e9-9a1f-ff339aa86a34}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Win">
       <UniqueIdentifier>{ba361f63-6439-4616-b9fb-610ae8e4a6e3}</UniqueIdentifier>
     </Filter>
@@ -91,36 +58,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\G3\LLGI.G3.CommandList.cpp">
-      <Filter>G3</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\G3\LLGI.G3.ConstantBuffer.cpp">
-      <Filter>G3</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\G3\LLGI.G3.Graphics.cpp">
-      <Filter>G3</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\G3\LLGI.G3.IndexBuffer.cpp">
-      <Filter>G3</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\G3\LLGI.G3.PipelineState.cpp">
-      <Filter>G3</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\G3\LLGI.G3.Platform.cpp">
-      <Filter>G3</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\G3\LLGI.G3.Shader.cpp">
-      <Filter>G3</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\G3\LLGI.G3.VertexBuffer.cpp">
-      <Filter>G3</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\G3\LLGI.G3.Texture.cpp">
-      <Filter>G3</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\G3\LLGI.G3.Compiler.cpp">
-      <Filter>G3</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\Win\LLGI.WindowWin.cpp">
       <Filter>Win</Filter>
     </ClCompile>

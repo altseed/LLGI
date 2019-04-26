@@ -4,6 +4,10 @@
 #include "../LLGI.Platform.h"
 #include "LLGI.BaseDX12.h"
 
+#ifdef _WIN32
+#include "../Win/LLGI.WindowWin.h"
+#endif
+
 namespace LLGI
 {
 
@@ -11,8 +15,8 @@ class PlatformDX12 : public Platform
 {
 private:
 	static const int SwapBufferCount = 2;
+	WindowWin window;
 
-	HWND hwnd = nullptr;
 	ID3D12Device* device = nullptr;
 	IDXGIFactory4* dxgiFactory = nullptr;
 	ID3D12CommandQueue* commandQueue = nullptr;

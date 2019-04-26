@@ -1,19 +1,9 @@
 #include "LLGI.PlatformDX12.h"
 #include "LLGI.GraphicsDX12.h"
+#include "../Win/LLGI.WindowWin.h"
 
 namespace LLGI
 {
-
-LRESULT LLGI_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-	switch (msg)
-	{
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		return 0;
-	}
-	return DefWindowProc(hwnd, msg, wParam, lParam);
-}
 
 void PlatformDX12::Wait()
 {
@@ -59,6 +49,7 @@ PlatformDX12::~PlatformDX12()
 	for (int32_t i = 0; i < SwapBufferCount; i++)
 	{
 		SafeRelease(RenderPass[i]);
+		handleRTV[i] = {};
 	}
 
 	SafeRelease(commandAllocator);
@@ -76,30 +67,16 @@ PlatformDX12::~PlatformDX12()
 		fenceEvent = nullptr;
 	}
 
-	DestroyWindow(hwnd);
-	UnregisterClassA("DirectX12", GetModuleHandle(NULL));
+	window.Terminate();
 }
 
 bool PlatformDX12::Initialize(Vec2I windowSize)
 {
 	// Windows
-
-	WNDCLASSEX wcex;
-	memset(&wcex, 0, sizeof(WNDCLASSEX));
-
-	wcex.cbSize = sizeof(WNDCLASSEX);
-	wcex.style = CS_CLASSDC;
-	wcex.lpfnWndProc = (WNDPROC)LLGI_WndProc;
-	wcex.lpszClassName = "DirectX12";
-	wcex.hInstance = GetModuleHandle(NULL);
-
-	RegisterClassExA(&wcex);
-
-	hwnd = CreateWindowA(
-		"DirectX12", "DirectX12", WS_OVERLAPPEDWINDOW, 100, 100, windowSize.X, windowSize.Y, NULL, NULL, wcex.hInstance, NULL);
-
-	ShowWindow(hwnd, SW_SHOWDEFAULT);
-	UpdateWindow(hwnd);
+	if (!window.Initialize("DirectX12", windowSize))
+	{
+		return false;
+	}
 
 	// DirectX12
 	HRESULT hr;
@@ -164,7 +141,7 @@ bool PlatformDX12::Initialize(Vec2I windowSize)
 
 	DXGISwapChainDesc.BufferDesc.Width = windowSize.X;
 	DXGISwapChainDesc.BufferDesc.Height = windowSize.Y;
-	DXGISwapChainDesc.OutputWindow = hwnd;
+	DXGISwapChainDesc.OutputWindow = window.GetHandle();
 	DXGISwapChainDesc.Windowed = TRUE;
 	DXGISwapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	DXGISwapChainDesc.BufferCount = SwapBufferCount;
@@ -254,6 +231,7 @@ FAILED_EXIT:;
 	for (int32_t i = 0; i < SwapBufferCount; i++)
 	{
 		SafeRelease(RenderPass[i]);
+		handleRTV[i] = {};
 	}
 
 	SafeRelease(commandAllocator);
@@ -276,20 +254,9 @@ FAILED_EXIT:;
 
 bool PlatformDX12::NewFrame()
 {
-	MSG msg;
-	ZeroMemory(&msg, sizeof(msg));
-	while (msg.message != WM_QUIT)
+	if(!window.DoEvent())
 	{
-		if (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-			continue;
-		}
-		else
-		{
-			break;
-		}
+		return false;
 	}
 
 	frameIndex = swapChain->GetCurrentBackBufferIndex();

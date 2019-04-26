@@ -32,20 +32,22 @@ void test_renderPass();
 
 int main()
 {
+	auto device = LLGI::DeviceType::Default;
+
 	// Empty
-	//test_empty();
+	test_empty(device);
 
 	// About clear
-	// test_clear();
-	// test_clear_update();
+	// test_clear(device);
+	// test_clear_update(device);
 
 	// About compile
-	// test_compile();
+	// test_compile(device);
 
 	// Render
-	// test_simple_rectangle();
-	//test_simple_constant_rectangle(LLGI::ConstantBufferType::LongTime);
-	test_simple_texture_rectangle(LLGI::DeviceType::Vulkan);
+	// test_simple_rectangle(device);
+	// test_simple_constant_rectangle(LLGI::ConstantBufferType::LongTime, device);
+	// test_simple_texture_rectangle(device);
 
 	// About renderPass
 	// test_renderPass();
