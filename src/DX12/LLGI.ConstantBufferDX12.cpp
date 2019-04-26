@@ -47,14 +47,14 @@ FAILED_EXIT:
 
 void* ConstantBufferDX12::Lock()
 {
-
+	throw "Not inplemented";
 FAILED_EXIT:
 	return nullptr;
 }
 
 void* ConstantBufferDX12::Lock(int32_t offset, int32_t size)
 {
-
+	throw "Not inplemented";
 FAILED_EXIT:
 	return nullptr;
 }

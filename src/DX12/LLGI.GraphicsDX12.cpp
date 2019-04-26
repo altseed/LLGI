@@ -113,6 +113,15 @@ CommandList* GraphicsDX12::CreateCommandList()
 
 PipelineState* GraphicsDX12::CreatePiplineState() { return new PipelineStateDX12(this); }
 
+RenderPass* GraphicsDX12::CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture)
+{
+	throw "Not inplemented";
+}
+
+Texture* GraphicsDX12::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer) { throw "Not inplemented"; }
+
+Texture* GraphicsDX12::CreateTexture(uint64_t id) { throw "Not inplemented"; }
+
 ID3D12Device* GraphicsDX12::GetDevice() { return device_; }
 
 } // namespace LLGI
