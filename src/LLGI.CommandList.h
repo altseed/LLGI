@@ -19,23 +19,36 @@ protected:
 		int32_t offset = 0;
 	};
 
-private:
+	struct BindingTexture
+	{
+		Texture* texture = nullptr;
+		TextureWrapMode wrapMode = TextureWrapMode::Clamp;
+		TextureMinMagFilter minMagFilter = TextureMinMagFilter::Nearest;
+	};
 
+private:
 	BindingVertexBuffer bindingVertexBuffer;
 	IndexBuffer* currentIndexBuffer = nullptr;
 	PipelineState* currentPipelineState = nullptr;
 
 	bool isVertexBufferDirtied = true;
 	bool isCurrentIndexBufferDirtied = true;
+	bool isPipelineDirtied = true;
+
+	std::array<ConstantBuffer*, static_cast<int>(ShaderStageType::Max)> constantBuffers;
+
+protected:
+	std::array<std::array<BindingTexture, 8>, static_cast<int>(ShaderStageType::Max)> currentTextures;
 
 protected:
 	void GetCurrentVertexBuffer(BindingVertexBuffer& buffer, bool& isDirtied);
-	void GetCurrentIndexBuffer(IndexBuffer*& buffer, bool& isDirtied); 
-	void GetCurrentPipelineState(PipelineState*& pipelineState);
+	void GetCurrentIndexBuffer(IndexBuffer*& buffer, bool& isDirtied);
+	void GetCurrentPipelineState(PipelineState*& pipelineState, bool& isDirtied);
+	void GetCurrentConstantBuffer(ShaderStageType type, ConstantBuffer*& buffer);
 
 public:
-	CommandList() = default;
-	virtual ~CommandList() = default;
+	CommandList();
+	virtual ~CommandList();
 
 	virtual void Begin();
 	virtual void End();

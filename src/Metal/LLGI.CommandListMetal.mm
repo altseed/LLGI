@@ -1,8 +1,10 @@
 #include "LLGI.CommandListMetal.h"
+#include "LLGI.ConstantBufferMetal.h"
 #include "LLGI.GraphicsMetal.h"
 #include "LLGI.IndexBufferMetal.h"
 #include "LLGI.Metal_Impl.h"
 #include "LLGI.PipelineStateMetal.h"
+#include "LLGI.TextureMetal.h"
 #include "LLGI.VertexBufferMetal.h"
 
 #import <MetalKit/MetalKit.h>
@@ -88,6 +90,15 @@ CommandListMetal::CommandListMetal() { impl = new CommandList_Impl(); }
 
 CommandListMetal::~CommandListMetal()
 {
+	for (int w = 0; w < 2; w++)
+	{
+		for (int f = 0; f < 2; f++)
+		{
+			[samplers[w][f] release];
+			[samplerStates[w][f] release];
+		}
+	}
+
 	SafeDelete(impl);
 	SafeRelease(graphics_);
 }
@@ -99,6 +110,31 @@ bool CommandListMetal::Initialize(Graphics* graphics)
 	graphics_ = graphics;
 
 	auto graphics_metal_ = static_cast<GraphicsMetal*>(graphics);
+
+	// Sampler
+	for (int w = 0; w < 2; w++)
+	{
+		for (int f = 0; f < 2; f++)
+		{
+			MTLSamplerAddressMode ws[2];
+			ws[0] = MTLSamplerAddressModeClampToEdge;
+			ws[1] = MTLSamplerAddressModeRepeat;
+
+			MTLSamplerMinMagFilter fsmin[2];
+			fsmin[0] = MTLSamplerMinMagFilterNearest;
+			fsmin[1] = MTLSamplerMinMagFilterLinear;
+
+			MTLSamplerDescriptor* samplerDescriptor = [MTLSamplerDescriptor new];
+			samplerDescriptor.minFilter = fsmin[f];
+			samplerDescriptor.magFilter = fsmin[f];
+			samplerDescriptor.sAddressMode = ws[w];
+			samplerDescriptor.tAddressMode = ws[w];
+
+			samplers[w][f] = samplerDescriptor;
+			samplerStates[w][f] = [graphics_metal_->GetImpl()->device newSamplerStateWithDescriptor:samplerDescriptor];
+		}
+	}
+
 	return impl->Initialize(graphics_metal_->GetImpl());
 }
 
@@ -121,10 +157,11 @@ void CommandListMetal::Draw(int32_t pritimiveCount)
 
 	bool isVBDirtied = false;
 	bool isIBDirtied = false;
+	bool isPipDirtied = false;
 
 	GetCurrentVertexBuffer(vb_, isVBDirtied);
 	GetCurrentIndexBuffer(ib_, isIBDirtied);
-	GetCurrentPipelineState(pip_);
+	GetCurrentPipelineState(pip_, isPipDirtied);
 
 	assert(vb_.vertexBuffer != nullptr);
 	assert(ib_ != nullptr);
@@ -139,7 +176,53 @@ void CommandListMetal::Draw(int32_t pritimiveCount)
 		impl->SetVertexBuffer(vb->GetImpl(), vb_.stride, vb_.offset);
 	}
 
-	[impl->renderEncoder setRenderPipelineState:pip->GetImpl()->pipelineState];
+	// assign constant buffer
+	ConstantBuffer* vcb = nullptr;
+	GetCurrentConstantBuffer(ShaderStageType::Vertex, vcb);
+	if (vcb != nullptr)
+	{
+		auto vcb_ = static_cast<ConstantBufferMetal*>(vcb);
+		[impl->renderEncoder setVertexBuffer:vcb_->GetImpl()->buffer offset:0 atIndex:1];
+	}
+
+	ConstantBuffer* pcb = nullptr;
+	GetCurrentConstantBuffer(ShaderStageType::Pixel, pcb);
+	if (pcb != nullptr)
+	{
+		auto pcb_ = static_cast<ConstantBufferMetal*>(pcb);
+		[impl->renderEncoder setFragmentBuffer:pcb_->GetImpl()->buffer offset:0 atIndex:1];
+	}
+
+	// Assign textures
+	for (int stage_ind = 0; stage_ind < (int32_t)ShaderStageType::Max; stage_ind++)
+	{
+		for (int unit_ind = 0; unit_ind < currentTextures[stage_ind].size(); unit_ind++)
+		{
+			if (currentTextures[stage_ind][unit_ind].texture == nullptr)
+				continue;
+
+			auto texture = (TextureMetal*)currentTextures[stage_ind][unit_ind].texture;
+			auto wm = (int32_t)currentTextures[stage_ind][unit_ind].wrapMode;
+			auto mm = (int32_t)currentTextures[stage_ind][unit_ind].minMagFilter;
+
+			if (stage_ind == (int32_t)ShaderStageType::Vertex)
+			{
+				[impl->renderEncoder setVertexTexture:texture->GetImpl()->texture atIndex:unit_ind];
+				[impl->renderEncoder setVertexSamplerState:samplerStates[wm][mm] atIndex:unit_ind];
+			}
+
+			if (stage_ind == (int32_t)ShaderStageType::Pixel)
+			{
+				[impl->renderEncoder setFragmentTexture:texture->GetImpl()->texture atIndex:unit_ind];
+				[impl->renderEncoder setFragmentSamplerState:samplerStates[wm][mm] atIndex:unit_ind];
+			}
+		}
+	}
+
+	if (isPipDirtied)
+	{
+		[impl->renderEncoder setRenderPipelineState:pip->GetImpl()->pipelineState];
+	}
 
 	// draw
 	int indexPerPrim = 0;
@@ -166,14 +249,6 @@ void CommandListMetal::Draw(int32_t pritimiveCount)
 									 indexType:indexType
 								   indexBuffer:ib->GetImpl()->buffer
 							 indexBufferOffset:0];
-}
-
-void CommandListMetal::SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageType shaderStage) { throw "Not inplemented"; }
-
-void CommandListMetal::SetTexture(
-	Texture* texture, TextureWrapMode wrapMode, TextureMinMagFilter minmagFilter, int32_t unit, ShaderStageType shaderStage)
-{
-	throw "Not inplemented";
 }
 
 void CommandListMetal::BeginRenderPass(RenderPass* renderPass)

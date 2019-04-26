@@ -29,16 +29,4 @@ bool Buffer_Impl::Initialize(Graphics_Impl* graphics, int32_t size)
 
 void* Buffer_Impl::GetBuffer() { return buffer.contents; }
 
-bool Texture_Impl::Initialize(Graphics_Impl* graphics, const Vec2I& size)
-{
-	MTLTextureDescriptor* textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
-																								 width:size.X
-																								height:size.Y
-																							 mipmapped:YES];
-
-	texture = [graphics->device newTextureWithDescriptor:textureDescriptor];
-
-	return true;
-}
-
 }

@@ -17,12 +17,19 @@ bool ConstantBufferMetal::Initialize(Graphics* graphics, int32_t size)
 	return impl->Initialize(graphics_->GetImpl(), size);
 }
 
-void* ConstantBufferMetal::Lock() { throw "Not inplemented"; }
+void* ConstantBufferMetal::Lock() { return impl->GetBuffer(); }
 
-void* ConstantBufferMetal::Lock(int32_t offset, int32_t size) { throw "Not inplemented"; }
+void* ConstantBufferMetal::Lock(int32_t offset, int32_t size)
+{
+	NSCAssert(0 <= offset && offset + size <= impl->size_, @"Run off the buffer");
 
-void ConstantBufferMetal::Unlock() { throw "Not inplemented"; }
+	auto buffer_ = static_cast<uint8_t*>(impl->GetBuffer());
+	buffer_ += offset;
+	return buffer_;
+}
 
-int32_t ConstantBufferMetal::GetSize() { throw "Not inplemented"; }
+void ConstantBufferMetal::Unlock() {}
+
+int32_t ConstantBufferMetal::GetSize() { return impl->size_; }
 
 }

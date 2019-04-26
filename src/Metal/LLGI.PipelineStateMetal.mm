@@ -66,7 +66,7 @@ void PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 			vertexOffset += sizeof(float);
 		}
 
-        if (self_->VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UNORM)
+		if (self_->VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UNORM)
 		{
 			vertexDescriptor.attributes[i].format = MTLVertexFormatChar4Normalized;
 			vertexDescriptor.attributes[i].bufferIndex = 0;
@@ -178,9 +178,10 @@ void PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 	pipelineState = [graphics->device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor error:&pipelineError];
 }
 
-PipelineStateMetal::PipelineStateMetal() {
-    impl = new PipelineState_Impl();
-    shaders.fill(nullptr);
+PipelineStateMetal::PipelineStateMetal()
+{
+	impl = new PipelineState_Impl();
+	shaders.fill(nullptr);
 }
 
 PipelineStateMetal::~PipelineStateMetal()
@@ -211,9 +212,6 @@ void PipelineStateMetal::SetShader(ShaderStageType stage, Shader* shader)
 	shaders[static_cast<int>(stage)] = shader;
 }
 
-void PipelineStateMetal::Compile()
-{
-	impl->Compile(this, graphics_->GetImpl());
-}
+void PipelineStateMetal::Compile() { impl->Compile(this, graphics_->GetImpl()); }
 
 }

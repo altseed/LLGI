@@ -7,7 +7,8 @@ namespace LLGI
 
 void PipelineState::SetShader(ShaderStageType stage, Shader* shader) {}
 
-void PipelineState::SetRenderPassPipelineState(RenderPassPipelineState* renderPassPipelineState) {
+void PipelineState::SetRenderPassPipelineState(RenderPassPipelineState* renderPassPipelineState)
+{
 
 	SafeAddRef(renderPassPipelineState);
 	renderPassPipelineState_ = CreateSharedPtr(renderPassPipelineState);

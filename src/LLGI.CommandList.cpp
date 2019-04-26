@@ -1,5 +1,10 @@
 
 #include "LLGI.CommandList.h"
+#include "LLGI.ConstantBuffer.h"
+#include "LLGI.IndexBuffer.h"
+#include "LLGI.PipelineState.h"
+#include "LLGI.Texture.h"
+#include "LLGI.VertexBuffer.h"
 
 namespace LLGI
 {
@@ -17,7 +22,45 @@ void CommandList::GetCurrentIndexBuffer(IndexBuffer*& buffer, bool& isDirtied)
 	isDirtied = isCurrentIndexBufferDirtied;
 }
 
-void CommandList::GetCurrentPipelineState(PipelineState*& pipelineState) { pipelineState = currentPipelineState; }
+void CommandList::GetCurrentPipelineState(PipelineState*& pipelineState, bool& isDirtied)
+{
+	pipelineState = currentPipelineState;
+	isDirtied = isPipelineDirtied;
+}
+
+void CommandList::GetCurrentConstantBuffer(ShaderStageType type, ConstantBuffer*& buffer)
+{
+	buffer = constantBuffers[static_cast<int>(type)];
+}
+
+CommandList::CommandList()
+{
+	constantBuffers.fill(nullptr);
+
+	for (auto& t : currentTextures)
+	{
+		for (auto& bt : t)
+		{
+			bt.texture = nullptr;
+		}
+	}
+}
+
+CommandList::~CommandList()
+{
+	for (auto& c : constantBuffers)
+	{
+		SafeRelease(c);
+	}
+
+	for (auto& t : currentTextures)
+	{
+		for (auto& bt : t)
+		{
+			SafeRelease(bt.texture);
+		}
+	}
+}
 
 void CommandList::Begin()
 {
@@ -26,6 +69,7 @@ void CommandList::Begin()
 	currentPipelineState = nullptr;
 	isVertexBufferDirtied = true;
 	isCurrentIndexBufferDirtied = true;
+	isPipelineDirtied = true;
 }
 
 void CommandList::End() {}
@@ -36,6 +80,7 @@ void CommandList::Draw(int32_t pritimiveCount)
 {
 	isVertexBufferDirtied = false;
 	isCurrentIndexBufferDirtied = false;
+	isPipelineDirtied = false;
 }
 
 void CommandList::SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride, int32_t offset)
@@ -53,13 +98,25 @@ void CommandList::SetIndexBuffer(IndexBuffer* indexBuffer)
 	currentIndexBuffer = indexBuffer;
 }
 
-void CommandList::SetPipelineState(PipelineState* pipelineState) { currentPipelineState = pipelineState; }
+void CommandList::SetPipelineState(PipelineState* pipelineState)
+{
+	currentPipelineState = pipelineState;
+	isPipelineDirtied = true;
+}
 
-void CommandList::SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageType shaderStage) {}
+void CommandList::SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageType shaderStage)
+{
+	auto ind = static_cast<int>(shaderStage);
+	SafeAssign(constantBuffers[ind], constantBuffer);
+}
 
 void CommandList::SetTexture(
 	Texture* texture, TextureWrapMode wrapMode, TextureMinMagFilter minmagFilter, int32_t unit, ShaderStageType shaderStage)
 {
+	auto ind = static_cast<int>(shaderStage);
+	SafeAssign(currentTextures[ind][unit].texture, texture);
+	currentTextures[ind][unit].wrapMode = wrapMode;
+	currentTextures[ind][unit].minMagFilter = minmagFilter;
 }
 
 } // namespace LLGI

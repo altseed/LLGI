@@ -97,8 +97,14 @@ struct Buffer_Impl
 struct Texture_Impl
 {
 	id<MTLTexture> texture;
+	Vec2I size_;
+
+	Texture_Impl();
+	virtual ~Texture_Impl();
 
 	bool Initialize(Graphics_Impl* graphics, const Vec2I& size);
+
+	void Write(const uint8_t* data);
 };
 
 } // namespace LLGI

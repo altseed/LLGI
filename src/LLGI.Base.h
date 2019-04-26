@@ -1,17 +1,17 @@
 
 #pragma once
 
+#include <assert.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
-#include <assert.h>
 
+#include <array>
+#include <atomic>
+#include <memory>
+#include <queue>
 #include <string>
 #include <vector>
-#include <memory>
-#include <atomic>
-#include <array>
-#include <queue>
 
 namespace LLGI
 {
@@ -20,7 +20,7 @@ enum class DeviceType
 {
 	Default,
 	DirectX12,
-    Metal,
+	Metal,
 	Vulkan,
 };
 
@@ -107,7 +107,7 @@ enum class DepthFuncType
 
 enum class ConstantBufferType
 {
-	LongTime, //! this constant buffer is not almost changed
+	LongTime,  //! this constant buffer is not almost changed
 	ShortTime, //! this constant buffer is disposed or rewrite by a frame. If shorttime, this constant buffer must be disposed by a frame.
 };
 
@@ -116,17 +116,9 @@ struct Vec2I
 	int32_t X;
 	int32_t Y;
 
-	Vec2I()
-		: X (0)
-		, Y (0)
-	{
-	}
+	Vec2I() : X(0), Y(0) {}
 
-	Vec2I(int32_t x, int32_t y)
-		: X(x)
-		, Y(y)
-	{
-	}
+	Vec2I(int32_t x, int32_t y) : X(x), Y(y) {}
 };
 
 struct Vec2F
@@ -134,17 +126,9 @@ struct Vec2F
 	float X;
 	float Y;
 
-	Vec2F()
-		: X(0)
-		, Y(0)
-	{
-	}
+	Vec2F() : X(0), Y(0) {}
 
-	Vec2F(float x, float y)
-		: X(x)
-		, Y(y)
-	{
-	}
+	Vec2F(float x, float y) : X(x), Y(y) {}
 };
 
 struct Vec3F
@@ -153,19 +137,9 @@ struct Vec3F
 	float Y;
 	float Z;
 
-	Vec3F()
-		: X(0)
-		, Y(0)
-		, Z(0)
-	{
-	}
+	Vec3F() : X(0), Y(0), Z(0) {}
 
-	Vec3F(float x, float y, float z)
-		: X(x)
-		, Y(y)
-		, Z(z)
-	{
-	}
+	Vec3F(float x, float y, float z) : X(x), Y(y), Z(z) {}
 };
 
 struct Color8
@@ -175,21 +149,9 @@ struct Color8
 	uint8_t B;
 	uint8_t A;
 
-	Color8()
-		: R(255)
-		, G(255)
-		, B(255)
-		, A(255)
-	{
-	}
+	Color8() : R(255), G(255), B(255), A(255) {}
 
-	Color8(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
-		: R(r)
-		, G(g)
-		, B(b)
-		, A(a)
-	{
-	}
+	Color8(uint8_t r, uint8_t g, uint8_t b, uint8_t a) : R(r), G(g), B(b), A(a) {}
 };
 
 struct DataStructure
@@ -198,9 +160,7 @@ struct DataStructure
 	int32_t Size;
 };
 
-
-template <class T>
-void SafeAddRef(T& t)
+template <class T> void SafeAddRef(T& t)
 {
 	if (t != NULL)
 	{
@@ -208,8 +168,7 @@ void SafeAddRef(T& t)
 	}
 }
 
-template <class T>
-void SafeRelease(T& t)
+template <class T> void SafeRelease(T& t)
 {
 	if (t != NULL)
 	{
@@ -218,8 +177,14 @@ void SafeRelease(T& t)
 	}
 }
 
-template <class T>
-void SafeDelete(T& t)
+template <class T> void SafeAssign(T& t, T value)
+{
+	SafeAddRef(value);
+	SafeRelease(t);
+	t = value;
+}
+
+template <class T> void SafeDelete(T& t)
 {
 	if (t != NULL)
 	{
@@ -228,21 +193,15 @@ void SafeDelete(T& t)
 	}
 }
 
-
 class ReferenceObject
 {
 private:
 	mutable std::atomic<int32_t> reference;
 
 public:
-	ReferenceObject()
-		: reference(1)
-	{
-	}
+	ReferenceObject() : reference(1) {}
 
-	virtual ~ReferenceObject()
-	{
-	}
+	virtual ~ReferenceObject() {}
 
 	int AddRef()
 	{
@@ -250,10 +209,7 @@ public:
 		return reference;
 	}
 
-	int GetRef()
-	{
-		return reference;
-	}
+	int GetRef() { return reference; }
 
 	int Release()
 	{
@@ -270,21 +226,16 @@ public:
 	}
 };
 
-template <typename T>
-struct ReferenceDeleter
+template <typename T> struct ReferenceDeleter
 {
-	void operator ()(T* p)
+	void operator()(T* p)
 	{
 		auto p_ = ((ReferenceObject*)p);
 		SafeRelease(p_);
 	}
 };
 
-template <typename T>
-static std::shared_ptr<T> CreateSharedPtr(T* p)
-{
-	return std::shared_ptr<T>(p, ReferenceDeleter<T>());
-}
+template <typename T> static std::shared_ptr<T> CreateSharedPtr(T* p) { return std::shared_ptr<T>(p, ReferenceDeleter<T>()); }
 
 class VertexBuffer;
 class IndexBuffer;
@@ -314,6 +265,6 @@ class CommandList;
 class Compiler;
 class RenderPass;
 
-}
+} // namespace G3
 
-}
+} // namespace LLGI

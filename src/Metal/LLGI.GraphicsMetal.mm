@@ -6,6 +6,7 @@
 #include "LLGI.PipelineStateMetal.h"
 #include "LLGI.ShaderMetal.h"
 #include "LLGI.VertexBufferMetal.h"
+#include "LLGI.TextureMetal.h"
 
 #import <MetalKit/MetalKit.h>
 
@@ -224,7 +225,19 @@ RenderPass* GraphicsMetal::CreateRenderPass(const Texture** textures, int32_t te
 	throw "Not inplemented";
 }
 
-Texture* GraphicsMetal::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer) { throw "Not inplemented"; }
+Texture* GraphicsMetal::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer) {
+    if(isRenderPass) throw "Not inplemented";
+    if(isDepthBuffer) throw "Not inplemented";
+    
+    auto o = new TextureMetal();
+    if (o->Initialize(this, size))
+    {
+        return o;
+    }
+    
+    SafeRelease(o);
+    return nullptr;    
+}
 
 Texture* GraphicsMetal::CreateTexture(uint64_t id) { throw "Not inplemented"; }
 
