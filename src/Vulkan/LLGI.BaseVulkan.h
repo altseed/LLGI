@@ -15,6 +15,7 @@ namespace LLGI
 {
 
 class GraphicsVulkan;
+class PipelineStateVulkan;
 
 class Buffer
 {

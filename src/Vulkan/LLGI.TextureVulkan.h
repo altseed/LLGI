@@ -17,11 +17,12 @@ private:
 	vk::DeviceMemory devMem = nullptr;
 	Vec2I textureSize;
 
+	int32_t memorySize = 0;
 	std::unique_ptr<Buffer> cpuBuf;
-	std::unique_ptr<Buffer> gpuBuf;
+	void* data = nullptr;
 
 public:
-	TextureVulkan();
+	TextureVulkan(GraphicsVulkan* graphics);
 	virtual ~TextureVulkan();
 
 	bool Initialize(const Vec2I& size, bool isRenderPass, bool isDepthBuffer);
@@ -31,6 +32,8 @@ public:
 	Vec2I GetSizeAs2D() override;
 	bool IsRenderTexture() const override;
 	bool IsDepthTexture() const override;
+
+	const vk::ImageView& GetView() const { return view; }
 };
 
 } // namespace LLGI

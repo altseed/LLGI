@@ -123,6 +123,8 @@ private:
 	vk::CommandPool vkCmdPool;
 	vk::PhysicalDevice vkPysicalDevice;
 
+	vk::Sampler defaultSampler = nullptr;
+
 	std::function<void(vk::CommandBuffer&)> addCommand_;
 	std::function<void(PlatformStatus&)> getStatus_;
 
@@ -165,6 +167,9 @@ public:
 	int32_t GetCurrentSwapBufferIndex() const;
 	int32_t GetSwapBufferCount() const;
 	uint32_t GetMemoryTypeIndex(uint32_t bits, const vk::MemoryPropertyFlags& properties);
+
+	//! temp
+	vk::Sampler& GetDefaultSampler() { return defaultSampler; };
 };
 
 } // namespace LLGI

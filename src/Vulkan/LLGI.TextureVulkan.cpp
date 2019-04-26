@@ -4,7 +4,7 @@
 namespace LLGI
 {
 
-TextureVulkan::TextureVulkan() {}
+TextureVulkan::TextureVulkan(GraphicsVulkan* graphics) : graphics_(graphics) { SafeAddRef(graphics_); }
 
 TextureVulkan::~TextureVulkan()
 {
@@ -23,6 +23,14 @@ TextureVulkan::~TextureVulkan()
 
 bool TextureVulkan::Initialize(const Vec2I& size, bool isRenderPass, bool isDepthBuffer)
 {
+	if (isRenderPass)
+		throw "Not implemented";
+
+	if (isDepthBuffer)
+		throw "Not implemented";
+
+	cpuBuf = std::unique_ptr<Buffer>(new Buffer(graphics_));
+
 	// image
 	vk::ImageCreateInfo imageCreateInfo;
 
@@ -46,7 +54,7 @@ bool TextureVulkan::Initialize(const Vec2I& size, bool isRenderPass, bool isDept
 	auto& device = graphics_->GetDevice();
 
 	// calculate size
-	auto memorySize = size.X * size.Y * 4;
+	memorySize = size.X * size.Y * 4;
 
 	// create a buffer on cpu
 	{
@@ -65,7 +73,7 @@ bool TextureVulkan::Initialize(const Vec2I& size, bool isRenderPass, bool isDept
 
 	// create a buffer on gpu
 	{
-		vk::MemoryRequirements memReqs = device.getImageMemoryRequirements(image); 
+		vk::MemoryRequirements memReqs = device.getImageMemoryRequirements(image);
 		vk::MemoryAllocateInfo memAlloc;
 		memAlloc.allocationSize = memReqs.size;
 		memAlloc.memoryTypeIndex = graphics_->GetMemoryTypeIndex(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
@@ -92,9 +100,65 @@ bool TextureVulkan::Initialize(const Vec2I& size, bool isRenderPass, bool isDept
 	return true;
 }
 
-void* TextureVulkan::Lock() { throw "Not inplemented"; }
+void* TextureVulkan::Lock()
+{
+	data = graphics_->GetDevice().mapMemory(cpuBuf->devMem, 0, memorySize, vk::MemoryMapFlags());
+	return data;
+}
 
-void TextureVulkan::Unlock() { throw "Not inplemented"; }
+void TextureVulkan::Unlock()
+{
+	graphics_->GetDevice().unmapMemory(cpuBuf->devMem);
+
+	// copy buffer
+	vk::CommandBufferAllocateInfo cmdBufInfo;
+	cmdBufInfo.commandPool = graphics_->GetCommandPool();
+	cmdBufInfo.level = vk::CommandBufferLevel::ePrimary;
+	cmdBufInfo.commandBufferCount = 1;
+	vk::CommandBuffer copyCommandBuffer = graphics_->GetDevice().allocateCommandBuffers(cmdBufInfo)[0];
+
+	vk::CommandBufferBeginInfo cmdBufferBeginInfo;
+
+	copyCommandBuffer.begin(cmdBufferBeginInfo);
+
+	vk::ImageLayout imageLayout = vk::ImageLayout::eTransferDstOptimal;
+	vk::BufferImageCopy imageBufferCopy;
+
+	imageBufferCopy.bufferOffset = 0;
+	imageBufferCopy.bufferRowLength = 0;
+	imageBufferCopy.bufferImageHeight = 0;
+
+	imageBufferCopy.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+	imageBufferCopy.imageSubresource.mipLevel = 0;
+	imageBufferCopy.imageSubresource.baseArrayLayer = 0;
+	imageBufferCopy.imageSubresource.layerCount = 1;
+
+	imageBufferCopy.imageOffset = {0, 0, 0};
+	imageBufferCopy.imageExtent = {static_cast<uint32_t>(GetSizeAs2D().X), static_cast<uint32_t>(GetSizeAs2D().Y), 1};
+
+	vk::ImageSubresourceRange colorSubRange;
+	colorSubRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+	colorSubRange.levelCount = 1;
+	colorSubRange.layerCount = 1;
+
+	SetImageLayout(copyCommandBuffer, image, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, colorSubRange);
+
+	copyCommandBuffer.copyBufferToImage(cpuBuf->buffer, image, imageLayout, imageBufferCopy);
+
+	SetImageLayout(copyCommandBuffer, image, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, colorSubRange);
+
+	copyCommandBuffer.end();
+
+	// submit and wait to execute command
+	vk::SubmitInfo copySubmitInfo;
+	copySubmitInfo.commandBufferCount = 1;
+	copySubmitInfo.pCommandBuffers = &copyCommandBuffer;
+
+	graphics_->GetQueue().submit(copySubmitInfo, VK_NULL_HANDLE);
+	graphics_->GetQueue().waitIdle();
+
+	graphics_->GetDevice().freeCommandBuffers(graphics_->GetCommandPool(), copyCommandBuffer);
+}
 
 Vec2I TextureVulkan::GetSizeAs2D() { return textureSize; }
 

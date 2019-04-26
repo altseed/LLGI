@@ -6,15 +6,29 @@
 namespace LLGI
 {
 
+class DescriptorPoolVulkan
+{
+private:
+	std::shared_ptr<GraphicsVulkan> graphics_;
+	vk::DescriptorPool descriptorPool = nullptr;
+	int32_t size_ = 0;
+	int32_t stage_ = 0;
+	int32_t offset = 0;
+	std::vector<std::vector<vk::DescriptorSet>> cache;
+
+public:
+	DescriptorPoolVulkan(std::shared_ptr<GraphicsVulkan> graphics, int32_t size, int stage);
+	virtual ~DescriptorPoolVulkan();
+	const std::vector<vk::DescriptorSet>& Get(PipelineStateVulkan* pip);
+	void Reset();
+};
+
 class CommandListVulkan : public CommandList
 {
 private:
 	std::shared_ptr<GraphicsVulkan> graphics_;
-	std::vector<vk::CommandBuffer> commandBuffers;
-	std::array<ConstantBuffer*, static_cast<int>(ShaderStageType::Max)> constantBuffers;
-
-
-	vk::DescriptorPool descriptorPool = nullptr;
+	std::vector<vk::CommandBuffer> commandBuffers;	
+	std::vector<std::shared_ptr<DescriptorPoolVulkan>> descriptorPools;
 
 public:
 	CommandListVulkan();
@@ -27,9 +41,6 @@ public:
 
 	void SetScissor(int32_t x, int32_t y, int32_t width, int32_t height) override;
 	void Draw(int32_t pritimiveCount) override;
-	void SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageType shaderStage) override;
-	void SetTexture(
-		Texture* texture, TextureWrapMode wrapMode, TextureMinMagFilter minmagFilter, int32_t unit, ShaderStageType shaderStage) override;
 	void BeginRenderPass(RenderPass* renderPass) override;
 	void EndRenderPass() override;
 	vk::CommandBuffer GetCommandBuffer() const;

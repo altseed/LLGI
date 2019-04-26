@@ -60,14 +60,34 @@ void SetImageLayout(vk::CommandBuffer cmdbuffer,
 	else if (newImageLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
 		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
 
-	// Put barrier on top
-	// Put barrier inside setup command buffer
-	cmdbuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe,
-							  vk::PipelineStageFlagBits::eTopOfPipe,
-							  vk::DependencyFlags(),
-							  nullptr,
-							  nullptr,
-							  imageMemoryBarrier);
+	if (imageMemoryBarrier.dstAccessMask == vk::AccessFlagBits::eTransferWrite)
+	{
+		cmdbuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe,
+								  vk::PipelineStageFlagBits::eTransfer,
+								  vk::DependencyFlags(),
+								  nullptr,
+								  nullptr,
+								  imageMemoryBarrier);
+	}
+	else if (imageMemoryBarrier.dstAccessMask == vk::AccessFlagBits::eShaderRead)
+	{
+		cmdbuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer,
+								  vk::PipelineStageFlagBits::eVertexShader | vk::PipelineStageFlagBits::eFragmentShader,
+								  vk::DependencyFlags(),
+								  nullptr,
+								  nullptr,
+								  imageMemoryBarrier);
+	}
+	else
+	{
+		// Put barrier inside setup command buffer
+		cmdbuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe,
+								  vk::PipelineStageFlagBits::eTopOfPipe,
+								  vk::DependencyFlags(),
+								  nullptr,
+								  nullptr,
+								  imageMemoryBarrier);
+	}
 }
 
 } // namespace LLGI

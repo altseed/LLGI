@@ -4,6 +4,7 @@
 #include "LLGI.IndexBufferVulkan.h"
 #include "LLGI.PipelineStateVulkan.h"
 #include "LLGI.ShaderVulkan.h"
+#include "LLGI.TextureVulkan.h"
 #include "LLGI.VertexBufferVulkan.h"
 
 namespace LLGI
@@ -112,9 +113,35 @@ GraphicsVulkan::GraphicsVulkan(const vk::Device& device,
 							   platformView.format);
 		renderPasses.push_back(renderPass);
 	}
+
+	vk::SamplerCreateInfo samplerInfo;
+	samplerInfo.magFilter = vk::Filter::eLinear;
+	samplerInfo.minFilter = vk::Filter::eLinear;
+	samplerInfo.anisotropyEnable = false;
+	samplerInfo.maxAnisotropy = 1;
+	samplerInfo.addressModeU = vk::SamplerAddressMode::eRepeat;
+	samplerInfo.addressModeV = vk::SamplerAddressMode::eRepeat;
+	samplerInfo.addressModeW = vk::SamplerAddressMode::eRepeat;
+	samplerInfo.borderColor = vk::BorderColor::eIntOpaqueBlack;
+	samplerInfo.unnormalizedCoordinates = false;
+	samplerInfo.compareEnable = false;
+	samplerInfo.compareOp = vk::CompareOp::eAlways;
+	samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+	samplerInfo.mipLodBias = 0.0f;
+	samplerInfo.minLod = 0.0f;
+	samplerInfo.maxLod = 0.0f;
+
+	defaultSampler = vkDevice.createSampler(samplerInfo);
 }
 
-GraphicsVulkan::~GraphicsVulkan() {}
+GraphicsVulkan::~GraphicsVulkan()
+{
+
+	if (defaultSampler != nullptr)
+	{
+		vkDevice.destroySampler(defaultSampler);
+	}
+}
 
 void GraphicsVulkan::NewFrame()
 {
@@ -208,7 +235,8 @@ CommandList* GraphicsVulkan::CreateCommandList()
 	return nullptr;
 }
 
-ConstantBuffer* GraphicsVulkan::CreateConstantBuffer(int32_t size, ConstantBufferType type) { 
+ConstantBuffer* GraphicsVulkan::CreateConstantBuffer(int32_t size, ConstantBufferType type)
+{
 	auto obj = new ConstantBufferVulkan();
 	if (!obj->Initialize(this, size, type))
 	{
@@ -222,7 +250,17 @@ RenderPass* GraphicsVulkan::CreateRenderPass(const Texture** textures, int32_t t
 {
 	throw "Not inplemented";
 }
-Texture* GraphicsVulkan::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer) { throw "Not inplemented"; }
+Texture* GraphicsVulkan::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer)
+{
+	auto obj = new TextureVulkan(this);
+	if (!obj->Initialize(size, isRenderPass, isDepthBuffer))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
+
+	return obj;
+}
 
 Texture* GraphicsVulkan::CreateTexture(uint64_t id) { throw "Not inplemented"; }
 
