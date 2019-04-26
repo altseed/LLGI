@@ -230,7 +230,7 @@ template <typename T> struct ReferenceDeleter
 {
 	void operator()(T* p)
 	{
-		auto p_ = ((ReferenceObject*)p);
+		auto p_ = (p);
 		SafeRelease(p_);
 	}
 };

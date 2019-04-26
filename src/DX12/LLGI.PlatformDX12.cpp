@@ -1,6 +1,6 @@
 #include "LLGI.PlatformDX12.h"
-#include "LLGI.GraphicsDX12.h"
 #include "../Win/LLGI.WindowWin.h"
+#include "LLGI.GraphicsDX12.h"
 
 namespace LLGI
 {
@@ -254,7 +254,7 @@ FAILED_EXIT:;
 
 bool PlatformDX12::NewFrame()
 {
-	if(!window.DoEvent())
+	if (!window.DoEvent())
 	{
 		return false;
 	}
@@ -313,7 +313,9 @@ Graphics* PlatformDX12::CreateGraphics()
 		return ret;
 	};
 
-	auto graphics = new GraphicsDX12(device, getScreenFunc, commandQueue);
+	std::function<void()> waitFunc = [this]() -> void { this->Wait(); };
+
+	auto graphics = new GraphicsDX12(device, getScreenFunc, waitFunc, commandQueue);
 
 	graphics->SetWindowSize(Vec2I(1280, 720));
 

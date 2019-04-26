@@ -10,8 +10,9 @@ namespace LLGI
 
 GraphicsDX12::GraphicsDX12(ID3D12Device* device,
 						   std::function<std::tuple<D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*>()> getScreenFunc,
+						   std::function<void()> waitFunc,
 						   ID3D12CommandQueue* commandQueue)
-	: device_(device), getScreenFunc_(getScreenFunc), commandQueue_(commandQueue)
+	: device_(device), getScreenFunc_(getScreenFunc), waitFunc_(waitFunc), commandQueue_(commandQueue)
 {
 	SafeAddRef(device_);
 	SafeAddRef(commandQueue_);
@@ -24,6 +25,8 @@ GraphicsDX12::GraphicsDX12(ID3D12Device* device,
 
 GraphicsDX12::~GraphicsDX12()
 {
+	WaitFinish();
+
 	SafeRelease(device_);
 	SafeRelease(commandQueue_);
 	SafeRelease(commandAllocator_);
@@ -34,6 +37,14 @@ void GraphicsDX12::Execute(CommandList* commandList)
 	auto cl = (CommandListDX12*)commandList;
 	auto cl_internal = cl->GetCommandList();
 	commandQueue_->ExecuteCommandLists(1, (ID3D12CommandList**)(&cl_internal));
+}
+
+void GraphicsDX12::WaitFinish()
+{
+	if (waitFunc_ != nullptr)
+	{
+		waitFunc_();
+	}
 }
 
 RenderPass* GraphicsDX12::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared)
