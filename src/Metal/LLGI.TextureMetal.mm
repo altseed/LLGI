@@ -15,25 +15,27 @@ Texture_Impl::~Texture_Impl()
 	}
 }
 
-bool Texture_Impl::Initialize(Graphics_Impl* graphics, const Vec2I& size)
+bool Texture_Impl::Initialize(Graphics_Impl* graphics, const Vec2I& size, bool isRenderTexture, bool isDepthTexture)
 {
-    bool isDepth = false;
-    bool isRenderTarget = false;
+    MTLTextureDescriptor* textureDescriptor = nullptr;
     
-    if(isDepth)
+    if(isDepthTexture)
     {
-        MTLTextureDescriptor* textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatDepth24Unorm_Stencil8
+        textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatDepth24Unorm_Stencil8
                                                                                                      width:size.X
                                                                                                     height:size.Y
                                                                                                  mipmapped:YES];
 
     }
-    
-	MTLTextureDescriptor* textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
+    else
+    {
+        textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
 																								 width:size.X
 																								height:size.Y
 																							 mipmapped:YES];
-    if(isRenderTarget)
+    }
+    
+    if(isRenderTexture)
     {
         textureDescriptor.usage = MTLTextureUsageRenderTarget;
     }
@@ -60,13 +62,16 @@ TextureMetal::~TextureMetal()
 	SafeRelease(graphics_);
 }
 
-bool TextureMetal::Initialize(Graphics* graphics, Vec2I size)
+bool TextureMetal::Initialize(Graphics* graphics, Vec2I size, bool isRenderTexture, bool isDepthTexture)
 {
+    isRenderTexture_ = isRenderTexture;
+    isDepthTexture_ = isDepthTexture;
+    
 	graphics_ = static_cast<GraphicsMetal*>(graphics);
 	SafeAddRef(graphics_);
 
 	data.resize(size.X * size.Y * 4);
-	return impl->Initialize(graphics_->GetImpl(), size);
+	return impl->Initialize(graphics_->GetImpl(), size, isRenderTexture_, isDepthTexture_);
 }
 
 void* TextureMetal::Lock() { return data.data(); }
@@ -75,10 +80,10 @@ void TextureMetal::Unlock() { impl->Write(data.data()); }
 
 Vec2I TextureMetal::GetSizeAs2D() { return impl->size_; }
 
-bool TextureMetal::IsRenderTexture() const { return false; }
+bool TextureMetal::IsRenderTexture() const { return isRenderTexture_; }
 
-bool TextureMetal::IsDepthTexture() const { return false; }
+bool TextureMetal::IsDepthTexture() const { return isDepthTexture_; }
 
-Texture_Impl* TextureMetal::GetImpl() { return impl; }
+Texture_Impl* TextureMetal::GetImpl() const { return impl; }
 
 }

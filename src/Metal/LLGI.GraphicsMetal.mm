@@ -7,7 +7,6 @@
 #include "LLGI.ShaderMetal.h"
 #include "LLGI.VertexBufferMetal.h"
 #include "LLGI.TextureMetal.h"
-
 #import <MetalKit/MetalKit.h>
 
 namespace LLGI
@@ -54,6 +53,26 @@ bool RenderPass_Impl::Initialize()
 	return true;
 }
 
+void RenderPass_Impl::UpdateTarget(Graphics_Impl* graphics)
+{
+    renderPassDescriptor.colorAttachments[0].texture = graphics->drawable.texture;
+    pixelFormat = graphics->drawable.texture.pixelFormat;
+}
+    
+void RenderPass_Impl::UpdateTarget(Texture_Impl** textures, int32_t textureCount, Texture_Impl* depthTexture)
+{
+    for(int i = 0; i < textureCount; i++)
+    {
+        renderPassDescriptor.colorAttachments[i].texture = textures[i]->texture;
+    }
+    
+    if(depthTexture != nullptr)
+    {
+        renderPassDescriptor.depthAttachment.texture = depthTexture->texture;
+    }
+}
+
+    
 RenderPassMetal::RenderPassMetal(GraphicsMetal* graphics, bool isStrongRef) : graphics_(graphics), isStrongRef_(isStrongRef)
 {
 	if (isStrongRef_)
@@ -152,11 +171,10 @@ void GraphicsMetal::WaitFinish() { throw "Not inplemented"; }
 
 RenderPass* GraphicsMetal::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared)
 {
-
 	renderPass_->SetClearColor(clearColor);
 	renderPass_->SetIsColorCleared(isColorCleared);
 	renderPass_->SetIsDepthCleared(isDepthCleared);
-	renderPass_->GetImpl()->renderPassDescriptor.colorAttachments[0].texture = impl->drawable.texture;
+    renderPass_->GetImpl()->UpdateTarget(impl);
 	return renderPass_.get();
 }
 
@@ -218,19 +236,46 @@ CommandList* GraphicsMetal::CreateCommandList()
 	return nullptr;
 }
 
-ConstantBuffer* GraphicsMetal::CreateConstantBuffer(int32_t size, ConstantBufferType type) { throw "Not inplemented"; }
+ConstantBuffer* GraphicsMetal::CreateConstantBuffer(int32_t size, ConstantBufferType type) {
+    
+    if(type == ConstantBufferType::ShortTime) throw "Not inplemented";
+    
+    auto obj = new ConstantBufferMetal();
+    if (obj->Initialize(this, size))
+    {
+        return obj;
+    }
+    
+    SafeRelease(obj);
+    return nullptr;
+}
 
 RenderPass* GraphicsMetal::CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture)
 {
-	throw "Not inplemented";
+    auto renderPass = new RenderPassMetal(this, true);
+
+    std::array<Texture_Impl*, 16> textures_;
+    Texture_Impl* depth_ = nullptr;
+    textures_.fill(nullptr);
+    
+    for(int i = 0; i < textureCount; i++)
+    {
+        textures_[i] = static_cast<const TextureMetal*>(textures[i])->GetImpl();
+    }
+    
+    if(depthTexture != nullptr)
+    {
+        depth_ = static_cast<const TextureMetal*>(depthTexture)->GetImpl();
+    }
+    
+    renderPass_->GetImpl()->UpdateTarget(textures_.data(), textureCount, depth_);
+    
+    return renderPass;
 }
 
 Texture* GraphicsMetal::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer) {
-    if(isRenderPass) throw "Not inplemented";
-    if(isDepthBuffer) throw "Not inplemented";
-    
     auto o = new TextureMetal();
-    if (o->Initialize(this, size))
+    if (o->Initialize(this, size, isRenderPass, isDepthBuffer))
     {
         return o;
     }

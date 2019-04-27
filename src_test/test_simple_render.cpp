@@ -109,9 +109,9 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 	auto code_metal_vs = R"(
     
     struct VertexIn {
-        metal::packed_float3 position;
-        metal::packed_float2 uv;
-        metal::packed_uchar4 color;
+        metal::float3 position [[attribute(0)]];
+        metal::float2 uv [[attribute(1)]];
+        metal::float4 color [[attribute(2)]];
     };
     
     struct VertexOut {
@@ -120,11 +120,11 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
         metal::float4 color;
     };
     
-    vertex VertexOut vs_main(const device VertexIn *vertex_array [[buffer(0)]], unsigned int vid [[vertex_id]]) {
+    vertex VertexOut main0(VertexIn vertex_array [[stage_in]], unsigned int vid [[vertex_id]]) {
         
         VertexOut vo;
-        vo.position = metal::float4(vertex_array[vid].position, 1.0);
-        vo.color = (metal::float4)vertex_array[vid].color / 255.0;  // TODO FIX IT
+        vo.position = metal::float4(vertex_array.position, 1.0);
+        vo.color = (metal::float4)vertex_array.color;
         return vo;
     }
     
@@ -139,7 +139,7 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
         metal::float4 color;
     };
     
-    fragment metal::half4 ps_main(VertexOut input [[stage_in]]) {
+    fragment metal::half4 main0(VertexOut input [[stage_in]]) {
         return metal::half4(input.color);
     }
     
@@ -411,8 +411,21 @@ void main()
 		LLGI::CompilerResult result_vs;
 		LLGI::CompilerResult result_ps;
 
-		compiler->Compile(result_vs, code_gl_vs, LLGI::ShaderStageType::Vertex);
-		compiler->Compile(result_ps, code_gl_ps, LLGI::ShaderStageType::Pixel);
+        if(platform->GetDeviceType() == LLGI::DeviceType::Metal)
+        {
+            auto code_vs = LoadData("Shaders/Metal/simple_constant_rectangle.vert");
+            auto code_ps = LoadData("Shaders/Metal/simple_constant_rectangle.frag");
+            code_vs.push_back(0);
+            code_ps.push_back(0);
+            
+            compiler->Compile(result_vs, (const char*)code_vs.data(), LLGI::ShaderStageType::Vertex);
+            compiler->Compile(result_ps, (const char*)code_ps.data(), LLGI::ShaderStageType::Pixel);
+        }
+        else
+        {
+            compiler->Compile(result_vs, code_gl_vs, LLGI::ShaderStageType::Vertex);
+            compiler->Compile(result_ps, code_gl_ps, LLGI::ShaderStageType::Pixel);
+        }
 
 		for (auto& b : result_vs.Binary)
 		{
@@ -440,12 +453,11 @@ void main()
 	vb_buf[2].Pos = LLGI::Vec3F(0.5, -0.5, 0.5);
 	vb_buf[3].Pos = LLGI::Vec3F(-0.5, -0.5, 0.5);
 
-	vb_buf[0].Color = LLGI::Color8(255, 255, 255, 255);
-	vb_buf[1].Color = LLGI::Color8(255, 255, 0, 255);
-	vb_buf[2].Color = LLGI::Color8(0, 255, 0, 255);
-	vb_buf[3].Color = LLGI::Color8(0, 0, 255, 255);
-
-	vb->Unlock();
+    vb_buf[0].Color = LLGI::Color8(255, 255, 255, 255);
+    vb_buf[1].Color = LLGI::Color8(255, 255, 0, 255);
+    vb_buf[2].Color = LLGI::Color8(0, 255, 0, 255);
+    vb_buf[3].Color = LLGI::Color8(0, 0, 255, 255);
+    vb->Unlock();
 
 	auto ib_buf = (uint16_t*)ib->Lock();
 	ib_buf[0] = 0;

@@ -18,6 +18,8 @@ public:
 	bool NewFrame() override;
 	void Present() override;
 	Graphics* CreateGraphics() override;
+    
+    DeviceType GetDeviceType() const override { return DeviceType::Metal; }
 };
 
 } // namespace LLGI

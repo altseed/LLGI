@@ -70,6 +70,7 @@ enum class BlendFuncType
 enum class VertexLayoutFormat
 {
 	R32G32B32_FLOAT,
+    R32G32B32A32_FLOAT,
 	R8G8B8A8_UNORM,
 	R8G8B8A8_UINT,
 	R32G32_FLOAT,
@@ -154,6 +155,19 @@ struct Color8
 	Color8(uint8_t r, uint8_t g, uint8_t b, uint8_t a) : R(r), G(g), B(b), A(a) {}
 };
 
+struct ColorF
+{
+    float R;
+    float G;
+    float B;
+    float A;
+        
+    ColorF() : R(1.0f), G(1.0f), B(1.0f), A(1.0f) {}
+        
+    ColorF(float r, float g, float b, float a) : R(r), G(g), B(b), A(a) {}
+};
+
+    
 struct DataStructure
 {
 	void* Data;

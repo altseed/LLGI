@@ -52,6 +52,13 @@ void PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 			vertexOffset += sizeof(float) * 3;
 		}
 
+        if (self_->VertexLayouts[i] == VertexLayoutFormat::R32G32B32A32_FLOAT)
+        {
+            vertexDescriptor.attributes[i].format = MTLVertexFormatFloat4;
+            vertexDescriptor.attributes[i].bufferIndex = 0;
+            vertexOffset += sizeof(float) * 4;
+        }
+
 		if (self_->VertexLayouts[i] == VertexLayoutFormat::R32G32_FLOAT)
 		{
 			vertexDescriptor.attributes[i].format = MTLVertexFormatFloat2;
@@ -61,14 +68,14 @@ void PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 
 		if (self_->VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UINT)
 		{
-			vertexDescriptor.attributes[i].format = MTLVertexFormatChar4;
+			vertexDescriptor.attributes[i].format = MTLVertexFormatUChar4;
 			vertexDescriptor.attributes[i].bufferIndex = 0;
 			vertexOffset += sizeof(float);
 		}
 
 		if (self_->VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UNORM)
 		{
-			vertexDescriptor.attributes[i].format = MTLVertexFormatChar4Normalized;
+			vertexDescriptor.attributes[i].format = MTLVertexFormatUChar4Normalized;
 			vertexDescriptor.attributes[i].bufferIndex = 0;
 			vertexOffset += sizeof(float);
 		}
@@ -84,8 +91,8 @@ void PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 	auto vs = static_cast<ShaderMetal*>(self_->GetShaders()[static_cast<int>(ShaderStageType::Vertex)]);
 	auto ps = static_cast<ShaderMetal*>(self_->GetShaders()[static_cast<int>(ShaderStageType::Pixel)]);
 
-	id<MTLFunction> vf = [vs->GetImpl()->library newFunctionWithName:@"vs_main"];
-	id<MTLFunction> pf = [ps->GetImpl()->library newFunctionWithName:@"ps_main"];
+	id<MTLFunction> vf = [vs->GetImpl()->library newFunctionWithName:@"main0"];
+	id<MTLFunction> pf = [ps->GetImpl()->library newFunctionWithName:@"main0"];
 	pipelineStateDescriptor.vertexFunction = vf;
 	pipelineStateDescriptor.fragmentFunction = pf;
 

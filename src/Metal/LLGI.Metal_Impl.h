@@ -10,7 +10,8 @@ namespace LLGI
 
 struct CommandList_Impl;
 struct Buffer_Impl;
-
+struct Texture_Impl;
+    
 struct Graphics_Impl
 {
 	id<MTLDevice> device = nullptr;
@@ -34,6 +35,8 @@ struct RenderPass_Impl
 	RenderPass_Impl();
 	~RenderPass_Impl();
 	bool Initialize();
+    void UpdateTarget(Graphics_Impl* graphics);
+    void UpdateTarget(Texture_Impl** textures, int32_t textureCount, Texture_Impl* depthTexture);
 };
 
 struct RenderPassPipelineState_Impl
@@ -102,7 +105,7 @@ struct Texture_Impl
 	Texture_Impl();
 	virtual ~Texture_Impl();
 
-	bool Initialize(Graphics_Impl* graphics, const Vec2I& size);
+	bool Initialize(Graphics_Impl* graphics, const Vec2I& size, bool isRenderTexture, bool isDepthTexture);
 
 	void Write(const uint8_t* data);
 };

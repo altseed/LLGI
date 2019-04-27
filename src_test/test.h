@@ -20,3 +20,10 @@ struct SimpleVertex
 	LLGI::Vec2F UV;
 	LLGI::Color8 Color;
 };
+
+struct SimpleVertexF
+{
+    LLGI::Vec3F Pos;
+    LLGI::Vec2F UV;
+    LLGI::ColorF Color;
+};
