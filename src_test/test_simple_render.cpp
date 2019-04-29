@@ -5,7 +5,7 @@
 #include <iostream>
 #include <map>
 
-std::vector<uint8_t> LoadData(const char* path)
+static std::vector<uint8_t> LoadData(const char* path)
 {
 	std::vector<uint8_t> ret;
 
@@ -680,8 +680,22 @@ void main()
 		LLGI::CompilerResult result_vs;
 		LLGI::CompilerResult result_ps;
 
-		compiler->Compile(result_vs, code_gl_vs, LLGI::ShaderStageType::Vertex);
-		compiler->Compile(result_ps, code_gl_ps, LLGI::ShaderStageType::Pixel);
+        if(platform->GetDeviceType() == LLGI::DeviceType::Metal)
+        {
+            auto code_vs = LoadData("Shaders/Metal/simple_texture_rectangle.vert");
+            auto code_ps = LoadData("Shaders/Metal/simple_texture_rectangle.frag");
+            code_vs.push_back(0);
+            code_ps.push_back(0);
+            
+            compiler->Compile(result_vs, (const char*)code_vs.data(), LLGI::ShaderStageType::Vertex);
+            compiler->Compile(result_ps, (const char*)code_ps.data(), LLGI::ShaderStageType::Pixel);
+        }
+        else
+        {
+            compiler->Compile(result_vs, code_gl_vs, LLGI::ShaderStageType::Vertex);
+            compiler->Compile(result_ps, code_gl_ps, LLGI::ShaderStageType::Pixel);
+            
+        }
 
 		for (auto& b : result_vs.Binary)
 		{

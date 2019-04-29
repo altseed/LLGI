@@ -1,6 +1,33 @@
 #include "test.h"
+#include <map>
 
-void test_renderPass()
+static std::vector<uint8_t> LoadData(const char* path)
+{
+    std::vector<uint8_t> ret;
+    
+#ifdef _WIN32
+    FILE* fp = nullptr;
+    fopen_s(&fp, path, "rb");
+    
+#else
+    FILE* fp = fopen(path, "rb");
+#endif
+    
+    if (fp == nullptr)
+    return ret;
+    
+    fseek(fp, 0, SEEK_END);
+    auto size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    
+    ret.resize(size);
+    fread(ret.data(), 1, size, fp);
+    fclose(fp);
+    
+    return ret;
+}
+
+void test_renderPass(LLGI::DeviceType deviceType)
 {
 	auto code_gl_vs = R"(
 #version 440 core
@@ -46,16 +73,15 @@ void main()
 
 )";
 
-	auto compiler = LLGI::CreateCompiler(LLGI::DeviceType::Default);
+	auto compiler = LLGI::CreateCompiler(deviceType);
 
 	int count = 0;
 
-	auto platform = LLGI::CreatePlatform(LLGI::DeviceType::Default);
+	auto platform = LLGI::CreatePlatform(deviceType);
 	auto graphics = platform->CreateGraphics();
 	auto commandList = graphics->CreateCommandList();
 	auto vb = graphics->CreateVertexBuffer(sizeof(SimpleVertex) * 4);
 	auto ib = graphics->CreateIndexBuffer(2, 6);
-	auto pip = graphics->CreatePiplineState();
 
 	auto renderTexture = graphics->CreateTexture(LLGI::Vec2I(256, 256), true, false);
 
@@ -83,9 +109,22 @@ void main()
 		LLGI::CompilerResult result_vs;
 		LLGI::CompilerResult result_ps;
 
-		compiler->Compile(result_vs, code_gl_vs, LLGI::ShaderStageType::Vertex);
-		compiler->Compile(result_ps, code_gl_ps, LLGI::ShaderStageType::Pixel);
-
+        if(platform->GetDeviceType() == LLGI::DeviceType::Metal)
+        {
+            auto code_vs = LoadData("Shaders/Metal/simple_texture_rectangle.vert");
+            auto code_ps = LoadData("Shaders/Metal/simple_texture_rectangle.frag");
+            code_vs.push_back(0);
+            code_ps.push_back(0);
+            
+            compiler->Compile(result_vs, (const char*)code_vs.data(), LLGI::ShaderStageType::Vertex);
+            compiler->Compile(result_ps, (const char*)code_ps.data(), LLGI::ShaderStageType::Pixel);
+        }
+        else
+        {
+            compiler->Compile(result_vs, code_gl_vs, LLGI::ShaderStageType::Vertex);
+            compiler->Compile(result_ps, code_gl_ps, LLGI::ShaderStageType::Pixel);
+        }
+        
 		std::vector<LLGI::DataStructure> data_vs;
 		std::vector<LLGI::DataStructure> data_ps;
 
@@ -136,19 +175,16 @@ void main()
 	ib_buf[5] = 3;
 	ib->Unlock();
 
-	pip->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
-	pip->VertexLayouts[1] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
-	pip->VertexLayouts[2] = LLGI::VertexLayoutFormat::R8G8B8A8_UNORM;
-	pip->VertexLayoutCount = 3;
-
-	pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs);
-	pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps);
-	pip->Compile();
+    std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pips;
 
 	while (count < 1000)
 	{
-		platform->NewFrame();
-		graphics->NewFrame();
+        if (!platform->NewFrame())
+        {
+            break;
+        }
+
+        graphics->NewFrame();
 
 		LLGI::Color8 color1;
 		color1.R = 0;
@@ -158,26 +194,67 @@ void main()
 		renderPass->SetIsColorCleared(true);
 		renderPass->SetClearColor(color1);
 
+        LLGI::Color8 color2;
+        color2.R = count % 255;
+        color2.G = 0;
+        color2.B = 0;
+        color2.A = 255;
+
 		commandList->Begin();
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib);
-		commandList->SetPipelineState(pip);
+        
+        auto renderPassPipelineState = LLGI::CreateSharedPtr(renderPass->CreateRenderPassPipelineState());
+
+        auto renderPassSc = graphics->GetCurrentScreen(color2, true);
+        auto renderPassPipelineStateSc = LLGI::CreateSharedPtr(renderPassSc->CreateRenderPassPipelineState());
+
+        if (pips.count(renderPassPipelineState) == 0)
+        {
+            auto pip = graphics->CreatePiplineState();
+            pip->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
+            pip->VertexLayouts[1] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
+            pip->VertexLayouts[2] = LLGI::VertexLayoutFormat::R8G8B8A8_UNORM;
+            pip->VertexLayoutCount = 3;
+            
+            pip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan
+            pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs);
+            pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps);
+            pip->SetRenderPassPipelineState(renderPassPipelineState.get());
+            pip->Compile();
+            
+            pips[renderPassPipelineState] = LLGI::CreateSharedPtr(pip);
+        }
+        
+		commandList->SetPipelineState(pips[renderPassPipelineState].get());
 		commandList->SetTexture(
 			texture, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 		commandList->EndRenderPass();
 
-		LLGI::Color8 color2;
-		color2.R = count % 255;
-		color2.G = 0;
-		color2.B = 0;
-		color2.A = 255;
-
 		commandList->BeginRenderPass(graphics->GetCurrentScreen(color2, true));
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib);
-		commandList->SetPipelineState(pip);
+        
+        if (pips.count(renderPassPipelineStateSc) == 0)
+        {
+            auto pip = graphics->CreatePiplineState();
+            pip->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
+            pip->VertexLayouts[1] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
+            pip->VertexLayouts[2] = LLGI::VertexLayoutFormat::R8G8B8A8_UNORM;
+            pip->VertexLayoutCount = 3;
+            
+            pip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan
+            pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs);
+            pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps);
+            pip->SetRenderPassPipelineState(renderPassPipelineStateSc.get());
+            pip->Compile();
+            
+            pips[renderPassPipelineStateSc] = LLGI::CreateSharedPtr(pip);
+        }
+        
+		commandList->SetPipelineState(pips[renderPassPipelineStateSc].get());
 		commandList->SetTexture(
 			renderTexture, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
@@ -191,12 +268,13 @@ void main()
 		count++;
 	}
 
+    pips.clear();
+    
 	LLGI::SafeRelease(renderTexture);
 	LLGI::SafeRelease(renderPass);
 	LLGI::SafeRelease(texture);
 	LLGI::SafeRelease(shader_vs);
 	LLGI::SafeRelease(shader_ps);
-	LLGI::SafeRelease(pip);
 	LLGI::SafeRelease(ib);
 	LLGI::SafeRelease(vb);
 	LLGI::SafeRelease(commandList);

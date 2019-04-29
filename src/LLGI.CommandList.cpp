@@ -85,7 +85,7 @@ void CommandList::Draw(int32_t pritimiveCount)
 
 void CommandList::SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride, int32_t offset)
 {
-	isVertexBufferDirtied =
+	isVertexBufferDirtied |=
 		bindingVertexBuffer.vertexBuffer != vertexBuffer || bindingVertexBuffer.stride != stride || bindingVertexBuffer.offset != offset;
 	bindingVertexBuffer.vertexBuffer = vertexBuffer;
 	bindingVertexBuffer.stride = stride;
@@ -94,7 +94,7 @@ void CommandList::SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride, in
 
 void CommandList::SetIndexBuffer(IndexBuffer* indexBuffer)
 {
-	isCurrentIndexBufferDirtied = currentIndexBuffer != indexBuffer;
+	isCurrentIndexBufferDirtied |= currentIndexBuffer != indexBuffer;
 	currentIndexBuffer = indexBuffer;
 }
 
@@ -118,5 +118,12 @@ void CommandList::SetTexture(
 	currentTextures[ind][unit].wrapMode = wrapMode;
 	currentTextures[ind][unit].minMagFilter = minmagFilter;
 }
+    
+    void CommandList::BeginRenderPass(RenderPass* renderPass)
+    {
+        isVertexBufferDirtied = true;
+        isCurrentIndexBufferDirtied = true;
+        isPipelineDirtied = true;
+    }
 
 } // namespace LLGI

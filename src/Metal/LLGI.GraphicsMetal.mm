@@ -70,6 +70,8 @@ void RenderPass_Impl::UpdateTarget(Texture_Impl** textures, int32_t textureCount
     {
         renderPassDescriptor.depthAttachment.texture = depthTexture->texture;
     }
+    
+    pixelFormat = textures[0]->texture.pixelFormat;
 }
 
     
@@ -268,7 +270,7 @@ RenderPass* GraphicsMetal::CreateRenderPass(const Texture** textures, int32_t te
         depth_ = static_cast<const TextureMetal*>(depthTexture)->GetImpl();
     }
     
-    renderPass_->GetImpl()->UpdateTarget(textures_.data(), textureCount, depth_);
+    renderPass->GetImpl()->UpdateTarget(textures_.data(), textureCount, depth_);
     
     return renderPass;
 }

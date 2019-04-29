@@ -32,12 +32,15 @@ bool Texture_Impl::Initialize(Graphics_Impl* graphics, const Vec2I& size, bool i
         textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
 																								 width:size.X
 																								height:size.Y
-																							 mipmapped:YES];
+																							 mipmapped:NO];
     }
     
     if(isRenderTexture)
     {
-        textureDescriptor.usage = MTLTextureUsageRenderTarget;
+        textureDescriptor.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
+        textureDescriptor.textureType = MTLTextureType2D;
+        textureDescriptor.depth = 1;
+        textureDescriptor.storageMode =MTLStorageModePrivate;
     }
     
 	texture = [graphics->device newTextureWithDescriptor:textureDescriptor];

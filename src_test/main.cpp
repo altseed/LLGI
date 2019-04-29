@@ -28,7 +28,7 @@ void test_simple_texture_rectangle(LLGI::DeviceType deviceType = LLGI::DeviceTyp
 void test_compile(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 
 // About renderPass
-void test_renderPass();
+void test_renderPass(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 
 int main()
 {
@@ -50,7 +50,7 @@ int main()
 	// test_simple_texture_rectangle(device);
 
 	// About renderPass
-	// test_renderPass();
+	// test_renderPass(device);
 
 	return 0;
 }

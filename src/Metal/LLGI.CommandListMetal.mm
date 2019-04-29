@@ -255,6 +255,8 @@ void CommandListMetal::BeginRenderPass(RenderPass* renderPass)
 {
 	auto renderPass_ = static_cast<RenderPassMetal*>(renderPass)->GetImpl();
 	impl->BeginRenderPass(renderPass_);
+    
+    CommandList::BeginRenderPass(renderPass);
 }
 
 void CommandListMetal::EndRenderPass() { impl->EndRenderPass(); }

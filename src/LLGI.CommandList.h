@@ -61,7 +61,7 @@ public:
 	virtual void SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageType shaderStage);
 	virtual void
 	SetTexture(Texture* texture, TextureWrapMode wrapMode, TextureMinMagFilter minmagFilter, int32_t unit, ShaderStageType shaderStage);
-	virtual void BeginRenderPass(RenderPass* renderPass) {}
+    virtual void BeginRenderPass(RenderPass* renderPass);
 	virtual void EndRenderPass() {}
 };
 
