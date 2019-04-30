@@ -8,11 +8,40 @@
 namespace LLGI
 {
 
+RenderPassDX12::RenderPassDX12(GraphicsDX12* graphics, bool isStrongRef) : graphics_(graphics), isStrongRef_(isStrongRef)
+{
+	if (isStrongRef_)
+	{
+		SafeAddRef(graphics_);
+	}
+}
+
+RenderPassDX12 ::~RenderPassDX12()
+{
+	if (isStrongRef_)
+	{
+		SafeRelease(graphics_);
+	}
+}
+
+RenderPassPipelineState* RenderPassDX12::CreateRenderPassPipelineState()
+{
+	auto ret = renderPassPipelineState.get();
+	SafeAddRef(ret);
+	return ret;
+}
+
 GraphicsDX12::GraphicsDX12(ID3D12Device* device,
 						   std::function<std::tuple<D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*>()> getScreenFunc,
 						   std::function<void()> waitFunc,
-						   ID3D12CommandQueue* commandQueue)
-	: device_(device), getScreenFunc_(getScreenFunc), waitFunc_(waitFunc), commandQueue_(commandQueue)
+						   ID3D12CommandQueue* commandQueue,
+						   int32_t swapBufferCount)
+	: device_(device)
+	, getScreenFunc_(getScreenFunc)
+	, waitFunc_(waitFunc)
+	, commandQueue_(commandQueue)
+	, currentScreen(this, false)
+	, swapBufferCount_(swapBufferCount)
 {
 	SafeAddRef(device_);
 	SafeAddRef(commandQueue_);
@@ -31,6 +60,8 @@ GraphicsDX12::~GraphicsDX12()
 	SafeRelease(commandQueue_);
 	SafeRelease(commandAllocator_);
 }
+
+void GraphicsDX12::NewFrame() { currentSwapBufferIndex = (currentSwapBufferIndex + 1) % swapBufferCount_; }
 
 void GraphicsDX12::Execute(CommandList* commandList)
 {
@@ -103,7 +134,7 @@ Shader* GraphicsDX12::CreateShader(DataStructure* data, int32_t count)
 CommandList* GraphicsDX12::CreateCommandList()
 {
 	auto obj = new CommandListDX12();
-	if (!obj->Initialize(this, commandAllocator_))
+	if (!obj->Initialize(this))
 	{
 		SafeRelease(obj);
 		return nullptr;
@@ -122,6 +153,36 @@ Texture* GraphicsDX12::CreateTexture(const Vec2I& size, bool isRenderPass, bool 
 
 Texture* GraphicsDX12::CreateTexture(uint64_t id) { throw "Not inplemented"; }
 
+std::shared_ptr<RenderPassPipelineStateDX12> GraphicsDX12::CreateRenderPassPipelineState(bool isPresentMode, bool hasDepth)
+{
+	RenderPassPipelineStateDX12Key key;
+	key.isPresentMode = isPresentMode;
+	key.hasDepth = hasDepth;
+
+	// already?
+	{
+		auto it = renderPassPipelineStates.find(key);
+
+		if (it != renderPassPipelineStates.end())
+		{
+			auto ret = it->second.lock();
+
+			if (ret != nullptr)
+				return ret;
+		}
+	}
+
+	std::shared_ptr<RenderPassPipelineStateDX12> ret = std::make_shared<RenderPassPipelineStateDX12>(this);
+
+	renderPassPipelineStates[key] = ret;
+
+	return ret;
+}
+
 ID3D12Device* GraphicsDX12::GetDevice() { return device_; }
+
+int32_t GraphicsDX12::GetCurrentSwapBufferIndex() const { return currentSwapBufferIndex; }
+
+int32_t GraphicsDX12::GetSwapBufferCount() const { return swapBufferCount_; }
 
 } // namespace LLGI

@@ -315,7 +315,7 @@ Graphics* PlatformDX12::CreateGraphics()
 
 	std::function<void()> waitFunc = [this]() -> void { this->Wait(); };
 
-	auto graphics = new GraphicsDX12(device, getScreenFunc, waitFunc, commandQueue);
+	auto graphics = new GraphicsDX12(device, getScreenFunc, waitFunc, commandQueue, SwapBufferCount);
 
 	graphics->SetWindowSize(Vec2I(1280, 720));
 

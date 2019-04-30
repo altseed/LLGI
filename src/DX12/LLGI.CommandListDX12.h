@@ -13,14 +13,14 @@ class CommandListDX12 : public CommandList
 private:
 	std::shared_ptr<GraphicsDX12> graphics_;
 	std::shared_ptr<RenderPassDX12> renderPass_;
-	std::shared_ptr<ID3D12CommandAllocator> commandAllocator_ = nullptr;
-
-	ID3D12GraphicsCommandList* commandList_ = nullptr;
+	
+	std::vector<std::shared_ptr<ID3D12GraphicsCommandList>> commandLists;
+	std::vector<std::shared_ptr<ID3D12CommandAllocator>> commandAllocators;
 
 public:
 	CommandListDX12();
 	virtual ~CommandListDX12();
-	bool Initialize(GraphicsDX12* graphics, ID3D12CommandAllocator* commandAllocator);
+	bool Initialize(GraphicsDX12* graphics);
 
 	void Begin() override;
 	void End() override;
@@ -30,7 +30,7 @@ public:
 
 	void Clear(const Color8& color);
 
-	ID3D12GraphicsCommandList* GetCommandList() { return commandList_; }
+	ID3D12GraphicsCommandList* GetCommandList() const;
 };
 
 } // namespace LLGI

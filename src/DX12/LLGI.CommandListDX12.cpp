@@ -10,44 +10,63 @@ namespace LLGI
 
 CommandListDX12::CommandListDX12() {}
 
-CommandListDX12::~CommandListDX12()
-{
-	SafeRelease(commandList_);
-}
+CommandListDX12::~CommandListDX12() {}
 
-bool CommandListDX12::Initialize(GraphicsDX12* graphics, ID3D12CommandAllocator* commandAllocator)
+bool CommandListDX12::Initialize(GraphicsDX12* graphics)
 {
 	SafeAddRef(graphics);
 	graphics_ = CreateSharedPtr(graphics);
-	SafeAddRef(commandAllocator);
-	commandAllocator_ = CreateSharedPtr(commandAllocator);
 
-	HRESULT hr;
-	hr = graphics_->GetDevice()->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator, NULL, IID_PPV_ARGS(&commandList_));
-	if (FAILED(hr))
+	for (int32_t i = 0; i < graphics_->GetSwapBufferCount(); i++)
 	{
-		goto FAILED_EXIT;
+		ID3D12CommandAllocator* commandAllocator = nullptr;
+		ID3D12GraphicsCommandList* commandList = nullptr;
+		HRESULT hr;
+
+		hr = graphics_->GetDevice()->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
+		if (FAILED(hr))
+		{
+			goto FAILED_EXIT;
+		}
+		commandAllocators.push_back(CreateSharedPtr(commandAllocator));
+
+		hr = graphics_->GetDevice()->CreateCommandList(
+			0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator, NULL, IID_PPV_ARGS(&commandList));
+		if (FAILED(hr))
+		{
+			goto FAILED_EXIT;
+		}
+		commandList->Close();
+		commandLists.push_back(CreateSharedPtr(commandList));
 	}
-	commandList_->Close();
 
 	return true;
 
 FAILED_EXIT:;
-	SafeRelease(commandList_);
-	commandAllocator_.reset();
 	graphics_.reset();
+	commandAllocators.clear();
+	commandLists.clear();
 	return false;
 }
 
-void CommandListDX12::Begin() { 
-	commandList_->Reset(commandAllocator_.get(), nullptr); 
+void CommandListDX12::Begin()
+{
+	auto commandList = commandLists[graphics_->GetCurrentSwapBufferIndex()];
+	commandList->Reset(commandAllocators[graphics_->GetCurrentSwapBufferIndex()].get(), nullptr);
 	CommandList::Begin();
 }
 
-void CommandListDX12::End() { commandList_->Close(); }
+void CommandListDX12::End()
+{
+	auto commandList = commandLists[graphics_->GetCurrentSwapBufferIndex()];
+
+	commandList->Close();
+}
 
 void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 {
+	auto commandList = commandLists[graphics_->GetCurrentSwapBufferIndex()];
+
 	SafeAddRef(renderPass);
 	renderPass_ = CreateSharedPtr((RenderPassDX12*)renderPass);
 
@@ -59,7 +78,7 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 		rect.left = 0;
 		rect.right = renderPass_->screenWindowSize.X;
 		rect.bottom = renderPass_->screenWindowSize.Y;
-		commandList_->RSSetScissorRects(1, &rect);
+		commandList->RSSetScissorRects(1, &rect);
 
 		// Clear color
 		if (renderPass_->GetIsColorCleared())
@@ -71,7 +90,10 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 
 void CommandListDX12::EndRenderPass() { renderPass_.reset(); }
 
-void CommandListDX12::Draw(int32_t pritimiveCount) {
+void CommandListDX12::Draw(int32_t pritimiveCount)
+{
+	auto commandList = commandLists[graphics_->GetCurrentSwapBufferIndex()];
+
 	BindingVertexBuffer vb_;
 	IndexBuffer* ib_ = nullptr;
 	PipelineState* pip_ = nullptr;
@@ -98,7 +120,7 @@ void CommandListDX12::Draw(int32_t pritimiveCount) {
 		vertexView.BufferLocation = vb->Get()->GetGPUVirtualAddress();
 		vertexView.StrideInBytes = sizeof(Vertex3D);
 		vertexView.SizeInBytes = vb_.stride;
-		commandList_->IASetVertexBuffers(0, 1, &vertexView);
+		commandList->IASetVertexBuffers(0, 1, &vertexView);
 	}
 
 	if (ib != nullptr)
@@ -106,14 +128,14 @@ void CommandListDX12::Draw(int32_t pritimiveCount) {
 		D3D12_INDEX_BUFFER_VIEW indexView;
 		indexView.BufferLocation = ib->Get()->GetGPUVirtualAddress();
 		indexView.SizeInBytes = sizeof(uint16_t) * ib->GetCount();
-		commandList_->IASetIndexBuffer(&indexView);
+		commandList->IASetIndexBuffer(&indexView);
 	}
 
 	if (pip != nullptr)
 	{
-		commandList_->SetGraphicsRootSignature(pip->GetRootSignature());
+		commandList->SetGraphicsRootSignature(pip->GetRootSignature());
 		auto p = pip->GetPipelineState();
-		commandList_->SetPipelineState(p);
+		commandList->SetPipelineState(p);
 	}
 
 	CommandList::Draw(pritimiveCount);
@@ -121,14 +143,21 @@ void CommandListDX12::Draw(int32_t pritimiveCount) {
 
 void CommandListDX12::Clear(const Color8& color)
 {
+	auto commandList = commandLists[graphics_->GetCurrentSwapBufferIndex()];
+
 	auto rt = renderPass_;
 	if (rt == nullptr)
 		return;
 
 	float color_[] = {color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f};
 
-	commandList_->ClearRenderTargetView(rt->handleRTV, color_, 0, nullptr);
+	commandList->ClearRenderTargetView(rt->handleRTV, color_, 0, nullptr);
 }
 
+ID3D12GraphicsCommandList* CommandListDX12::GetCommandList() const
+{
+	auto commandList = commandLists[graphics_->GetCurrentSwapBufferIndex()];
+	return commandList.get();
+}
 
 } // namespace LLGI
