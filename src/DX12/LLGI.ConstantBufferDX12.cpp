@@ -19,7 +19,7 @@ bool ConstantBufferDX12::Initialize(GraphicsDX12* graphics, int32_t size)
 	heapProperties.VisibleNodeMask = 0;
 
 	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	// resourceDesc.Width = size * sizeof(Constant3D);
+	resourceDesc.Width = size;
 	resourceDesc.Height = 1;
 	resourceDesc.DepthOrArraySize = 1;
 	resourceDesc.MipLevels = 1;
@@ -47,14 +47,26 @@ FAILED_EXIT:
 
 void* ConstantBufferDX12::Lock()
 {
-	throw "Not inplemented";
+	auto hr = constantBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mapped));
+	if (FAILED(hr))
+	{
+		goto FAILED_EXIT;
+	}
+	return mapped;
+
 FAILED_EXIT:
 	return nullptr;
 }
 
 void* ConstantBufferDX12::Lock(int32_t offset, int32_t size)
 {
-	throw "Not inplemented";
+	auto hr = constantBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mapped));
+	if (FAILED(hr))
+	{
+		goto FAILED_EXIT;
+	}
+	return mapped + offset;
+
 FAILED_EXIT:
 	return nullptr;
 }

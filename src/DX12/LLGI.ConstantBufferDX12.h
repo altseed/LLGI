@@ -17,6 +17,8 @@ private:
 
 	ID3D12Resource* constantBuffer = nullptr;
 
+	uint8_t* mapped = nullptr;
+
 public:
 	bool Initialize(GraphicsDX12* graphics, int32_t size);
 

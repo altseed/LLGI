@@ -1,5 +1,6 @@
 #include "LLGI.GraphicsDX12.h"
 #include "LLGI.CommandListDX12.h"
+#include "LLGI.ConstantBufferDX12.h"
 #include "LLGI.IndexBufferDX12.h"
 #include "LLGI.PipelineStateDX12.h"
 #include "LLGI.ShaderDX12.h"
@@ -112,6 +113,23 @@ IndexBuffer* GraphicsDX12::CreateIndexBuffer(int32_t stride, int32_t count)
 {
 	auto obj = new IndexBufferDX12();
 	if (!obj->Initialize(this, stride, count))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
+
+	return obj;
+}
+
+ConstantBuffer* GraphicsDX12::CreateConstantBuffer(int32_t size, ConstantBufferType type)
+{
+	if (type == ConstantBufferType::ShortTime)
+	{
+		throw "Not inplemented";
+	}
+
+	auto obj = new ConstantBufferDX12();
+	if (!obj->Initialize(this, size))
 	{
 		SafeRelease(obj);
 		return nullptr;

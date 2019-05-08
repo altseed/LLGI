@@ -10,6 +10,7 @@ namespace LLGI
 
 class RenderPassVulkan;
 class RenderPassPipelineStateVulkan;
+class TextureVulkan;
 
 class RenderPassVulkan : public RenderPass
 {
@@ -17,6 +18,9 @@ private:
 	GraphicsVulkan* graphics_ = nullptr;
 	bool isStrongRef_ = false;
 	Vec2I imageSize_;
+
+	std::array<std::shared_ptr<TextureVulkan>, 4> colorBufferPtrs;
+	std::shared_ptr<TextureVulkan> depthBufferPtr;
 
 public:
 	std::shared_ptr<RenderPassPipelineStateVulkan> renderPassPipelineState;
@@ -38,6 +42,11 @@ public:
 					const vk::ImageView& imageDepthView,
 					Vec2I imageSize,
 					vk::Format format);
+
+	/**
+		@brief	initialize for offscreen
+	*/
+	bool Initialize(const TextureVulkan** textures, int32_t textureCount, TextureVulkan* depthTexture);
 
 	Vec2I GetImageSize() const;
 

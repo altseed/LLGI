@@ -85,7 +85,18 @@ public:
 		Don't use it for the many purposes, please input Clear or SetRenderPass immediately.
 	*/
 	virtual RenderPass* GetCurrentScreen(const Color8& clearColor = Color8(), bool isColorCleared = false, bool isDepthCleared = false);
+
+	/**
+		@brief	create a vertex buffer
+		@param	size	the size of vertex buffer
+	*/
 	virtual VertexBuffer* CreateVertexBuffer(int32_t size);
+
+	/**
+		@brief	create an index buffer
+		@param	stride	the stride of index(2 or 4)
+		@param	count	the number of index
+	*/
 	virtual IndexBuffer* CreateIndexBuffer(int32_t stride, int32_t count);
 	virtual Shader* CreateShader(DataStructure* data, int32_t count);
 	virtual PipelineState* CreatePiplineState();

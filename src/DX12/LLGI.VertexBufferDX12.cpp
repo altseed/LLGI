@@ -19,7 +19,7 @@ bool VertexBufferDX12::Initialize(GraphicsDX12* graphics, int32_t size)
 	heapProperties.VisibleNodeMask = 1;
 
 	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	resourceDesc.Width = size * sizeof(Vertex3D);
+	resourceDesc.Width = size;
 	resourceDesc.Height = 1;
 	resourceDesc.DepthOrArraySize = 1;
 	resourceDesc.MipLevels = 1;

@@ -77,12 +77,13 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 
 	auto code_dx_vs = R"(
     struct VS_INPUT{
-        float3 g_position : POSITION;
-        float4 g_color : COLOR;
+        float3 g_position : POSITION0;
+		float2 g_uv : UV0;
+        float4 g_color : COLOR0;
     };
     struct VS_OUTPUT{
         float4 g_position : SV_POSITION;
-        float4 g_color : COLOR;
+        float4 g_color : COLOR0;
     };
     
     VS_OUTPUT main(VS_INPUT input){
@@ -97,11 +98,12 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 
 	auto code_dx_ps = R"(
     struct PS_INPUT{
-        float4 Color    : COLOR;
+        float4 g_position : SV_POSITION;
+        float4 g_color : COLOR0;
     };
     
     float4 main(PS_INPUT input) : SV_TARGET{
-        return input.Color;
+        return input.g_color;
     }
     
     )";
@@ -275,6 +277,9 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 			pip->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
 			pip->VertexLayouts[1] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
 			pip->VertexLayouts[2] = LLGI::VertexLayoutFormat::R8G8B8A8_UNORM;
+			pip->VertexLayoutNames[0] = "POSITION";
+			pip->VertexLayoutNames[1] = "UV";
+			pip->VertexLayoutNames[2] = "COLOR";
 			pip->VertexLayoutCount = 3;
 
 			pip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan

@@ -118,8 +118,8 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 	{
 		D3D12_VERTEX_BUFFER_VIEW vertexView;
 		vertexView.BufferLocation = vb->Get()->GetGPUVirtualAddress();
-		vertexView.StrideInBytes = sizeof(Vertex3D);
-		vertexView.SizeInBytes = vb_.stride;
+		vertexView.StrideInBytes = vb_.stride;
+		vertexView.SizeInBytes = vb_.stride;	// is it true?
 		commandList->IASetVertexBuffers(0, 1, &vertexView);
 	}
 

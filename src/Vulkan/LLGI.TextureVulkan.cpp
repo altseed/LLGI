@@ -29,7 +29,15 @@ bool TextureVulkan::Initialize(const Vec2I& size, bool isRenderPass, bool isDept
 	if (isDepthBuffer)
 		throw "Not implemented";
 
+	if (isDepthBuffer)
+	{
+		isDepthBuffer_ = isDepthBuffer;
+		// CreateDepthBuffer(this->image, this->view, this->devMem, graphics_->GetDevice(), ...)
+	}
+
 	cpuBuf = std::unique_ptr<Buffer>(new Buffer(graphics_));
+
+	vk::Format format = vk::Format::eR8G8B8A8Unorm;
 
 	// image
 	vk::ImageCreateInfo imageCreateInfo;
@@ -40,10 +48,20 @@ bool TextureVulkan::Initialize(const Vec2I& size, bool isRenderPass, bool isDept
 	imageCreateInfo.extent.depth = 1;
 	imageCreateInfo.mipLevels = 1;
 	imageCreateInfo.arrayLayers = 1;
-	imageCreateInfo.format = vk::Format::eR8G8B8A8Unorm;
+	imageCreateInfo.format = format;
 	imageCreateInfo.tiling = vk::ImageTiling::eOptimal;
 	imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
-	imageCreateInfo.usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled;
+
+	if (isRenderPass)
+	{
+		isRenderPass_ = isRenderPass;
+		imageCreateInfo.usage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled;
+	}
+	else
+	{
+		imageCreateInfo.usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled;
+	}
+
 	imageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
 	imageCreateInfo.samples = vk::SampleCountFlagBits::e1;
 	imageCreateInfo.flags = (vk::ImageCreateFlagBits)0;
@@ -86,7 +104,7 @@ bool TextureVulkan::Initialize(const Vec2I& size, bool isRenderPass, bool isDept
 		vk::ImageViewCreateInfo imageViewInfo;
 		imageViewInfo.image = image;
 		imageViewInfo.viewType = vk::ImageViewType::e2D;
-		imageViewInfo.format = vk::Format::eR8G8B8A8Unorm;
+		imageViewInfo.format = format;
 		imageViewInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
 		imageViewInfo.subresourceRange.baseMipLevel = 0;
 		imageViewInfo.subresourceRange.levelCount = 1;
@@ -96,6 +114,7 @@ bool TextureVulkan::Initialize(const Vec2I& size, bool isRenderPass, bool isDept
 	}
 
 	textureSize = size;
+	vkTextureFormat = imageCreateInfo.format;
 
 	return true;
 }
@@ -162,8 +181,16 @@ void TextureVulkan::Unlock()
 
 Vec2I TextureVulkan::GetSizeAs2D() { return textureSize; }
 
-bool TextureVulkan::IsRenderTexture() const { throw "Not inplemented"; }
+bool TextureVulkan::IsRenderTexture() const
+{
+	throw "Not inplemented";
+	return isRenderPass_;
+}
 
-bool TextureVulkan::IsDepthTexture() const { throw "Not inplemented"; }
+bool TextureVulkan::IsDepthTexture() const
+{
+	throw "Not inplemented";
+	return isDepthBuffer_;
+}
 
 } // namespace LLGI

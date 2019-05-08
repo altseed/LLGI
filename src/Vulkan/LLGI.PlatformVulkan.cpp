@@ -10,26 +10,6 @@
 namespace LLGI
 {
 
-uint32_t GetMemoryTypeIndex(uint32_t bits, const vk::MemoryPropertyFlags& properties, vk::PhysicalDevice vkPhysicalDevice)
-{
-	uint32_t result = 0;
-	vk::PhysicalDeviceMemoryProperties deviceMemoryProperties = vkPhysicalDevice.getMemoryProperties();
-	for (uint32_t i = 0; i < 32; i++)
-	{
-		if ((bits & 1) == 1)
-		{
-			if ((deviceMemoryProperties.memoryTypes[i].propertyFlags & properties) == properties)
-			{
-				return i;
-			}
-		}
-		bits >>= 1;
-	}
-
-	assert(!"NOT found memory type.\n");
-	return 0xffffffff;
-}
-
 #ifdef _DEBUG
 VkBool32 PlatformVulkan::DebugMessageCallback(VkDebugReportFlagsEXT flags,
 											  VkDebugReportObjectTypeEXT objType,
@@ -577,8 +557,7 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 			vk::MemoryRequirements memReqs = vkDevice.getImageMemoryRequirements(depthStencilBuffer.image);
 			vk::MemoryAllocateInfo memAlloc;
 			memAlloc.allocationSize = memReqs.size;
-			memAlloc.memoryTypeIndex =
-				GetMemoryTypeIndex(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal, vkPhysicalDevice);
+			memAlloc.memoryTypeIndex = GetMemoryTypeIndex(vkPhysicalDevice, memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
 			depthStencilBuffer.devMem = vkDevice.allocateMemory(memAlloc);
 			vkDevice.bindImageMemory(depthStencilBuffer.image, depthStencilBuffer.devMem, 0);
 

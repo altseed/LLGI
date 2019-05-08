@@ -13,8 +13,7 @@ namespace LLGI
 class ShaderDX12 : public Shader
 {
 private:
-	std::vector<DataStructure> data_;
-	int32_t count_;
+	std::vector<uint8_t> data_;
 
 public:
 	ShaderDX12() = default;
@@ -22,8 +21,7 @@ public:
 
 	bool Initialize(DataStructure* data, int32_t count);
 
-	DataStructure* GetData() { return data_.data(); }
-	int32_t GetCount() { return count_; }
+	const std::vector<uint8_t>& GetData() { return data_; }
 };
 
 } // namespace LLGI

@@ -14,12 +14,7 @@ PipelineStateDX12::PipelineStateDX12(GraphicsDX12* graphics)
 	graphics_ = CreateSharedPtr(graphics);
 }
 
-PipelineStateDX12::~PipelineStateDX12()
-{
-	SafeRelease(pixelShader);
-	SafeRelease(vertexShader);
-	SafeRelease(graphics_);
-}
+PipelineStateDX12::~PipelineStateDX12() {}
 
 void PipelineStateDX12::SetShader(ShaderStageType stage, Shader* shader)
 {
@@ -42,19 +37,58 @@ void PipelineStateDX12::Compile()
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateDesc = {};
 
-	auto vs = reinterpret_cast<ShaderDX12*>(vertexShader.get())->GetData();
-	pipelineStateDesc.VS.pShaderBytecode = vs->Data;
-	pipelineStateDesc.VS.BytecodeLength = vs->Size;
+	auto& vs = reinterpret_cast<ShaderDX12*>(vertexShader.get())->GetData();
+	pipelineStateDesc.VS.pShaderBytecode = vs.data();
+	pipelineStateDesc.VS.BytecodeLength = vs.size();
 
-	auto ps = reinterpret_cast<ShaderDX12*>(pixelShader.get())->GetData();
-	pipelineStateDesc.PS.pShaderBytecode = vs->Data;
-	pipelineStateDesc.PS.BytecodeLength = vs->Size;
+	auto& ps = reinterpret_cast<ShaderDX12*>(pixelShader.get())->GetData();
+	pipelineStateDesc.PS.pShaderBytecode = ps.data();
+	pipelineStateDesc.PS.BytecodeLength = ps.size();
 
-	D3D12_INPUT_ELEMENT_DESC elementDescs[] = {
-		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-	};
+	// setup a vertex layout
+	std::array<D3D12_INPUT_ELEMENT_DESC, 16> elementDescs;
+	elementDescs.fill(D3D12_INPUT_ELEMENT_DESC{});
+	int32_t elementOffset = 0;
 
+	for (int i = 0; i < VertexLayoutCount; i++)
+	{
+		elementDescs[i].SemanticName = this->VertexLayoutNames[i].c_str();
+		elementDescs[i].SemanticIndex = 0;
+		elementDescs[i].AlignedByteOffset = elementOffset;
+		elementDescs[i].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+
+		if (VertexLayouts[i] == VertexLayoutFormat::R32G32_FLOAT)
+		{
+			elementDescs[i].Format = DXGI_FORMAT_R32G32_FLOAT;
+			elementOffset += sizeof(float) * 2;
+		}
+
+		if (VertexLayouts[i] == VertexLayoutFormat::R32G32B32_FLOAT)
+		{
+			elementDescs[i].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+			elementOffset += sizeof(float) * 3;
+		}
+
+		if (VertexLayouts[i] == VertexLayoutFormat::R32G32B32A32_FLOAT)
+		{
+			elementDescs[i].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+			elementOffset += sizeof(float) * 4;
+		}
+
+		if (VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UNORM)
+		{
+			elementDescs[i].Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+			elementOffset += sizeof(float) * 1;
+		}
+
+		if (VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UINT)
+		{
+			elementDescs[i].Format = DXGI_FORMAT_R8G8B8A8_UINT;
+			elementOffset += sizeof(float) * 1;
+		}
+	}
+
+	// TODO...(generate from parameters)
 	D3D12_RASTERIZER_DESC rasterizerDesc = {};
 	rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 	rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
@@ -89,19 +123,25 @@ void PipelineStateDX12::Compile()
 		blendDesc.RenderTarget[i] = RTBSDesc;
 	}
 
-	pipelineStateDesc.InputLayout = {elementDescs, _countof(elementDescs)};
+	pipelineStateDesc.InputLayout.pInputElementDescs = elementDescs.data();
+	pipelineStateDesc.InputLayout.NumElements = VertexLayoutCount;
 	pipelineStateDesc.pRootSignature = RootSignature_;
-	pipelineStateDesc.VS = {vs->Data, (size_t)vs->Size};
-	pipelineStateDesc.PS = {ps->Data, (size_t)ps->Size};
 	pipelineStateDesc.RasterizerState = rasterizerDesc;
 	pipelineStateDesc.BlendState = blendDesc;
-	pipelineStateDesc.DepthStencilState.DepthEnable = FALSE;
-	pipelineStateDesc.DepthStencilState.StencilEnable = FALSE;
+
+	// setup a depth
+	pipelineStateDesc.DepthStencilState.DepthEnable = this->IsDepthTestEnabled;
+	pipelineStateDesc.DepthStencilState.StencilEnable = this->IsDepthTestEnabled;
 	pipelineStateDesc.SampleMask = UINT_MAX;
+
+	// TODO
 	pipelineStateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+
+	// TODO (from renderpass)
 	pipelineStateDesc.NumRenderTargets = 1;
 	pipelineStateDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 	pipelineStateDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+
 	pipelineStateDesc.SampleDesc.Count = 1;
 
 	auto hr = graphics_->GetDevice()->CreateGraphicsPipelineState(&pipelineStateDesc, IID_PPV_ARGS(&pipelineState_));
@@ -111,6 +151,8 @@ void PipelineStateDX12::Compile()
 	{
 		goto FAILED_EXIT;
 	}
+
+	return;
 
 FAILED_EXIT:
 	SafeRelease(pipelineState_);

@@ -35,4 +35,15 @@ void SetImageLayout(vk::CommandBuffer cmdbuffer,
 					vk::ImageLayout newImageLayout,
 					vk::ImageSubresourceRange subresourceRange);
 
+uint32_t GetMemoryTypeIndex(vk::PhysicalDevice& phDevice, uint32_t bits, const vk::MemoryPropertyFlags& properties);
+
+bool CreateDepthBuffer(vk::Image& image,
+					   vk::ImageView view,
+					   vk::DeviceMemory devMem,
+					   vk::Device& device,
+					   vk::PhysicalDevice& phDevice,
+					   const Vec2I& size,
+					   vk::Format format,
+					   vk::CommandBuffer* commandBuffer);
+
 } // namespace LLGI

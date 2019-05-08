@@ -17,9 +17,9 @@ private:
 
 	ID3D12Resource* indexBuffer = nullptr;
 
-	uint16_t* mapped;
-	int32_t stride;
-	int32_t count;
+	uint8_t* mapped = nullptr;
+	int32_t stride = 0;
+	int32_t count = 0;
 
 public:
 	bool Initialize(GraphicsDX12* graphics, int32_t stride, int32_t count);

@@ -1,4 +1,5 @@
 #include "LLGI.GraphicsVulkan.h"
+#include "LLGI.BaseVulkan.h"
 #include "LLGI.CommandListVulkan.h"
 #include "LLGI.ConstantBufferVulkan.h"
 #include "LLGI.IndexBufferVulkan.h"
@@ -63,6 +64,64 @@ bool RenderPassVulkan::Initialize(const vk::Image& imageColor,
 	depthBuffer = imageDepth;
 
 	return true;
+}
+
+bool RenderPassVulkan::Initialize(const TextureVulkan** textures, int32_t textureCount, TextureVulkan* depthTexture)
+{
+	throw "Not inplemented";
+
+	if (textureCount == 0)
+		return false;
+
+	for (int32_t i = 0; i < textureCount; i++)
+	{
+		auto texture = const_cast<TextureVulkan*>(textures[i]);
+		SafeAddRef(texture);
+		colorBufferPtrs[i] = CreateSharedPtr(texture);
+	}
+
+	if (depthTexture != nullptr)
+	{
+		SafeAddRef(depthTexture);
+		depthBufferPtr = CreateSharedPtr(depthTexture);
+	}
+	else
+	{
+		depthBufferPtr.reset();
+	}
+
+	// TODO : make const
+	imageSize_ = ((TextureVulkan*)textures[0])->GetSizeAs2D();
+
+	vk::Format format = textures[0]->GetVulkanFormat();
+
+	bool hasDepth = depthTexture != nullptr;
+	bool isPresentMode = false;
+
+	/*
+
+	// TODO : MRT
+	this->renderPassPipelineState = graphics_->CreateRenderPassPipelineState(isPresentMode, hasDepth, format);
+
+	std::array<vk::ImageView, 2> views;
+	views[0] = imageColorView;
+	views[1] = imageDepthView;
+
+	vk::FramebufferCreateInfo framebufferCreateInfo;
+	framebufferCreateInfo.renderPass = renderPassPipelineState->GetRenderPass();
+	framebufferCreateInfo.attachmentCount = static_cast<uint32_t>(views.size());
+	framebufferCreateInfo.pAttachments = views.data();
+	framebufferCreateInfo.width = imageSize.X;
+	framebufferCreateInfo.height = imageSize.Y;
+	framebufferCreateInfo.layers = 1;
+
+	frameBuffer = graphics_->GetDevice().createFramebuffer(framebufferCreateInfo);
+
+	colorBuffers[0] = imageColor;
+	depthBuffer = imageDepth;
+
+	return true;
+	*/
 }
 
 Vec2I RenderPassVulkan::GetImageSize() const { return imageSize_; }
@@ -237,6 +296,11 @@ CommandList* GraphicsVulkan::CreateCommandList()
 
 ConstantBuffer* GraphicsVulkan::CreateConstantBuffer(int32_t size, ConstantBufferType type)
 {
+	if (type == ConstantBufferType::ShortTime)
+	{
+		throw "Not inplemented";
+	}
+
 	auto obj = new ConstantBufferVulkan();
 	if (!obj->Initialize(this, size, type))
 	{
@@ -249,6 +313,17 @@ ConstantBuffer* GraphicsVulkan::CreateConstantBuffer(int32_t size, ConstantBuffe
 RenderPass* GraphicsVulkan::CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture)
 {
 	throw "Not inplemented";
+
+	if (textureCount > 1)
+		throw "Not inplemented";
+
+	auto renderPass = new RenderPassVulkan(this, true);
+	if (!renderPass->Initialize((const TextureVulkan**)textures, textureCount, (TextureVulkan*)depthTexture))
+	{
+		SafeRelease(renderPass);
+	}
+
+	return renderPass;
 }
 Texture* GraphicsVulkan::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer)
 {
@@ -405,22 +480,7 @@ int32_t GraphicsVulkan::GetSwapBufferCount() const { return swapBufferCount_; }
 
 uint32_t GraphicsVulkan::GetMemoryTypeIndex(uint32_t bits, const vk::MemoryPropertyFlags& properties)
 {
-	uint32_t result = 0;
-	vk::PhysicalDeviceMemoryProperties deviceMemoryProperties = vkPysicalDevice.getMemoryProperties();
-	for (uint32_t i = 0; i < 32; i++)
-	{
-		if ((bits & 1) == 1)
-		{
-			if ((deviceMemoryProperties.memoryTypes[i].propertyFlags & properties) == properties)
-			{
-				return i;
-			}
-		}
-		bits >>= 1;
-	}
-
-	assert(!"NOT found memory type.\n");
-	return 0xffffffff;
+	return LLGI::GetMemoryTypeIndex(vkPysicalDevice, bits, properties);
 }
 
 } // namespace LLGI

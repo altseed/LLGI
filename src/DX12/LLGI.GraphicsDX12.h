@@ -96,6 +96,7 @@ public:
 	RenderPass* GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) override;
 	VertexBuffer* CreateVertexBuffer(int32_t size) override;
 	IndexBuffer* CreateIndexBuffer(int32_t stride, int32_t count) override;
+	ConstantBuffer* CreateConstantBuffer(int32_t size, ConstantBufferType type = ConstantBufferType::LongTime) override;
 	Shader* CreateShader(DataStructure* data, int32_t count) override;
 	PipelineState* CreatePiplineState() override;
 	CommandList* CreateCommandList() override;

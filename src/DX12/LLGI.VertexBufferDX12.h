@@ -5,17 +5,8 @@
 #include "LLGI.BaseDX12.h"
 #include "LLGI.GraphicsDX12.h"
 
-using namespace DirectX;
-
 namespace LLGI
 {
-
-struct Vertex3D
-{
-	XMFLOAT3 Position;
-	XMFLOAT3 Normal;
-	XMFLOAT4 Color;
-};
 
 class VertexBufferDX12 : public VertexBuffer
 {
@@ -24,7 +15,7 @@ private:
 
 	ID3D12Resource* vertexBuffer = nullptr;
 
-	Vertex3D* mapped;
+	uint8_t* mapped = nullptr;
 
 public:
 	bool Initialize(GraphicsDX12* graphics, int32_t size);
