@@ -7,6 +7,8 @@ namespace LLGI
 
 VertexBufferDX12::VertexBufferDX12() {}
 
+VertexBufferDX12::~VertexBufferDX12() { SafeRelease(vertexBuffer); }
+
 bool VertexBufferDX12::Initialize(GraphicsDX12* graphics, int32_t size)
 {
 	D3D12_HEAP_PROPERTIES heapProperties = {};
@@ -29,14 +31,16 @@ bool VertexBufferDX12::Initialize(GraphicsDX12* graphics, int32_t size)
 
 	SafeAddRef(graphics);
 	graphics_ = CreateSharedPtr(graphics);
-
+	
 	auto hr = graphics_->GetDevice()->CreateCommittedResource(
 		&heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&vertexBuffer));
 	if (FAILED(hr))
 	{
 		goto FAILED_EXIT;
 	}
-	SafeAddRef(vertexBuffer);
+
+	size_ = size;
+
 	return true;
 
 FAILED_EXIT:
@@ -76,6 +80,6 @@ void VertexBufferDX12::Unlock()
 	mapped = nullptr;
 }
 
-int32_t VertexBufferDX12::GetSize() { return sizeof(float) * 9; }
+int32_t VertexBufferDX12::GetSize() { return size_; }
 
 } // namespace LLGI

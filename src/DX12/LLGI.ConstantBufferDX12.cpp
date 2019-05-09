@@ -7,6 +7,8 @@ namespace LLGI
 
 ConstantBufferDX12::ConstantBufferDX12() {}
 
+ConstantBufferDX12::~ConstantBufferDX12() { SafeRelease(constantBuffer); }
+
 bool ConstantBufferDX12::Initialize(GraphicsDX12* graphics, int32_t size)
 {
 	D3D12_HEAP_PROPERTIES heapProperties;
@@ -37,7 +39,7 @@ bool ConstantBufferDX12::Initialize(GraphicsDX12* graphics, int32_t size)
 	{
 		goto FAILED_EXIT;
 	}
-	SafeAddRef(constantBuffer);
+
 	return true;
 
 FAILED_EXIT:

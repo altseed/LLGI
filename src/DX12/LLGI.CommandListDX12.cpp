@@ -80,6 +80,15 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 		rect.bottom = renderPass_->screenWindowSize.Y;
 		commandList->RSSetScissorRects(1, &rect);
 
+		D3D12_VIEWPORT viewport;
+		viewport.TopLeftX = 0.0f;
+		viewport.TopLeftY = 0.0f;
+		viewport.Width = renderPass_->screenWindowSize.X;
+		viewport.Height = renderPass_->screenWindowSize.Y;
+		viewport.MinDepth = 0.0f;
+		viewport.MaxDepth = 1.0f;
+		commandList->RSSetViewports(1, &viewport);
+
 		// Clear color
 		if (renderPass_->GetIsColorCleared())
 		{
@@ -114,20 +123,23 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 	auto ib = static_cast<IndexBufferDX12*>(ib_);
 	auto pip = static_cast<PipelineStateDX12*>(pip_);
 
-	if (vb_.vertexBuffer != nullptr)
+	D3D12_VERTEX_BUFFER_VIEW vertexView;
 	{
-		D3D12_VERTEX_BUFFER_VIEW vertexView;
-		vertexView.BufferLocation = vb->Get()->GetGPUVirtualAddress();
+		vertexView.BufferLocation = vb->Get()->GetGPUVirtualAddress() + vb_.offset;
 		vertexView.StrideInBytes = vb_.stride;
-		vertexView.SizeInBytes = vb_.stride;	// is it true?
-		commandList->IASetVertexBuffers(0, 1, &vertexView);
+		vertexView.SizeInBytes = vb_.vertexBuffer->GetSize() - vb_.offset;
+		if (vb_.vertexBuffer != nullptr)
+		{
+			commandList->IASetVertexBuffers(0, 1, &vertexView);
+		}
 	}
 
 	if (ib != nullptr)
 	{
 		D3D12_INDEX_BUFFER_VIEW indexView;
 		indexView.BufferLocation = ib->Get()->GetGPUVirtualAddress();
-		indexView.SizeInBytes = sizeof(uint16_t) * ib->GetCount();
+		indexView.SizeInBytes = ib->GetStride() * ib->GetCount();
+		indexView.Format = ib->GetStride() == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
 		commandList->IASetIndexBuffer(&indexView);
 	}
 
@@ -137,6 +149,12 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 		auto p = pip->GetPipelineState();
 		commandList->SetPipelineState(p);
 	}
+
+	// setup a topology (triangle)
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// draw polygon
+	commandList->DrawInstanced(vertexView.SizeInBytes / vertexView.StrideInBytes /*triangle*/, 1, 0, 0);
 
 	CommandList::Draw(pritimiveCount);
 }

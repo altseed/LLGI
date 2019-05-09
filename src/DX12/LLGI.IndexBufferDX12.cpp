@@ -7,6 +7,8 @@ namespace LLGI
 
 IndexBufferDX12::IndexBufferDX12() {}
 
+IndexBufferDX12::~IndexBufferDX12() { SafeRelease(indexBuffer); }
+
 bool IndexBufferDX12::Initialize(GraphicsDX12* graphics, int32_t stride, int32_t count)
 {
 	D3D12_HEAP_PROPERTIES heapProperties = {};
@@ -30,6 +32,8 @@ bool IndexBufferDX12::Initialize(GraphicsDX12* graphics, int32_t stride, int32_t
 
 	SafeAddRef(graphics);
 	graphics_ = CreateSharedPtr(graphics);
+	this->stride_ = stride;
+	this->count_ = count;
 
 	auto hr = graphics_->GetDevice()->CreateCommittedResource(
 		&heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&indexBuffer));
@@ -37,6 +41,8 @@ bool IndexBufferDX12::Initialize(GraphicsDX12* graphics, int32_t stride, int32_t
 	{
 		goto FAILED_EXIT;
 	}
+
+
 	SafeAddRef(indexBuffer);
 	return true;
 

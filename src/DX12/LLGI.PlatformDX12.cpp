@@ -107,12 +107,41 @@ bool PlatformDX12::Initialize(Vec2I windowSize)
 	}
 
 	// device
+
+	IDXGIAdapter1* adapter = nullptr;
+
+	for (UINT adapterIndex = 0; dxgiFactory->EnumAdapters1(adapterIndex, &adapter) != DXGI_ERROR_NOT_FOUND; adapterIndex++)
+	{
+		DXGI_ADAPTER_DESC1 desc;
+		adapter->GetDesc1(&desc);
+
+		if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
+		{
+			continue;
+		}
+
+		if (SUCCEEDED(D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device), (void**)&device)))
+		{
+			SafeRelease(adapter);
+			break;
+		}
+
+		SafeRelease(adapter);
+	}
+
+	if (device == nullptr)
+	{
+		goto FAILED_EXIT;
+	}
+
+	/*
 	hr = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), (void**)&device);
 
 	if (FAILED(hr))
 	{
 		goto FAILED_EXIT;
 	}
+	*/
 
 	// Create Command Queue
 	D3D12_COMMAND_QUEUE_DESC descCommandQueue;

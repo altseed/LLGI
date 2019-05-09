@@ -23,7 +23,7 @@ public:
 	bool Initialize(GraphicsDX12* graphics, int32_t size);
 
 	ConstantBufferDX12();
-	virtual ~ConstantBufferDX12() = default;
+	virtual ~ConstantBufferDX12();
 
 	virtual void* Lock();
 	virtual void* Lock(int32_t offset, int32_t size);
