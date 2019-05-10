@@ -14,8 +14,7 @@ namespace LLGI
 class PipelineStateDX12 : public PipelineState
 {
 private:
-	std::shared_ptr<Shader> vertexShader;
-	std::shared_ptr<Shader> pixelShader;
+	std::array < Shader*, static_cast<int>(ShaderStageType::Max)> shaders;
 
 	ID3D12PipelineState* pipelineState_ = nullptr;
 	std::shared_ptr<GraphicsDX12> graphics_;
