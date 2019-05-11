@@ -72,6 +72,11 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 
 	if (renderPass != nullptr)
 	{
+		// Set render target
+		commandList->OMSetRenderTargets(1, &(renderPass_->handleRTV), FALSE, nullptr);
+
+		// TODO depth...
+
 		// Reset scissor
 		D3D12_RECT rect;
 		rect.top = 0;
@@ -154,8 +159,8 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// draw polygon
-	commandList->DrawInstanced(vertexView.SizeInBytes / vertexView.StrideInBytes /*triangle*/, 1, 0, 0);
-
+	commandList->DrawIndexedInstanced(pritimiveCount * 3 /*triangle*/, 1, 0, 0, 0);
+	
 	CommandList::Draw(pritimiveCount);
 }
 

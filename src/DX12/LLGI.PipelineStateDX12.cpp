@@ -20,6 +20,7 @@ PipelineStateDX12::~PipelineStateDX12()
 	{
 		SafeRelease(shader);
 	}
+	SafeRelease(pipelineState_);
 }
 
 void PipelineStateDX12::SetShader(ShaderStageType stage, Shader* shader)
@@ -155,10 +156,13 @@ void PipelineStateDX12::Compile()
 
 		// TODO:
 		renderTargetBlendDesc.LogicOpEnable = FALSE;
-		renderTargetBlendDesc.LogicOp = D3D12_LOGIC_OP_COPY;
+		renderTargetBlendDesc.LogicOp = D3D12_LOGIC_OP_NOOP;
 	}
 	else
 		renderTargetBlendDesc.BlendEnable = FALSE;
+
+	// ?
+	renderTargetBlendDesc.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 
 	// setup a blend state
 	D3D12_BLEND_DESC blendDesc = {};
@@ -199,8 +203,9 @@ void PipelineStateDX12::Compile()
 
 	pipelineStateDesc.SampleDesc.Count = 1;
 
+	pipelineStateDesc.SampleMask = UINT_MAX;
+
 	auto hr = graphics_->GetDevice()->CreateGraphicsPipelineState(&pipelineStateDesc, IID_PPV_ARGS(&pipelineState_));
-	SafeAddRef(pipelineState_);
 
 	if (FAILED(hr))
 	{
@@ -237,7 +242,6 @@ bool PipelineStateDX12::CreateRootSignature()
 		goto FAILED_EXIT;
 		SafeRelease(Signature_);
 	}
-	SafeAddRef(RootSignature_);
 	return true;
 
 FAILED_EXIT:
