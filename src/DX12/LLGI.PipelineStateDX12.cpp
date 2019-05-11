@@ -11,6 +11,7 @@ PipelineStateDX12::PipelineStateDX12(GraphicsDX12* graphics)
 {
 	SafeAddRef(graphics);
 	graphics_ = CreateSharedPtr(graphics);
+	shaders.fill(nullptr);
 }
 
 PipelineStateDX12::~PipelineStateDX12()
