@@ -36,17 +36,17 @@ void PipelineStateDX12::Compile()
 
 	for (size_t i = 0; i < shaders.size(); i++)
 	{
-		auto shader = static_cast<ShaderDX12*>(shaders[i])->GetData();
+		auto& shaderData = static_cast<ShaderDX12*>(shaders[i])->GetData();
 
 		if (i == static_cast<int>(ShaderStageType::Pixel))
 		{
-			pipelineStateDesc.PS.pShaderBytecode = shader.data();
-			pipelineStateDesc.PS.BytecodeLength = shader.size();
+			pipelineStateDesc.PS.pShaderBytecode = shaderData.data();
+			pipelineStateDesc.PS.BytecodeLength = shaderData.size();
 		}
 		else if (i == static_cast<int>(ShaderStageType::Vertex))
 		{
-			pipelineStateDesc.VS.pShaderBytecode = shader.data();
-			pipelineStateDesc.VS.BytecodeLength = shader.size();
+			pipelineStateDesc.VS.pShaderBytecode = shaderData.data();
+			pipelineStateDesc.VS.BytecodeLength = shaderData.size();
 		}
 	}
 
@@ -67,29 +67,29 @@ void PipelineStateDX12::Compile()
 			elementDescs[i].Format = DXGI_FORMAT_R32G32_FLOAT;
 			elementOffset += sizeof(float) * 2;
 		}
-
-		if (VertexLayouts[i] == VertexLayoutFormat::R32G32B32_FLOAT)
+		else if (VertexLayouts[i] == VertexLayoutFormat::R32G32B32_FLOAT)
 		{
 			elementDescs[i].Format = DXGI_FORMAT_R32G32B32_FLOAT;
 			elementOffset += sizeof(float) * 3;
 		}
-
-		if (VertexLayouts[i] == VertexLayoutFormat::R32G32B32A32_FLOAT)
+		else if (VertexLayouts[i] == VertexLayoutFormat::R32G32B32A32_FLOAT)
 		{
 			elementDescs[i].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 			elementOffset += sizeof(float) * 4;
 		}
-
-		if (VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UNORM)
+		else if (VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UNORM)
 		{
 			elementDescs[i].Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 			elementOffset += sizeof(float) * 1;
 		}
-
-		if (VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UINT)
+		else if (VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UINT)
 		{
 			elementDescs[i].Format = DXGI_FORMAT_R8G8B8A8_UINT;
 			elementOffset += sizeof(float) * 1;
+		}
+		else
+		{
+			assert(0);
 		}
 	}
 
@@ -98,7 +98,6 @@ void PipelineStateDX12::Compile()
 		pipelineStateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	if (Topology == TopologyType::Line)
 		pipelineStateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
-
 
 	// TODO...(generate from parameters)
 	D3D12_RASTERIZER_DESC rasterizerDesc = {};
