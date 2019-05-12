@@ -7,6 +7,7 @@ set (CMAKE_CXX_STANDARD 11)
 
 option(BUILD_METAL "build metal" OFF)
 option(BUILD_VULKAN "build vulkan" OFF)
+option(BUILD_TEST "build test" OFF)
 
 if(BUILD_VULKAN)
   add_definitions(-DENABLE_VULKAN)
@@ -17,4 +18,7 @@ if(BUILD_METAL)
 endif()
 
 add_subdirectory("src")
-add_subdirectory("src_test")
+
+if(BUILD_TEST)
+  add_subdirectory("src_test")
+endif()
