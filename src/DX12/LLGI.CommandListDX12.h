@@ -17,6 +17,8 @@ private:
 	std::vector<std::shared_ptr<ID3D12GraphicsCommandList>> commandLists;
 	std::vector<std::shared_ptr<ID3D12CommandAllocator>> commandAllocators;
 
+	ID3D12DescriptorHeap* descriptorHeap = nullptr;
+
 public:
 	CommandListDX12();
 	virtual ~CommandListDX12();

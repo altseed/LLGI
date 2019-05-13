@@ -10,10 +10,12 @@ namespace LLGI
 
 CommandListDX12::CommandListDX12() {}
 
-CommandListDX12::~CommandListDX12() {}
+CommandListDX12::~CommandListDX12() { SafeRelease(descriptorHeap); }
 
 bool CommandListDX12::Initialize(GraphicsDX12* graphics)
 {
+	HRESULT hr;
+
 	SafeAddRef(graphics);
 	graphics_ = CreateSharedPtr(graphics);
 
@@ -21,7 +23,6 @@ bool CommandListDX12::Initialize(GraphicsDX12* graphics)
 	{
 		ID3D12CommandAllocator* commandAllocator = nullptr;
 		ID3D12GraphicsCommandList* commandList = nullptr;
-		HRESULT hr;
 
 		hr = graphics_->GetDevice()->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
 		if (FAILED(hr))
@@ -38,6 +39,16 @@ bool CommandListDX12::Initialize(GraphicsDX12* graphics)
 		}
 		commandList->Close();
 		commandLists.push_back(CreateSharedPtr(commandList));
+	}
+
+	{
+		D3D12_DESCRIPTOR_HEAP_DESC descriptorDesc = {};
+		descriptorDesc.NumDescriptors = 1;
+		descriptorDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		descriptorDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+		hr = graphics_->GetDevice()->CreateDescriptorHeap(&descriptorDesc, IID_PPV_ARGS(&descriptorHeap));
+		assert(SUCCEEDED(hr));
 	}
 
 	return true;
@@ -155,12 +166,24 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 		commandList->SetPipelineState(p);
 	}
 
+	// descriptor
+	{
+		// None
+		D3D12_CONSTANT_BUFFER_VIEW_DESC desc = {};
+		//desc.BufferLocation = nullptr;
+		//desc.SizeInBytes = 256;
+		graphics_->GetDevice()->CreateConstantBufferView(&desc, descriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	}
+
+	commandList->SetDescriptorHeaps(1, &descriptorHeap);
+	commandList->SetGraphicsRootDescriptorTable(0, descriptorHeap->GetGPUDescriptorHandleForHeapStart());
+
 	// setup a topology (triangle)
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// draw polygon
 	commandList->DrawIndexedInstanced(pritimiveCount * 3 /*triangle*/, 1, 0, 0, 0);
-	
+
 	CommandList::Draw(pritimiveCount);
 }
 

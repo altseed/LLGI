@@ -226,7 +226,7 @@ bool PlatformDX12::Initialize(Vec2I windowSize)
 
 	// Render target DescriptorHeap
 	ZeroMemory(&RenderPassHeapDesc, sizeof(RenderPassHeapDesc));
-	RenderPassHeapDesc.NumDescriptors = 2;
+	RenderPassHeapDesc.NumDescriptors = SwapBufferCount;
 	RenderPassHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	RenderPassHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	RenderPassHeapDesc.NodeMask = 0;

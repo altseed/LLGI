@@ -223,9 +223,24 @@ FAILED_EXIT:
 
 bool PipelineStateDX12::CreateRootSignature()
 {
+	D3D12_DESCRIPTOR_RANGE ranges[1];
+	D3D12_ROOT_PARAMETER rootParameters[1];
+
+	// constant buffer
+	ranges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+	ranges[0].NumDescriptors = 1;
+	ranges[0].BaseShaderRegister = 0;
+	ranges[0].RegisterSpace = 0;
+	ranges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParameters[0].DescriptorTable.NumDescriptorRanges = 1;
+	rootParameters[0].DescriptorTable.pDescriptorRanges = ranges;
+	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
 	D3D12_ROOT_SIGNATURE_DESC desc = {};
-	desc.NumParameters = 0;
-	desc.pParameters = nullptr;
+	desc.NumParameters = 1;
+	desc.pParameters = rootParameters;
 	desc.NumStaticSamplers = 0;
 	desc.pStaticSamplers = nullptr;
 	desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
