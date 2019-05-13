@@ -21,6 +21,8 @@ PipelineStateDX12::~PipelineStateDX12()
 		SafeRelease(shader);
 	}
 	SafeRelease(pipelineState_);
+	SafeRelease(signature_);
+	SafeRelease(rootSignature_);
 }
 
 void PipelineStateDX12::SetShader(ShaderStageType stage, Shader* shader)
@@ -175,7 +177,7 @@ void PipelineStateDX12::Compile()
 
 	pipelineStateDesc.InputLayout.pInputElementDescs = elementDescs.data();
 	pipelineStateDesc.InputLayout.NumElements = VertexLayoutCount;
-	pipelineStateDesc.pRootSignature = RootSignature_;
+	pipelineStateDesc.pRootSignature = rootSignature_;
 	pipelineStateDesc.RasterizerState = rasterizerDesc;
 	pipelineStateDesc.BlendState = blendDesc;
 
@@ -228,24 +230,24 @@ bool PipelineStateDX12::CreateRootSignature()
 	desc.pStaticSamplers = nullptr;
 	desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
-	auto hr = D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1, &Signature_, nullptr);
-	SafeAddRef(Signature_);
+	auto hr = D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1, &signature_, nullptr);
+
 	if (FAILED(hr))
 	{
 		goto FAILED_EXIT;
 	}
 
 	hr = graphics_->GetDevice()->CreateRootSignature(
-		0, Signature_->GetBufferPointer(), Signature_->GetBufferSize(), IID_PPV_ARGS(&RootSignature_));
+		0, signature_->GetBufferPointer(), signature_->GetBufferSize(), IID_PPV_ARGS(&rootSignature_));
 	if (FAILED(hr))
 	{
 		goto FAILED_EXIT;
-		SafeRelease(Signature_);
+		SafeRelease(signature_);
 	}
 	return true;
 
 FAILED_EXIT:
-	SafeRelease(RootSignature_);
+	SafeRelease(rootSignature_);
 	return false;
 }
 

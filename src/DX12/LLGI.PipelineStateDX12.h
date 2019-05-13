@@ -19,8 +19,8 @@ private:
 	ID3D12PipelineState* pipelineState_ = nullptr;
 	std::shared_ptr<GraphicsDX12> graphics_;
 
-	ID3DBlob* Signature_;
-	ID3D12RootSignature* RootSignature_;
+	ID3DBlob* signature_ = nullptr;
+	ID3D12RootSignature* rootSignature_ = nullptr;
 
 	bool CreateRootSignature();
 
@@ -33,7 +33,7 @@ public:
 	void Compile() override;
 
 	ID3D12PipelineState* GetPipelineState() { return pipelineState_; }
-	ID3D12RootSignature* GetRootSignature() { return RootSignature_; }
+	ID3D12RootSignature* GetRootSignature() { return rootSignature_; }
 };
 
 } // namespace LLGI

@@ -42,8 +42,6 @@ bool IndexBufferDX12::Initialize(GraphicsDX12* graphics, int32_t stride, int32_t
 		goto FAILED_EXIT;
 	}
 
-
-	SafeAddRef(indexBuffer);
 	return true;
 
 FAILED_EXIT:
