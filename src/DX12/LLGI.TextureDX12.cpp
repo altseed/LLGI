@@ -4,7 +4,11 @@ namespace LLGI
 {
 TextureDX12::TextureDX12(GraphicsDX12* graphics) : graphics_(graphics) { SafeAddRef(graphics_); }
 
-TextureDX12::~TextureDX12() {}
+TextureDX12::~TextureDX12()
+{
+	SafeRelease(graphics_);
+	SafeRelease(texture_);
+}
 
 bool TextureDX12::Initialize(const Vec2I& size, bool isRenderPass, bool isDepthBuffer)
 {
@@ -41,7 +45,6 @@ bool TextureDX12::Initialize(const Vec2I& size, bool isRenderPass, bool isDepthB
 	{
 		goto FAILED_EXIT;
 	}
-
 	textureSize = size;
 
 	return true;
@@ -51,24 +54,9 @@ FAILED_EXIT:
 	return false;
 }
 
-void* TextureDX12::Lock()
-{
-	auto hr = texture_->Map(0, nullptr, reinterpret_cast<void**>(&mapped));
-	if (FAILED(hr))
-	{
-		goto FAILED_EXIT;
-	}
-	return mapped;
+void* TextureDX12::Lock() { return nullptr; }
 
-FAILED_EXIT:
-	return nullptr;
-}
-
-void TextureDX12::Unlock()
-{
-	texture_->Unmap(0, nullptr);
-	mapped = nullptr;
-}
+void TextureDX12::Unlock() {}
 
 Vec2I TextureDX12::GetSizeAs2D() { return textureSize; }
 

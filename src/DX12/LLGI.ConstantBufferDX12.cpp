@@ -11,8 +11,8 @@ ConstantBufferDX12::~ConstantBufferDX12() { SafeRelease(constantBuffer); }
 
 bool ConstantBufferDX12::Initialize(GraphicsDX12* graphics, int32_t size)
 {
-	D3D12_HEAP_PROPERTIES heapProperties;
-	D3D12_RESOURCE_DESC resourceDesc;
+	D3D12_HEAP_PROPERTIES heapProperties={};
+	D3D12_RESOURCE_DESC resourceDesc={};
 
 	heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
 	heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;

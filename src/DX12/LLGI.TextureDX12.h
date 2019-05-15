@@ -14,8 +14,6 @@ private:
 	GraphicsDX12* graphics_ = nullptr;
 	ID3D12Resource* texture_ = nullptr;
 
-	uint8_t* mapped = nullptr;
-
 	Vec2I textureSize;
 
 	bool isRenderPass_ = false;
@@ -27,9 +25,10 @@ public:
 
 	bool Initialize(const Vec2I& size, bool isRenderPass, bool isDepthBuffer);
 
-	virtual void* Lock() override;
-	virtual void Unlock() override;
-	virtual Vec2I GetSizeAs2D() override;
+	void* Lock() override;
+	void Unlock() override;
+	Vec2I GetSizeAs2D() override;
+	ID3D12Resource* Get() { return texture_; }
 	bool IsRenderTexture() const override;
 	bool IsDepthTexture() const override;
 };

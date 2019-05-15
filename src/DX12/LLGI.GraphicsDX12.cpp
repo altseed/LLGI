@@ -5,6 +5,7 @@
 #include "LLGI.PipelineStateDX12.h"
 #include "LLGI.ShaderDX12.h"
 #include "LLGI.VertexBufferDX12.h"
+#include "LLGI.TextureDX12.h"
 
 namespace LLGI
 {
@@ -167,7 +168,17 @@ RenderPass* GraphicsDX12::CreateRenderPass(const Texture** textures, int32_t tex
 	throw "Not inplemented";
 }
 
-Texture* GraphicsDX12::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer) { throw "Not inplemented"; }
+Texture* GraphicsDX12::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer)
+{
+	auto obj = new TextureDX12(this);
+	if (!obj->Initialize(size, isRenderPass, isDepthBuffer))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
+
+	return obj;
+}
 
 Texture* GraphicsDX12::CreateTexture(uint64_t id) { throw "Not inplemented"; }
 
