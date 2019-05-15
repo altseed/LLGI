@@ -10,6 +10,7 @@ namespace LLGI
 {
 
 class RenderPassPipelineStateDX12;
+class TextureDX12;
 
 class RenderPassDX12 : public RenderPass
 {
