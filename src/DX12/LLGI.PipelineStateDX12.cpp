@@ -223,17 +223,17 @@ FAILED_EXIT:
 
 bool PipelineStateDX12::CreateRootSignature()
 {
-	D3D12_DESCRIPTOR_RANGE ranges[2];
-	D3D12_ROOT_PARAMETER rootParameters[2];
+	D3D12_DESCRIPTOR_RANGE ranges[2] = {{}, {}};
+	D3D12_ROOT_PARAMETER rootParameters[2] = {{}, {}};
 
-	// shader resource view
+	// constant buffer view
 	ranges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
 	ranges[0].NumDescriptors = 1;
 	ranges[0].BaseShaderRegister = 0;
 	ranges[0].RegisterSpace = 0;
 	ranges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	// constant buffer view
+	// shader resource view
 	ranges[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	ranges[1].NumDescriptors = 1;
 	ranges[1].BaseShaderRegister = 0;
@@ -267,7 +267,7 @@ bool PipelineStateDX12::CreateRootSignature()
 	sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	D3D12_ROOT_SIGNATURE_DESC desc = {};
-	desc.NumParameters = 1;
+	desc.NumParameters = 2;
 	desc.pParameters = rootParameters;
 	desc.NumStaticSamplers = 1;
 	desc.pStaticSamplers = &sampler;

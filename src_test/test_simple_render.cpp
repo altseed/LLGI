@@ -633,36 +633,45 @@ void main()
 
 	auto code_dx_vs = R"(
 struct VS_INPUT{
-    float3 g_position : POSITION0;
-	float2 g_uv : UV0;
-    float4 g_color : COLOR0;
+    float3 Position : POSITION0;
+	float2 UV : UV0;
+    float4 Color : COLOR0;
 };
 struct VS_OUTPUT{
-    float4 g_position : SV_POSITION;
-    float4 g_color : COLOR0;
+    float4 Position : SV_POSITION;
+	float2 UV : UV0;
+    float4 Color : COLOR0;
 };
     
 VS_OUTPUT main(VS_INPUT input){
     VS_OUTPUT output;
         
-    output.g_position = float4(input.g_position, 1.0f);
-    output.g_color = input.g_color;
+    output.Position = float4(input.Position, 1.0f);
+	output.UV = input.UV;
+    output.Color = input.Color;
         
     return output;
 }
 )";
 
 	auto code_dx_ps = R"(
-Texture2D<float4> txt : register(t0);
+Texture2D txt : register(t0);
 SamplerState smp : register(s0);
 
 struct PS_INPUT
 {
-	float4 Position : SV_POSITION;
-	float2 UV       : TEXCOORD;
+    float4  Position : SV_POSITION;
+	float2  UV : UV0;
+    float4  Color    : COLOR0;
 };
 
-float4 main(PS_INPUT input) : SV_TARGET { return txt.Sample(smp, input.UV); }
+float4 main(PS_INPUT input) : SV_TARGET 
+{ 
+	float4 c;
+	c = txt.Sample(smp, input.UV);
+	c.a = 255;
+	return c;
+}
 )";
 
 	auto compiler = LLGI::CreateCompiler(deviceType);

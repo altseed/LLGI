@@ -184,11 +184,11 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 		viewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		viewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-		viewDesc.Texture2D.MipLevels = 0;
+		viewDesc.Texture2D.MipLevels = 1;
 		viewDesc.Texture2D.MostDetailedMip = 0;
 
 		// TODO: get the others
-		auto texture = (TextureDX12*)currentTextures[0][static_cast<int>(ShaderStageType::Pixel)].texture;
+		auto texture = (TextureDX12*)currentTextures[static_cast<int>(ShaderStageType::Pixel)][0].texture;
 		auto handle = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
 		handle.ptr += descriptorSize;
 		graphics_->GetDevice()->CreateShaderResourceView(texture->Get(), &viewDesc, handle);
