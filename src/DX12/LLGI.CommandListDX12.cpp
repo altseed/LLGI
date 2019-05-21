@@ -176,31 +176,16 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 		graphics_->GetDevice()->CreateConstantBufferView(&desc, descriptorHeap->GetCPUDescriptorHandleForHeapStart());
 	}
 
-	auto descriptorSize = graphics_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	// shader resource view
-	{
-		D3D12_SHADER_RESOURCE_VIEW_DESC viewDesc = {};
-		viewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		viewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		viewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	auto bindingTexture = currentTextures[static_cast<int>(ShaderStageType::Pixel)][0];
+	auto texture = static_cast<TextureDX12*>(bindingTexture.texture);
+	texture->CreateView();
+	texture->CreateSampler(bindingTexture.wrapMode);
 
-		viewDesc.Texture2D.MipLevels = 1;
-		viewDesc.Texture2D.MostDetailedMip = 0;
+	ID3D12DescriptorHeap* heaps[] = {texture->GetSrv(), texture->GetSampler()};
+	commandList->SetDescriptorHeaps(2, heaps);
 
-		// TODO: get the others
-		auto texture = (TextureDX12*)currentTextures[static_cast<int>(ShaderStageType::Pixel)][0].texture;
-		auto handle = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
-		handle.ptr += descriptorSize;
-		graphics_->GetDevice()->CreateShaderResourceView(texture->Get(), &viewDesc, handle);
-	}
-
-	commandList->SetDescriptorHeaps(1, &descriptorHeap);
-	{
-		auto handle = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
-		commandList->SetGraphicsRootDescriptorTable(0, handle);
-		handle.ptr += descriptorSize;
-		commandList->SetGraphicsRootDescriptorTable(1, handle);
-	}
+	commandList->SetGraphicsRootDescriptorTable(1, texture->GetSrv()->GetGPUDescriptorHandleForHeapStart());
+	commandList->SetGraphicsRootDescriptorTable(2, texture->GetSampler()->GetGPUDescriptorHandleForHeapStart());
 	// setup a topology (triangle)
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
