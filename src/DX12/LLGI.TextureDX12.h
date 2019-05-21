@@ -13,11 +13,15 @@ class TextureDX12 : public Texture
 private:
 	GraphicsDX12* graphics_ = nullptr;
 	ID3D12Resource* texture_ = nullptr;
+	ID3D12Resource* buffer_ = nullptr;
+	D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
 
 	Vec2I textureSize;
 
 	bool isRenderPass_ = false;
 	bool isDepthBuffer_ = false;
+
+	void CreateBuffer();
 
 public:
 	TextureDX12(GraphicsDX12* graphics);

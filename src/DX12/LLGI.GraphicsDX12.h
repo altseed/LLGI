@@ -111,6 +111,7 @@ public:
 
 	int32_t GetCurrentSwapBufferIndex() const;
 	int32_t GetSwapBufferCount() const;
+	ID3D12CommandQueue* GetCommandQueue() { return commandQueue_; }
 };
 
 } // namespace LLGI
