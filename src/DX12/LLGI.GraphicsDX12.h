@@ -112,6 +112,13 @@ public:
 	int32_t GetCurrentSwapBufferIndex() const;
 	int32_t GetSwapBufferCount() const;
 	ID3D12CommandQueue* GetCommandQueue() { return commandQueue_; }
+
+	ID3D12Resource* CreateResource(D3D12_HEAP_TYPE heapType,
+								   DXGI_FORMAT format,
+								   D3D12_RESOURCE_DIMENSION resourceDimention,
+								   D3D12_RESOURCE_STATES resourceState,
+								   Vec2I size);
+	ID3D12DescriptorHeap* CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType);
 };
 
 } // namespace LLGI

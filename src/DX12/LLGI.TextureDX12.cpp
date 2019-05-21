@@ -10,8 +10,8 @@ TextureDX12::~TextureDX12()
 	SafeRelease(graphics_);
 	SafeRelease(texture_);
 	SafeRelease(buffer_);
-	SafeRelease(SrvDescriptorHeap);
-	SafeRelease(samplerDescriptorHeap);
+	SafeRelease(SrvDescriptorHeap_);
+	SafeRelease(samplerDescriptorHeap_);
 }
 
 bool TextureDX12::Initialize(const Vec2I& size, bool isRenderPass, bool isDepthBuffer)
@@ -23,134 +23,55 @@ bool TextureDX12::Initialize(const Vec2I& size, bool isRenderPass, bool isDepthB
 
 		throw "Not implemented";
 
-	D3D12_HEAP_PROPERTIES heapProperties = {};
-	D3D12_RESOURCE_DESC resourceDesc = {};
-
-	heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
-	heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-	heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-	heapProperties.CreationNodeMask = 1;
-	heapProperties.VisibleNodeMask = 1;
-
-	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	resourceDesc.Width = size.X;
-	resourceDesc.Height = size.Y;
-	resourceDesc.DepthOrArraySize = 1;
-	resourceDesc.MipLevels = 1;
-	resourceDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-	resourceDesc.SampleDesc.Count = 1;
-	resourceDesc.SampleDesc.Quality = 0;
-	resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-
-	auto hr = graphics_->GetDevice()->CreateCommittedResource(
-		&heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&texture_));
-	if (FAILED(hr))
-	{
-		goto FAILED_EXIT;
-	}
-	textureSize = size;
+	texture_ = graphics_->CreateResource(
+		D3D12_HEAP_TYPE_DEFAULT, DXGI_FORMAT_R8G8B8A8_UNORM, D3D12_RESOURCE_DIMENSION_TEXTURE2D, D3D12_RESOURCE_STATE_COPY_DEST, size);
+	textureSize_ = size;
+	if (texture_ == nullptr)
+		return false;
 
 	// TODO: when it's NOT editable, do NOT call CreateBuffer.
 	CreateBuffer();
 
 	return true;
-
-FAILED_EXIT:
-	SafeRelease(texture_);
-	return false;
 }
 
 void TextureDX12::CreateView()
 {
-	if (SrvDescriptorHeap != nullptr)
-		SafeRelease(SrvDescriptorHeap);
+	if (SrvDescriptorHeap_ != nullptr)
+		SafeRelease(SrvDescriptorHeap_);
+	SrvDescriptorHeap_ = graphics_->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	assert(SrvDescriptorHeap_ != nullptr);
 
-	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-
-	heapDesc.NumDescriptors = 1;
-	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	heapDesc.NodeMask = 0;
-
-	auto hr = graphics_->GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&SrvDescriptorHeap));
-	if (FAILED(hr))
-	{
-		goto FAIL_EXIT;
-	}
-
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-
 	srvDesc.Texture2D.MipLevels = 1;
 	srvDesc.Texture2D.MostDetailedMip = 0;
-	auto handle = SrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	graphics_->GetDevice()->CreateShaderResourceView(texture_, &srvDesc, handle);
 
-	return;
-FAIL_EXIT:
-	SafeRelease(SrvDescriptorHeap);
+	auto handle = SrvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
+	graphics_->GetDevice()->CreateShaderResourceView(texture_, &srvDesc, handle);
 }
 
 void TextureDX12::CreateBuffer()
 {
 	UINT64 size = 0;
-	graphics_->GetDevice()->GetCopyableFootprints(&texture_->GetDesc(), 0, 1, 0, &footprint, nullptr, nullptr, &size);
+	graphics_->GetDevice()->GetCopyableFootprints(&texture_->GetDesc(), 0, 1, 0, &footprint_, nullptr, nullptr, &size);
 
-	D3D12_HEAP_PROPERTIES heapProperties = {};
-	D3D12_RESOURCE_DESC resourceDesc = {};
-
-	heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
-	heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-	heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-	heapProperties.CreationNodeMask = 1;
-	heapProperties.VisibleNodeMask = 1;
-
-	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	resourceDesc.Width = size;
-	resourceDesc.Height = 1;
-	resourceDesc.DepthOrArraySize = 1;
-	resourceDesc.MipLevels = 1;
-	resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
-	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-	resourceDesc.SampleDesc.Count = 1;
-	resourceDesc.SampleDesc.Quality = 0;
-	resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-
-	auto hr = graphics_->GetDevice()->CreateCommittedResource(
-		&heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&buffer_));
-
-	if (FAILED(hr))
-	{
-		goto FAILED_EXIT;
-	}
-	return;
-
-FAILED_EXIT:
-	SafeRelease(buffer_);
+	buffer_ = graphics_->CreateResource(
+		D3D12_HEAP_TYPE_UPLOAD, DXGI_FORMAT_UNKNOWN, D3D12_RESOURCE_DIMENSION_BUFFER, D3D12_RESOURCE_STATE_GENERIC_READ, Vec2I(size, 1));
+	assert(buffer_ != nullptr);
 }
 
 void TextureDX12::CreateSampler(TextureWrapMode wrapMode)
 {
-	if (samplerDescriptorHeap != nullptr)
-		SafeRelease(samplerDescriptorHeap);
+	if (samplerDescriptorHeap_ != nullptr)
+		SafeRelease(samplerDescriptorHeap_);
 
-	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+	samplerDescriptorHeap_ = graphics_->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+	assert(samplerDescriptorHeap_!=nullptr);
+
 	D3D12_SAMPLER_DESC samplerDesc = {};
-	D3D12_CPU_DESCRIPTOR_HANDLE handle;
-
-	heapDesc.NumDescriptors = 1;
-	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
-	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	heapDesc.NodeMask = 0;
-
-	auto hr = graphics_->GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&samplerDescriptorHeap));
-	if (FAILED(hr))
-	{
-		goto FAILED_EXIT;
-	}
 
 	// TODO
 	samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
@@ -173,11 +94,8 @@ void TextureDX12::CreateSampler(TextureWrapMode wrapMode)
 	samplerDesc.MinLOD = 0.0f;
 	samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
 
-	handle = samplerDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	auto handle = samplerDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
 	graphics_->GetDevice()->CreateSampler(&samplerDesc, handle);
-	return;
-FAILED_EXIT:
-	SafeRelease(samplerDescriptorHeap);
 }
 
 void* TextureDX12::Lock()
@@ -214,7 +132,7 @@ void TextureDX12::Unlock()
 
 	src.pResource = buffer_;
 	src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
-	src.PlacedFootprint = footprint;
+	src.PlacedFootprint = footprint_;
 
 	dst.pResource = texture_;
 	dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
@@ -239,7 +157,7 @@ FAILED_EXIT:
 	SafeRelease(commandList);
 }
 
-Vec2I TextureDX12::GetSizeAs2D() { return textureSize; }
+Vec2I TextureDX12::GetSizeAs2D() { return textureSize_; }
 
 bool TextureDX12::IsRenderTexture() const
 {

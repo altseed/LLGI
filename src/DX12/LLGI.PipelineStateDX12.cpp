@@ -11,12 +11,12 @@ PipelineStateDX12::PipelineStateDX12(GraphicsDX12* graphics)
 {
 	SafeAddRef(graphics);
 	graphics_ = CreateSharedPtr(graphics);
-	shaders.fill(nullptr);
+	shaders_.fill(nullptr);
 }
 
 PipelineStateDX12::~PipelineStateDX12()
 {
-	for (auto& shader : shaders)
+	for (auto& shader : shaders_)
 	{
 		SafeRelease(shader);
 	}
@@ -28,8 +28,8 @@ PipelineStateDX12::~PipelineStateDX12()
 void PipelineStateDX12::SetShader(ShaderStageType stage, Shader* shader)
 {
 	SafeAddRef(shader);
-	SafeRelease(shaders[static_cast<int>(stage)]);
-	shaders[static_cast<int>(stage)] = shader;
+	SafeRelease(shaders_[static_cast<int>(stage)]);
+	shaders_[static_cast<int>(stage)] = shader;
 }
 
 void PipelineStateDX12::Compile()
@@ -38,9 +38,9 @@ void PipelineStateDX12::Compile()
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateDesc = {};
 
-	for (size_t i = 0; i < shaders.size(); i++)
+	for (size_t i = 0; i < shaders_.size(); i++)
 	{
-		auto& shaderData = static_cast<ShaderDX12*>(shaders[i])->GetData();
+		auto& shaderData = static_cast<ShaderDX12*>(shaders_[i])->GetData();
 
 		if (i == static_cast<int>(ShaderStageType::Pixel))
 		{

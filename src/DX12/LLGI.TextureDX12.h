@@ -15,12 +15,12 @@ private:
 	ID3D12Resource* texture_ = nullptr;
 
 	ID3D12Resource* buffer_ = nullptr;
-	D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
+	D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint_;
 
-	ID3D12DescriptorHeap* SrvDescriptorHeap = nullptr;
-	ID3D12DescriptorHeap* samplerDescriptorHeap = nullptr;
+	ID3D12DescriptorHeap* SrvDescriptorHeap_ = nullptr;
+	ID3D12DescriptorHeap* samplerDescriptorHeap_ = nullptr;
 
-	Vec2I textureSize;
+	Vec2I textureSize_;
 
 	bool isRenderPass_ = false;
 	bool isDepthBuffer_ = false;
@@ -42,7 +42,7 @@ public:
 
 	void CreateView();
 	void CreateSampler(TextureWrapMode wrapMode);
-	ID3D12DescriptorHeap* GetSrv() { return SrvDescriptorHeap; }
-	ID3D12DescriptorHeap* GetSampler() { return samplerDescriptorHeap; }
+	ID3D12DescriptorHeap* GetSrv() { return SrvDescriptorHeap_; }
+	ID3D12DescriptorHeap* GetSampler() { return samplerDescriptorHeap_; }
 };
 } // namespace LLGI

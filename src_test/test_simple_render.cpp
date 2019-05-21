@@ -741,7 +741,9 @@ float4 main(PS_INPUT input) : SV_TARGET
 		else if (platform->GetDeviceType() == LLGI::DeviceType::DirectX12)
 		{
 			compiler->Compile(result_vs, code_dx_vs, LLGI::ShaderStageType::Vertex);
+			assert(result_vs.Message == "");
 			compiler->Compile(result_ps, code_dx_ps, LLGI::ShaderStageType::Pixel);
+			assert(result_ps.Message == "");
 		}
 
 		for (auto& b : result_vs.Binary)
