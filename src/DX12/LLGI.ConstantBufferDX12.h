@@ -13,11 +13,8 @@ namespace LLGI
 class ConstantBufferDX12 : public ConstantBuffer
 {
 private:
-	std::shared_ptr<GraphicsDX12> graphics_;
-
-	ID3D12Resource* constantBuffer = nullptr;
-
-	uint8_t* mapped = nullptr;
+	ID3D12Resource* constantBuffer_ = nullptr;
+	uint8_t* mapped_ = nullptr;
 
 public:
 	bool Initialize(GraphicsDX12* graphics, int32_t size);

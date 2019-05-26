@@ -3,6 +3,7 @@
 #include "LLGI.GraphicsDX12.h"
 #include "LLGI.IndexBufferDX12.h"
 #include "LLGI.PipelineStateDX12.h"
+#include "LLGI.TextureDX12.h"
 #include "LLGI.VertexBufferDX12.h"
 
 namespace LLGI
@@ -43,7 +44,7 @@ bool CommandListDX12::Initialize(GraphicsDX12* graphics)
 
 	{
 		D3D12_DESCRIPTOR_HEAP_DESC descriptorDesc = {};
-		descriptorDesc.NumDescriptors = 1;
+		descriptorDesc.NumDescriptors = 2;
 		descriptorDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		descriptorDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
@@ -170,14 +171,21 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 	{
 		// None
 		D3D12_CONSTANT_BUFFER_VIEW_DESC desc = {};
-		//desc.BufferLocation = nullptr;
-		//desc.SizeInBytes = 256;
+		// desc.BufferLocation = nullptr;
+		// desc.SizeInBytes = 256;
 		graphics_->GetDevice()->CreateConstantBufferView(&desc, descriptorHeap->GetCPUDescriptorHandleForHeapStart());
 	}
 
-	commandList->SetDescriptorHeaps(1, &descriptorHeap);
-	commandList->SetGraphicsRootDescriptorTable(0, descriptorHeap->GetGPUDescriptorHandleForHeapStart());
+	auto bindingTexture = currentTextures[static_cast<int>(ShaderStageType::Pixel)][0];
+	auto texture = static_cast<TextureDX12*>(bindingTexture.texture);
+	texture->CreateView();
+	texture->CreateSampler(bindingTexture.wrapMode);
 
+	ID3D12DescriptorHeap* heaps[] = {texture->GetSrv(), texture->GetSampler()};
+	commandList->SetDescriptorHeaps(2, heaps);
+
+	commandList->SetGraphicsRootDescriptorTable(1, texture->GetSrv()->GetGPUDescriptorHandleForHeapStart());
+	commandList->SetGraphicsRootDescriptorTable(2, texture->GetSampler()->GetGPUDescriptorHandleForHeapStart());
 	// setup a topology (triangle)
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 

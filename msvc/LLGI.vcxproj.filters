@@ -45,6 +45,9 @@
     <ClInclude Include="..\src\DX12\LLGI.VertexBufferDX12.h">
       <Filter>DX12</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\DX12\LLGI.TextureDX12.h">
+      <Filter>DX12</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Win">
@@ -99,6 +102,9 @@
       <Filter>DX12</Filter>
     </ClCompile>
     <ClCompile Include="..\src\DX12\LLGI.VertexBufferDX12.cpp">
+      <Filter>DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\DX12\LLGI.TextureDX12.cpp">
       <Filter>DX12</Filter>
     </ClCompile>
   </ItemGroup>

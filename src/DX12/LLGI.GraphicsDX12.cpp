@@ -4,6 +4,7 @@
 #include "LLGI.IndexBufferDX12.h"
 #include "LLGI.PipelineStateDX12.h"
 #include "LLGI.ShaderDX12.h"
+#include "LLGI.TextureDX12.h"
 #include "LLGI.VertexBufferDX12.h"
 
 namespace LLGI
@@ -101,11 +102,6 @@ VertexBuffer* GraphicsDX12::CreateVertexBuffer(int32_t size)
 		return nullptr;
 	}
 
-	// auto vertexView = D3D12_VERTEX_BUFFER_VIEW();
-	// vertexView.BufferLocation = obj->GetGPUVirtualAddress();
-	// vertexView.StrideInBytes = sizeof(Vertex3D);
-	// vertexView.SizeInBytes = size * sizeof(Vertex3D);
-
 	return obj;
 }
 
@@ -167,7 +163,17 @@ RenderPass* GraphicsDX12::CreateRenderPass(const Texture** textures, int32_t tex
 	throw "Not inplemented";
 }
 
-Texture* GraphicsDX12::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer) { throw "Not inplemented"; }
+Texture* GraphicsDX12::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer)
+{
+	auto obj = new TextureDX12(this);
+	if (!obj->Initialize(size, isRenderPass, isDepthBuffer))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
+
+	return obj;
+}
 
 Texture* GraphicsDX12::CreateTexture(uint64_t id) { throw "Not inplemented"; }
 
@@ -202,5 +208,64 @@ ID3D12Device* GraphicsDX12::GetDevice() { return device_; }
 int32_t GraphicsDX12::GetCurrentSwapBufferIndex() const { return currentSwapBufferIndex; }
 
 int32_t GraphicsDX12::GetSwapBufferCount() const { return swapBufferCount_; }
+
+ID3D12Resource* GraphicsDX12::CreateResource(D3D12_HEAP_TYPE heapType,
+											 DXGI_FORMAT format,
+											 D3D12_RESOURCE_DIMENSION resourceDimention,
+											 D3D12_RESOURCE_STATES resourceState,
+											 Vec2I size)
+{
+	D3D12_HEAP_PROPERTIES heapProps = {};
+	D3D12_RESOURCE_DESC resDesc = {};
+
+	ID3D12Resource* resource = nullptr;
+
+	heapProps.Type = heapType;
+	heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+
+	// TODO: set properly for multi-adaptor.
+	heapProps.CreationNodeMask = 1;
+	heapProps.VisibleNodeMask = 1;
+
+	resDesc.Dimension = resourceDimention;
+	resDesc.Width = size.X;
+	resDesc.Height = size.Y;
+	resDesc.DepthOrArraySize = 1;
+	resDesc.MipLevels = 1;
+	resDesc.Format = format;
+	resDesc.Layout = (resourceDimention == D3D12_RESOURCE_DIMENSION_BUFFER ? D3D12_TEXTURE_LAYOUT_ROW_MAJOR : D3D12_TEXTURE_LAYOUT_UNKNOWN);
+	resDesc.SampleDesc.Count = 1;
+
+	auto hr =
+		GetDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, resourceState, nullptr, IID_PPV_ARGS(&resource));
+	if (FAILED(hr))
+	{
+		SafeRelease(resource);
+		return nullptr;
+	}
+	return resource;
+}
+
+ID3D12DescriptorHeap* GraphicsDX12::CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType)
+{
+	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+	ID3D12DescriptorHeap* heap = nullptr;
+
+	heapDesc.NumDescriptors = 1;
+	heapDesc.Type = heapType;
+	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+	// TODO: set properly for multi-adaptor.
+	heapDesc.NodeMask = 1;
+
+	auto hr = GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heap));
+	if (FAILED(hr))
+	{
+		SafeRelease(heap);
+		return nullptr;
+	}
+	return heap;
+}
 
 } // namespace LLGI

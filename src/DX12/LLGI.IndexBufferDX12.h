@@ -13,11 +13,8 @@ namespace LLGI
 class IndexBufferDX12 : public IndexBuffer
 {
 private:
-	std::shared_ptr<GraphicsDX12> graphics_;
-
-	ID3D12Resource* indexBuffer = nullptr;
-
-	uint8_t* mapped = nullptr;
+	ID3D12Resource* indexBuffer_ = nullptr;
+	uint8_t* mapped_ = nullptr;
 	int32_t stride_ = 0;
 	int32_t count_ = 0;
 
@@ -32,7 +29,7 @@ public:
 	virtual void Unlock();
 	virtual int32_t GetStride() { return stride_; }
 	virtual int32_t GetCount() { return count_; }
-	ID3D12Resource* Get() { return indexBuffer; }
+	ID3D12Resource* Get() { return indexBuffer_; }
 };
 
 } // namespace LLGI

@@ -14,10 +14,11 @@ namespace LLGI
 class PipelineStateDX12 : public PipelineState
 {
 private:
-	std::array < Shader*, static_cast<int>(ShaderStageType::Max)> shaders;
+	std::shared_ptr<GraphicsDX12> graphics_;
+
+	std::array<Shader*, static_cast<int>(ShaderStageType::Max)> shaders_;
 
 	ID3D12PipelineState* pipelineState_ = nullptr;
-	std::shared_ptr<GraphicsDX12> graphics_;
 
 	ID3DBlob* signature_ = nullptr;
 	ID3D12RootSignature* rootSignature_ = nullptr;

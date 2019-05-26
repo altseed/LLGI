@@ -123,6 +123,7 @@
     <ClInclude Include="..\src\DX12\LLGI.PipelineStateDX12.h" />
     <ClInclude Include="..\src\DX12\LLGI.PlatformDX12.h" />
     <ClInclude Include="..\src\DX12\LLGI.ShaderDX12.h" />
+    <ClInclude Include="..\src\DX12\LLGI.TextureDX12.h" />
     <ClInclude Include="..\src\DX12\LLGI.VertexBufferDX12.h" />
     <ClInclude Include="..\src\LLGI.Base.h" />
     <ClInclude Include="..\src\LLGI.CommandList.h" />
@@ -146,6 +147,7 @@
     <ClCompile Include="..\src\DX12\LLGI.PipelineStateDX12.cpp" />
     <ClCompile Include="..\src\DX12\LLGI.PlatformDX12.cpp" />
     <ClCompile Include="..\src\DX12\LLGI.ShaderDX12.cpp" />
+    <ClCompile Include="..\src\DX12\LLGI.TextureDX12.cpp" />
     <ClCompile Include="..\src\DX12\LLGI.VertexBufferDX12.cpp" />
     <ClCompile Include="..\src\LLGI.CommandList.cpp" />
     <ClCompile Include="..\src\LLGI.Compiler.cpp" />
