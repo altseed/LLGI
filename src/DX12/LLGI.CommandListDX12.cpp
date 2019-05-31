@@ -12,30 +12,72 @@ namespace LLGI
 DescriptorHeapDX12::DescriptorHeapDX12(std::shared_ptr<GraphicsDX12> graphics, int size, int stage)
 	: graphics_(graphics), size_(size), stage_(stage)
 {
-}
-
-DescriptorHeapDX12::~DescriptorHeapDX12() { SafeRelease(graphics_); }
-
-std::vector<ID3D12DescriptorHeap*>& DescriptorHeapDX12::Get(PipelineStateDX12* pip)
-{
-	if (cache_.size() < static_cast<size_t>(offset_))
-	{
-		offset_++;
-		return cache_[offset_ - 1];
-	}
-
-	std::vector<ID3D12DescriptorHeap*> heaps;
 	auto heap = CreateHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, size_ * stage_);
 	assert(heap != nullptr);
-	heaps.push_back(heap);
+	descriptorHeaps_.push_back(heap);
 
 	heap = CreateHeap(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, size_ * stage_);
 	assert(heap != nullptr);
-	heaps.push_back(heap);
+	descriptorHeaps_.push_back(heap);
+}
 
-	cache_.push_back(heaps);
-	offset_++;
-	return cache_[offset_ - 1];
+DescriptorHeapDX12::~DescriptorHeapDX12()
+{
+	SafeRelease(graphics_);
+	descriptorHeaps_.clear();
+	for (auto c : cache_)
+	{
+		c.clear();
+	}
+	cache_.clear();
+}
+
+std::vector<ID3D12DescriptorHeap*>& DescriptorHeapDX12::GetHeaps() { return descriptorHeaps_; }
+
+std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> DescriptorHeapDX12::GetCPUHandles()
+{
+	//if (cache_.size() < static_cast<size_t>(offset_))
+	//{
+	//	offset_++;
+	//	return cache_[offset_ - 1];
+	//}
+
+	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> handles;
+	auto handle = descriptorHeaps_[0]->GetCPUDescriptorHandleForHeapStart();
+	auto size = graphics_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	handle.ptr += size * offset_;
+	handles.push_back(handle);
+
+	handle = descriptorHeaps_[1]->GetCPUDescriptorHandleForHeapStart();
+	size = graphics_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+	handle.ptr += size * offset_;
+	handles.push_back(handle);
+
+	return handles;
+	//cache_.push_back(heaps);
+	//offset_++;
+	//return cache_[offset_ - 1];
+
+	//TODO: cache
+}
+
+std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> DescriptorHeapDX12::GetGPUHandles()
+{
+	std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> handles;
+	auto handle = descriptorHeaps_[0]->GetGPUDescriptorHandleForHeapStart();
+	auto size = graphics_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	handle.ptr += size * offset_;
+	handles.push_back(handle);
+
+	handle = descriptorHeaps_[1]->GetGPUDescriptorHandleForHeapStart();
+	size = graphics_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+	handle.ptr += size * offset_;
+	handles.push_back(handle);
+
+	// TODO: cache
+	// TODO: synchronize w/ offset of CPU handle
+
+	return handles;
 }
 
 ID3D12DescriptorHeap* DescriptorHeapDX12::CreateHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, int numDescriptors)
@@ -228,15 +270,20 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 		// graphics_->GetDevice()->CreateConstantBufferView(&desc, descriptorHeap->GetCPUDescriptorHandleForHeapStart());
 	}
 
-	auto& heaps = descriptorHeaps_[graphics_->GetCurrentSwapBufferIndex()];
+	auto& descriptorHeaps = descriptorHeaps_[graphics_->GetCurrentSwapBufferIndex()];
+
 	for (int stage_ind = 0; stage_ind < (int32_t)ShaderStageType::Max; stage_ind++)
 	{
 		for (int unit_ind = 0; unit_ind < currentTextures[stage_ind].size(); unit_ind++)
 		{
 			if (currentTextures[stage_ind][unit_ind].texture == nullptr)
 				continue;
-			auto heap = heaps->Get(pip);
-			commandList->SetDescriptorHeaps(2, heap.data());
+
+			auto heaps = descriptorHeaps->GetHeaps();
+			auto cpuHandles = descriptorHeaps->GetCPUHandles();
+			auto gpuHandles = descriptorHeaps->GetGPUHandles();
+
+			commandList->SetDescriptorHeaps(2, heaps.data());
 
 			auto texture = static_cast<TextureDX12*>(currentTextures[stage_ind][unit_ind].texture);
 			auto wrapMode = currentTextures[stage_ind][unit_ind].wrapMode;
@@ -251,9 +298,8 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 				srvDesc.Texture2D.MipLevels = 1;
 				srvDesc.Texture2D.MostDetailedMip = 0;
 
-				auto handle = heap[0]->GetCPUDescriptorHandleForHeapStart();
-				graphics_->GetDevice()->CreateShaderResourceView(texture->Get(), &srvDesc, handle);
-				commandList->SetGraphicsRootDescriptorTable(1, heap[0]->GetGPUDescriptorHandleForHeapStart());
+				graphics_->GetDevice()->CreateShaderResourceView(texture->Get(), &srvDesc, cpuHandles[0]);
+				commandList->SetGraphicsRootDescriptorTable(1, gpuHandles[0]);
 			}
 
 			// Sampler
@@ -281,9 +327,8 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 				samplerDesc.MinLOD = 0.0f;
 				samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
 
-				auto handle = heap[1]->GetCPUDescriptorHandleForHeapStart();
-				graphics_->GetDevice()->CreateSampler(&samplerDesc, handle);
-				commandList->SetGraphicsRootDescriptorTable(2, heap[1]->GetGPUDescriptorHandleForHeapStart());
+				graphics_->GetDevice()->CreateSampler(&samplerDesc, cpuHandles[1]);
+				commandList->SetGraphicsRootDescriptorTable(2, gpuHandles[1]);
 			}
 		}
 	}
