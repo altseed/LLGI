@@ -7,11 +7,9 @@ TextureDX12::TextureDX12(GraphicsDX12* graphics) : graphics_(graphics) { SafeAdd
 
 TextureDX12::~TextureDX12()
 {
-	SafeRelease(graphics_);
 	SafeRelease(texture_);
 	SafeRelease(buffer_);
-	SafeRelease(SrvDescriptorHeap_);
-	SafeRelease(samplerDescriptorHeap_);
+	SafeRelease(graphics_);
 }
 
 bool TextureDX12::Initialize(const Vec2I& size, bool isRenderPass, bool isDepthBuffer)
@@ -35,24 +33,6 @@ bool TextureDX12::Initialize(const Vec2I& size, bool isRenderPass, bool isDepthB
 	return true;
 }
 
-void TextureDX12::CreateView()
-{
-	if (SrvDescriptorHeap_ != nullptr)
-		SafeRelease(SrvDescriptorHeap_);
-	SrvDescriptorHeap_ = graphics_->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	assert(SrvDescriptorHeap_ != nullptr);
-
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Texture2D.MipLevels = 1;
-	srvDesc.Texture2D.MostDetailedMip = 0;
-
-	auto handle = SrvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
-	graphics_->GetDevice()->CreateShaderResourceView(texture_, &srvDesc, handle);
-}
-
 void TextureDX12::CreateBuffer()
 {
 	UINT64 size = 0;
@@ -61,41 +41,6 @@ void TextureDX12::CreateBuffer()
 	buffer_ = graphics_->CreateResource(
 		D3D12_HEAP_TYPE_UPLOAD, DXGI_FORMAT_UNKNOWN, D3D12_RESOURCE_DIMENSION_BUFFER, D3D12_RESOURCE_STATE_GENERIC_READ, Vec2I(size, 1));
 	assert(buffer_ != nullptr);
-}
-
-void TextureDX12::CreateSampler(TextureWrapMode wrapMode)
-{
-	if (samplerDescriptorHeap_ != nullptr)
-		SafeRelease(samplerDescriptorHeap_);
-
-	samplerDescriptorHeap_ = graphics_->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-	assert(samplerDescriptorHeap_!=nullptr);
-
-	D3D12_SAMPLER_DESC samplerDesc = {};
-
-	// TODO
-	samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-
-	if (wrapMode == TextureWrapMode::Repeat)
-	{
-		samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-		samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-		samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	}
-	else
-	{
-		samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-		samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-		samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-	}
-	samplerDesc.MipLODBias = 0;
-	samplerDesc.MaxAnisotropy = 0;
-	samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-	samplerDesc.MinLOD = 0.0f;
-	samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
-
-	auto handle = samplerDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
-	graphics_->GetDevice()->CreateSampler(&samplerDesc, handle);
 }
 
 void* TextureDX12::Lock()

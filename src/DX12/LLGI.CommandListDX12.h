@@ -4,20 +4,39 @@
 #include "../LLGI.CommandList.h"
 #include "LLGI.BaseDX12.h"
 #include "LLGI.GraphicsDX12.h"
+#include "LLGI.PipelineStateDX12.h"
 
 namespace LLGI
 {
+
+class DescriptorHeapDX12
+{
+private:
+	std::shared_ptr<GraphicsDX12> graphics_;
+	int size_ = 0;
+	int stage_ = 0;
+	int offset_ = 0;
+	std::vector<std::vector<ID3D12DescriptorHeap*>> cache_;
+
+	ID3D12DescriptorHeap* CreateHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, int numDescriptors);
+
+public:
+	DescriptorHeapDX12(std::shared_ptr<GraphicsDX12> graphics, int size, int stage);
+	virtual ~DescriptorHeapDX12();
+	std::vector<ID3D12DescriptorHeap*>& Get(PipelineStateDX12* pip);
+	void Reset() { offset_ = 0; }
+};
 
 class CommandListDX12 : public CommandList
 {
 private:
 	std::shared_ptr<GraphicsDX12> graphics_;
 	std::shared_ptr<RenderPassDX12> renderPass_;
-	
+
 	std::vector<std::shared_ptr<ID3D12GraphicsCommandList>> commandLists;
 	std::vector<std::shared_ptr<ID3D12CommandAllocator>> commandAllocators;
 
-	ID3D12DescriptorHeap* descriptorHeap = nullptr;
+	std::vector<std::shared_ptr<DescriptorHeapDX12>> descriptorHeaps_;
 
 public:
 	CommandListDX12();

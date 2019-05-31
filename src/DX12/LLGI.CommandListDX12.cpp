@@ -9,9 +9,59 @@
 namespace LLGI
 {
 
+DescriptorHeapDX12::DescriptorHeapDX12(std::shared_ptr<GraphicsDX12> graphics, int size, int stage)
+	: graphics_(graphics), size_(size), stage_(stage)
+{
+}
+
+DescriptorHeapDX12::~DescriptorHeapDX12() { SafeRelease(graphics_); }
+
+std::vector<ID3D12DescriptorHeap*>& DescriptorHeapDX12::Get(PipelineStateDX12* pip)
+{
+	if (cache_.size() < static_cast<size_t>(offset_))
+	{
+		offset_++;
+		return cache_[offset_ - 1];
+	}
+
+	std::vector<ID3D12DescriptorHeap*> heaps;
+	auto heap = CreateHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, size_ * stage_);
+	assert(heap != nullptr);
+	heaps.push_back(heap);
+
+	heap = CreateHeap(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, size_ * stage_);
+	assert(heap != nullptr);
+	heaps.push_back(heap);
+
+	cache_.push_back(heaps);
+	offset_++;
+	return cache_[offset_ - 1];
+}
+
+ID3D12DescriptorHeap* DescriptorHeapDX12::CreateHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, int numDescriptors)
+{
+	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+	ID3D12DescriptorHeap* heap = nullptr;
+
+	heapDesc.NumDescriptors = numDescriptors;
+	heapDesc.Type = heapType;
+	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+	// TODO: set properly for multi-adaptor.
+	heapDesc.NodeMask = 1;
+
+	auto hr = graphics_->GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heap));
+	if (FAILED(hr))
+	{
+		SafeRelease(heap);
+		return nullptr;
+	}
+	return heap;
+}
+
 CommandListDX12::CommandListDX12() {}
 
-CommandListDX12::~CommandListDX12() { SafeRelease(descriptorHeap); }
+CommandListDX12::~CommandListDX12() { descriptorHeaps_.clear(); }
 
 bool CommandListDX12::Initialize(GraphicsDX12* graphics)
 {
@@ -42,14 +92,10 @@ bool CommandListDX12::Initialize(GraphicsDX12* graphics)
 		commandLists.push_back(CreateSharedPtr(commandList));
 	}
 
+	for (size_t i = 0; i < static_cast<size_t>(graphics_->GetSwapBufferCount()); i++)
 	{
-		D3D12_DESCRIPTOR_HEAP_DESC descriptorDesc = {};
-		descriptorDesc.NumDescriptors = 2;
-		descriptorDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		descriptorDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-
-		hr = graphics_->GetDevice()->CreateDescriptorHeap(&descriptorDesc, IID_PPV_ARGS(&descriptorHeap));
-		assert(SUCCEEDED(hr));
+		auto dp = std::make_shared<DescriptorHeapDX12>(graphics_, 100, 2);
+		descriptorHeaps_.push_back(dp);
 	}
 
 	return true;
@@ -58,6 +104,8 @@ FAILED_EXIT:;
 	graphics_.reset();
 	commandAllocators.clear();
 	commandLists.clear();
+	descriptorHeaps_.clear();
+
 	return false;
 }
 
@@ -65,6 +113,10 @@ void CommandListDX12::Begin()
 {
 	auto commandList = commandLists[graphics_->GetCurrentSwapBufferIndex()];
 	commandList->Reset(commandAllocators[graphics_->GetCurrentSwapBufferIndex()].get(), nullptr);
+
+	auto& dp = descriptorHeaps_[graphics_->GetCurrentSwapBufferIndex()];
+	dp->Reset();
+
 	CommandList::Begin();
 }
 
@@ -170,22 +222,72 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 	// descriptor
 	{
 		// None
-		D3D12_CONSTANT_BUFFER_VIEW_DESC desc = {};
+		// D3D12_CONSTANT_BUFFER_VIEW_DESC desc = {};
 		// desc.BufferLocation = nullptr;
 		// desc.SizeInBytes = 256;
-		graphics_->GetDevice()->CreateConstantBufferView(&desc, descriptorHeap->GetCPUDescriptorHandleForHeapStart());
+		// graphics_->GetDevice()->CreateConstantBufferView(&desc, descriptorHeap->GetCPUDescriptorHandleForHeapStart());
 	}
 
-	auto bindingTexture = currentTextures[static_cast<int>(ShaderStageType::Pixel)][0];
-	auto texture = static_cast<TextureDX12*>(bindingTexture.texture);
-	texture->CreateView();
-	texture->CreateSampler(bindingTexture.wrapMode);
+	auto& heaps = descriptorHeaps_[graphics_->GetCurrentSwapBufferIndex()];
+	for (int stage_ind = 0; stage_ind < (int32_t)ShaderStageType::Max; stage_ind++)
+	{
+		for (int unit_ind = 0; unit_ind < currentTextures[stage_ind].size(); unit_ind++)
+		{
+			if (currentTextures[stage_ind][unit_ind].texture == nullptr)
+				continue;
+			auto heap = heaps->Get(pip);
+			commandList->SetDescriptorHeaps(2, heap.data());
 
-	ID3D12DescriptorHeap* heaps[] = {texture->GetSrv(), texture->GetSampler()};
-	commandList->SetDescriptorHeaps(2, heaps);
+			auto texture = static_cast<TextureDX12*>(currentTextures[stage_ind][unit_ind].texture);
+			auto wrapMode = currentTextures[stage_ind][unit_ind].wrapMode;
+			auto minMagFilter = currentTextures[stage_ind][unit_ind].minMagFilter;
 
-	commandList->SetGraphicsRootDescriptorTable(1, texture->GetSrv()->GetGPUDescriptorHandleForHeapStart());
-	commandList->SetGraphicsRootDescriptorTable(2, texture->GetSampler()->GetGPUDescriptorHandleForHeapStart());
+			// SRV
+			{
+				D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+				srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+				srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+				srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+				srvDesc.Texture2D.MipLevels = 1;
+				srvDesc.Texture2D.MostDetailedMip = 0;
+
+				auto handle = heap[0]->GetCPUDescriptorHandleForHeapStart();
+				graphics_->GetDevice()->CreateShaderResourceView(texture->Get(), &srvDesc, handle);
+				commandList->SetGraphicsRootDescriptorTable(1, heap[0]->GetGPUDescriptorHandleForHeapStart());
+			}
+
+			// Sampler
+			{
+				D3D12_SAMPLER_DESC samplerDesc = {};
+
+				// TODO
+				samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+
+				if (wrapMode == TextureWrapMode::Repeat)
+				{
+					samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+					samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+					samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+				}
+				else
+				{
+					samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+					samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+					samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+				}
+				samplerDesc.MipLODBias = 0;
+				samplerDesc.MaxAnisotropy = 0;
+				samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+				samplerDesc.MinLOD = 0.0f;
+				samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+
+				auto handle = heap[1]->GetCPUDescriptorHandleForHeapStart();
+				graphics_->GetDevice()->CreateSampler(&samplerDesc, handle);
+				commandList->SetGraphicsRootDescriptorTable(2, heap[1]->GetGPUDescriptorHandleForHeapStart());
+			}
+		}
+	}
+
 	// setup a topology (triangle)
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
