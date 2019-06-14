@@ -14,6 +14,7 @@ class ConstantBufferDX12 : public ConstantBuffer
 {
 private:
 	ID3D12Resource* constantBuffer_ = nullptr;
+	int memSize_ = 0;
 	uint8_t* mapped_ = nullptr;
 
 public:
@@ -22,10 +23,12 @@ public:
 	ConstantBufferDX12();
 	virtual ~ConstantBufferDX12();
 
-	virtual void* Lock();
-	virtual void* Lock(int32_t offset, int32_t size);
-	virtual void Unlock();
-	virtual int32_t GetSize();
+	void* Lock() override;
+	void* Lock(int32_t offset, int32_t size) override;
+	void Unlock() override;
+	int32_t GetSize() override;
+
+	ID3D12Resource* Get() { return constantBuffer_; }
 };
 
 } // namespace LLGI
