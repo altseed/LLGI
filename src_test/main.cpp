@@ -46,8 +46,8 @@ int main()
 
 	// Render
 	// test_simple_rectangle(device);
-	test_simple_constant_rectangle(LLGI::ConstantBufferType::LongTime, device);
-	// test_simple_texture_rectangle(device);
+	// test_simple_constant_rectangle(LLGI::ConstantBufferType::LongTime, device);
+	test_simple_texture_rectangle(device);
 
 	// About renderPass
 	// test_renderPass(device);
