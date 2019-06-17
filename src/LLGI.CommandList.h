@@ -5,6 +5,7 @@
 
 namespace LLGI
 {
+static constexpr int NumTexture = 8;
 
 class VertexBuffer;
 class IndexBuffer;
@@ -38,7 +39,7 @@ private:
 	std::array<ConstantBuffer*, static_cast<int>(ShaderStageType::Max)> constantBuffers;
 
 protected:
-	std::array<std::array<BindingTexture, 8>, static_cast<int>(ShaderStageType::Max)> currentTextures;
+	std::array<std::array<BindingTexture, NumTexture>, static_cast<int>(ShaderStageType::Max)> currentTextures;
 
 protected:
 	void GetCurrentVertexBuffer(BindingVertexBuffer& buffer, bool& isDirtied);
@@ -61,7 +62,7 @@ public:
 	virtual void SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageType shaderStage);
 	virtual void
 	SetTexture(Texture* texture, TextureWrapMode wrapMode, TextureMinMagFilter minmagFilter, int32_t unit, ShaderStageType shaderStage);
-    virtual void BeginRenderPass(RenderPass* renderPass);
+	virtual void BeginRenderPass(RenderPass* renderPass);
 	virtual void EndRenderPass() {}
 };
 

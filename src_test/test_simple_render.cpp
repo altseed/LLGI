@@ -719,8 +719,8 @@ VS_OUTPUT main(VS_INPUT input){
 )";
 
 	auto code_dx_ps = R"(
-Texture2D txt : register(t0);
-SamplerState smp : register(s0);
+Texture2D txt : register(t8);
+SamplerState smp : register(s8);
 
 struct PS_INPUT
 {

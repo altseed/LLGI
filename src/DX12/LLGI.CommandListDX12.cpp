@@ -28,15 +28,9 @@ DescriptorHeapDX12::~DescriptorHeapDX12()
 	SafeRelease(graphics_);
 	for (int i = 0; i <= static_cast<int>(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER); i++)
 		SafeRelease(descriptorHeaps_[i]);
-
-	// for (auto c : cache_)
-	//{
-	//	c.clear();
-	//}
-	// cache_.clear();
 }
 
-void DescriptorHeapDX12::Increment(D3D12_DESCRIPTOR_HEAP_TYPE heapType, int count)
+void DescriptorHeapDX12::IncrementCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE heapType, int count)
 {
 	if (heapType != D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV && heapType != D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER)
 		throw "not implemented";
@@ -44,8 +38,18 @@ void DescriptorHeapDX12::Increment(D3D12_DESCRIPTOR_HEAP_TYPE heapType, int coun
 	auto size = graphics_->GetDevice()->GetDescriptorHandleIncrementSize(heapType);
 	auto i = static_cast<int>(heapType);
 	CpuHandles_[i].ptr += size * count;
+}
+
+void DescriptorHeapDX12::IncrementGpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE heapType, int count)
+{
+	if (heapType != D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV && heapType != D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER)
+		throw "not implemented";
+
+	auto size = graphics_->GetDevice()->GetDescriptorHandleIncrementSize(heapType);
+	auto i = static_cast<int>(heapType);
 	GpuHandles_[i].ptr += size * count;
 }
+
 ID3D12DescriptorHeap* DescriptorHeapDX12::GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType)
 {
 	if (heapType != D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV && heapType != D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER)
@@ -53,6 +57,7 @@ ID3D12DescriptorHeap* DescriptorHeapDX12::GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE hea
 
 	return descriptorHeaps_[static_cast<int>(heapType)];
 }
+
 D3D12_CPU_DESCRIPTOR_HANDLE DescriptorHeapDX12::GetCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE heapType)
 {
 	if (heapType != D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV && heapType != D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER)
@@ -261,17 +266,26 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 
 	auto& descriptorHeaps = descriptorHeaps_[graphics_->GetCurrentSwapBufferIndex()];
 
+	// set using descriptor heaps
+	{
+		ID3D12DescriptorHeap* heaps[] = {
+			descriptorHeaps->GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV), // descriptor heap for CBV, SRV and UAV
+			descriptorHeaps->GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER),	 // descriptor heap for Sampler
+		};
+		commandList->SetDescriptorHeaps(2, heaps);
+	}
+
+	// set descriptor tables
+	{
+		commandList->SetGraphicsRootDescriptorTable(0, descriptorHeaps->GetGpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+		commandList->SetGraphicsRootDescriptorTable(1, descriptorHeaps->GetGpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER));
+	}
+
+	int increment = NumTexture * static_cast<int>(ShaderStageType::Max);
+
 	// constant buffer
 	{
-		auto heap = descriptorHeaps->GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		auto cpuHandle = descriptorHeaps->GetCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		auto gpuHandle = descriptorHeaps->GetGpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		descriptorHeaps->Increment(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 2);
-
-		auto incrementSize = graphics_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		commandList->SetDescriptorHeaps(1, &heap);
-
-		for (int stage_ind = 0; stage_ind < (int)ShaderStageType::Max; stage_ind++)
+		for (int stage_ind = 0; stage_ind < static_cast<int>(ShaderStageType::Max); stage_ind++)
 		{
 			GetCurrentConstantBuffer(static_cast<ShaderStageType>(stage_ind), cb);
 			if (cb != nullptr)
@@ -280,87 +294,72 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 				D3D12_CONSTANT_BUFFER_VIEW_DESC desc = {};
 				desc.BufferLocation = _cb->Get()->GetGPUVirtualAddress();
 				desc.SizeInBytes = _cb->GetSize();
-
+				auto cpuHandle = descriptorHeaps->GetCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 				graphics_->GetDevice()->CreateConstantBufferView(&desc, cpuHandle);
 			}
-			cpuHandle.ptr += incrementSize;
+			descriptorHeaps->IncrementCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1);
 		}
-		commandList->SetGraphicsRootDescriptorTable(0, gpuHandle);
+		descriptorHeaps->IncrementGpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, static_cast<int>(ShaderStageType::Max));
 	}
 
 	{
-		auto heapSrv = descriptorHeaps->GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		auto cpuHandleSrv = descriptorHeaps->GetCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		auto gpuHandleSrv = descriptorHeaps->GetGpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		descriptorHeaps->Increment(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-								   1); // TODO: (int32_t)ShaderStageType::Max * currentTextures[stage_ind].size() ?
-
-		// auto incrementSizeSrv = graphics_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		commandList->SetDescriptorHeaps(1, &heapSrv);
-
-		auto heapSmp = descriptorHeaps->GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-		auto cpuHandleSmp = descriptorHeaps->GetCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-		auto gpuHandleSmp = descriptorHeaps->GetGpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-		descriptorHeaps->Increment(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER,
-								   1); // TODO: (int32_t)ShaderStageType::Max * currentTextures[stage_ind].size() ?
-
-		// auto incrementSizeSmp = graphics_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-		commandList->SetDescriptorHeaps(1, &heapSmp);
-
-		for (int stage_ind = 0; stage_ind < (int32_t)ShaderStageType::Max; stage_ind++)
+		for (int stage_ind = 0; stage_ind < static_cast<int>(ShaderStageType::Max); stage_ind++)
 		{
 			for (int unit_ind = 0; unit_ind < currentTextures[stage_ind].size(); unit_ind++)
 			{
-				if (currentTextures[stage_ind][unit_ind].texture == nullptr)
-					continue;
-
-				auto texture = static_cast<TextureDX12*>(currentTextures[stage_ind][unit_ind].texture);
-				auto wrapMode = currentTextures[stage_ind][unit_ind].wrapMode;
-				auto minMagFilter = currentTextures[stage_ind][unit_ind].minMagFilter;
-
-				// SRV
+				if (currentTextures[stage_ind][unit_ind].texture != nullptr)
 				{
-					D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-					srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-					srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-					srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-					srvDesc.Texture2D.MipLevels = 1;
-					srvDesc.Texture2D.MostDetailedMip = 0;
+					auto texture = static_cast<TextureDX12*>(currentTextures[stage_ind][unit_ind].texture);
+					auto wrapMode = currentTextures[stage_ind][unit_ind].wrapMode;
+					auto minMagFilter = currentTextures[stage_ind][unit_ind].minMagFilter;
 
-					graphics_->GetDevice()->CreateShaderResourceView(texture->Get(), &srvDesc, cpuHandleSrv);
-					commandList->SetGraphicsRootDescriptorTable(1, gpuHandleSrv);
-				}
-
-				// Sampler
-				{
-					D3D12_SAMPLER_DESC samplerDesc = {};
-
-					// TODO
-					samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-
-					if (wrapMode == TextureWrapMode::Repeat)
+					// SRV
 					{
-						samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-						samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-						samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-					}
-					else
-					{
-						samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-						samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-						samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-					}
-					samplerDesc.MipLODBias = 0;
-					samplerDesc.MaxAnisotropy = 0;
-					samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-					samplerDesc.MinLOD = 0.0f;
-					samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+						D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+						srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+						srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+						srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+						srvDesc.Texture2D.MipLevels = 1;
+						srvDesc.Texture2D.MostDetailedMip = 0;
 
-					graphics_->GetDevice()->CreateSampler(&samplerDesc, cpuHandleSmp);
-					commandList->SetGraphicsRootDescriptorTable(2, gpuHandleSmp);
+						auto cpuHandle = descriptorHeaps->GetCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+						graphics_->GetDevice()->CreateShaderResourceView(texture->Get(), &srvDesc, cpuHandle);
+					}
+
+					// Sampler
+					{
+						D3D12_SAMPLER_DESC samplerDesc = {};
+
+						// TODO
+						samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+
+						if (wrapMode == TextureWrapMode::Repeat)
+						{
+							samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+							samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+							samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+						}
+						else
+						{
+							samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+							samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+							samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+						}
+						samplerDesc.MipLODBias = 0;
+						samplerDesc.MaxAnisotropy = 0;
+						samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+						samplerDesc.MinLOD = 0.0f;
+						samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+
+						auto cpuHandle = descriptorHeaps->GetCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+						graphics_->GetDevice()->CreateSampler(&samplerDesc, cpuHandle);
+					}
 				}
+				descriptorHeaps->IncrementCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1);
+				descriptorHeaps->IncrementCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 1);
 			}
 		}
+		descriptorHeaps->IncrementGpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, increment);
 	}
 
 	// setup a topology (triangle)
