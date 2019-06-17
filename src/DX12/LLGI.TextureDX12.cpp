@@ -45,7 +45,6 @@ void TextureDX12::CreateBuffer()
 
 void* TextureDX12::Lock()
 {
-	// TODO: when it's NOT editable, call CreateBuffer.
 	void* ptr;
 	buffer_->Map(0, nullptr, &ptr);
 	return ptr;

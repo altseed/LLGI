@@ -11,8 +11,12 @@ ConstantBufferDX12::~ConstantBufferDX12() { SafeRelease(constantBuffer_); }
 
 bool ConstantBufferDX12::Initialize(GraphicsDX12* graphics, int32_t size)
 {
-	constantBuffer_ = graphics->CreateResource(
-		D3D12_HEAP_TYPE_UPLOAD, DXGI_FORMAT_UNKNOWN, D3D12_RESOURCE_DIMENSION_BUFFER, D3D12_RESOURCE_STATE_GENERIC_READ, Vec2I(size, 1));
+	memSize_ = (size + 255) & ~255; // buffer size should be multiple of 256
+	constantBuffer_ = graphics->CreateResource(D3D12_HEAP_TYPE_UPLOAD,
+											   DXGI_FORMAT_UNKNOWN,
+											   D3D12_RESOURCE_DIMENSION_BUFFER,
+											   D3D12_RESOURCE_STATE_GENERIC_READ,
+											   Vec2I(memSize_, 1));
 	return (constantBuffer_ != nullptr);
 }
 
@@ -34,10 +38,6 @@ void ConstantBufferDX12::Unlock()
 	mapped_ = nullptr;
 }
 
-int32_t ConstantBufferDX12::GetSize()
-{
-	//?
-	return sizeof(float) * 9;
-}
+int32_t ConstantBufferDX12::GetSize() { return memSize_; }
 
 } // namespace LLGI
