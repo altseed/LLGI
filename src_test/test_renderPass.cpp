@@ -73,6 +73,49 @@ void main()
 
 )";
 
+	auto code_dx_vs = R"(
+struct VS_INPUT{
+    float3 Position : POSITION0;
+	float2 UV : UV0;
+    float4 Color : COLOR0;
+};
+struct VS_OUTPUT{
+    float4 Position : SV_POSITION;
+	float2 UV : UV0;
+    float4 Color : COLOR0;
+};
+    
+VS_OUTPUT main(VS_INPUT input){
+    VS_OUTPUT output;
+        
+    output.Position = float4(input.Position, 1.0f);
+	output.UV = input.UV;
+    output.Color = input.Color;
+        
+    return output;
+}
+)";
+
+	auto code_dx_ps = R"(
+Texture2D txt : register(t8);
+SamplerState smp : register(s8);
+
+struct PS_INPUT
+{
+    float4  Position : SV_POSITION;
+	float2  UV : UV0;
+    float4  Color    : COLOR0;
+};
+
+float4 main(PS_INPUT input) : SV_TARGET 
+{ 
+	float4 c;
+	c = txt.Sample(smp, input.UV);
+	c.a = 255;
+	return c;
+}
+)";
+
 	auto compiler = LLGI::CreateCompiler(deviceType);
 
 	int count = 0;
@@ -119,6 +162,13 @@ void main()
             compiler->Compile(result_vs, (const char*)code_vs.data(), LLGI::ShaderStageType::Vertex);
             compiler->Compile(result_ps, (const char*)code_ps.data(), LLGI::ShaderStageType::Pixel);
         }
+		else if (platform->GetDeviceType() == LLGI::DeviceType::DirectX12)
+		{
+			compiler->Compile(result_vs, code_dx_vs, LLGI::ShaderStageType::Vertex);
+			assert(result_vs.Message == "");
+			compiler->Compile(result_ps, code_dx_ps, LLGI::ShaderStageType::Pixel);
+			assert(result_ps.Message == "");
+		}
         else
         {
             compiler->Compile(result_vs, code_gl_vs, LLGI::ShaderStageType::Vertex);
@@ -216,6 +266,9 @@ void main()
             pip->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
             pip->VertexLayouts[1] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
             pip->VertexLayouts[2] = LLGI::VertexLayoutFormat::R8G8B8A8_UNORM;
+			pip->VertexLayoutNames[0] = "POSITION";
+			pip->VertexLayoutNames[1] = "UV";
+			pip->VertexLayoutNames[2] = "COLOR";
             pip->VertexLayoutCount = 3;
             
             pip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan
@@ -243,6 +296,9 @@ void main()
             pip->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
             pip->VertexLayouts[1] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
             pip->VertexLayouts[2] = LLGI::VertexLayoutFormat::R8G8B8A8_UNORM;
+			pip->VertexLayoutNames[0] = "POSITION";
+			pip->VertexLayoutNames[1] = "UV";
+			pip->VertexLayoutNames[2] = "COLOR";
             pip->VertexLayoutCount = 3;
             
             pip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan

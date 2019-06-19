@@ -1,20 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="..\src\LLGI.Base.h" />
     <ClInclude Include="..\src\Win\LLGI.WindowWin.h">
       <Filter>Win</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\LLGI.CommandList.h" />
-    <ClInclude Include="..\src\LLGI.Compiler.h" />
-    <ClInclude Include="..\src\LLGI.ConstantBuffer.h" />
-    <ClInclude Include="..\src\LLGI.Graphics.h" />
-    <ClInclude Include="..\src\LLGI.IndexBuffer.h" />
-    <ClInclude Include="..\src\LLGI.PipelineState.h" />
-    <ClInclude Include="..\src\LLGI.Platform.h" />
-    <ClInclude Include="..\src\LLGI.Shader.h" />
-    <ClInclude Include="..\src\LLGI.Texture.h" />
-    <ClInclude Include="..\src\LLGI.VertexBuffer.h" />
     <ClInclude Include="..\src\DX12\LLGI.BaseDX12.h">
       <Filter>DX12</Filter>
     </ClInclude>
@@ -48,6 +37,39 @@
     <ClInclude Include="..\src\DX12\LLGI.TextureDX12.h">
       <Filter>DX12</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\LLGI.Base.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\LLGI.CommandList.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\LLGI.Compiler.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\LLGI.ConstantBuffer.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\LLGI.Graphics.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\LLGI.IndexBuffer.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\LLGI.PipelineState.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\LLGI.Platform.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\LLGI.Shader.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\LLGI.Texture.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\LLGI.VertexBuffer.h">
+      <Filter>Base</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Win">
@@ -59,21 +81,14 @@
     <Filter Include="DX12">
       <UniqueIdentifier>{572c3c29-226f-4618-8b81-5c2bbcd7f652}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Base">
+      <UniqueIdentifier>{b743d897-99ab-4db5-91b9-4c4244a3115d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\Win\LLGI.WindowWin.cpp">
       <Filter>Win</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\LLGI.CommandList.cpp" />
-    <ClCompile Include="..\src\LLGI.Compiler.cpp" />
-    <ClCompile Include="..\src\LLGI.ConstantBuffer.cpp" />
-    <ClCompile Include="..\src\LLGI.Graphics.cpp" />
-    <ClCompile Include="..\src\LLGI.IndexBuffer.cpp" />
-    <ClCompile Include="..\src\LLGI.PipelineState.cpp" />
-    <ClCompile Include="..\src\LLGI.Platform.cpp" />
-    <ClCompile Include="..\src\LLGI.Shader.cpp" />
-    <ClCompile Include="..\src\LLGI.Texture.cpp" />
-    <ClCompile Include="..\src\LLGI.VertexBuffer.cpp" />
     <ClCompile Include="..\src\PC\LLGI.CreatePC.cpp">
       <Filter>PC</Filter>
     </ClCompile>
@@ -106,6 +121,36 @@
     </ClCompile>
     <ClCompile Include="..\src\DX12\LLGI.TextureDX12.cpp">
       <Filter>DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\LLGI.CommandList.cpp">
+      <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\LLGI.Compiler.cpp">
+      <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\LLGI.ConstantBuffer.cpp">
+      <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\LLGI.Graphics.cpp">
+      <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\LLGI.IndexBuffer.cpp">
+      <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\LLGI.PipelineState.cpp">
+      <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\LLGI.Platform.cpp">
+      <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\LLGI.Shader.cpp">
+      <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\LLGI.Texture.cpp">
+      <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\LLGI.VertexBuffer.cpp">
+      <Filter>Base</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
