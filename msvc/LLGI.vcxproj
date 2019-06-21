@@ -118,10 +118,13 @@
     <ClInclude Include="..\src\DX12\LLGI.CommandListDX12.h" />
     <ClInclude Include="..\src\DX12\LLGI.CompilerDX12.h" />
     <ClInclude Include="..\src\DX12\LLGI.ConstantBufferDX12.h" />
+    <ClInclude Include="..\src\DX12\LLGI.DescriptorHeapDX12.h" />
     <ClInclude Include="..\src\DX12\LLGI.GraphicsDX12.h" />
     <ClInclude Include="..\src\DX12\LLGI.IndexBufferDX12.h" />
     <ClInclude Include="..\src\DX12\LLGI.PipelineStateDX12.h" />
     <ClInclude Include="..\src\DX12\LLGI.PlatformDX12.h" />
+    <ClInclude Include="..\src\DX12\LLGI.RenderPassDX12.h" />
+    <ClInclude Include="..\src\DX12\LLGI.RenderPassPipelineStateDX12.h" />
     <ClInclude Include="..\src\DX12\LLGI.ShaderDX12.h" />
     <ClInclude Include="..\src\DX12\LLGI.TextureDX12.h" />
     <ClInclude Include="..\src\DX12\LLGI.VertexBufferDX12.h" />
@@ -142,10 +145,13 @@
     <ClCompile Include="..\src\DX12\LLGI.CommandListDX12.cpp" />
     <ClCompile Include="..\src\DX12\LLGI.CompilerDX12.cpp" />
     <ClCompile Include="..\src\DX12\LLGI.ConstantBufferDX12.cpp" />
+    <ClCompile Include="..\src\DX12\LLGI.DescriptorHeapDX12.cpp" />
     <ClCompile Include="..\src\DX12\LLGI.GraphicsDX12.cpp" />
     <ClCompile Include="..\src\DX12\LLGI.IndexBufferDX12.cpp" />
     <ClCompile Include="..\src\DX12\LLGI.PipelineStateDX12.cpp" />
     <ClCompile Include="..\src\DX12\LLGI.PlatformDX12.cpp" />
+    <ClCompile Include="..\src\DX12\LLGI.RenderPassDX12.cpp" />
+    <ClCompile Include="..\src\DX12\LLGI.RenderPassPipelineStateDX12.cpp" />
     <ClCompile Include="..\src\DX12\LLGI.ShaderDX12.cpp" />
     <ClCompile Include="..\src\DX12\LLGI.TextureDX12.cpp" />
     <ClCompile Include="..\src\DX12\LLGI.VertexBufferDX12.cpp" />

@@ -2,65 +2,17 @@
 
 #include "../LLGI.Graphics.h"
 #include "LLGI.BaseDX12.h"
+#include "LLGI.RenderPassDX12.h"
+#include "LLGI.RenderPassPipelineStateDX12.h"
 
 #include <functional>
 #include <unordered_map>
 
 namespace LLGI
 {
-
-class RenderPassPipelineStateDX12;
-class TextureDX12;
-
-class RenderPassDX12 : public RenderPass
-{
-private:
-	GraphicsDX12* graphics_ = nullptr;
-	bool isStrongRef_ = false;
-	std::shared_ptr<RenderPassPipelineStateDX12> renderPassPipelineState;
-
-public:
-	Vec2I screenWindowSize;
-	D3D12_CPU_DESCRIPTOR_HANDLE handleRTV;
-	ID3D12Resource* RenderPass;
-
-	RenderPassDX12(GraphicsDX12* graphics, bool isStrongRef);
-	virtual ~RenderPassDX12();
-
-	RenderPassPipelineState* CreateRenderPassPipelineState() override;
-};
-
-class RenderPassPipelineStateDX12 : public RenderPassPipelineState
-{
-private:
-	GraphicsDX12* graphics_ = nullptr;
-
-public:
-	RenderPassPipelineStateDX12(GraphicsDX12* graphics) {}
-
-	virtual ~RenderPassPipelineStateDX12() {}
-};
-
-struct RenderPassPipelineStateDX12Key
-{
-	bool isPresentMode;
-	bool hasDepth;
-
-	bool operator==(const RenderPassPipelineStateDX12Key& value) const
-	{
-		return (isPresentMode == value.isPresentMode && hasDepth == value.hasDepth);
-	}
-
-	struct Hash
-	{
-		typedef std::size_t result_type;
-
-		std::size_t operator()(const RenderPassPipelineStateDX12Key& key) const
-		{
-			return std::hash<std::int32_t>()(std::hash<bool>()(key.hasDepth));
-		}
-	};
-};
+class RenderPassDX12;
+class RenderPassPipelineStateDX12Key;
+class RenderPassPipelineStateDX12Key::Hash;
 
 class GraphicsDX12 : public Graphics
 {

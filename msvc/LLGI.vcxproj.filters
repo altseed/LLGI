@@ -70,6 +70,15 @@
     <ClInclude Include="..\src\LLGI.VertexBuffer.h">
       <Filter>Base</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\DX12\LLGI.DescriptorHeapDX12.h">
+      <Filter>DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\DX12\LLGI.RenderPassDX12.h">
+      <Filter>DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\DX12\LLGI.RenderPassPipelineStateDX12.h">
+      <Filter>DX12</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Win">
@@ -151,6 +160,15 @@
     </ClCompile>
     <ClCompile Include="..\src\LLGI.VertexBuffer.cpp">
       <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\DX12\LLGI.DescriptorHeapDX12.cpp">
+      <Filter>DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\DX12\LLGI.RenderPassDX12.cpp">
+      <Filter>DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\DX12\LLGI.RenderPassPipelineStateDX12.cpp">
+      <Filter>DX12</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
