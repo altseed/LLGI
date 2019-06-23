@@ -11,8 +11,6 @@
 namespace LLGI
 {
 class RenderPassDX12;
-class RenderPassPipelineStateDX12Key;
-class RenderPassPipelineStateDX12Key::Hash;
 
 class GraphicsDX12 : public Graphics
 {
@@ -69,8 +67,17 @@ public:
 								   DXGI_FORMAT format,
 								   D3D12_RESOURCE_DIMENSION resourceDimention,
 								   D3D12_RESOURCE_STATES resourceState,
+								   Vec2I size)
+	{
+		return CreateResource(heapType, format, resourceDimention, resourceState, D3D12_RESOURCE_FLAG_NONE, size);
+	}
+
+	ID3D12Resource* CreateResource(D3D12_HEAP_TYPE heapType,
+								   DXGI_FORMAT format,
+								   D3D12_RESOURCE_DIMENSION resourceDimention,
+								   D3D12_RESOURCE_STATES resourceState,
+								   D3D12_RESOURCE_FLAGS flags,
 								   Vec2I size);
-	ID3D12DescriptorHeap* CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType);
 };
 
 } // namespace LLGI

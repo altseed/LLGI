@@ -1,5 +1,6 @@
-#include "LLGI.GraphicsDX12.h"
 #include "LLGI.RenderPassDX12.h"
+#include "LLGI.GraphicsDX12.h"
+#include "LLGI.TextureDX12.h"
 
 namespace LLGI
 {
@@ -20,6 +21,17 @@ RenderPassDX12 ::~RenderPassDX12()
 	}
 }
 
+bool RenderPassDX12::Initialize() { return false; }
+
+bool RenderPassDX12::Initialize(TextureDX12** textures, int numTextures, TextureDX12* depthTexture)
+{
+	isScreen_ = false;
+	renderPass_ = textures[0]->Get();
+	textures_ = textures;
+
+	return renderPass_ != nullptr;
+}
+
 RenderPassPipelineState* RenderPassDX12::CreateRenderPassPipelineState()
 {
 	auto ret = renderPassPipelineState.get();
@@ -27,5 +39,11 @@ RenderPassPipelineState* RenderPassDX12::CreateRenderPassPipelineState()
 	return ret;
 }
 
-} // namespace LLGI
+RenderPassPipelineStateDX12* RenderPassDX12::GetRenderPassPipelineState()
+{
+	auto ret = renderPassPipelineState.get();
+	SafeAddRef(ret);
+	return ret;
+}
 
+} // namespace LLGI

@@ -87,8 +87,33 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 
 	if (renderPass != nullptr)
 	{
+		if (!renderPass_->GetIsScreen())
+		{
+			auto& descriptorHeaps = descriptorHeaps_[graphics_->GetCurrentSwapBufferIndex()];
+
+			{
+				// set using descriptor heaps
+				ID3D12DescriptorHeap* heaps[] = {
+					descriptorHeaps->GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV), // descriptor heap for RTV
+				};
+				//commandList->SetDescriptorHeaps(1, heaps);
+
+				// set descriptor tables
+				//commandList->SetGraphicsRootDescriptorTable(0, descriptorHeaps->GetGpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
+			}
+
+			D3D12_RENDER_TARGET_VIEW_DESC desc = {};
+			desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+			desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+			auto cpuHandle = descriptorHeaps->GetCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+			graphics_->GetDevice()->CreateRenderTargetView(renderPass_->renderPass_, &desc, cpuHandle);
+			renderPass_->handleRtv_ = cpuHandle;
+			descriptorHeaps->IncrementCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1);
+			descriptorHeaps->IncrementGpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1);
+		}
+
 		// Set render target
-		commandList->OMSetRenderTargets(1, &(renderPass_->handleRTV), FALSE, nullptr);
+		commandList->OMSetRenderTargets(1, &(renderPass_->handleRtv_), FALSE, nullptr);
 
 		// TODO depth...
 
@@ -172,18 +197,15 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 	}
 
 	auto& descriptorHeaps = descriptorHeaps_[graphics_->GetCurrentSwapBufferIndex()];
-
-	// set using descriptor heaps
 	{
+		// set using descriptor heaps
 		ID3D12DescriptorHeap* heaps[] = {
 			descriptorHeaps->GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV), // descriptor heap for CBV, SRV and UAV
 			descriptorHeaps->GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER),	 // descriptor heap for Sampler
 		};
 		commandList->SetDescriptorHeaps(2, heaps);
-	}
 
-	// set descriptor tables
-	{
+		// set descriptor tables
 		commandList->SetGraphicsRootDescriptorTable(0, descriptorHeaps->GetGpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
 		commandList->SetGraphicsRootDescriptorTable(1, descriptorHeaps->GetGpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER));
 	}
@@ -288,7 +310,7 @@ void CommandListDX12::Clear(const Color8& color)
 
 	float color_[] = {color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f};
 
-	commandList->ClearRenderTargetView(rt->handleRTV, color_, 0, nullptr);
+	commandList->ClearRenderTargetView(rt->handleRtv_, color_, 0, nullptr);
 }
 
 ID3D12GraphicsCommandList* CommandListDX12::GetCommandList() const

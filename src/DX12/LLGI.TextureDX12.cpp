@@ -14,15 +14,22 @@ TextureDX12::~TextureDX12()
 
 bool TextureDX12::Initialize(const Vec2I& size, bool isRenderPass, bool isDepthBuffer)
 {
-	if (isRenderPass)
-		throw "Not implemented";
+	isRenderPass_ = isRenderPass;
 
 	if (isDepthBuffer)
-
 		throw "Not implemented";
 
-	texture_ = graphics_->CreateResource(
-		D3D12_HEAP_TYPE_DEFAULT, DXGI_FORMAT_R8G8B8A8_UNORM, D3D12_RESOURCE_DIMENSION_TEXTURE2D, D3D12_RESOURCE_STATE_COPY_DEST, size);
+	if (isRenderPass_)
+		texture_ = graphics_->CreateResource(D3D12_HEAP_TYPE_DEFAULT,
+											 DXGI_FORMAT_R8G8B8A8_UNORM,
+											 D3D12_RESOURCE_DIMENSION_TEXTURE2D,
+											 D3D12_RESOURCE_STATE_COPY_DEST,
+											 D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
+											 size);
+	else
+		texture_ = graphics_->CreateResource(
+			D3D12_HEAP_TYPE_DEFAULT, DXGI_FORMAT_R8G8B8A8_UNORM, D3D12_RESOURCE_DIMENSION_TEXTURE2D, D3D12_RESOURCE_STATE_COPY_DEST, size);
+
 	textureSize_ = size;
 	if (texture_ == nullptr)
 		return false;

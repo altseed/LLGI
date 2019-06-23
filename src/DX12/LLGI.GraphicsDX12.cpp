@@ -60,8 +60,8 @@ void GraphicsDX12::WaitFinish()
 RenderPass* GraphicsDX12::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared)
 {
 	auto currentParam = getScreenFunc_();
-	currentScreen.handleRTV = std::get<0>(currentParam);
-	currentScreen.RenderPass = std::get<1>(currentParam);
+	currentScreen.handleRtv_ = std::get<0>(currentParam);
+	currentScreen.renderPass_ = std::get<1>(currentParam);
 	currentScreen.SetClearColor(clearColor);
 	currentScreen.SetIsColorCleared(isColorCleared);
 	currentScreen.SetIsDepthCleared(isDepthCleared);
@@ -137,7 +137,16 @@ PipelineState* GraphicsDX12::CreatePiplineState() { return new PipelineStateDX12
 
 RenderPass* GraphicsDX12::CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture)
 {
-	throw "Not inplemented";
+	if (textureCount > 1)
+		throw "Not inplemented";
+
+	auto renderPass = new RenderPassDX12(this, true);
+	if (!renderPass->Initialize((TextureDX12**)textures, textureCount, (TextureDX12*)depthTexture))
+	{
+		SafeRelease(renderPass);
+	}
+
+	return renderPass;
 }
 
 Texture* GraphicsDX12::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer)
@@ -190,6 +199,7 @@ ID3D12Resource* GraphicsDX12::CreateResource(D3D12_HEAP_TYPE heapType,
 											 DXGI_FORMAT format,
 											 D3D12_RESOURCE_DIMENSION resourceDimention,
 											 D3D12_RESOURCE_STATES resourceState,
+											 D3D12_RESOURCE_FLAGS flags,
 											 Vec2I size)
 {
 	D3D12_HEAP_PROPERTIES heapProps = {};
@@ -201,9 +211,8 @@ ID3D12Resource* GraphicsDX12::CreateResource(D3D12_HEAP_TYPE heapType,
 	heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
 	heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
 
-	// TODO: set properly for multi-adaptor.
-	heapProps.CreationNodeMask = 1;
-	heapProps.VisibleNodeMask = 1;
+	heapProps.CreationNodeMask = 1; // TODO: set properly for multi-adaptor.
+	heapProps.VisibleNodeMask = 1;  // TODO: set properly for multi-adaptor.
 
 	resDesc.Dimension = resourceDimention;
 	resDesc.Width = size.X;
@@ -213,6 +222,7 @@ ID3D12Resource* GraphicsDX12::CreateResource(D3D12_HEAP_TYPE heapType,
 	resDesc.Format = format;
 	resDesc.Layout = (resourceDimention == D3D12_RESOURCE_DIMENSION_BUFFER ? D3D12_TEXTURE_LAYOUT_ROW_MAJOR : D3D12_TEXTURE_LAYOUT_UNKNOWN);
 	resDesc.SampleDesc.Count = 1;
+	resDesc.Flags = flags;
 
 	auto hr =
 		GetDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, resourceState, nullptr, IID_PPV_ARGS(&resource));
@@ -222,27 +232,6 @@ ID3D12Resource* GraphicsDX12::CreateResource(D3D12_HEAP_TYPE heapType,
 		return nullptr;
 	}
 	return resource;
-}
-
-ID3D12DescriptorHeap* GraphicsDX12::CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType)
-{
-	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-	ID3D12DescriptorHeap* heap = nullptr;
-
-	heapDesc.NumDescriptors = 1;
-	heapDesc.Type = heapType;
-	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-
-	// TODO: set properly for multi-adaptor.
-	heapDesc.NodeMask = 1;
-
-	auto hr = GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heap));
-	if (FAILED(hr))
-	{
-		SafeRelease(heap);
-		return nullptr;
-	}
-	return heap;
 }
 
 } // namespace LLGI
