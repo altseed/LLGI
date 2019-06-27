@@ -3,9 +3,9 @@
 
 #include "../LLGI.CommandList.h"
 #include "LLGI.BaseDX12.h"
+#include "LLGI.DescriptorHeapDX12.h"
 #include "LLGI.GraphicsDX12.h"
 #include "LLGI.PipelineStateDX12.h"
-#include "LLGI.DescriptorHeapDX12.h"
 
 namespace LLGI
 {
@@ -20,6 +20,8 @@ private:
 	std::vector<std::shared_ptr<ID3D12CommandAllocator>> commandAllocators;
 
 	std::vector<std::shared_ptr<DescriptorHeapDX12>> descriptorHeaps_;
+
+	void SetResourceBarrier(ID3D12Resource* resource, D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter);
 
 public:
 	CommandListDX12();

@@ -28,6 +28,9 @@ bool RenderPassDX12::Initialize(TextureDX12** textures, int numTextures, Texture
 	isScreen_ = false;
 	renderPass_ = textures[0]->Get();
 	textures_ = textures;
+	auto size = textures[0]->GetSizeAs2D();
+	screenWindowSize.X = size.X;
+	screenWindowSize.Y = size.Y;
 
 	return renderPass_ != nullptr;
 }
