@@ -89,18 +89,18 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 	{
 		if (!renderPass_->GetIsScreen())
 		{
-			SetResourceBarrier(renderPass_->renderPass_, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET);
-
 			auto& descriptorHeaps = descriptorHeaps_[graphics_->GetCurrentSwapBufferIndex()];
 			D3D12_RENDER_TARGET_VIEW_DESC desc = {};
 			desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 			desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 			auto cpuHandle = descriptorHeaps->GetCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-			graphics_->GetDevice()->CreateRenderTargetView(renderPass_->renderPass_, &desc, cpuHandle);
+			graphics_->GetDevice()->CreateRenderTargetView(renderPass_->GetTextures()[0]->Get(), &desc, cpuHandle);
 			renderPass_->handleRtv_ = cpuHandle;
 			descriptorHeaps->IncrementCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1);
 			descriptorHeaps->IncrementGpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1);
 
+			// memory barrior to make a rendertarget
+			renderPass_->GetTextures()[0]->ResourceBarrior(commandList.get(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 		}
 
 		// Set render target
@@ -135,10 +135,6 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 
 void CommandListDX12::EndRenderPass()
 {
-	if (!renderPass_->GetIsScreen())
-	{
-		SetResourceBarrier(renderPass_->renderPass_, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_GENERIC_READ);
-	}
 	renderPass_.reset();
 }
 
@@ -240,6 +236,19 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 					auto wrapMode = currentTextures[stage_ind][unit_ind].wrapMode;
 					auto minMagFilter = currentTextures[stage_ind][unit_ind].minMagFilter;
 
+					// Make barrior to use a render target
+					if (texture->IsRenderTexture())
+					{
+						if (stage_ind == static_cast<int>(ShaderStageType::Pixel))
+						{
+							texture->ResourceBarrior(commandList.get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+						}
+						else
+						{
+							texture->ResourceBarrior(commandList.get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+						}
+					}
+
 					// SRV
 					{
 						D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -315,20 +324,6 @@ ID3D12GraphicsCommandList* CommandListDX12::GetCommandList() const
 {
 	auto commandList = commandLists[graphics_->GetCurrentSwapBufferIndex()];
 	return commandList.get();
-}
-
-void CommandListDX12::SetResourceBarrier(ID3D12Resource* resource, D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter)
-{
-	D3D12_RESOURCE_BARRIER barrier = {};
-	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrier.Transition.pResource = resource;
-	barrier.Transition.StateBefore = stateBefore;
-	barrier.Transition.StateAfter = stateAfter;
-	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-
-	auto commandList = commandLists[graphics_->GetCurrentSwapBufferIndex()];
-	commandList->ResourceBarrier(1, &barrier);
 }
 
 } // namespace LLGI

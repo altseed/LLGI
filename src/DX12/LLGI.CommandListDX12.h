@@ -21,8 +21,6 @@ private:
 
 	std::vector<std::shared_ptr<DescriptorHeapDX12>> descriptorHeaps_;
 
-	void SetResourceBarrier(ID3D12Resource* resource, D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter);
-
 public:
 	CommandListDX12();
 	virtual ~CommandListDX12();

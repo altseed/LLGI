@@ -15,6 +15,12 @@ RenderPassDX12::RenderPassDX12(GraphicsDX12* graphics, bool isStrongRef) : graph
 
 RenderPassDX12 ::~RenderPassDX12()
 {
+	for (size_t i = 0; i < textures_.size(); i++)
+	{
+		SafeRelease(textures_[i]);
+	}
+	textures_.clear();
+
 	if (isStrongRef_)
 	{
 		SafeRelease(graphics_);
@@ -27,7 +33,14 @@ bool RenderPassDX12::Initialize(TextureDX12** textures, int numTextures, Texture
 {
 	isScreen_ = false;
 	renderPass_ = textures[0]->Get();
-	textures_ = textures;
+	textures_.resize(numTextures);
+
+	for (size_t i = 0; i < numTextures; i++)
+	{
+		textures_[i] = textures[i];
+		SafeAddRef(textures_[i]);
+	}
+
 	auto size = textures[0]->GetSizeAs2D();
 	screenWindowSize.X = size.X;
 	screenWindowSize.Y = size.Y;

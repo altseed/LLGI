@@ -6,6 +6,8 @@ namespace LLGI
 DescriptorHeapDX12::DescriptorHeapDX12(std::shared_ptr<GraphicsDX12> graphics, int size, int stage)
 	: graphics_(graphics), size_(size), stage_(stage)
 {
+	SafeAddRef(graphics);
+
 	for (int i = 0; i < numHeaps_; i++)
 	{
 		auto heap = CreateHeap(static_cast<D3D12_DESCRIPTOR_HEAP_TYPE>(i), size_ * stage_);
@@ -27,14 +29,14 @@ void DescriptorHeapDX12::IncrementCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE heapType,
 {
 	auto size = graphics_->GetDevice()->GetDescriptorHandleIncrementSize(heapType);
 	auto i = static_cast<int>(heapType);
-	cpuHandles_[i].ptr += size * count;
+	cpuHandles_[i].ptr += (size * count);
 }
 
 void DescriptorHeapDX12::IncrementGpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE heapType, int count)
 {
 	auto size = graphics_->GetDevice()->GetDescriptorHandleIncrementSize(heapType);
 	auto i = static_cast<int>(heapType);
-	gpuHandles_[i].ptr += size * count;
+	gpuHandles_[i].ptr += (size * count);
 }
 
 ID3D12DescriptorHeap* DescriptorHeapDX12::GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType)
