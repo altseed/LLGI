@@ -53,3 +53,9 @@ endforeach()
 
 add_library(LLGI STATIC ${files})
 
+if(BUILD_VULKAN)
+  find_package(Vulkan REQUIRED)
+  target_include_directories(LLGI PRIVATE ${Vulkan_INCLUDE_DIRS})
+  target_link_libraries(LLGI PRIVATE ${Vulkan_LIBRARIES})
+endif()
+
