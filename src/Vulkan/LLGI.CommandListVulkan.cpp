@@ -281,7 +281,7 @@ void CommandListVulkan::Draw(int32_t pritimiveCount)
 
 		if (firstSet < 0)
 		{
-			firstSet = i;
+			firstSet = descriptorIndex;
 		}
 
 		descriptorIndex++;
