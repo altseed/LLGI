@@ -215,7 +215,7 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 			{
 				auto _cb = static_cast<ConstantBufferDX12*>(cb);
 				D3D12_CONSTANT_BUFFER_VIEW_DESC desc = {};
-				desc.BufferLocation = _cb->Get()->GetGPUVirtualAddress();
+				desc.BufferLocation = _cb->Get()->GetGPUVirtualAddress() + _cb->GetOffset();
 				desc.SizeInBytes = _cb->GetSize();
 				auto cpuHandle = descriptorHeaps->GetCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 				graphics_->GetDevice()->CreateConstantBufferView(&desc, cpuHandle);

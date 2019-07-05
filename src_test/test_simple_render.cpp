@@ -573,12 +573,14 @@ float4 main(PS_INPUT input) : SV_TARGET
 			cb_vs_buf[1] = 0.0f;
 			cb_vs_buf[2] = 0.0f;
 			cb_vs_buf[3] = 0.0f;
+			cb_vs->Unlock();
 
 			auto cb_ps_buf = (float*)cb_ps->Lock();
 			cb_ps_buf[0] = 0.0f;
 			cb_ps_buf[1] = -1.0f;
 			cb_ps_buf[2] = -1.0f;
 			cb_ps_buf[3] = 0.0f;
+			cb_ps->Unlock();
 		}
 
 		LLGI::Color8 color;

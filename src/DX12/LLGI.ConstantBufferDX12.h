@@ -15,10 +15,13 @@ class ConstantBufferDX12 : public ConstantBuffer
 private:
 	ID3D12Resource* constantBuffer_ = nullptr;
 	int memSize_ = 0;
+	int offset_ = 0;
 	uint8_t* mapped_ = nullptr;
 
 public:
 	bool Initialize(GraphicsDX12* graphics, int32_t size);
+
+	bool InitializeAsShortTime(GraphicsDX12* graphics, int32_t size);
 
 	ConstantBufferDX12();
 	virtual ~ConstantBufferDX12();
@@ -27,6 +30,8 @@ public:
 	void* Lock(int32_t offset, int32_t size) override;
 	void Unlock() override;
 	int32_t GetSize() override;
+	
+	int32_t GetOffset() const;
 
 	ID3D12Resource* Get() { return constantBuffer_; }
 };
