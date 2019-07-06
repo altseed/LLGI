@@ -15,6 +15,7 @@ class ConstantBufferDX12 : public ConstantBuffer
 private:
 	ID3D12Resource* constantBuffer_ = nullptr;
 	int memSize_ = 0;
+	int actualSize_ = 0;
 	int offset_ = 0;
 	uint8_t* mapped_ = nullptr;
 
@@ -30,7 +31,11 @@ public:
 	void* Lock(int32_t offset, int32_t size) override;
 	void Unlock() override;
 	int32_t GetSize() override;
-	
+
+	/**
+		@brief	memory size must be multiple of 256 in DirectX12. So specified size and actual size are different.
+	*/
+	int32_t GetActualSize() const;
 	int32_t GetOffset() const;
 
 	ID3D12Resource* Get() { return constantBuffer_; }

@@ -38,7 +38,7 @@ struct RenderPassPipelineStateDX12Key
 
 		std::size_t operator()(const RenderPassPipelineStateDX12Key& key) const
 		{
-			return std::hash<std::int32_t>()(std::hash<bool>()(key.hasDepth));
+			return std::hash<bool>()(key.hasDepth);
 		}
 	};
 };

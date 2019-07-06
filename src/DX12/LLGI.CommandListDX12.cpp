@@ -119,8 +119,8 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 		D3D12_VIEWPORT viewport;
 		viewport.TopLeftX = 0.0f;
 		viewport.TopLeftY = 0.0f;
-		viewport.Width = renderPass_->screenWindowSize.X;
-		viewport.Height = renderPass_->screenWindowSize.Y;
+		viewport.Width = static_cast<float>(renderPass_->screenWindowSize.X);
+		viewport.Height = static_cast<float>(renderPass_->screenWindowSize.Y);
 		viewport.MinDepth = 0.0f;
 		viewport.MaxDepth = 1.0f;
 		commandList->RSSetViewports(1, &viewport);
@@ -216,7 +216,7 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 				auto _cb = static_cast<ConstantBufferDX12*>(cb);
 				D3D12_CONSTANT_BUFFER_VIEW_DESC desc = {};
 				desc.BufferLocation = _cb->Get()->GetGPUVirtualAddress() + _cb->GetOffset();
-				desc.SizeInBytes = _cb->GetSize();
+				desc.SizeInBytes = _cb->GetActualSize();
 				auto cpuHandle = descriptorHeaps->GetCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 				graphics_->GetDevice()->CreateConstantBufferView(&desc, cpuHandle);
 			}

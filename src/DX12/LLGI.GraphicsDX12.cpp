@@ -282,7 +282,7 @@ ID3D12Resource* GraphicsDX12::CreateResource(D3D12_HEAP_TYPE heapType,
 	clearValue.Color[1] = 0.0f;
 	clearValue.Color[1] = 0.0f;
 	auto setClearValue = resourceDimention != D3D12_RESOURCE_DIMENSION_BUFFER &&
-						 ((flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET != 0) || (flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL != 0));
+						 (((flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET) != 0) || ((flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) != 0));
 
 	auto hr = GetDevice()->CreateCommittedResource(
 		&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, resourceState, (setClearValue ? &clearValue : nullptr), IID_PPV_ARGS(&resource));
