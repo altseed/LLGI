@@ -1,4 +1,6 @@
-# The project's name
+cmake_minimum_required (VERSION 3.0.0)
+project(LLGI)
+
 file(GLOB files *.h *.cpp)
 file(GLOB files_pc PC/*.h PC/*.cpp)
 
@@ -57,9 +59,28 @@ endforeach()
 
 add_library(LLGI STATIC ${files})
 
+file(GLOB LOCAL_HEADERS *.h)
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${LOCAL_HEADERS}")
+
 if(BUILD_VULKAN)
   find_package(Vulkan REQUIRED)
   target_include_directories(LLGI PRIVATE ${Vulkan_INCLUDE_DIRS})
   target_link_libraries(LLGI PRIVATE ${Vulkan_LIBRARIES})
 endif()
 
+#--------------------
+# Install
+
+install(
+    TARGETS ${PROJECT_NAME}
+    EXPORT ${PROJECT_NAME}-export
+    INCLUDES DESTINATION include/LLGI
+    PUBLIC_HEADER DESTINATION include/LLGI
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib)
+
+install(
+    EXPORT ${PROJECT_NAME}-export
+    FILE ${PROJECT_NAME}-config.cmake
+    DESTINATION lib/cmake
+    EXPORT_LINK_INTERFACE_LIBRARIES)
