@@ -66,6 +66,7 @@ protected:
 	void GetCurrentIndexBuffer(IndexBuffer*& buffer, bool& isDirtied);
 	void GetCurrentPipelineState(PipelineState*& pipelineState, bool& isDirtied);
 	void GetCurrentConstantBuffer(ShaderStageType type, ConstantBuffer*& buffer);
+	void RegisterReferencedObject(ReferenceObject* referencedObject);
 
 public:
 	CommandList(int32_t swapCount = 3);

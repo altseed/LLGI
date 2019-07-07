@@ -33,6 +33,16 @@ void CommandList::GetCurrentConstantBuffer(ShaderStageType type, ConstantBuffer*
 	buffer = constantBuffers[static_cast<int>(type)];
 }
 
+void CommandList::RegisterReferencedObject(ReferenceObject* referencedObject)
+{
+	if (referencedObject == nullptr)
+		return;
+
+	assert(swapIndex_ >= 0);
+	SafeAddRef(referencedObject);
+	swapObjects[swapIndex_].referencedObjects.push_back(referencedObject);
+}
+
 CommandList::CommandList(int32_t swapCount) : swapCount_(swapCount)
 {
 	constantBuffers.fill(nullptr);
@@ -110,10 +120,7 @@ void CommandList::SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride, in
 	bindingVertexBuffer.stride = stride;
 	bindingVertexBuffer.offset = offset;
 
-	// register it to referenced objects
-	assert(swapIndex_ >= 0);
-	SafeAddRef(vertexBuffer);
-	swapObjects[swapIndex_].referencedObjects.push_back(vertexBuffer);
+	RegisterReferencedObject(vertexBuffer);
 }
 
 void CommandList::SetIndexBuffer(IndexBuffer* indexBuffer)
@@ -121,10 +128,7 @@ void CommandList::SetIndexBuffer(IndexBuffer* indexBuffer)
 	isCurrentIndexBufferDirtied |= currentIndexBuffer != indexBuffer;
 	currentIndexBuffer = indexBuffer;
 
-	// register it to referenced objects
-	assert(swapIndex_ >= 0);
-	SafeAddRef(indexBuffer);
-	swapObjects[swapIndex_].referencedObjects.push_back(indexBuffer);
+	RegisterReferencedObject(indexBuffer);
 }
 
 void CommandList::SetPipelineState(PipelineState* pipelineState)
@@ -132,10 +136,7 @@ void CommandList::SetPipelineState(PipelineState* pipelineState)
 	currentPipelineState = pipelineState;
 	isPipelineDirtied = true;
 
-	// register it to referenced objects
-	assert(swapIndex_ >= 0);
-	SafeAddRef(pipelineState);
-	swapObjects[swapIndex_].referencedObjects.push_back(pipelineState);
+	RegisterReferencedObject(pipelineState);
 }
 
 void CommandList::SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageType shaderStage)
@@ -143,10 +144,7 @@ void CommandList::SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageT
 	auto ind = static_cast<int>(shaderStage);
 	SafeAssign(constantBuffers[ind], constantBuffer);
 
-	// register it to referenced objects
-	assert(swapIndex_ >= 0);
-	SafeAddRef(constantBuffer);
-	swapObjects[swapIndex_].referencedObjects.push_back(constantBuffer);
+	RegisterReferencedObject(constantBuffer);
 }
 
 void CommandList::SetTexture(
@@ -157,10 +155,7 @@ void CommandList::SetTexture(
 	currentTextures[ind][unit].wrapMode = wrapMode;
 	currentTextures[ind][unit].minMagFilter = minmagFilter;
 
-	// register it to referenced objects
-	assert(swapIndex_ >= 0);
-	SafeAddRef(texture);
-	swapObjects[swapIndex_].referencedObjects.push_back(texture);
+	RegisterReferencedObject(texture);
 }
 
 void CommandList::BeginRenderPass(RenderPass* renderPass)
