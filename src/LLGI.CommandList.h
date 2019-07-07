@@ -10,6 +10,17 @@ static constexpr int NumTexture = 8;
 class VertexBuffer;
 class IndexBuffer;
 
+/**
+	@brief	command list
+	@note
+	CommandList has a swap buffer. So you don't need to consider buffering.
+	CommandList has references related to rendering.
+	References are released after the number of swapCount has passed.
+
+	Limitation :
+	Begin and End are need to call only once in one frame.
+	Command list must not be released after finishing rendering.
+*/
 class CommandList : public ReferenceObject
 {
 protected:
@@ -28,6 +39,15 @@ protected:
 	};
 
 private:
+	struct SwapObject
+	{
+		std::vector<ReferenceObject*> referencedObjects;
+	};
+
+	int32_t swapIndex_ = -1;
+	int32_t swapCount_ = 0;
+	std::vector<SwapObject> swapObjects;
+
 	BindingVertexBuffer bindingVertexBuffer;
 	IndexBuffer* currentIndexBuffer = nullptr;
 	PipelineState* currentPipelineState = nullptr;
@@ -48,7 +68,7 @@ protected:
 	void GetCurrentConstantBuffer(ShaderStageType type, ConstantBuffer*& buffer);
 
 public:
-	CommandList();
+	CommandList(int32_t swapCount = 3);
 	virtual ~CommandList();
 
 	virtual void Begin();

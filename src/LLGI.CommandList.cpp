@@ -33,7 +33,7 @@ void CommandList::GetCurrentConstantBuffer(ShaderStageType type, ConstantBuffer*
 	buffer = constantBuffers[static_cast<int>(type)];
 }
 
-CommandList::CommandList()
+CommandList::CommandList(int32_t swapCount) : swapCount_(swapCount)
 {
 	constantBuffers.fill(nullptr);
 
@@ -44,6 +44,8 @@ CommandList::CommandList()
 			bt.texture = nullptr;
 		}
 	}
+
+	swapObjects.resize(swapCount_);
 }
 
 CommandList::~CommandList()
@@ -60,6 +62,15 @@ CommandList::~CommandList()
 			SafeRelease(bt.texture);
 		}
 	}
+
+	for (auto& so : swapObjects)
+	{
+		for (auto& o : so.referencedObjects)
+		{
+			o->Release();
+		}
+		so.referencedObjects.clear();
+	}
 }
 
 void CommandList::Begin()
@@ -70,6 +81,14 @@ void CommandList::Begin()
 	isVertexBufferDirtied = true;
 	isCurrentIndexBufferDirtied = true;
 	isPipelineDirtied = true;
+
+	swapIndex_ = (swapIndex_ + 1) % swapCount_;
+
+	for (auto& o : swapObjects[swapIndex_].referencedObjects)
+	{
+		o->Release();
+	}
+	swapObjects[swapIndex_].referencedObjects.clear();
 }
 
 void CommandList::End() {}
@@ -90,24 +109,44 @@ void CommandList::SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride, in
 	bindingVertexBuffer.vertexBuffer = vertexBuffer;
 	bindingVertexBuffer.stride = stride;
 	bindingVertexBuffer.offset = offset;
+
+	// register it to referenced objects
+	assert(swapIndex_ >= 0);
+	SafeAddRef(vertexBuffer);
+	swapObjects[swapIndex_].referencedObjects.push_back(vertexBuffer);
 }
 
 void CommandList::SetIndexBuffer(IndexBuffer* indexBuffer)
 {
 	isCurrentIndexBufferDirtied |= currentIndexBuffer != indexBuffer;
 	currentIndexBuffer = indexBuffer;
+
+	// register it to referenced objects
+	assert(swapIndex_ >= 0);
+	SafeAddRef(indexBuffer);
+	swapObjects[swapIndex_].referencedObjects.push_back(indexBuffer);
 }
 
 void CommandList::SetPipelineState(PipelineState* pipelineState)
 {
 	currentPipelineState = pipelineState;
 	isPipelineDirtied = true;
+
+	// register it to referenced objects
+	assert(swapIndex_ >= 0);
+	SafeAddRef(pipelineState);
+	swapObjects[swapIndex_].referencedObjects.push_back(pipelineState);
 }
 
 void CommandList::SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageType shaderStage)
 {
 	auto ind = static_cast<int>(shaderStage);
 	SafeAssign(constantBuffers[ind], constantBuffer);
+
+	// register it to referenced objects
+	assert(swapIndex_ >= 0);
+	SafeAddRef(constantBuffer);
+	swapObjects[swapIndex_].referencedObjects.push_back(constantBuffer);
 }
 
 void CommandList::SetTexture(
@@ -117,13 +156,18 @@ void CommandList::SetTexture(
 	SafeAssign(currentTextures[ind][unit].texture, texture);
 	currentTextures[ind][unit].wrapMode = wrapMode;
 	currentTextures[ind][unit].minMagFilter = minmagFilter;
+
+	// register it to referenced objects
+	assert(swapIndex_ >= 0);
+	SafeAddRef(texture);
+	swapObjects[swapIndex_].referencedObjects.push_back(texture);
 }
-    
-    void CommandList::BeginRenderPass(RenderPass* renderPass)
-    {
-        isVertexBufferDirtied = true;
-        isCurrentIndexBufferDirtied = true;
-        isPipelineDirtied = true;
-    }
+
+void CommandList::BeginRenderPass(RenderPass* renderPass)
+{
+	isVertexBufferDirtied = true;
+	isCurrentIndexBufferDirtied = true;
+	isPipelineDirtied = true;
+}
 
 } // namespace LLGI
