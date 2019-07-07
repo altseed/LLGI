@@ -170,7 +170,7 @@ struct ColorF
     
 struct DataStructure
 {
-	void* Data;
+	const void* Data;
 	int32_t Size;
 };
 
