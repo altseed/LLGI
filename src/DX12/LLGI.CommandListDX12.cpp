@@ -218,6 +218,15 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 				auto cpuHandle = swapBuffer.cbreDescriptorHeap->GetCpuHandle();
 				graphics_->GetDevice()->CreateConstantBufferView(&desc, cpuHandle);
 			}
+			else
+			{
+				// set dummy values
+				D3D12_CONSTANT_BUFFER_VIEW_DESC desc = {};
+				desc.BufferLocation = D3D12_GPU_VIRTUAL_ADDRESS();
+				desc.SizeInBytes = 0;
+				auto cpuHandle = swapBuffer.cbreDescriptorHeap->GetCpuHandle();
+				graphics_->GetDevice()->CreateConstantBufferView(&desc, cpuHandle);
+			}
 			swapBuffer.cbreDescriptorHeap->IncrementCpuHandle(1);
 		}
 		swapBuffer.cbreDescriptorHeap->IncrementGpuHandle(static_cast<int>(ShaderStageType::Max));
