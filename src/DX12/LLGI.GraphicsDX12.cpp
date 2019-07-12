@@ -284,6 +284,7 @@ ID3D12Resource* GraphicsDX12::CreateResource(D3D12_HEAP_TYPE heapType,
 	auto setClearValue = resourceDimention != D3D12_RESOURCE_DIMENSION_BUFFER &&
 						 (((flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET) != 0) || ((flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) != 0));
 
+	// clearValue causes CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE
 	auto hr = GetDevice()->CreateCommittedResource(
 		&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, resourceState, (setClearValue ? &clearValue : nullptr), IID_PPV_ARGS(&resource));
 

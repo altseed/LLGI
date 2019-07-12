@@ -134,6 +134,27 @@ bool PlatformDX12::Initialize(Vec2I windowSize)
 		goto FAILED_EXIT;
 	}
 
+#if defined(_DEBUG)
+	ID3D12InfoQueue* infoQueue = nullptr;
+	if (SUCCEEDED(device->QueryInterface(&infoQueue)))
+	{
+		D3D12_MESSAGE_SEVERITY severities[] = {D3D12_MESSAGE_SEVERITY_INFO};
+
+		D3D12_MESSAGE_ID denyIds[] = {
+			D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE,
+		};
+
+		D3D12_INFO_QUEUE_FILTER NewFilter = {};
+		NewFilter.DenyList.NumSeverities = _countof(severities);
+		NewFilter.DenyList.pSeverityList = severities;
+		NewFilter.DenyList.NumIDs = _countof(denyIds);
+		NewFilter.DenyList.pIDList = denyIds;
+
+		infoQueue->PushStorageFilter(&NewFilter);
+		SafeRelease(infoQueue);
+	}
+#endif
+
 	/*
 	hr = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), (void**)&device);
 
