@@ -8,7 +8,7 @@ namespace LLGI
 
 bool ShaderDX12::Initialize(DataStructure* data, int32_t count)
 {
-	auto p = static_cast<uint8_t*>(data->Data);
+	auto p = static_cast<const uint8_t*>(data->Data);
 	data_.resize(data->Size);
 	memcpy(data_.data(), p, data_.size());
 	return true;
