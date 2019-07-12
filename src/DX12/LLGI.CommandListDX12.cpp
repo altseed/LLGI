@@ -12,7 +12,7 @@ namespace LLGI
 
 CommandListDX12::CommandListDX12() {}
 
-CommandListDX12::~CommandListDX12() { descriptorHeaps_.clear(); }
+CommandListDX12::~CommandListDX12() { swapBuffers_.clear(); }
 
 bool CommandListDX12::Initialize(GraphicsDX12* graphics)
 {
@@ -20,6 +20,8 @@ bool CommandListDX12::Initialize(GraphicsDX12* graphics)
 
 	SafeAddRef(graphics);
 	graphics_ = CreateSharedPtr(graphics);
+
+	swapBuffers_.resize(graphics_->GetSwapBufferCount());
 
 	for (int32_t i = 0; i < graphics_->GetSwapBufferCount(); i++)
 	{
@@ -31,7 +33,7 @@ bool CommandListDX12::Initialize(GraphicsDX12* graphics)
 		{
 			goto FAILED_EXIT;
 		}
-		commandAllocators.push_back(CreateSharedPtr(commandAllocator));
+		swapBuffers_[i].commandAllocator = CreateSharedPtr(commandAllocator);
 
 		hr = graphics_->GetDevice()->CreateCommandList(
 			0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator, NULL, IID_PPV_ARGS(&commandList));
@@ -40,47 +42,47 @@ bool CommandListDX12::Initialize(GraphicsDX12* graphics)
 			goto FAILED_EXIT;
 		}
 		commandList->Close();
-		commandLists.push_back(CreateSharedPtr(commandList));
-	}
+		swapBuffers_[i].commandList = CreateSharedPtr(commandList);
 
-	for (size_t i = 0; i < static_cast<size_t>(graphics_->GetSwapBufferCount()); i++)
-	{
-		auto dp = std::make_shared<DescriptorHeapDX12>(graphics_, 100, 2);
-		descriptorHeaps_.push_back(dp);
+		swapBuffers_[i].cbreDescriptorHeap =
+			std::make_shared<DescriptorHeapDX12>(graphics_, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 200, 2);
+		swapBuffers_[i].rtDescriptorHeap =
+			std::make_shared<DescriptorHeapDX12>(graphics_, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 50, 2);
+		swapBuffers_[i].smpDescriptorHeap =
+			std::make_shared<DescriptorHeapDX12>(graphics_, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 100, 2);
 	}
 
 	return true;
 
 FAILED_EXIT:;
 	graphics_.reset();
-	commandAllocators.clear();
-	commandLists.clear();
-	descriptorHeaps_.clear();
-
+	swapBuffers_.clear();
 	return false;
 }
 
 void CommandListDX12::Begin()
 {
-	auto commandList = commandLists[graphics_->GetCurrentSwapBufferIndex()];
-	commandList->Reset(commandAllocators[graphics_->GetCurrentSwapBufferIndex()].get(), nullptr);
+	auto& swapBuffer = swapBuffers_[graphics_->GetCurrentSwapBufferIndex()];
+	auto commandList = swapBuffer.commandList;
+	commandList->Reset(swapBuffer.commandAllocator.get(), nullptr);
 
-	auto& dp = descriptorHeaps_[graphics_->GetCurrentSwapBufferIndex()];
-	dp->Reset();
+	swapBuffer.cbreDescriptorHeap->Reset();
+	swapBuffer.rtDescriptorHeap->Reset();
+	swapBuffer.smpDescriptorHeap->Reset();
 
 	CommandList::Begin();
 }
 
 void CommandListDX12::End()
 {
-	auto commandList = commandLists[graphics_->GetCurrentSwapBufferIndex()];
-
-	commandList->Close();
+	auto& swapBuffer = swapBuffers_[graphics_->GetCurrentSwapBufferIndex()];
+	swapBuffer.commandList->Close();
 }
 
 void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 {
-	auto commandList = commandLists[graphics_->GetCurrentSwapBufferIndex()];
+	auto& swapBuffer = swapBuffers_[graphics_->GetCurrentSwapBufferIndex()];
+	auto commandList = swapBuffer.commandList;
 
 	SafeAddRef(renderPass);
 	renderPass_ = CreateSharedPtr((RenderPassDX12*)renderPass);
@@ -89,15 +91,14 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 	{
 		if (!renderPass_->GetIsScreen())
 		{
-			auto& descriptorHeaps = descriptorHeaps_[graphics_->GetCurrentSwapBufferIndex()];
 			D3D12_RENDER_TARGET_VIEW_DESC desc = {};
 			desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 			desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-			auto cpuHandle = descriptorHeaps->GetCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+			auto cpuHandle = swapBuffer.rtDescriptorHeap->GetCpuHandle();
 			graphics_->GetDevice()->CreateRenderTargetView(renderPass_->GetTextures()[0]->Get(), &desc, cpuHandle);
 			renderPass_->handleRtv_ = cpuHandle;
-			descriptorHeaps->IncrementCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1);
-			descriptorHeaps->IncrementGpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1);
+			swapBuffer.rtDescriptorHeap->IncrementCpuHandle(1);
+			swapBuffer.rtDescriptorHeap->IncrementGpuHandle(1);
 
 			// memory barrior to make a rendertarget
 			renderPass_->GetTextures()[0]->ResourceBarrior(commandList.get(), D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -133,14 +134,12 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 	}
 }
 
-void CommandListDX12::EndRenderPass()
-{
-	renderPass_.reset();
-}
+void CommandListDX12::EndRenderPass() { renderPass_.reset(); }
 
 void CommandListDX12::Draw(int32_t pritimiveCount)
 {
-	auto commandList = commandLists[graphics_->GetCurrentSwapBufferIndex()];
+	auto& swapBuffer = swapBuffers_[graphics_->GetCurrentSwapBufferIndex()];
+	auto commandList = swapBuffer.commandList;
 
 	BindingVertexBuffer vb_;
 	IndexBuffer* ib_ = nullptr;
@@ -190,18 +189,17 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 		commandList->SetPipelineState(p);
 	}
 
-	auto& descriptorHeaps = descriptorHeaps_[graphics_->GetCurrentSwapBufferIndex()];
 	{
 		// set using descriptor heaps
 		ID3D12DescriptorHeap* heaps[] = {
-			descriptorHeaps->GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV), // descriptor heap for CBV, SRV and UAV
-			descriptorHeaps->GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER),	 // descriptor heap for Sampler
+			swapBuffer.cbreDescriptorHeap->GetHeap(),
+			swapBuffer.smpDescriptorHeap->GetHeap(),
 		};
 		commandList->SetDescriptorHeaps(2, heaps);
 
 		// set descriptor tables
-		commandList->SetGraphicsRootDescriptorTable(0, descriptorHeaps->GetGpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-		commandList->SetGraphicsRootDescriptorTable(1, descriptorHeaps->GetGpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER));
+		commandList->SetGraphicsRootDescriptorTable(0, swapBuffer.cbreDescriptorHeap->GetGpuHandle());
+		commandList->SetGraphicsRootDescriptorTable(1, swapBuffer.smpDescriptorHeap->GetGpuHandle());
 	}
 
 	int increment = NumTexture * static_cast<int>(ShaderStageType::Max);
@@ -217,12 +215,12 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 				D3D12_CONSTANT_BUFFER_VIEW_DESC desc = {};
 				desc.BufferLocation = _cb->Get()->GetGPUVirtualAddress() + _cb->GetOffset();
 				desc.SizeInBytes = _cb->GetActualSize();
-				auto cpuHandle = descriptorHeaps->GetCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+				auto cpuHandle = swapBuffer.cbreDescriptorHeap->GetCpuHandle();
 				graphics_->GetDevice()->CreateConstantBufferView(&desc, cpuHandle);
 			}
-			descriptorHeaps->IncrementCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1);
+			swapBuffer.cbreDescriptorHeap->IncrementCpuHandle(1);
 		}
-		descriptorHeaps->IncrementGpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, static_cast<int>(ShaderStageType::Max));
+		swapBuffer.cbreDescriptorHeap->IncrementGpuHandle(static_cast<int>(ShaderStageType::Max));
 	}
 
 	{
@@ -258,7 +256,7 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 						srvDesc.Texture2D.MipLevels = 1;
 						srvDesc.Texture2D.MostDetailedMip = 0;
 
-						auto cpuHandle = descriptorHeaps->GetCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+						auto cpuHandle = swapBuffer.cbreDescriptorHeap->GetCpuHandle();
 						graphics_->GetDevice()->CreateShaderResourceView(texture->Get(), &srvDesc, cpuHandle);
 					}
 
@@ -287,15 +285,16 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 						samplerDesc.MinLOD = 0.0f;
 						samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
 
-						auto cpuHandle = descriptorHeaps->GetCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+						auto cpuHandle = swapBuffer.smpDescriptorHeap->GetCpuHandle();
 						graphics_->GetDevice()->CreateSampler(&samplerDesc, cpuHandle);
 					}
 				}
-				descriptorHeaps->IncrementCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1);
-				descriptorHeaps->IncrementCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 1);
+				swapBuffer.cbreDescriptorHeap->IncrementCpuHandle(1);
+				swapBuffer.smpDescriptorHeap->IncrementCpuHandle(1);
 			}
 		}
-		descriptorHeaps->IncrementGpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, increment);
+		swapBuffer.cbreDescriptorHeap->IncrementGpuHandle(increment);
+		swapBuffer.smpDescriptorHeap->IncrementGpuHandle(increment);
 	}
 
 	// setup a topology (triangle)
@@ -309,7 +308,8 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 
 void CommandListDX12::Clear(const Color8& color)
 {
-	auto commandList = commandLists[graphics_->GetCurrentSwapBufferIndex()];
+	auto& swapBuffer = swapBuffers_[graphics_->GetCurrentSwapBufferIndex()];
+	auto commandList = swapBuffer.commandList;
 
 	auto rt = renderPass_;
 	if (rt == nullptr)
@@ -322,7 +322,9 @@ void CommandListDX12::Clear(const Color8& color)
 
 ID3D12GraphicsCommandList* CommandListDX12::GetCommandList() const
 {
-	auto commandList = commandLists[graphics_->GetCurrentSwapBufferIndex()];
+	auto& swapBuffer = swapBuffers_[graphics_->GetCurrentSwapBufferIndex()];
+	auto commandList = swapBuffer.commandList;
+
 	return commandList.get();
 }
 

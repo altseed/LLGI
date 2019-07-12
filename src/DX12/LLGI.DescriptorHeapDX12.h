@@ -8,28 +8,27 @@ namespace LLGI
 class DescriptorHeapDX12
 {
 private:
-	static const int numHeaps_ = static_cast<int>(D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES);
-
 	std::shared_ptr<GraphicsDX12> graphics_;
 	int size_ = 0;
 	int stage_ = 0;
 	int offset_ = 0;
+	D3D12_DESCRIPTOR_HEAP_TYPE type_ = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
 
-	std::array<ID3D12DescriptorHeap*, numHeaps_> descriptorHeaps_;
-	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, numHeaps_> cpuHandles_;
-	std::array<D3D12_GPU_DESCRIPTOR_HANDLE, numHeaps_> gpuHandles_;
+	ID3D12DescriptorHeap* descriptorHeaps_ = nullptr;
+	D3D12_CPU_DESCRIPTOR_HANDLE cpuHandles_;
+	D3D12_GPU_DESCRIPTOR_HANDLE gpuHandles_;
 
-	ID3D12DescriptorHeap* CreateHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, int numDescriptors);
+	ID3D12DescriptorHeap* CreateHeap(int numDescriptors);
 
 public:
-	DescriptorHeapDX12(std::shared_ptr<GraphicsDX12> graphics, int size, int stage);
+	DescriptorHeapDX12(std::shared_ptr<GraphicsDX12> graphics, D3D12_DESCRIPTOR_HEAP_TYPE type, int size, int stage);
 	virtual ~DescriptorHeapDX12();
 
-	void IncrementCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE heapType, int count);
-	void IncrementGpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE heapType, int count);
-	ID3D12DescriptorHeap* GetHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType);
-	D3D12_CPU_DESCRIPTOR_HANDLE GetCpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE heapType);
-	D3D12_GPU_DESCRIPTOR_HANDLE GetGpuHandle(D3D12_DESCRIPTOR_HEAP_TYPE heapType);
+	void IncrementCpuHandle(int count);
+	void IncrementGpuHandle(int count);
+	ID3D12DescriptorHeap* GetHeap();
+	D3D12_CPU_DESCRIPTOR_HANDLE GetCpuHandle();
+	D3D12_GPU_DESCRIPTOR_HANDLE GetGpuHandle();
 
 	void Reset();
 };

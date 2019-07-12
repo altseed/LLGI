@@ -13,13 +13,19 @@ namespace LLGI
 class CommandListDX12 : public CommandList
 {
 private:
+	struct SwapBuffer
+	{
+		std::shared_ptr<DescriptorHeapDX12> cbreDescriptorHeap;
+		std::shared_ptr<DescriptorHeapDX12> rtDescriptorHeap;
+		std::shared_ptr<DescriptorHeapDX12> smpDescriptorHeap;
+		std::shared_ptr<ID3D12GraphicsCommandList> commandList;
+		std::shared_ptr<ID3D12CommandAllocator> commandAllocator;
+	};
+
 	std::shared_ptr<GraphicsDX12> graphics_;
 	std::shared_ptr<RenderPassDX12> renderPass_;
 
-	std::vector<std::shared_ptr<ID3D12GraphicsCommandList>> commandLists;
-	std::vector<std::shared_ptr<ID3D12CommandAllocator>> commandAllocators;
-
-	std::vector<std::shared_ptr<DescriptorHeapDX12>> descriptorHeaps_;
+	std::vector<SwapBuffer> swapBuffers_;
 
 public:
 	CommandListDX12();
