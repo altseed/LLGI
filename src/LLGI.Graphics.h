@@ -6,6 +6,23 @@
 namespace LLGI
 {
 
+struct TextureInitializationParameter
+{
+	Vec2I Size;
+	TextureFormatType Format = TextureFormatType::R8G8B8A8_UNORM;
+};
+
+struct RenderTextureInitializationParameter
+{
+	Vec2I Size;
+	TextureFormatType Format = TextureFormatType::R8G8B8A8_UNORM;
+};
+
+struct DepthTextureInitializationParameter
+{
+	Vec2I Size;
+};
+
 class RenderPass : public ReferenceObject
 {
 private:
@@ -100,7 +117,18 @@ public:
 	virtual IndexBuffer* CreateIndexBuffer(int32_t stride, int32_t count);
 	virtual Shader* CreateShader(DataStructure* data, int32_t count);
 	virtual PipelineState* CreatePiplineState();
+
+	/**
+		@brief	 deprecated
+	*/
 	virtual CommandList* CreateCommandList();
+
+	/**
+		@brief
+		@param drawingCount	the number of maximum drawing
+	*/
+
+	virtual CommandList* CreateCommandList(int32_t drawingCount);
 
 	/**
 		@brief	create a constant buffer
@@ -110,7 +138,21 @@ public:
 	virtual ConstantBuffer* CreateConstantBuffer(int32_t size, ConstantBufferType type = ConstantBufferType::LongTime);
 
 	virtual RenderPass* CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture) { return nullptr; }
+
+	virtual Texture* CreateTexture(const TextureInitializationParameter& parameter) { return nullptr; }
+
+	virtual Texture* CreateRenderTexture(const RenderTextureInitializationParameter& parameter) { return nullptr; }
+
+	virtual Texture* CreateDepthTexture(const DepthTextureInitializationParameter& parameter) { return nullptr; }
+
+	/**
+		@brief	 deprecated
+	*/
 	virtual Texture* CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer);
+
+	/**
+		@brief	create texture from pointer or id in current platform
+	*/
 	virtual Texture* CreateTexture(uint64_t id);
 };
 

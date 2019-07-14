@@ -68,6 +68,7 @@ public:
 	ConstantBuffer* CreateConstantBuffer(int32_t size, ConstantBufferType type = ConstantBufferType::LongTime) override;
 	Shader* CreateShader(DataStructure* data, int32_t count) override;
 	PipelineState* CreatePiplineState() override;
+	CommandList* CreateCommandList(int32_t drawingCount) override;
 	CommandList* CreateCommandList() override;
 	RenderPass* CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture) override;
 	Texture* CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer) override;

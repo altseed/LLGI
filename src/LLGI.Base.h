@@ -70,7 +70,7 @@ enum class BlendFuncType
 enum class VertexLayoutFormat
 {
 	R32G32B32_FLOAT,
-    R32G32B32A32_FLOAT,
+	R32G32B32A32_FLOAT,
 	R8G8B8A8_UNORM,
 	R8G8B8A8_UINT,
 	R32G32_FLOAT,
@@ -157,17 +157,33 @@ struct Color8
 
 struct ColorF
 {
-    float R;
-    float G;
-    float B;
-    float A;
-        
-    ColorF() : R(1.0f), G(1.0f), B(1.0f), A(1.0f) {}
-        
-    ColorF(float r, float g, float b, float a) : R(r), G(g), B(b), A(a) {}
+	float R;
+	float G;
+	float B;
+	float A;
+
+	ColorF() : R(1.0f), G(1.0f), B(1.0f), A(1.0f) {}
+
+	ColorF(float r, float g, float b, float a) : R(r), G(g), B(b), A(a) {}
 };
 
-    
+enum class TextureFormatType
+{
+	R8G8B8A8_UNORM = 0,
+	R16G16B16A16_FLOAT = 11,
+	R32G32B32A32_FLOAT = 1,
+	R8G8B8A8_UNORM_SRGB = 2,
+	R16G16_FLOAT = 3,
+	R8_UNORM = 4,
+
+	BC1 = 5,
+	BC2 = 6,
+	BC3 = 7,
+	BC1_SRGB = 8,
+	BC2_SRGB = 9,
+	BC3_SRGB = 10,
+};
+
 struct DataStructure
 {
 	const void* Data;
@@ -263,22 +279,5 @@ class CommandList;
 class Compiler;
 class RenderPass;
 class RenderPassPipelineState;
-
-namespace G3
-{
-
-class VertexBuffer;
-class IndexBuffer;
-class ConstantBuffer;
-class Shader;
-class PipelineState;
-class Texture;
-class Platform;
-class Graphics;
-class CommandList;
-class Compiler;
-class RenderPass;
-
-} // namespace G3
 
 } // namespace LLGI

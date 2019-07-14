@@ -30,7 +30,7 @@ private:
 public:
 	CommandListDX12();
 	virtual ~CommandListDX12();
-	bool Initialize(GraphicsDX12* graphics);
+	bool Initialize(GraphicsDX12* graphics, int32_t drawingCount);
 
 	void Begin() override;
 	void End() override;

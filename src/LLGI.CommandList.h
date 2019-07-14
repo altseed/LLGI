@@ -85,6 +85,11 @@ public:
 	SetTexture(Texture* texture, TextureWrapMode wrapMode, TextureMinMagFilter minmagFilter, int32_t unit, ShaderStageType shaderStage);
 	virtual void BeginRenderPass(RenderPass* renderPass);
 	virtual void EndRenderPass() {}
+
+	/**
+		@brief	send a memory in specified texture from cpu to gpu
+	*/
+	virtual void SendTextureFromCPUToGPU(Texture* texture) {}
 };
 
 } // namespace LLGI

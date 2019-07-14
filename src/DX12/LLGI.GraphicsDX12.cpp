@@ -167,16 +167,18 @@ Shader* GraphicsDX12::CreateShader(DataStructure* data, int32_t count)
 	return obj;
 }
 
-CommandList* GraphicsDX12::CreateCommandList()
+CommandList* GraphicsDX12::CreateCommandList(int32_t drawingCount)
 {
 	auto obj = new CommandListDX12();
-	if (!obj->Initialize(this))
+	if (!obj->Initialize(this, drawingCount))
 	{
 		SafeRelease(obj);
 		return nullptr;
 	}
 	return obj;
 }
+
+CommandList* GraphicsDX12::CreateCommandList() { return CreateCommandList(100); }
 
 PipelineState* GraphicsDX12::CreatePiplineState() { return new PipelineStateDX12(this); }
 
@@ -281,8 +283,9 @@ ID3D12Resource* GraphicsDX12::CreateResource(D3D12_HEAP_TYPE heapType,
 	clearValue.Color[1] = 0.0f;
 	clearValue.Color[1] = 0.0f;
 	clearValue.Color[1] = 0.0f;
-	auto setClearValue = resourceDimention != D3D12_RESOURCE_DIMENSION_BUFFER &&
-						 (((flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET) != 0) || ((flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) != 0));
+	auto setClearValue =
+		resourceDimention != D3D12_RESOURCE_DIMENSION_BUFFER &&
+		(((flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET) != 0) || ((flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) != 0));
 
 	// clearValue causes CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE
 	auto hr = GetDevice()->CreateCommittedResource(

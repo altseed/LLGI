@@ -14,7 +14,7 @@ CommandListDX12::CommandListDX12() {}
 
 CommandListDX12::~CommandListDX12() { swapBuffers_.clear(); }
 
-bool CommandListDX12::Initialize(GraphicsDX12* graphics)
+bool CommandListDX12::Initialize(GraphicsDX12* graphics, int32_t drawingCount)
 {
 	HRESULT hr;
 
@@ -44,12 +44,14 @@ bool CommandListDX12::Initialize(GraphicsDX12* graphics)
 		commandList->Close();
 		swapBuffers_[i].commandList = CreateSharedPtr(commandList);
 
-		swapBuffers_[i].cbreDescriptorHeap =
-			std::make_shared<DescriptorHeapDX12>(graphics_, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 200, 2);
+		swapBuffers_[i].cbreDescriptorHeap = std::make_shared<DescriptorHeapDX12>(
+			graphics_, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, drawingCount * NumTexture + 2, 2);
+
+		// the maximum render target is defined temporary
 		swapBuffers_[i].rtDescriptorHeap =
-			std::make_shared<DescriptorHeapDX12>(graphics_, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 50, 2);
-		swapBuffers_[i].smpDescriptorHeap =
-			std::make_shared<DescriptorHeapDX12>(graphics_, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 100, 2);
+			std::make_shared<DescriptorHeapDX12>(graphics_, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_RTV, drawingCount / 2, 2);
+		swapBuffers_[i].smpDescriptorHeap = std::make_shared<DescriptorHeapDX12>(
+			graphics_, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, drawingCount * NumTexture, 2);
 	}
 
 	return true;

@@ -3,6 +3,8 @@
 namespace LLGI
 {
 
+void* Texture::GetBuffer() const { return nullptr; }
+
 void* Texture::Lock() { return nullptr; }
 
 void Texture::Unlock() {}

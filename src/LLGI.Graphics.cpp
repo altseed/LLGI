@@ -29,6 +29,8 @@ PipelineState* Graphics::CreatePiplineState() { return nullptr; }
 
 CommandList* Graphics::CreateCommandList() { return nullptr; }
 
+CommandList* Graphics::CreateCommandList(int32_t drawingCount) { return nullptr; }
+
 ConstantBuffer* Graphics::CreateConstantBuffer(int32_t size, ConstantBufferType type) { return nullptr; }
 
 Texture* Graphics::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer) { return nullptr; }
