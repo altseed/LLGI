@@ -73,6 +73,14 @@ public:
 	virtual ~CommandList();
 
 	virtual void Begin();
+
+	/**
+		@brief
+		added a command into supecified context. This function is supported in some platform.
+		Internal context is not used if platformContextPtr is null in Metal.
+	*/
+	virtual bool BeginWithPlatform(void* platformContextPtr) { return false; }
+
 	virtual void End();
 
 	virtual void SetScissor(int32_t x, int32_t y, int32_t width, int32_t height);
@@ -84,7 +92,20 @@ public:
 	virtual void
 	SetTexture(Texture* texture, TextureWrapMode wrapMode, TextureMinMagFilter minmagFilter, int32_t unit, ShaderStageType shaderStage);
 	virtual void BeginRenderPass(RenderPass* renderPass);
+
+	/**
+		@brief
+		added a command into supecified renderpass. This function is supported in some platform.
+	*/
+	virtual bool BeginRenderPassWithPlatformPtr(void* platformPtr) { return false; }
+
 	virtual void EndRenderPass() {}
+
+	/**
+		@brief
+		The pair of BeginRenderPassWithPlatformPtr
+	*/
+	virtual bool EndRenderPassWithPlatformPtr() { return false; }
 
 	/**
 		@brief	send a memory in specified texture from cpu to gpu
