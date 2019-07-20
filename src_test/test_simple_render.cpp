@@ -1,35 +1,10 @@
 
 #include "test.h"
+#include "TestHelper.h"
 
 #include <fstream>
 #include <iostream>
 #include <map>
-
-static std::vector<uint8_t> LoadData(const char* path)
-{
-	std::vector<uint8_t> ret;
-
-#ifdef _WIN32
-	FILE* fp = nullptr;
-	fopen_s(&fp, path, "rb");
-
-#else
-	FILE* fp = fopen(path, "rb");
-#endif
-
-	if (fp == nullptr)
-		return ret;
-
-	fseek(fp, 0, SEEK_END);
-	auto size = ftell(fp);
-	fseek(fp, 0, SEEK_SET);
-
-	ret.resize(size);
-	fread(ret.data(), 1, size, fp);
-	fclose(fp);
-
-	return ret;
-}
 
 void test_simple_rectangle(LLGI::DeviceType deviceType)
 {
@@ -192,8 +167,8 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 
 		if (compiler == nullptr)
 		{
-			auto binary_vs = LoadData("Shaders/SPIRV/simple_rectangle.vert.spv");
-			auto binary_ps = LoadData("Shaders/SPIRV/simple_rectangle.frag.spv");
+			auto binary_vs = TestHelper::LoadData("Shaders/SPIRV/simple_rectangle.vert.spv");
+			auto binary_ps = TestHelper::LoadData("Shaders/SPIRV/simple_rectangle.frag.spv");
 
 			LLGI::DataStructure d_vs;
 			LLGI::DataStructure d_ps;
@@ -446,8 +421,8 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 	if (compiler == nullptr)
 	{
-		auto binary_vs = LoadData("Shaders/SPIRV/simple_constant_rectangle.vert.spv");
-		auto binary_ps = LoadData("Shaders/SPIRV/simple_constant_rectangle.frag.spv");
+		auto binary_vs = TestHelper::LoadData("simple_constant_rectangle.vert.spv");
+		auto binary_ps = TestHelper::LoadData("simple_constant_rectangle.frag.spv");
 
 		LLGI::DataStructure d_vs;
 		LLGI::DataStructure d_ps;
@@ -470,8 +445,8 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 		if (platform->GetDeviceType() == LLGI::DeviceType::Metal)
 		{
-			auto code_vs = LoadData("Shaders/Metal/simple_constant_rectangle.vert");
-			auto code_ps = LoadData("Shaders/Metal/simple_constant_rectangle.frag");
+			auto code_vs = TestHelper::LoadData("simple_constant_rectangle.vert");
+			auto code_ps = TestHelper::LoadData("simple_constant_rectangle.frag");
 			code_vs.push_back(0);
 			code_ps.push_back(0);
 
@@ -772,8 +747,8 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 	if (compiler == nullptr)
 	{
-		auto binary_vs = LoadData("Shaders/SPIRV/simple_texture_rectangle.vert.spv");
-		auto binary_ps = LoadData("Shaders/SPIRV/simple_texture_rectangle.frag.spv");
+		auto binary_vs = TestHelper::LoadData("simple_texture_rectangle.vert.spv");
+		auto binary_ps = TestHelper::LoadData("simple_texture_rectangle.frag.spv");
 
 		LLGI::DataStructure d_vs;
 		LLGI::DataStructure d_ps;
@@ -796,8 +771,8 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 		if (platform->GetDeviceType() == LLGI::DeviceType::Metal)
 		{
-			auto code_vs = LoadData("Shaders/Metal/simple_texture_rectangle.vert");
-			auto code_ps = LoadData("Shaders/Metal/simple_texture_rectangle.frag");
+			auto code_vs = TestHelper::LoadData("simple_texture_rectangle.vert");
+			auto code_ps = TestHelper::LoadData("simple_texture_rectangle.frag");
 			code_vs.push_back(0);
 			code_ps.push_back(0);
 

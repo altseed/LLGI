@@ -1,31 +1,6 @@
 #include "test.h"
 #include <map>
-
-static std::vector<uint8_t> LoadData(const char* path)
-{
-    std::vector<uint8_t> ret;
-    
-#ifdef _WIN32
-    FILE* fp = nullptr;
-    fopen_s(&fp, path, "rb");
-    
-#else
-    FILE* fp = fopen(path, "rb");
-#endif
-    
-    if (fp == nullptr)
-    return ret;
-    
-    fseek(fp, 0, SEEK_END);
-    auto size = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-    
-    ret.resize(size);
-    fread(ret.data(), 1, size, fp);
-    fclose(fp);
-    
-    return ret;
-}
+#include "TestHelper.h"
 
 void test_renderPass(LLGI::DeviceType deviceType)
 {
@@ -154,8 +129,8 @@ float4 main(PS_INPUT input) : SV_TARGET
 
         if(platform->GetDeviceType() == LLGI::DeviceType::Metal)
         {
-            auto code_vs = LoadData("Shaders/Metal/simple_texture_rectangle.vert");
-            auto code_ps = LoadData("Shaders/Metal/simple_texture_rectangle.frag");
+			auto code_vs = TestHelper::LoadData("simple_texture_rectangle.vert");
+			auto code_ps = TestHelper::LoadData("simple_texture_rectangle.frag");
             code_vs.push_back(0);
             code_ps.push_back(0);
             
