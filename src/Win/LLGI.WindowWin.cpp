@@ -18,10 +18,10 @@ LRESULT LLGI_WndProc_Win(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 bool WindowWin::Initialize(const char* title, const Vec2I& windowSize) {
 
-	WNDCLASSEX wcex;
-	memset(&wcex, 0, sizeof(WNDCLASSEX));
+    WNDCLASSEXA wcex;
+	memset(&wcex, 0, sizeof(WNDCLASSEXA));
 
-	wcex.cbSize = sizeof(WNDCLASSEX);
+	wcex.cbSize = sizeof(WNDCLASSEXA);
 	wcex.style = CS_CLASSDC;
 	wcex.lpfnWndProc = (WNDPROC)LLGI_WndProc_Win;
 	wcex.lpszClassName = title;
