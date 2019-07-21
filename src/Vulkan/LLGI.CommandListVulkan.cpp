@@ -9,7 +9,7 @@
 namespace LLGI
 {
 
-DescriptorPoolVulkan::DescriptorPoolVulkan(std::shared_ptr<GraphicsVulkan> graphics, int32_t size, int stage)
+DescriptorPoolVulkan::DescriptorPoolVulkan(GraphicsVulkan* graphics, int32_t size, int stage)
 	: graphics_(graphics), size_(size), stage_(stage)
 {
 	std::array<vk::DescriptorPoolSize, 3> poolSizes;
@@ -57,13 +57,63 @@ const std::vector<vk::DescriptorSet>& DescriptorPoolVulkan::Get(PipelineStateVul
 
 void DescriptorPoolVulkan::Reset() { offset = 0; }
 
+
+bool VulkanNativeCommandList::Initialize(GraphicsVulkan* graphics)
+{
+    //vk::CommandBufferAllocateInfo allocInfo;
+    //allocInfo.commandPool = graphics->GetCommandPool();
+    //allocInfo.commandBufferCount = 1;
+    //auto r = graphics->GetDevice().allocateCommandBuffers(allocInfo);
+
+    graphics_ = graphics;
+
+    VkCommandBufferAllocateInfo allocInfo;
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.pNext = nullptr;
+    allocInfo.commandPool = (VkCommandPool)graphics->GetCommandPool();
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandBufferCount = 1;
+    LLGI_VK_CHECK(vkAllocateCommandBuffers((VkDevice)graphics->GetDevice(), &allocInfo, &nativeCommandBuffer_));
+
+    descriptorPool_ = std::make_shared<DescriptorPoolVulkan>(graphics, 10000, 2);
+
+    return true;
+}
+
+void VulkanNativeCommandList::Dispose()
+{
+}
+
+bool VulkanNativeCommandList::Begin()
+{
+    LLGI_VK_CHECK(vkResetCommandBuffer(nativeCommandBuffer_, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT));
+
+    VkCommandBufferBeginInfo beginInfo = {};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.pNext = nullptr;
+    beginInfo.flags = 0;
+    beginInfo.pInheritanceInfo = nullptr;
+    LLGI_VK_CHECK(vkBeginCommandBuffer(nativeCommandBuffer_, &beginInfo));
+
+    descriptorPool_->Reset();
+
+    return true;
+}
+
+bool VulkanNativeCommandList::End()
+{
+    LLGI_VK_CHECK(vkEndCommandBuffer(nativeCommandBuffer_));
+    return true;
+}
+
 CommandListVulkan::CommandListVulkan() {}
 
 CommandListVulkan::~CommandListVulkan()
 {
-	commandBuffers.clear();
-
-	descriptorPools.clear();
+    for (auto& nativeList : commandLists_) {
+        nativeList->Dispose();
+    }
+    commandLists_.clear();
 }
 
 bool CommandListVulkan::Initialize(GraphicsVulkan* graphics)
@@ -71,15 +121,13 @@ bool CommandListVulkan::Initialize(GraphicsVulkan* graphics)
 	SafeAddRef(graphics);
 	graphics_ = CreateSharedPtr(graphics);
 
-	vk::CommandBufferAllocateInfo allocInfo;
-	allocInfo.commandPool = graphics->GetCommandPool();
-	allocInfo.commandBufferCount = graphics->GetSwapBufferCount();
-	commandBuffers = graphics->GetDevice().allocateCommandBuffers(allocInfo);
-
 	for (size_t i = 0; i < static_cast<size_t>(graphics_->GetSwapBufferCount()); i++)
 	{
-		auto dp = std::make_shared<DescriptorPoolVulkan>(graphics_, 10000, 2);
-		descriptorPools.push_back(dp);
+        auto cl = std::make_shared<VulkanNativeCommandList>();
+        if (!cl->Initialize(graphics)) {
+            return false;
+        }
+        commandLists_.push_back(cl);
 	}
 
 	return true;
@@ -87,30 +135,30 @@ bool CommandListVulkan::Initialize(GraphicsVulkan* graphics)
 
 void CommandListVulkan::Begin()
 {
-	auto& cmdBuffer = commandBuffers[graphics_->GetCurrentSwapBufferIndex()];
-
-	cmdBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
-	vk::CommandBufferBeginInfo cmdBufInfo;
-	cmdBuffer.begin(cmdBufInfo);
-
-	auto& dp = descriptorPools[graphics_->GetCurrentSwapBufferIndex()];
-	dp->Reset();
+	auto& cmdBuffer = commandLists_[graphics_->GetCurrentSwapBufferIndex()];
+    if (!cmdBuffer->Begin()) {
+        assert(0);
+        return;
+    }
 
 	CommandList::Begin();
 }
 
 void CommandListVulkan::End()
 {
-	auto& cmdBuffer = commandBuffers[graphics_->GetCurrentSwapBufferIndex()];
-	cmdBuffer.end();
+	auto& cmdBuffer = commandLists_[graphics_->GetCurrentSwapBufferIndex()];
+    if (!cmdBuffer->End()) {
+        assert(0);
+        return;
+    }
 }
 
 void CommandListVulkan::SetScissor(int32_t x, int32_t y, int32_t width, int32_t height)
 {
-	auto& cmdBuffer = commandBuffers[graphics_->GetCurrentSwapBufferIndex()];
+	auto& cmdBuffer = commandLists_[graphics_->GetCurrentSwapBufferIndex()];
 
-	vk::Rect2D scissor = vk::Rect2D(vk::Offset2D(x, y), vk::Extent2D(width, height));
-	cmdBuffer.setScissor(0, scissor);
+    VkRect2D scissor = { { x, y }, { (uint32_t)width, (uint32_t)height } };
+    vkCmdSetScissor(cmdBuffer->GetNativeCommandBuffer(), 0, 1, &scissor);
 }
 
 void CommandListVulkan::Draw(int32_t pritimiveCount)
@@ -135,30 +183,32 @@ void CommandListVulkan::Draw(int32_t pritimiveCount)
 	auto ib = static_cast<IndexBufferVulkan*>(ib_);
 	auto pip = static_cast<PipelineStateVulkan*>(pip_);
 
-	auto& cmdBuffer = commandBuffers[graphics_->GetCurrentSwapBufferIndex()];
+	auto& cmdBuffer = commandLists_[graphics_->GetCurrentSwapBufferIndex()];
 
 	// assign a vertex buffer
 	if (isVBDirtied)
 	{
-		vk::DeviceSize vertexOffsets = vb_.offset;
-		cmdBuffer.bindVertexBuffers(0, 1, &(vb->GetBuffer()), &vertexOffsets);
+        VkDeviceSize vertexOffsets = vb_.offset;
+        VkBuffer buffer = (VkBuffer)vb->GetBuffer();
+        vkCmdBindVertexBuffers(cmdBuffer->GetNativeCommandBuffer(), 0, 1, &buffer, &vertexOffsets);
 	}
 
 	// assign an index vuffer
 	if (isIBDirtied)
 	{
-		vk::DeviceSize indexOffset = 0;
-		vk::IndexType indexType = vk::IndexType::eUint16;
+		VkDeviceSize indexOffset = 0;
+        VkIndexType indexType = VK_INDEX_TYPE_UINT16;
 
-		if (ib->GetStride() == 2)
-			indexType = vk::IndexType::eUint16;
-		if (ib->GetStride() == 4)
-			indexType = vk::IndexType::eUint32;
+        if (ib->GetStride() == 2)
+            indexType = VK_INDEX_TYPE_UINT16;
+        if (ib->GetStride() == 4)
+            indexType = VK_INDEX_TYPE_UINT32;
 
-		cmdBuffer.bindIndexBuffer(ib->GetBuffer(), indexOffset, indexType);
+        VkBuffer buffer = (VkBuffer)ib->GetBuffer();
+        vkCmdBindIndexBuffer(cmdBuffer->GetNativeCommandBuffer(), buffer, indexOffset, indexType);
 	}
 
-	auto& dp = descriptorPools[graphics_->GetCurrentSwapBufferIndex()];
+    auto* dp = cmdBuffer->GetDescriptorPool();
 
 	std::vector<vk::DescriptorSet> descriptorSets = dp->Get(pip);
 	/*
@@ -266,7 +316,7 @@ void CommandListVulkan::Draw(int32_t pritimiveCount)
 
 	graphics_->GetDevice().updateDescriptorSets(writeDescriptorIndex, writeDescriptorSets.data(), 0, nullptr);
 
-	std::array<vk::DescriptorSet, static_cast<int>(ShaderStageType::Max)> descriptorSets_;
+	std::array<VkDescriptorSet, static_cast<int>(ShaderStageType::Max)> descriptorSets_;
 	std::array<uint32_t, static_cast<int>(ShaderStageType::Max)> offsets_;
 	int descriptorIndex = 0;
 	int firstSet = -1;
@@ -276,7 +326,7 @@ void CommandListVulkan::Draw(int32_t pritimiveCount)
 		if (!stages[i])
 			continue;
 
-		descriptorSets_[descriptorIndex] = descriptorSets[i];
+		descriptorSets_[descriptorIndex] = static_cast<VkDescriptorSet>(descriptorSets[i]);
 		offsets_[descriptorIndex] = 0;
 
 		if (firstSet < 0)
@@ -289,19 +339,23 @@ void CommandListVulkan::Draw(int32_t pritimiveCount)
 
 	if (firstSet >= 0)
 	{
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-									 pip->GetPipelineLayout(),
-									 firstSet,
-									 descriptorIndex,
-									 descriptorSets_.data(),
-									 descriptorIndex,
-									 offsets_.data());
+        auto pipelineLayout = (VkPipelineLayout)pip->GetPipelineLayout();
+        vkCmdBindDescriptorSets(
+            cmdBuffer->GetNativeCommandBuffer(),
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipelineLayout,
+            firstSet,
+            descriptorIndex,
+            descriptorSets_.data(),
+            descriptorIndex,
+            offsets_.data());
 	}
 
 	// assign a pipeline
 	if (isPipDirtied)
 	{
-		cmdBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pip->GetPipeline());
+        auto pipeline = (VkPipeline)pip->GetPipeline();
+        vkCmdBindPipeline(cmdBuffer->GetNativeCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 	}
 
 	// draw
@@ -311,7 +365,7 @@ void CommandListVulkan::Draw(int32_t pritimiveCount)
 	if (pip->Topology == TopologyType::Line)
 		indexPerPrim = 2;
 
-	cmdBuffer.drawIndexed(indexPerPrim * pritimiveCount, 1, 0, 0, 0);
+    vkCmdDrawIndexed(cmdBuffer->GetNativeCommandBuffer(), indexPerPrim * pritimiveCount, 1, 0, 0, 0);
 
 	CommandList::Draw(pritimiveCount);
 }
@@ -336,7 +390,7 @@ void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
 	depthSubRange.levelCount = 1;
 	depthSubRange.layerCount = 1;
 
-	auto& cmdBuffer = commandBuffers[graphics_->GetCurrentSwapBufferIndex()];
+	auto& cmdBuffer = commandLists_[graphics_->GetCurrentSwapBufferIndex()];
 
 	/*
 	// to make screen clear
@@ -372,39 +426,41 @@ void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
 				   depthSubRange);
 	*/
 
-	vk::ClearValue clear_values[2];
+	VkClearValue clear_values[2];
 	clear_values[0].color = clearColor;
 	clear_values[1].depthStencil = clearDepth;
 
-	// begin renderpass
-	vk::RenderPassBeginInfo renderPassBeginInfo;
-	renderPassBeginInfo.framebuffer = renderPass_->frameBuffer;
-	renderPassBeginInfo.renderPass = renderPass_->renderPassPipelineState->GetRenderPass();
-	renderPassBeginInfo.renderArea.extent = vk::Extent2D(renderPass_->GetImageSize().X, renderPass_->GetImageSize().Y);
-	renderPassBeginInfo.clearValueCount = 2;
-	renderPassBeginInfo.pClearValues = clear_values;
-	cmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
+    VkRenderPassBeginInfo renderPassBeginInfo = {};
+    renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassBeginInfo.pNext = nullptr;
+    renderPassBeginInfo.renderPass = static_cast<VkRenderPass>(renderPass_->renderPassPipelineState->GetRenderPass());
+    renderPassBeginInfo.framebuffer = static_cast<VkFramebuffer>(renderPass_->frameBuffer);
+    renderPassBeginInfo.renderArea.offset = { 0, 0 };
+    renderPassBeginInfo.renderArea.extent.width = renderPass_->GetImageSize().X;
+    renderPassBeginInfo.renderArea.extent.height = renderPass_->GetImageSize().Y;
+    renderPassBeginInfo.clearValueCount = 2;
+    renderPassBeginInfo.pClearValues = clear_values;
+    vkCmdBeginRenderPass(cmdBuffer->GetNativeCommandBuffer(), &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	vk::Viewport viewport = vk::Viewport(
-		0.0f, 0.0f, static_cast<float>(renderPass_->GetImageSize().X), static_cast<float>(renderPass_->GetImageSize().Y), 0.0f, 1.0f);
-	cmdBuffer.setViewport(0, viewport);
+    VkViewport viewport = { 0.0f, 0.0f, static_cast<float>(renderPass_->GetImageSize().X), static_cast<float>(renderPass_->GetImageSize().Y), 0.0f, 1.0f };
+    vkCmdSetViewport(cmdBuffer->GetNativeCommandBuffer(), 0, 1, &viewport);
 
-	vk::Rect2D scissor = vk::Rect2D(vk::Offset2D(), vk::Extent2D(renderPass_->GetImageSize().X, renderPass_->GetImageSize().Y));
-	cmdBuffer.setScissor(0, scissor);
+    VkRect2D scissor = { { 0, 0 }, { (uint32_t)renderPass_->GetImageSize().X, (uint32_t)renderPass_->GetImageSize().Y } };
+    vkCmdSetScissor(cmdBuffer->GetNativeCommandBuffer(), 0, 1, &scissor);
 }
 
 void CommandListVulkan::EndRenderPass()
 {
-	auto& cmdBuffer = commandBuffers[graphics_->GetCurrentSwapBufferIndex()];
+	auto& cmdBuffer = commandLists_[graphics_->GetCurrentSwapBufferIndex()];
 
-	// end renderpass
-	cmdBuffer.endRenderPass();
+    // end renderpass
+    vkCmdEndRenderPass(cmdBuffer->GetNativeCommandBuffer());
 }
 
-vk::CommandBuffer CommandListVulkan::GetCommandBuffer() const
+VkCommandBuffer CommandListVulkan::GetCommandBuffer() const
 {
-	auto& cmdBuffer = commandBuffers[graphics_->GetCurrentSwapBufferIndex()];
-	return cmdBuffer;
+	auto& cmdBuffer = commandLists_[graphics_->GetCurrentSwapBufferIndex()];
+    return cmdBuffer->GetNativeCommandBuffer();
 }
 
 } // namespace LLGI

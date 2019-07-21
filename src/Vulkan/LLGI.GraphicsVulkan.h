@@ -134,7 +134,7 @@ private:
 
 	vk::Sampler defaultSampler = nullptr;
 
-	std::function<void(vk::CommandBuffer&)> addCommand_;
+	std::function<void(VkCommandBuffer)> addCommand_;
 	std::function<void(PlatformStatus&)> getStatus_;
 
 public:
@@ -143,7 +143,7 @@ public:
 				   const vk::CommandPool& commandPool,
 				   const vk::PhysicalDevice& pysicalDevice,
 				   const PlatformView& platformView,
-				   std::function<void(vk::CommandBuffer&)> addCommand,
+				   std::function<void(VkCommandBuffer)> addCommand,
 				   std::function<void(PlatformStatus&)> getStatus);
 
 	virtual ~GraphicsVulkan();

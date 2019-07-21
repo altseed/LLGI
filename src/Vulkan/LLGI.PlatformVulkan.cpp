@@ -720,12 +720,13 @@ Graphics* PlatformVulkan::CreateGraphics()
 
 	auto getStatus = [this](PlatformStatus& status) -> void { status.currentSwapBufferIndex = this->frameIndex; };
 
-	auto addCommand = [this](vk::CommandBuffer& commandBuffer) -> void {
+	auto addCommand = [this](VkCommandBuffer commandBuffer) -> void {
 
-		vk::SubmitInfo copySubmitInfo;
+        VkSubmitInfo copySubmitInfo = {};
+        copySubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		copySubmitInfo.commandBufferCount = 1;
 		copySubmitInfo.pCommandBuffers = &commandBuffer;
-		vkQueue.submit(copySubmitInfo, VK_NULL_HANDLE);
+        vkQueueSubmit(static_cast<VkQueue>(vkQueue), 1, &copySubmitInfo, VK_NULL_HANDLE);
 
 		this->executedCommandCount++;
 	};

@@ -150,7 +150,7 @@ GraphicsVulkan::GraphicsVulkan(const vk::Device& device,
 							   const vk::CommandPool& commandPool,
 							   const vk::PhysicalDevice& pysicalDevice,
 							   const PlatformView& platformView,
-							   std::function<void(vk::CommandBuffer&)> addCommand,
+							   std::function<void(VkCommandBuffer)> addCommand,
 							   std::function<void(PlatformStatus&)> getStatus)
 	: vkDevice(device)
 	, vkQueue(quque)
