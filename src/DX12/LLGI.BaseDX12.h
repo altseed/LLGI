@@ -14,5 +14,7 @@ namespace LLGI
 {
 
 class GraphicsDX12;
+class RenderPassDX12;
+class SingleFrameMemoryPoolDX12;
 
 } // namespace LLGI

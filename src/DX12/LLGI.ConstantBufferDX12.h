@@ -22,7 +22,7 @@ private:
 public:
 	bool Initialize(GraphicsDX12* graphics, int32_t size);
 
-	bool InitializeAsShortTime(GraphicsDX12* graphics, int32_t size);
+	bool InitializeAsShortTime(SingleFrameMemoryPoolDX12* memoryPool, int32_t size);
 
 	ConstantBufferDX12();
 	virtual ~ConstantBufferDX12();

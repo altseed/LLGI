@@ -4,36 +4,12 @@
 #include "LLGI.IndexBufferDX12.h"
 #include "LLGI.PipelineStateDX12.h"
 #include "LLGI.ShaderDX12.h"
+#include "LLGI.SingleFrameMemoryPoolDX12.h"
 #include "LLGI.TextureDX12.h"
 #include "LLGI.VertexBufferDX12.h"
 
 namespace LLGI
 {
-
-MemoryPoolDX12::MemoryPoolDX12(GraphicsDX12* graphics, int32_t constantBufferSize)
-{
-	constantBufferSize_ = (constantBufferSize + 255) & ~255; // buffer size should be multiple of 256
-	constantBuffer_ = graphics->CreateResource(D3D12_HEAP_TYPE_UPLOAD,
-											   DXGI_FORMAT_UNKNOWN,
-											   D3D12_RESOURCE_DIMENSION_BUFFER,
-											   D3D12_RESOURCE_STATE_GENERIC_READ,
-											   Vec2I(constantBufferSize_, 1));
-}
-
-MemoryPoolDX12 ::~MemoryPoolDX12() { SafeRelease(constantBuffer_); }
-
-bool MemoryPoolDX12::GetConstantBuffer(int32_t size, ID3D12Resource*& resource, int32_t& offset)
-{
-	if (constantBufferOffset_ + size > constantBufferSize_)
-		return false;
-
-	resource = constantBuffer_;
-	offset = constantBufferOffset_;
-	constantBufferOffset_ += size;
-	return true;
-}
-
-void MemoryPoolDX12::Reset() { constantBufferOffset_ = 0; }
 
 GraphicsDX12::GraphicsDX12(ID3D12Device* device,
 						   std::function<std::tuple<D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*>()> getScreenFunc,
@@ -55,18 +31,14 @@ GraphicsDX12::GraphicsDX12(ID3D12Device* device,
 	hr = device->CreateCommandAllocator(commandListType_, IID_PPV_ARGS(&commandAllocator_));
 	assert(SUCCEEDED(hr));
 
-	memoryPools.reserve(swapBufferCount);
-	for (int32_t i = 0; i < swapBufferCount; i++)
-	{
-		memoryPools.push_back(std::make_shared<MemoryPoolDX12>(this, 1024 * 1024 * 8));
-	}
+	internalSingleFrameMemoryPool_ = std::make_shared<SingleFrameMemoryPoolDX12>(this, false, swapBufferCount_, 1024 * 1024, 128);
 }
 
 GraphicsDX12::~GraphicsDX12()
 {
 	WaitFinish();
 
-	memoryPools.clear();
+	internalSingleFrameMemoryPool_.reset();
 	SafeRelease(device_);
 	SafeRelease(commandQueue_);
 	SafeRelease(commandAllocator_);
@@ -75,7 +47,7 @@ GraphicsDX12::~GraphicsDX12()
 void GraphicsDX12::NewFrame()
 {
 	currentSwapBufferIndex = (currentSwapBufferIndex + 1) % swapBufferCount_;
-	GetMemoryPool()->Reset();
+	internalSingleFrameMemoryPool_->NewFrame();
 }
 
 void GraphicsDX12::Execute(CommandList* commandList)
@@ -135,7 +107,7 @@ ConstantBuffer* GraphicsDX12::CreateConstantBuffer(int32_t size, ConstantBufferT
 	if (type == ConstantBufferType::ShortTime)
 	{
 		auto obj = new ConstantBufferDX12();
-		if (!obj->InitializeAsShortTime(this, size))
+		if (!obj->InitializeAsShortTime(internalSingleFrameMemoryPool_.get(), size))
 		{
 			SafeRelease(obj);
 			return nullptr;
@@ -167,20 +139,30 @@ Shader* GraphicsDX12::CreateShader(DataStructure* data, int32_t count)
 	return obj;
 }
 
-CommandList* GraphicsDX12::CreateCommandList(int32_t drawingCount)
+PipelineState* GraphicsDX12::CreatePiplineState() { return new PipelineStateDX12(this); }
+
+SingleFrameMemoryPool* GraphicsDX12::CreateSingleFrameMemoryPool(int32_t constantBufferPoolSize, int32_t drawingCount)
 {
+	return new SingleFrameMemoryPoolDX12(this, true, swapBufferCount_, constantBufferPoolSize, drawingCount);
+}
+
+CommandList* GraphicsDX12::CreateCommandList(SingleFrameMemoryPool* memoryPool)
+{
+	auto mp = static_cast<SingleFrameMemoryPoolDX12*>(memoryPool);
+
+	if (mp == nullptr)
+	{
+		mp = internalSingleFrameMemoryPool_.get();
+	}
+
 	auto obj = new CommandListDX12();
-	if (!obj->Initialize(this, drawingCount))
+	if (!obj->Initialize(this, mp->GetDrawingCount()))
 	{
 		SafeRelease(obj);
 		return nullptr;
 	}
 	return obj;
 }
-
-CommandList* GraphicsDX12::CreateCommandList() { return CreateCommandList(100); }
-
-PipelineState* GraphicsDX12::CreatePiplineState() { return new PipelineStateDX12(this); }
 
 RenderPass* GraphicsDX12::CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture)
 {
@@ -234,12 +216,6 @@ std::shared_ptr<RenderPassPipelineStateDX12> GraphicsDX12::CreateRenderPassPipel
 	renderPassPipelineStates[key] = ret;
 
 	return ret;
-}
-
-std::shared_ptr<MemoryPoolDX12>& GraphicsDX12::GetMemoryPool()
-{
-	assert(GetCurrentSwapBufferIndex() >= 0);
-	return memoryPools[GetCurrentSwapBufferIndex()];
 }
 
 ID3D12Device* GraphicsDX12::GetDevice() { return device_; }

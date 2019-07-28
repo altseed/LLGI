@@ -10,24 +10,6 @@
 
 namespace LLGI
 {
-class RenderPassDX12;
-
-class MemoryPoolDX12
-{
-private:
-	ID3D12Resource* constantBuffer_ = nullptr;
-	int32_t constantBufferSize_ = 0;
-	int32_t constantBufferOffset_ = 0;
-
-public:
-	MemoryPoolDX12(GraphicsDX12* graphics, int32_t constantBufferSize);
-	virtual ~MemoryPoolDX12();
-
-	bool GetConstantBuffer(int32_t size, ID3D12Resource*& resource, int32_t& offset);
-
-	void Reset();
-};
-
 class GraphicsDX12 : public Graphics
 {
 private:
@@ -44,7 +26,7 @@ private:
 
 	RenderPassDX12 currentScreen;
 
-	std::vector<std::shared_ptr<MemoryPoolDX12>> memoryPools;
+	std::shared_ptr<SingleFrameMemoryPoolDX12> internalSingleFrameMemoryPool_;
 
 	std::unordered_map<RenderPassPipelineStateDX12Key, std::weak_ptr<RenderPassPipelineStateDX12>, RenderPassPipelineStateDX12Key::Hash>
 		renderPassPipelineStates;
@@ -68,15 +50,13 @@ public:
 	ConstantBuffer* CreateConstantBuffer(int32_t size, ConstantBufferType type = ConstantBufferType::LongTime) override;
 	Shader* CreateShader(DataStructure* data, int32_t count) override;
 	PipelineState* CreatePiplineState() override;
-	CommandList* CreateCommandList(int32_t drawingCount) override;
-	CommandList* CreateCommandList() override;
+	SingleFrameMemoryPool* CreateSingleFrameMemoryPool(int32_t constantBufferPoolSize, int32_t drawingCount) override;
+	CommandList* CreateCommandList(SingleFrameMemoryPool* memoryPool = nullptr) override;
 	RenderPass* CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture) override;
 	Texture* CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer) override;
 	Texture* CreateTexture(uint64_t id) override;
 
 	std::shared_ptr<RenderPassPipelineStateDX12> CreateRenderPassPipelineState(bool isPresentMode, bool hasDepth);
-
-	std::shared_ptr<MemoryPoolDX12>& GetMemoryPool();
 
 	ID3D12Device* GetDevice();
 

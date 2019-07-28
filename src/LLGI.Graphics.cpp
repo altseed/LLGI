@@ -3,6 +3,10 @@
 namespace LLGI
 {
 
+void SingleFrameMemoryPool::NewFrame() {}
+
+ConstantBuffer* SingleFrameMemoryPool::CreateConstantBuffer(int32_t size) { return nullptr; }
+
 void RenderPass::SetIsColorCleared(bool isColorCleared) { isColorCleared_ = isColorCleared; }
 
 void RenderPass::SetIsDepthCleared(bool isDepthCleared) { isDepthCleared_ = isDepthCleared; }
@@ -27,9 +31,9 @@ Shader* Graphics::CreateShader(DataStructure* data, int32_t count) { return null
 
 PipelineState* Graphics::CreatePiplineState() { return nullptr; }
 
-CommandList* Graphics::CreateCommandList() { return nullptr; }
+SingleFrameMemoryPool* Graphics::CreateSingleFrameMemoryPool(int32_t constantBufferPoolSize, int32_t drawingCount) { return nullptr; }
 
-CommandList* Graphics::CreateCommandList(int32_t drawingCount) { return nullptr; }
+CommandList* Graphics::CreateCommandList(SingleFrameMemoryPool* memoryPool) { return nullptr; }
 
 ConstantBuffer* Graphics::CreateConstantBuffer(int32_t size, ConstantBufferType type) { return nullptr; }
 

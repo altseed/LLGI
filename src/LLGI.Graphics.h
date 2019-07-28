@@ -23,6 +23,23 @@ struct DepthTextureInitializationParameter
 	Vec2I Size;
 };
 
+/**
+	@brief	provide a memory which is available in one frame
+*/
+class SingleFrameMemoryPool : public ReferenceObject
+{
+public:
+	SingleFrameMemoryPool() = default;
+	virtual ~SingleFrameMemoryPool() = default;
+
+	/**
+	@brief	Start new frame
+	*/
+	virtual void NewFrame();
+
+	virtual ConstantBuffer* CreateConstantBuffer(int32_t size);
+};
+
 class RenderPass : public ReferenceObject
 {
 private:
@@ -81,6 +98,7 @@ public:
 		@brief	Start new frame
 	*/
 	virtual void NewFrame();
+
 	virtual void SetWindowSize(const Vec2I& windowSize);
 
 	/**
@@ -119,16 +137,15 @@ public:
 	virtual PipelineState* CreatePiplineState();
 
 	/**
-		@brief	 deprecated
+		@brief create a memory pool
 	*/
-	virtual CommandList* CreateCommandList();
+	virtual SingleFrameMemoryPool* CreateSingleFrameMemoryPool(int32_t constantBufferPoolSize, int32_t drawingCount);
 
 	/**
 		@brief
-		@param drawingCount	the number of maximum drawing
+		@param memoryPool if memory pool is null, allocate memory from graphics
 	*/
-
-	virtual CommandList* CreateCommandList(int32_t drawingCount);
+	virtual CommandList* CreateCommandList(SingleFrameMemoryPool* memoryPool = nullptr);
 
 	/**
 		@brief	create a constant buffer
