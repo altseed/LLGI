@@ -220,7 +220,7 @@ std::shared_ptr<RenderPassPipelineStateDX12> GraphicsDX12::CreateRenderPassPipel
 
 ID3D12Device* GraphicsDX12::GetDevice() { return device_; }
 
-int32_t GraphicsDX12::GetCurrentSwapBufferIndex() const { return currentSwapBufferIndex; }
+// int32_t GraphicsDX12::GetCurrentSwapBufferIndex() const { return currentSwapBufferIndex; }
 
 int32_t GraphicsDX12::GetSwapBufferCount() const { return swapBufferCount_; }
 

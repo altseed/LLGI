@@ -60,7 +60,7 @@ public:
 
 	ID3D12Device* GetDevice();
 
-	int32_t GetCurrentSwapBufferIndex() const;
+	// int32_t GetCurrentSwapBufferIndex() const;
 	int32_t GetSwapBufferCount() const;
 	ID3D12CommandQueue* GetCommandQueue() { return commandQueue_; }
 
