@@ -3,6 +3,10 @@
 namespace LLGI
 {
 
+void SingleFrameMemoryPool::NewFrame() {}
+
+ConstantBuffer* SingleFrameMemoryPool::CreateConstantBuffer(int32_t size) { return nullptr; }
+
 void RenderPass::SetIsColorCleared(bool isColorCleared) { isColorCleared_ = isColorCleared; }
 
 void RenderPass::SetIsDepthCleared(bool isDepthCleared) { isDepthCleared_ = isDepthCleared; }
@@ -10,8 +14,6 @@ void RenderPass::SetIsDepthCleared(bool isDepthCleared) { isDepthCleared_ = isDe
 void RenderPass::SetClearColor(const Color8& color) { color_ = color; }
 
 RenderPassPipelineState* RenderPass::CreateRenderPassPipelineState() { return nullptr; }
-
-void Graphics::NewFrame() {}
 
 void Graphics::SetWindowSize(const Vec2I& windowSize) { windowSize_ = windowSize; }
 
@@ -27,11 +29,11 @@ Shader* Graphics::CreateShader(DataStructure* data, int32_t count) { return null
 
 PipelineState* Graphics::CreatePiplineState() { return nullptr; }
 
-CommandList* Graphics::CreateCommandList() { return nullptr; }
+SingleFrameMemoryPool* Graphics::CreateSingleFrameMemoryPool(int32_t constantBufferPoolSize, int32_t drawingCount) { return nullptr; }
 
-CommandList* Graphics::CreateCommandList(int32_t drawingCount) { return nullptr; }
+CommandList* Graphics::CreateCommandList(SingleFrameMemoryPool* memoryPool) { return nullptr; }
 
-ConstantBuffer* Graphics::CreateConstantBuffer(int32_t size, ConstantBufferType type) { return nullptr; }
+ConstantBuffer* Graphics::CreateConstantBuffer(int32_t size) { return nullptr; }
 
 Texture* Graphics::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer) { return nullptr; }
 

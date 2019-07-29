@@ -1,6 +1,6 @@
 
-#include "test.h"
 #include "TestHelper.h"
+#include "test.h"
 
 #include <fstream>
 #include <iostream>
@@ -128,7 +128,8 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 
 	auto platform = LLGI::CreatePlatform(deviceType);
 	auto graphics = platform->CreateGraphics();
-	auto commandList = graphics->CreateCommandList();
+	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
+	auto commandList = graphics->CreateCommandList(sfMemoryPool);
 	auto vb = graphics->CreateVertexBuffer(sizeof(SimpleVertex) * 4);
 	auto ib = graphics->CreateIndexBuffer(2, 6);
 	LLGI::Shader* shader_vs = nullptr;
@@ -235,7 +236,7 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 		if (!platform->NewFrame())
 			break;
 
-		graphics->NewFrame();
+		sfMemoryPool->NewFrame();
 
 		LLGI::Color8 color;
 		color.R = count % 255;
@@ -283,6 +284,9 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 
 	pips.clear();
 
+	graphics->WaitFinish();
+
+	LLGI::SafeRelease(sfMemoryPool);
 	LLGI::SafeRelease(shader_vs);
 	LLGI::SafeRelease(shader_ps);
 	LLGI::SafeRelease(ib);
@@ -407,7 +411,8 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 	auto platform = LLGI::CreatePlatform(deviceType);
 	auto graphics = platform->CreateGraphics();
-	auto commandList = graphics->CreateCommandList();
+	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
+	auto commandList = graphics->CreateCommandList(sfMemoryPool);
 	auto vb = graphics->CreateVertexBuffer(sizeof(SimpleVertex) * 4);
 	auto ib = graphics->CreateIndexBuffer(2, 6);
 	LLGI::ConstantBuffer* cb_vs = nullptr;
@@ -536,12 +541,12 @@ float4 main(PS_INPUT input) : SV_TARGET
 			break;
 		}
 
-		graphics->NewFrame();
+		sfMemoryPool->NewFrame();
 
 		if (type == LLGI::ConstantBufferType::ShortTime)
 		{
-			cb_vs = graphics->CreateConstantBuffer(sizeof(float) * 4, type);
-			cb_ps = graphics->CreateConstantBuffer(sizeof(float) * 4, type);
+			cb_vs = sfMemoryPool->CreateConstantBuffer(sizeof(float) * 4);
+			cb_ps = sfMemoryPool->CreateConstantBuffer(sizeof(float) * 4);
 
 			auto cb_vs_buf = (float*)cb_vs->Lock();
 			cb_vs_buf[0] = (count % 100) / 100.0f;
@@ -613,6 +618,9 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 	pips.clear();
 
+	graphics->WaitFinish();
+
+	LLGI::SafeRelease(sfMemoryPool);
 	LLGI::SafeRelease(cb_vs);
 	LLGI::SafeRelease(cb_ps);
 	LLGI::SafeRelease(shader_vs);
@@ -721,7 +729,8 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 	auto platform = LLGI::CreatePlatform(deviceType);
 	auto graphics = platform->CreateGraphics();
-	auto commandList = graphics->CreateCommandList();
+	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
+	auto commandList = graphics->CreateCommandList(sfMemoryPool);
 	auto vb = graphics->CreateVertexBuffer(sizeof(SimpleVertex) * 4);
 	auto ib = graphics->CreateIndexBuffer(2, 6);
 	auto texture = graphics->CreateTexture(LLGI::Vec2I(256, 256), false, false);
@@ -843,7 +852,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 			break;
 		}
 
-		graphics->NewFrame();
+		sfMemoryPool->NewFrame();
 
 		LLGI::Color8 color;
 		color.R = count % 255;
@@ -893,6 +902,9 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 	pips.clear();
 
+	graphics->WaitFinish();
+
+	LLGI::SafeRelease(sfMemoryPool);
 	LLGI::SafeRelease(texture);
 	LLGI::SafeRelease(shader_vs);
 	LLGI::SafeRelease(shader_ps);

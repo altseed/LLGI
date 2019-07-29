@@ -26,6 +26,7 @@ private:
 	std::shared_ptr<RenderPassDX12> renderPass_;
 
 	std::vector<SwapBuffer> swapBuffers_;
+	int32_t currentSwap_ = -1;
 
 public:
 	CommandListDX12();

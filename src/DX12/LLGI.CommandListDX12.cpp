@@ -64,7 +64,10 @@ FAILED_EXIT:;
 
 void CommandListDX12::Begin()
 {
-	auto& swapBuffer = swapBuffers_[graphics_->GetCurrentSwapBufferIndex()];
+	currentSwap_++;
+	currentSwap_ %= swapBuffers_.size();
+
+	auto& swapBuffer = swapBuffers_[currentSwap_];
 	auto commandList = swapBuffer.commandList;
 	commandList->Reset(swapBuffer.commandAllocator.get(), nullptr);
 
@@ -77,13 +80,15 @@ void CommandListDX12::Begin()
 
 void CommandListDX12::End()
 {
-	auto& swapBuffer = swapBuffers_[graphics_->GetCurrentSwapBufferIndex()];
+	auto& swapBuffer = swapBuffers_[currentSwap_];
 	swapBuffer.commandList->Close();
 }
 
 void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 {
-	auto& swapBuffer = swapBuffers_[graphics_->GetCurrentSwapBufferIndex()];
+	assert(currentSwap_ >= 0);
+
+	auto& swapBuffer = swapBuffers_[currentSwap_];
 	auto commandList = swapBuffer.commandList;
 
 	SafeAddRef(renderPass);
@@ -140,7 +145,7 @@ void CommandListDX12::EndRenderPass() { renderPass_.reset(); }
 
 void CommandListDX12::Draw(int32_t pritimiveCount)
 {
-	auto& swapBuffer = swapBuffers_[graphics_->GetCurrentSwapBufferIndex()];
+	auto& swapBuffer = swapBuffers_[currentSwap_];
 	auto commandList = swapBuffer.commandList;
 
 	BindingVertexBuffer vb_;
@@ -319,7 +324,7 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 
 void CommandListDX12::Clear(const Color8& color)
 {
-	auto& swapBuffer = swapBuffers_[graphics_->GetCurrentSwapBufferIndex()];
+	auto& swapBuffer = swapBuffers_[currentSwap_];
 	auto commandList = swapBuffer.commandList;
 
 	auto rt = renderPass_;
@@ -333,7 +338,7 @@ void CommandListDX12::Clear(const Color8& color)
 
 ID3D12GraphicsCommandList* CommandListDX12::GetCommandList() const
 {
-	auto& swapBuffer = swapBuffers_[graphics_->GetCurrentSwapBufferIndex()];
+	auto& swapBuffer = swapBuffers_[currentSwap_];
 	auto commandList = swapBuffer.commandList;
 
 	return commandList.get();

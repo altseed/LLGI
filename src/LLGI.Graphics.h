@@ -23,6 +23,23 @@ struct DepthTextureInitializationParameter
 	Vec2I Size;
 };
 
+/**
+	@brief	provide a memory which is available in one frame
+*/
+class SingleFrameMemoryPool : public ReferenceObject
+{
+public:
+	SingleFrameMemoryPool() = default;
+	virtual ~SingleFrameMemoryPool() = default;
+
+	/**
+	@brief	Start new frame
+	*/
+	virtual void NewFrame();
+
+	virtual ConstantBuffer* CreateConstantBuffer(int32_t size);
+};
+
 class RenderPass : public ReferenceObject
 {
 private:
@@ -68,6 +85,10 @@ public:
 	virtual ~RenderPassPipelineState() = default;
 };
 
+/**
+	@note
+	please call WaitFinish before releasing
+*/
 class Graphics : public ReferenceObject
 {
 protected:
@@ -77,10 +98,6 @@ public:
 	Graphics() = default;
 	virtual ~Graphics() = default;
 
-	/**
-		@brief	Start new frame
-	*/
-	virtual void NewFrame();
 	virtual void SetWindowSize(const Vec2I& windowSize);
 
 	/**
@@ -119,23 +136,21 @@ public:
 	virtual PipelineState* CreatePiplineState();
 
 	/**
-		@brief	 deprecated
+		@brief create a memory pool
 	*/
-	virtual CommandList* CreateCommandList();
+	virtual SingleFrameMemoryPool* CreateSingleFrameMemoryPool(int32_t constantBufferPoolSize, int32_t drawingCount);
 
 	/**
 		@brief
-		@param drawingCount	the number of maximum drawing
+		@param memoryPool if memory pool is null, allocate memory from graphics
 	*/
-
-	virtual CommandList* CreateCommandList(int32_t drawingCount);
+	virtual CommandList* CreateCommandList(SingleFrameMemoryPool* memoryPool);
 
 	/**
 		@brief	create a constant buffer
 		@param	size buffer size
-		@param	type LongTime - exists over two frames and unchanged frequently. ShortTime exists in a frame
 	*/
-	virtual ConstantBuffer* CreateConstantBuffer(int32_t size, ConstantBufferType type = ConstantBufferType::LongTime);
+	virtual ConstantBuffer* CreateConstantBuffer(int32_t size);
 
 	virtual RenderPass* CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture) { return nullptr; }
 

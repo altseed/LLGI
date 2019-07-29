@@ -1,6 +1,7 @@
 
 #include "LLGI.ConstantBufferDX12.h"
 #include "../LLGI.ConstantBuffer.h"
+#include "LLGI.SingleFrameMemoryPoolDX12.h"
 
 namespace LLGI
 {
@@ -21,10 +22,10 @@ bool ConstantBufferDX12::Initialize(GraphicsDX12* graphics, int32_t size)
 	return (constantBuffer_ != nullptr);
 }
 
-bool ConstantBufferDX12::InitializeAsShortTime(GraphicsDX12* graphics, int32_t size)
+bool ConstantBufferDX12::InitializeAsShortTime(SingleFrameMemoryPoolDX12* memoryPool, int32_t size)
 {
-	auto size_ = (size + 255) & ~255;  // buffer size should be multiple of 256
-	if (graphics->GetMemoryPool()->GetConstantBuffer(size_, constantBuffer_, offset_))
+	auto size_ = (size + 255) & ~255; // buffer size should be multiple of 256
+	if (memoryPool->GetConstantBuffer(size_, constantBuffer_, offset_))
 	{
 		SafeAddRef(constantBuffer_);
 		memSize_ = size;
@@ -58,7 +59,7 @@ void ConstantBufferDX12::Unlock()
 
 int32_t ConstantBufferDX12::GetSize() { return memSize_; }
 
-int32_t ConstantBufferDX12::GetActualSize() const { return actualSize_; } 
+int32_t ConstantBufferDX12::GetActualSize() const { return actualSize_; }
 
 int32_t ConstantBufferDX12::GetOffset() const { return offset_; }
 

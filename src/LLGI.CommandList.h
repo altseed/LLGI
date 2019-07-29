@@ -72,12 +72,18 @@ public:
 	CommandList(int32_t swapCount = 3);
 	virtual ~CommandList();
 
+	/**
+	@brief
+	added a command into supecified context. 
+	This function can be called once by a frame.
+	*/
 	virtual void Begin();
 
 	/**
 		@brief
 		added a command into supecified context. This function is supported in some platform.
 		Internal context is not used if platformContextPtr is null in Metal.
+		This function can be called once by a frame.
 	*/
 	virtual bool BeginWithPlatform(void* platformContextPtr) { return false; }
 
