@@ -6,14 +6,15 @@ void test_clear_update(LLGI::DeviceType deviceType)
 
 	auto platform = LLGI::CreatePlatform(deviceType);
 	auto graphics = platform->CreateGraphics();
-	auto commandList = graphics->CreateCommandList();
+	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
+	auto commandList = graphics->CreateCommandList(sfMemoryPool);
 
 	while (count < 1000)
 	{
 		if (!platform->NewFrame())
 			break;
 
-		graphics->NewFrame();
+		sfMemoryPool->NewFrame();
 
 		LLGI::Color8 color;
 		color.R = count % 255;
@@ -32,6 +33,9 @@ void test_clear_update(LLGI::DeviceType deviceType)
 		count++;
 	}
 
+	graphics->WaitFinish();
+
+	LLGI::SafeRelease(sfMemoryPool);
 	LLGI::SafeRelease(commandList);
 	LLGI::SafeRelease(graphics);
 	LLGI::SafeRelease(platform);
@@ -43,7 +47,8 @@ void test_clear(LLGI::DeviceType deviceType)
 
 	auto platform = LLGI::CreatePlatform(deviceType);
 	auto graphics = platform->CreateGraphics();
-	auto commandList = graphics->CreateCommandList();
+	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
+	auto commandList = graphics->CreateCommandList(sfMemoryPool);
 
 	LLGI::Color8 color;
 	color.R = 255;
@@ -56,7 +61,7 @@ void test_clear(LLGI::DeviceType deviceType)
 		if (!platform->NewFrame())
 			break;
 
-		graphics->NewFrame();
+		sfMemoryPool->NewFrame();
 
 		// It need to create a command buffer between NewFrame and Present.
 		// Because get current screen returns other values by every frame.
@@ -71,6 +76,9 @@ void test_clear(LLGI::DeviceType deviceType)
 		count++;
 	}
 
+	graphics->WaitFinish();
+
+	LLGI::SafeRelease(sfMemoryPool);
 	LLGI::SafeRelease(commandList);
 	LLGI::SafeRelease(graphics);
 	LLGI::SafeRelease(platform);

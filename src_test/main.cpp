@@ -34,7 +34,7 @@ void test_renderPass(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 void call_test(LLGI::DeviceType device)
 {
 	// Empty
-	// test_empty(device);
+	test_empty(device);
 
 	// About clear
 	// test_clear(device);
@@ -49,7 +49,7 @@ void call_test(LLGI::DeviceType device)
 	// test_simple_texture_rectangle(device);
 
 	// About renderPass
-	test_renderPass(device);
+	// test_renderPass(device);
 }
 
 #if defined(__linux__) || defined(__APPLE__) || defined(WIN32)

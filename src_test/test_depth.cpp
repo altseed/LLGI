@@ -50,7 +50,8 @@ void main()
 
 	auto platform = LLGI::CreatePlatform(LLGI::DeviceType::Default);
 	auto graphics = platform->CreateGraphics();
-	auto commandList = graphics->CreateCommandList();
+	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
+	auto commandList = graphics->CreateCommandList(sfMemoryPool);
 	auto vb = graphics->CreateVertexBuffer(sizeof(SimpleVertex) * 4);
 	auto ib = graphics->CreateIndexBuffer(2, 6);
 	auto pip = graphics->CreatePiplineState();
@@ -121,7 +122,7 @@ void main()
 	while (count < 1000)
 	{
 		platform->NewFrame();
-		graphics->NewFrame();
+		sfMemoryPool->NewFrame();
 
 		LLGI::Color8 color;
 		color.R = count % 255;
@@ -144,6 +145,9 @@ void main()
 		count++;
 	}
 
+	graphics->WaitFinish();
+
+	LLGI::SafeRelease(sfMemoryPool);
 	LLGI::SafeRelease(shader_vs);
 	LLGI::SafeRelease(shader_ps);
 	LLGI::SafeRelease(pip);

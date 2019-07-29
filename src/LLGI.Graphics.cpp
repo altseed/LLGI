@@ -15,8 +15,6 @@ void RenderPass::SetClearColor(const Color8& color) { color_ = color; }
 
 RenderPassPipelineState* RenderPass::CreateRenderPassPipelineState() { return nullptr; }
 
-void Graphics::NewFrame() {}
-
 void Graphics::SetWindowSize(const Vec2I& windowSize) { windowSize_ = windowSize; }
 
 void Graphics::Execute(CommandList* commandList) {}
@@ -35,7 +33,7 @@ SingleFrameMemoryPool* Graphics::CreateSingleFrameMemoryPool(int32_t constantBuf
 
 CommandList* Graphics::CreateCommandList(SingleFrameMemoryPool* memoryPool) { return nullptr; }
 
-ConstantBuffer* Graphics::CreateConstantBuffer(int32_t size, ConstantBufferType type) { return nullptr; }
+ConstantBuffer* Graphics::CreateConstantBuffer(int32_t size) { return nullptr; }
 
 Texture* Graphics::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer) { return nullptr; }
 

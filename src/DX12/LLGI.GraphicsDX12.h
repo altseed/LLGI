@@ -26,8 +26,6 @@ private:
 
 	RenderPassDX12 currentScreen;
 
-	std::shared_ptr<SingleFrameMemoryPoolDX12> internalSingleFrameMemoryPool_;
-
 	std::unordered_map<RenderPassPipelineStateDX12Key, std::weak_ptr<RenderPassPipelineStateDX12>, RenderPassPipelineStateDX12Key::Hash>
 		renderPassPipelineStates;
 
@@ -39,19 +37,17 @@ public:
 				 int32_t swapBufferCount);
 	virtual ~GraphicsDX12();
 
-	void NewFrame() override;
-
 	void Execute(CommandList* commandList) override;
 	void WaitFinish() override;
 
 	RenderPass* GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) override;
 	VertexBuffer* CreateVertexBuffer(int32_t size) override;
 	IndexBuffer* CreateIndexBuffer(int32_t stride, int32_t count) override;
-	ConstantBuffer* CreateConstantBuffer(int32_t size, ConstantBufferType type = ConstantBufferType::LongTime) override;
+	ConstantBuffer* CreateConstantBuffer(int32_t size) override;
 	Shader* CreateShader(DataStructure* data, int32_t count) override;
 	PipelineState* CreatePiplineState() override;
 	SingleFrameMemoryPool* CreateSingleFrameMemoryPool(int32_t constantBufferPoolSize, int32_t drawingCount) override;
-	CommandList* CreateCommandList(SingleFrameMemoryPool* memoryPool = nullptr) override;
+	CommandList* CreateCommandList(SingleFrameMemoryPool* memoryPool) override;
 	RenderPass* CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture) override;
 	Texture* CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer) override;
 	Texture* CreateTexture(uint64_t id) override;

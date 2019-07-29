@@ -30,24 +30,13 @@ GraphicsDX12::GraphicsDX12(ID3D12Device* device,
 	// Create Command Allocator
 	hr = device->CreateCommandAllocator(commandListType_, IID_PPV_ARGS(&commandAllocator_));
 	assert(SUCCEEDED(hr));
-
-	internalSingleFrameMemoryPool_ = std::make_shared<SingleFrameMemoryPoolDX12>(this, false, swapBufferCount_, 1024 * 1024, 128);
 }
 
 GraphicsDX12::~GraphicsDX12()
 {
-	WaitFinish();
-
-	internalSingleFrameMemoryPool_.reset();
 	SafeRelease(device_);
 	SafeRelease(commandQueue_);
 	SafeRelease(commandAllocator_);
-}
-
-void GraphicsDX12::NewFrame()
-{
-	currentSwapBufferIndex = (currentSwapBufferIndex + 1) % swapBufferCount_;
-	internalSingleFrameMemoryPool_->NewFrame();
 }
 
 void GraphicsDX12::Execute(CommandList* commandList)
@@ -102,30 +91,16 @@ IndexBuffer* GraphicsDX12::CreateIndexBuffer(int32_t stride, int32_t count)
 	return obj;
 }
 
-ConstantBuffer* GraphicsDX12::CreateConstantBuffer(int32_t size, ConstantBufferType type)
+ConstantBuffer* GraphicsDX12::CreateConstantBuffer(int32_t size)
 {
-	if (type == ConstantBufferType::ShortTime)
+	auto obj = new ConstantBufferDX12();
+	if (!obj->Initialize(this, size))
 	{
-		auto obj = new ConstantBufferDX12();
-		if (!obj->InitializeAsShortTime(internalSingleFrameMemoryPool_.get(), size))
-		{
-			SafeRelease(obj);
-			return nullptr;
-		}
-
-		return obj;
+		SafeRelease(obj);
+		return nullptr;
 	}
-	else
-	{
-		auto obj = new ConstantBufferDX12();
-		if (!obj->Initialize(this, size))
-		{
-			SafeRelease(obj);
-			return nullptr;
-		}
 
-		return obj;
-	}
+	return obj;
 }
 
 Shader* GraphicsDX12::CreateShader(DataStructure* data, int32_t count)
@@ -149,11 +124,6 @@ SingleFrameMemoryPool* GraphicsDX12::CreateSingleFrameMemoryPool(int32_t constan
 CommandList* GraphicsDX12::CreateCommandList(SingleFrameMemoryPool* memoryPool)
 {
 	auto mp = static_cast<SingleFrameMemoryPoolDX12*>(memoryPool);
-
-	if (mp == nullptr)
-	{
-		mp = internalSingleFrameMemoryPool_.get();
-	}
 
 	auto obj = new CommandListDX12();
 	if (!obj->Initialize(this, mp->GetDrawingCount()))
@@ -219,8 +189,6 @@ std::shared_ptr<RenderPassPipelineStateDX12> GraphicsDX12::CreateRenderPassPipel
 }
 
 ID3D12Device* GraphicsDX12::GetDevice() { return device_; }
-
-// int32_t GraphicsDX12::GetCurrentSwapBufferIndex() const { return currentSwapBufferIndex; }
 
 int32_t GraphicsDX12::GetSwapBufferCount() const { return swapBufferCount_; }
 
