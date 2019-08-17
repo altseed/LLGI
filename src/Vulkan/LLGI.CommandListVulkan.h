@@ -27,14 +27,15 @@ class CommandListVulkan : public CommandList
 {
 private:
 	std::shared_ptr<GraphicsVulkan> graphics_;
-	std::vector<vk::CommandBuffer> commandBuffers;	
+	std::vector<vk::CommandBuffer> commandBuffers;
 	std::vector<std::shared_ptr<DescriptorPoolVulkan>> descriptorPools;
+	int32_t currentSwapBufferIndex_;
 
 public:
 	CommandListVulkan();
 	virtual ~CommandListVulkan();
 
-	bool Initialize(GraphicsVulkan* graphics);
+	bool Initialize(GraphicsVulkan* graphics, int32_t drawingCount);
 
 	void Begin() override;
 	void End() override;

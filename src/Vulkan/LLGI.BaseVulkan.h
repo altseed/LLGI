@@ -2,6 +2,7 @@
 #pragma once
 
 #include "../LLGI.Base.h"
+#include <iostream>
 
 #ifdef _WIN32
 #define VK_PROTOTYPES
@@ -11,11 +12,27 @@
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan.hpp>
 
+#define LLGI_VK_CHECK(f)                                                                                                                   \
+	{                                                                                                                                      \
+		VkResult r = (f);                                                                                                                  \
+		if (r != VK_SUCCESS)                                                                                                               \
+		{                                                                                                                                  \
+			std::cerr << #f << "; VkResult:" << r << "(" << VulkanHelper::getResultName(r) << ")" << std::endl;                            \
+			return false;                                                                                                                  \
+		}                                                                                                                                  \
+	}
+
 namespace LLGI
 {
 
 class GraphicsVulkan;
 class PipelineStateVulkan;
+
+class VulkanHelper
+{
+public:
+	static const char* getResultName(VkResult result);
+};
 
 class Buffer
 {

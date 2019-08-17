@@ -2,6 +2,7 @@
 #pragma once
 
 #include "LLGI.BaseVulkan.h"
+#include "LLGI.GraphicsVulkan.h"
 
 namespace LLGI
 {
@@ -12,31 +13,36 @@ class InternalSingleFrameMemoryPoolVulkan
 private:
 	int32_t constantBufferSize_ = 0;
 	int32_t constantBufferOffset_ = 0;
+	VkDevice nativeDevice_ = VK_NULL_HANDLE;
+	VkBuffer nativeBuffer_ = VK_NULL_HANDLE;
+	VkDeviceMemory nativeBufferMemory_ = VK_NULL_HANDLE;
 
 public:
-    InternalSingleFrameMemoryPoolVulkan(GraphicsVulkan* graphics, int32_t constantBufferPoolSize, int32_t drawingCount);
+	InternalSingleFrameMemoryPoolVulkan();
 	virtual ~InternalSingleFrameMemoryPoolVulkan();
-	bool GetConstantBuffer(int32_t size, VkBuffer** outResource, int32_t* outOffset);
+	bool Initialize(GraphicsVulkan* graphics, int32_t constantBufferPoolSize, int32_t drawingCount);
+	void Dispose();
+	bool GetConstantBuffer(int32_t size, VkBuffer* outResource, int32_t* outOffset);
 	void Reset();
 };
 
 class SingleFrameMemoryPoolVulkan : public SingleFrameMemoryPool
 {
 private:
-    GraphicsVulkan* graphics_ = nullptr;
+	GraphicsVulkan* graphics_ = nullptr;
 	bool isStrongRef_ = false;
 	std::vector<std::shared_ptr<InternalSingleFrameMemoryPoolVulkan>> memoryPools;
 	int32_t currentSwap_ = 0;
 	int32_t drawingCount_ = 0;
 
 public:
-    SingleFrameMemoryPoolVulkan(
-        GraphicsVulkan* graphics, bool isStrongRef, int32_t swapBufferCount, int32_t constantBufferPoolSize, int32_t drawingCount);
+	SingleFrameMemoryPoolVulkan(
+		GraphicsVulkan* graphics, bool isStrongRef, int32_t swapBufferCount, int32_t constantBufferPoolSize, int32_t drawingCount);
 	virtual ~SingleFrameMemoryPoolVulkan();
 
-	bool GetConstantBuffer(int32_t size, VkBuffer** outResource, int32_t* outOffset);
+	bool GetConstantBuffer(int32_t size, VkBuffer* outResource, int32_t* outOffset);
 
-    InternalSingleFrameMemoryPoolVulkan* GetInternal();
+	InternalSingleFrameMemoryPoolVulkan* GetInternal();
 
 	int32_t GetDrawingCount() const;
 

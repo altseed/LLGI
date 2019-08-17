@@ -66,6 +66,6 @@ int main(int argc, char* argv[])
 		TestHelper::SetRoot("Shaders/SPIRV/");
 	}
 
-	call_test(LLGI::DeviceType::Default);
+	call_test(device);
 }
 #endif
