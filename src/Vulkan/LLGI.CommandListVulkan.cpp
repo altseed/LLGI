@@ -66,7 +66,7 @@ CommandListVulkan::~CommandListVulkan()
 	descriptorPools.clear();
 }
 
-bool CommandListVulkan::Initialize(GraphicsVulkan* graphics)
+bool CommandListVulkan::Initialize(GraphicsVulkan* graphics, int32_t drawingCount)
 {
 	SafeAddRef(graphics);
 	graphics_ = CreateSharedPtr(graphics);
@@ -78,22 +78,26 @@ bool CommandListVulkan::Initialize(GraphicsVulkan* graphics)
 
 	for (size_t i = 0; i < static_cast<size_t>(graphics_->GetSwapBufferCount()); i++)
 	{
-		auto dp = std::make_shared<DescriptorPoolVulkan>(graphics_, 10000, 2);
+		auto dp = std::make_shared<DescriptorPoolVulkan>(graphics_, drawingCount, 2);
 		descriptorPools.push_back(dp);
 	}
 
+	currentSwapBufferIndex_ = -1;
 	return true;
 }
 
 void CommandListVulkan::Begin()
 {
-	auto& cmdBuffer = commandBuffers[graphics_->GetCurrentSwapBufferIndex()];
+	currentSwapBufferIndex_++;
+	currentSwapBufferIndex_ %= commandBuffers.size();
+
+	auto& cmdBuffer = commandBuffers[currentSwapBufferIndex_];
 
 	cmdBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
 	vk::CommandBufferBeginInfo cmdBufInfo;
 	cmdBuffer.begin(cmdBufInfo);
 
-	auto& dp = descriptorPools[graphics_->GetCurrentSwapBufferIndex()];
+	auto& dp = descriptorPools[currentSwapBufferIndex_];
 	dp->Reset();
 
 	CommandList::Begin();
@@ -101,13 +105,13 @@ void CommandListVulkan::Begin()
 
 void CommandListVulkan::End()
 {
-	auto& cmdBuffer = commandBuffers[graphics_->GetCurrentSwapBufferIndex()];
+	auto& cmdBuffer = commandBuffers[currentSwapBufferIndex_];
 	cmdBuffer.end();
 }
 
 void CommandListVulkan::SetScissor(int32_t x, int32_t y, int32_t width, int32_t height)
 {
-	auto& cmdBuffer = commandBuffers[graphics_->GetCurrentSwapBufferIndex()];
+	auto& cmdBuffer = commandBuffers[currentSwapBufferIndex_];
 
 	vk::Rect2D scissor = vk::Rect2D(vk::Offset2D(x, y), vk::Extent2D(width, height));
 	cmdBuffer.setScissor(0, scissor);
@@ -135,7 +139,7 @@ void CommandListVulkan::Draw(int32_t pritimiveCount)
 	auto ib = static_cast<IndexBufferVulkan*>(ib_);
 	auto pip = static_cast<PipelineStateVulkan*>(pip_);
 
-	auto& cmdBuffer = commandBuffers[graphics_->GetCurrentSwapBufferIndex()];
+	auto& cmdBuffer = commandBuffers[currentSwapBufferIndex_];
 
 	// assign a vertex buffer
 	if (isVBDirtied)
@@ -158,7 +162,7 @@ void CommandListVulkan::Draw(int32_t pritimiveCount)
 		cmdBuffer.bindIndexBuffer(ib->GetBuffer(), indexOffset, indexType);
 	}
 
-	auto& dp = descriptorPools[graphics_->GetCurrentSwapBufferIndex()];
+	auto& dp = descriptorPools[currentSwapBufferIndex_];
 
 	std::vector<vk::DescriptorSet> descriptorSets = dp->Get(pip);
 	/*
@@ -336,7 +340,7 @@ void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
 	depthSubRange.levelCount = 1;
 	depthSubRange.layerCount = 1;
 
-	auto& cmdBuffer = commandBuffers[graphics_->GetCurrentSwapBufferIndex()];
+	auto& cmdBuffer = commandBuffers[currentSwapBufferIndex_];
 
 	/*
 	// to make screen clear
@@ -395,7 +399,7 @@ void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
 
 void CommandListVulkan::EndRenderPass()
 {
-	auto& cmdBuffer = commandBuffers[graphics_->GetCurrentSwapBufferIndex()];
+	auto& cmdBuffer = commandBuffers[currentSwapBufferIndex_];
 
 	// end renderpass
 	cmdBuffer.endRenderPass();
@@ -403,7 +407,7 @@ void CommandListVulkan::EndRenderPass()
 
 vk::CommandBuffer CommandListVulkan::GetCommandBuffer() const
 {
-	auto& cmdBuffer = commandBuffers[graphics_->GetCurrentSwapBufferIndex()];
+	auto& cmdBuffer = commandBuffers[currentSwapBufferIndex_];
 	return cmdBuffer;
 }
 

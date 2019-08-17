@@ -5,6 +5,7 @@
 #include "LLGI.IndexBufferVulkan.h"
 #include "LLGI.PipelineStateVulkan.h"
 #include "LLGI.ShaderVulkan.h"
+#include "LLGI.SingleFrameMemoryPoolVulkan.h"
 #include "LLGI.TextureVulkan.h"
 #include "LLGI.VertexBufferVulkan.h"
 
@@ -202,16 +203,6 @@ GraphicsVulkan::~GraphicsVulkan()
 	}
 }
 
-void GraphicsVulkan::NewFrame()
-{
-	currentSwapBufferIndex = (currentSwapBufferIndex + 1) % swapBufferCount_;
-
-	PlatformStatus status;
-	getStatus_(status);
-
-	assert(currentSwapBufferIndex == status.currentSwapBufferIndex);
-}
-
 void GraphicsVulkan::SetWindowSize(const Vec2I& windowSize) { throw "Not inplemented"; }
 
 void GraphicsVulkan::Execute(CommandList* commandList)
@@ -224,7 +215,9 @@ void GraphicsVulkan::WaitFinish() { vkQueue.waitIdle(); }
 
 RenderPass* GraphicsVulkan::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared)
 {
-	auto currentRenderPass = renderPasses[currentSwapBufferIndex];
+	PlatformStatus status;
+	getStatus_(status);
+	auto currentRenderPass = renderPasses[status.currentSwapBufferIndex];
 
 	currentRenderPass->SetClearColor(clearColor);
 	currentRenderPass->SetIsColorCleared(isColorCleared);
@@ -282,11 +275,17 @@ PipelineState* GraphicsVulkan::CreatePiplineState()
 	return nullptr;
 }
 
-CommandList* GraphicsVulkan::CreateCommandList()
+SingleFrameMemoryPool* GraphicsVulkan::CreateSingleFrameMemoryPool(int32_t constantBufferPoolSize, int32_t drawingCount)
 {
+	return new SingleFrameMemoryPoolVulkan(this, true, swapBufferCount_, constantBufferPoolSize, drawingCount);
+}
+
+CommandList* GraphicsVulkan::CreateCommandList(SingleFrameMemoryPool* memoryPool)
+{
+	auto mp = static_cast<SingleFrameMemoryPoolVulkan*>(memoryPool);
 
 	auto commandList = new CommandListVulkan();
-	if (commandList->Initialize(this))
+	if (commandList->Initialize(this, mp->GetDrawingCount()))
 	{
 		return commandList;
 	}
@@ -294,15 +293,10 @@ CommandList* GraphicsVulkan::CreateCommandList()
 	return nullptr;
 }
 
-ConstantBuffer* GraphicsVulkan::CreateConstantBuffer(int32_t size, ConstantBufferType type)
+ConstantBuffer* GraphicsVulkan::CreateConstantBuffer(int32_t size)
 {
-	if (type == ConstantBufferType::ShortTime)
-	{
-		throw "Not inplemented";
-	}
-
 	auto obj = new ConstantBufferVulkan();
-	if (!obj->Initialize(this, size, type))
+	if (!obj->Initialize(this, size, ConstantBufferType::LongTime))
 	{
 		SafeRelease(obj);
 		return nullptr;
@@ -468,12 +462,6 @@ GraphicsVulkan::CreateRenderPassPipelineState(bool isPresentMode, bool hasDepth,
 
 		return ret;
 	}
-}
-
-int32_t GraphicsVulkan::GetCurrentSwapBufferIndex() const
-{
-	assert(currentSwapBufferIndex >= 0);
-	return currentSwapBufferIndex;
 }
 
 int32_t GraphicsVulkan::GetSwapBufferCount() const { return swapBufferCount_; }

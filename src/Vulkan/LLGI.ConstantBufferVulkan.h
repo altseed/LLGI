@@ -7,27 +7,30 @@
 
 namespace LLGI
 {
+class SingleFrameMemoryPoolVulkan;
 
 class ConstantBufferVulkan : public ConstantBuffer
 {
 private:
 	std::shared_ptr<GraphicsVulkan> graphics_;
-	std::unique_ptr<Buffer> buffer;
-	int memSize = 0;
+	std::unique_ptr<Buffer> buffer_;
+	int memSize_ = 0;
 	void* data = nullptr;
+	int32_t offset_ = 0;
 
 public:
 	ConstantBufferVulkan();
 	virtual ~ConstantBufferVulkan();
 
 	bool Initialize(GraphicsVulkan* graphics, int32_t size, ConstantBufferType type);
+	bool InitializeAsShortTime(SingleFrameMemoryPoolVulkan* memoryPool, int32_t size);
 
 	void* Lock() override;
 	void* Lock(int32_t offset, int32_t size) override;
 	void Unlock() override;
 	int32_t GetSize() override;
 
-	vk::Buffer GetBuffer() { return buffer->buffer; }
+	vk::Buffer GetBuffer() { return buffer_->buffer; }
 };
 
 } // namespace LLGI

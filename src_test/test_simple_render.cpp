@@ -168,8 +168,8 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 
 		if (compiler == nullptr)
 		{
-			auto binary_vs = TestHelper::LoadData("Shaders/SPIRV/simple_rectangle.vert.spv");
-			auto binary_ps = TestHelper::LoadData("Shaders/SPIRV/simple_rectangle.frag.spv");
+			auto binary_vs = TestHelper::LoadData("simple_rectangle.vert.spv");
+			auto binary_ps = TestHelper::LoadData("simple_rectangle.frag.spv");
 
 			LLGI::DataStructure d_vs;
 			LLGI::DataStructure d_ps;

@@ -117,7 +117,6 @@ class GraphicsVulkan : public Graphics
 {
 private:
 	int32_t swapBufferCount_ = 0;
-	int32_t currentSwapBufferIndex = -1;
 
 	std::unordered_map<RenderPassPipelineStateVulkanKey,
 					   std::weak_ptr<RenderPassPipelineStateVulkan>,
@@ -148,8 +147,6 @@ public:
 
 	virtual ~GraphicsVulkan();
 
-	void NewFrame() override;
-
 	void SetWindowSize(const Vec2I& windowSize) override;
 
 	void Execute(CommandList* commandList) override;
@@ -161,8 +158,9 @@ public:
 	IndexBuffer* CreateIndexBuffer(int32_t stride, int32_t count) override;
 	Shader* CreateShader(DataStructure* data, int32_t count) override;
 	PipelineState* CreatePiplineState() override;
-	CommandList* CreateCommandList() override;
-	ConstantBuffer* CreateConstantBuffer(int32_t size, ConstantBufferType type = ConstantBufferType::LongTime) override;
+	SingleFrameMemoryPool* CreateSingleFrameMemoryPool(int32_t constantBufferPoolSize, int32_t drawingCount) override;
+	CommandList* CreateCommandList(SingleFrameMemoryPool* memoryPool) override;
+	ConstantBuffer* CreateConstantBuffer(int32_t size) override;
 	RenderPass* CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture) override;
 	Texture* CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer) override;
 	Texture* CreateTexture(uint64_t id) override;
@@ -173,7 +171,6 @@ public:
 	vk::CommandPool GetCommandPool() const { return vkCmdPool; }
 	vk::Queue GetQueue() const { return vkQueue; }
 
-	int32_t GetCurrentSwapBufferIndex() const;
 	int32_t GetSwapBufferCount() const;
 	uint32_t GetMemoryTypeIndex(uint32_t bits, const vk::MemoryPropertyFlags& properties);
 
