@@ -38,9 +38,11 @@ public:
 	bool IsRenderTexture() const override;
 	bool IsDepthTexture() const override;
 
+	const vk::Image& GetImage() const { return image; }
 	const vk::ImageView& GetView() const { return view; }
 
 	vk::Format GetVulkanFormat() const { return vkTextureFormat; }
+	int32_t GetMemorySize() const { return memorySize; }
 };
 
 } // namespace LLGI

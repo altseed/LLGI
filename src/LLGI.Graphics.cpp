@@ -39,4 +39,10 @@ Texture* Graphics::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDe
 
 Texture* Graphics::CreateTexture(uint64_t id) { return nullptr; }
 
+std::vector<uint8_t> Graphics::CaptureRenderTarget(Texture* renderTarget)
+{
+	throw "Not implemented.";
+	return std::vector<uint8_t>();
+}
+
 } // namespace LLGI

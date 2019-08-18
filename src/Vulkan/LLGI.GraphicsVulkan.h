@@ -164,6 +164,7 @@ public:
 	RenderPass* CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture) override;
 	Texture* CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer) override;
 	Texture* CreateTexture(uint64_t id) override;
+	std::vector<uint8_t> CaptureRenderTarget(Texture* renderTarget) override;
 
 	std::shared_ptr<RenderPassPipelineStateVulkan> CreateRenderPassPipelineState(bool isPresentMode, bool hasDepth, vk::Format format);
 
@@ -173,6 +174,9 @@ public:
 
 	int32_t GetSwapBufferCount() const;
 	uint32_t GetMemoryTypeIndex(uint32_t bits, const vk::MemoryPropertyFlags& properties);
+
+	VkCommandBuffer BeginSingleTimeCommands();
+	bool EndSingleTimeCommands(VkCommandBuffer commandBuffer);
 
 	//! temp
 	vk::Sampler& GetDefaultSampler() { return defaultSampler; };
