@@ -182,6 +182,8 @@ enum class TextureFormatType
 	BC1_SRGB = 8,
 	BC2_SRGB = 9,
 	BC3_SRGB = 10,
+
+	Uknown = 255,
 };
 
 struct DataStructure

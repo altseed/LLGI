@@ -9,6 +9,10 @@ namespace LLGI
 class Texture : public ReferenceObject
 {
 private:
+
+protected:
+	TextureFormatType format_ = TextureFormatType::Uknown;
+
 public:
 	Texture() = default;
 	virtual ~Texture() = default;
@@ -25,6 +29,8 @@ public:
 	virtual Vec2I GetSizeAs2D();
 	virtual bool IsRenderTexture() const;
 	virtual bool IsDepthTexture() const;
+
+	virtual TextureFormatType GetFormat() const;
 };
 
 } // namespace LLGI

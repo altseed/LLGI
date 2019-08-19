@@ -41,7 +41,9 @@ Texture* Graphics::CreateTexture(uint64_t id) { return nullptr; }
 
 std::vector<uint8_t> Graphics::CaptureRenderTarget(Texture* renderTarget)
 {
+#ifndef DISABLED_EXCEPTION
 	throw "Not implemented.";
+#endif
 	return std::vector<uint8_t>();
 }
 
