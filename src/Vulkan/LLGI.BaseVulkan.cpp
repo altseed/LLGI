@@ -62,6 +62,58 @@ Buffer::~Buffer()
 	}
 }
 
+VulkanBuffer::VulkanBuffer() : graphics_(nullptr), nativeBuffer_(VK_NULL_HANDLE), nativeBufferMemory_(VK_NULL_HANDLE), size_(0) {}
+
+bool VulkanBuffer::Initialize(GraphicsVulkan* graphics, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
+{
+	assert(!graphics_);
+	assert(graphics);
+
+	graphics_ = graphics;
+	size_ = size;
+
+	auto device = static_cast<VkDevice>(graphics_->GetDevice());
+
+	VkBufferCreateInfo bufferInfo = {};
+	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	bufferInfo.size = size;
+	bufferInfo.usage = usage;
+	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	LLGI_VK_CHECK(vkCreateBuffer(device, &bufferInfo, nullptr, &nativeBuffer_));
+
+	VkMemoryRequirements memRequirements;
+	vkGetBufferMemoryRequirements(device, nativeBuffer_, &memRequirements);
+
+	VkMemoryAllocateInfo allocInfo = {};
+	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	allocInfo.allocationSize = memRequirements.size;
+	allocInfo.memoryTypeIndex = graphics_->GetMemoryTypeIndex(memRequirements.memoryTypeBits, vk::MemoryPropertyFlags(properties));
+
+	LLGI_VK_CHECK(vkAllocateMemory(device, &allocInfo, nullptr, &nativeBufferMemory_));
+	LLGI_VK_CHECK(vkBindBufferMemory(device, nativeBuffer_, nativeBufferMemory_, 0));
+
+	return true;
+}
+
+void VulkanBuffer::Dispose()
+{
+	auto device = static_cast<VkDevice>(graphics_->GetDevice());
+
+	if (nativeBufferMemory_)
+	{
+		vkFreeMemory(device, nativeBufferMemory_, nullptr);
+		nativeBufferMemory_ = VK_NULL_HANDLE;
+	}
+
+	if (nativeBuffer_)
+	{
+		vkDestroyBuffer(device, nativeBuffer_, nullptr);
+		nativeBuffer_ = VK_NULL_HANDLE;
+	}
+
+	graphics_ = nullptr;
+}
+
 void SetImageLayout(vk::CommandBuffer cmdbuffer,
 					vk::Image image,
 					vk::ImageLayout oldImageLayout,

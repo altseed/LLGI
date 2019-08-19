@@ -169,6 +169,9 @@ public:
 		@brief	create texture from pointer or id in current platform
 	*/
 	virtual Texture* CreateTexture(uint64_t id);
+
+    /** For testing. Wait for all commands in queue to complete. Then read data from specified render target. */
+    virtual std::vector<uint8_t> CaptureRenderTarget(Texture* renderTarget);
 };
 
 } // namespace LLGI

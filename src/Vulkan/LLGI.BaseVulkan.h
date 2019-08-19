@@ -46,6 +46,23 @@ public:
 	virtual ~Buffer();
 };
 
+class VulkanBuffer
+{
+public:
+	VulkanBuffer();
+	bool Initialize(GraphicsVulkan* graphics, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
+	void Dispose();
+	VkBuffer GetNativeBuffer() const { return nativeBuffer_; }
+	VkDeviceMemory GetNativeBufferMemory() const { return nativeBufferMemory_; }
+	VkDeviceSize GetSize() const { return size_; }
+
+private:
+	GraphicsVulkan* graphics_;
+	VkBuffer nativeBuffer_;
+	VkDeviceMemory nativeBufferMemory_;
+	VkDeviceSize size_;
+};
+
 void SetImageLayout(vk::CommandBuffer cmdbuffer,
 					vk::Image image,
 					vk::ImageLayout oldImageLayout,
