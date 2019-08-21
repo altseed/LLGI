@@ -95,7 +95,8 @@ bool PlatformVulkan::CreateSwapChain(Vec2I windowSize, bool isVSyncEnabled)
 	swapchainCreateInfo.imageFormat = surfaceFormat;
 	swapchainCreateInfo.imageColorSpace = surfaceColorSpace;
 	swapchainCreateInfo.imageExtent = swapchainExtent;
-	swapchainCreateInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferDst;
+	swapchainCreateInfo.imageUsage =
+		vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eTransferSrc; // eTransferSrc: for capture
 	swapchainCreateInfo.preTransform = preTransform;
 	swapchainCreateInfo.imageArrayLayers = 1;
 	swapchainCreateInfo.imageSharingMode = vk::SharingMode::eExclusive;
@@ -557,7 +558,8 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 			vk::MemoryRequirements memReqs = vkDevice.getImageMemoryRequirements(depthStencilBuffer.image);
 			vk::MemoryAllocateInfo memAlloc;
 			memAlloc.allocationSize = memReqs.size;
-			memAlloc.memoryTypeIndex = GetMemoryTypeIndex(vkPhysicalDevice, memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
+			memAlloc.memoryTypeIndex =
+				GetMemoryTypeIndex(vkPhysicalDevice, memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
 			depthStencilBuffer.devMem = vkDevice.allocateMemory(memAlloc);
 			vkDevice.bindImageMemory(depthStencilBuffer.image, depthStencilBuffer.devMem, 0);
 
@@ -721,7 +723,6 @@ Graphics* PlatformVulkan::CreateGraphics()
 	auto getStatus = [this](PlatformStatus& status) -> void { status.currentSwapBufferIndex = this->frameIndex; };
 
 	auto addCommand = [this](vk::CommandBuffer& commandBuffer) -> void {
-
 		vk::SubmitInfo copySubmitInfo;
 		copySubmitInfo.commandBufferCount = 1;
 		copySubmitInfo.pCommandBuffers = &commandBuffer;

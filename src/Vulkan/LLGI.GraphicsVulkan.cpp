@@ -64,6 +64,13 @@ bool RenderPassVulkan::Initialize(const vk::Image& imageColor,
 	colorBuffers[0] = imageColor;
 	depthBuffer = imageDepth;
 
+	auto texture = CreateSharedPtr(new TextureVulkan(graphics_));
+	if (!texture->Initialize(imageColor, imageColorView, format, imageSize))
+	{
+		return false;
+	}
+	colorBufferPtrs[0] = texture;
+
 	return true;
 }
 
@@ -126,6 +133,8 @@ bool RenderPassVulkan::Initialize(const TextureVulkan** textures, int32_t textur
 }
 
 Vec2I RenderPassVulkan::GetImageSize() const { return imageSize_; }
+
+Texture* RenderPassVulkan::GetColorBuffer(int index) { return colorBufferPtrs[index].get(); }
 
 RenderPassPipelineState* RenderPassVulkan::CreateRenderPassPipelineState()
 {
