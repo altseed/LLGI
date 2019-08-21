@@ -8,6 +8,7 @@
 namespace LLGI
 {
 
+// for Texture2D, RenderTarget, DepthBuffer
 class TextureVulkan : public Texture
 {
 private:
@@ -25,12 +26,14 @@ private:
 
 	bool isRenderPass_ = false;
 	bool isDepthBuffer_ = false;
+	bool isExternalResource_ = false;
 
 public:
 	TextureVulkan(GraphicsVulkan* graphics);
 	virtual ~TextureVulkan();
 
 	bool Initialize(const Vec2I& size, bool isRenderPass, bool isDepthBuffer);
+	bool Initialize(const vk::Image& image, const vk::ImageView& imageVew, vk::Format format, const Vec2I& size);
 
 	void* Lock() override;
 	void Unlock() override;

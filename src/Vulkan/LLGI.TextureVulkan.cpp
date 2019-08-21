@@ -10,12 +10,15 @@ TextureVulkan::~TextureVulkan()
 {
 	if (image != nullptr)
 	{
-		graphics_->GetDevice().destroyImageView(view);
-		graphics_->GetDevice().destroyImage(image);
-		graphics_->GetDevice().freeMemory(devMem);
+		if (!isExternalResource_)
+		{
+			graphics_->GetDevice().destroyImageView(view);
+			graphics_->GetDevice().destroyImage(image);
+			graphics_->GetDevice().freeMemory(devMem);
 
-		image = nullptr;
-		view = nullptr;
+			image = nullptr;
+			view = nullptr;
+		}
 	}
 
 	SafeRelease(graphics_);
@@ -116,6 +119,17 @@ bool TextureVulkan::Initialize(const Vec2I& size, bool isRenderPass, bool isDept
 	textureSize = size;
 	vkTextureFormat = imageCreateInfo.format;
 
+	return true;
+}
+
+bool TextureVulkan::Initialize(const vk::Image& image, const vk::ImageView& imageVew, vk::Format format, const Vec2I& size)
+{
+	this->image = image;
+	this->view = imageVew;
+	vkTextureFormat = format;
+	textureSize = size;
+	memorySize = size.X * size.Y * 4; // TODO: format
+	isExternalResource_ = true;
 	return true;
 }
 

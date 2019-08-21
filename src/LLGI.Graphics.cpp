@@ -13,6 +13,12 @@ void RenderPass::SetIsDepthCleared(bool isDepthCleared) { isDepthCleared_ = isDe
 
 void RenderPass::SetClearColor(const Color8& color) { color_ = color; }
 
+Texture* RenderPass::GetColorBuffer(int index)
+{
+	throw "Not implemented.";
+	return nullptr;
+}
+
 RenderPassPipelineState* RenderPass::CreateRenderPassPipelineState() { return nullptr; }
 
 void Graphics::SetWindowSize(const Vec2I& windowSize) { windowSize_ = windowSize; }

@@ -65,6 +65,8 @@ public:
 
 	virtual void SetClearColor(const Color8& color);
 
+	virtual Texture* GetColorBuffer(int index);
+
 	/**
 		@brief	create a RenderPassPipelineState
 		@note
@@ -170,8 +172,8 @@ public:
 	*/
 	virtual Texture* CreateTexture(uint64_t id);
 
-    /** For testing. Wait for all commands in queue to complete. Then read data from specified render target. */
-    virtual std::vector<uint8_t> CaptureRenderTarget(Texture* renderTarget);
+	/** For testing. Wait for all commands in queue to complete. Then read data from specified render target. */
+	virtual std::vector<uint8_t> CaptureRenderTarget(Texture* renderTarget);
 };
 
 } // namespace LLGI

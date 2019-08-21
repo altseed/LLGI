@@ -50,6 +50,8 @@ public:
 
 	Vec2I GetImageSize() const;
 
+	virtual Texture* GetColorBuffer(int index) override;
+
 	RenderPassPipelineState* CreateRenderPassPipelineState() override;
 };
 
