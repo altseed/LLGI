@@ -16,7 +16,13 @@ if(BUILD_METAL)
 
 endif()
 
-target_include_directories(LLGI_Test PUBLIC ../src/)
-target_link_libraries(LLGI_Test LLGI)
+target_include_directories(LLGI_Test PUBLIC ../src/ ${LLGI_GOOGLETEST_INCLUDE})
+target_link_directories(LLGI_Test PRIVATE ${LLGI_GOOGLETEST_LIBRARY_DIRECTORY})
+target_link_libraries(
+	LLGI_Test
+	LLGI
+	debug gtestd
+	optimized gtest
+)
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)

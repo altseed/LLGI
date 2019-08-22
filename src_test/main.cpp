@@ -34,10 +34,10 @@ void test_renderPass(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 void call_test(LLGI::DeviceType device)
 {
 	// Empty
-	test_empty(device);
+	// test_empty(device);
 
 	// About clear
-	// test_clear(device);
+	test_clear(device);
 	// test_clear_update(device);
 
 	// About compile
@@ -55,7 +55,7 @@ void call_test(LLGI::DeviceType device)
 #if defined(__linux__) || defined(__APPLE__) || defined(WIN32)
 int main(int argc, char* argv[])
 {
-	auto device = LLGI::DeviceType::Default;
+	auto device = LLGI::DeviceType::Vulkan;
 
 #if defined(__APPLE__)
 	TestHelper::SetRoot("Shaders/Metal/");
@@ -66,6 +66,12 @@ int main(int argc, char* argv[])
 		TestHelper::SetRoot("Shaders/SPIRV/");
 	}
 
+#if 0
+	::testing::InitGoogleTest(&argc, argv);
+	return RUN_ALL_TESTS();
+#else
 	call_test(device);
+	return 0;
+#endif
 }
 #endif
