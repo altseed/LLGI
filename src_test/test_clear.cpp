@@ -1,8 +1,14 @@
 #include "test.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "../thirdparty/stb/stb_image_write.h"
+#include "thirdparty/stb/stb_image_write.h"
 
 #define CAPTURE_TEST 0
+
+class ClearTest : public ::testing::Test
+{
+};
+
+TEST_F(ClearTest, Clear1) {}
 
 void test_clear_update(LLGI::DeviceType deviceType)
 {

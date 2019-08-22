@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.12)
 # The project's name
 project(LLGI)
 
+include(ExternalProject)
 set (CMAKE_CXX_STANDARD 11)
 
 option(BUILD_METAL "build metal" OFF)
@@ -42,5 +43,18 @@ endif()
 add_subdirectory("src")
 
 if(BUILD_TEST)
+  ExternalProject_Add(
+    ExternalProject_googletest
+    GIT_REPOSITORY    https://github.com/google/googletest.git
+    GIT_TAG           release-1.8.1
+    SOURCE_DIR        ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/Source/googletest
+    BINARY_DIR        ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/Build/googletest
+    PREFIX            ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/Build/googletest
+    INSTALL_DIR       ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/Install/googletest
+    CMAKE_ARGS        -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/Install/googletest
+                      -Dgtest_force_shared_crt=${USE_MSVC_RUNTIME_LIBRARY_DLL}
+  )
+  set(LLGI_GOOGLETEST_INCLUDE ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/Install/googletest/include)
+  set(LLGI_GOOGLETEST_LIBRARY_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/Install/googletest/lib)
   add_subdirectory("src_test")
 endif()

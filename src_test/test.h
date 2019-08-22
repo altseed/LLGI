@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "gtest/gtest.h"
+
 #include <LLGI.CommandList.h>
 #include <LLGI.Compiler.h>
 #include <LLGI.ConstantBuffer.h>
