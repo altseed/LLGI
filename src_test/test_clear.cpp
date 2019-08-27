@@ -1,6 +1,5 @@
+#include "TestHelper.h"
 #include "test.h"
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "thirdparty/stb/stb_image_write.h"
 
 #define CAPTURE_TEST 0
 
@@ -91,7 +90,14 @@ void test_clear(LLGI::DeviceType deviceType)
 		{
 			auto texture = renderPass->GetColorBuffer(0);
 			auto data = graphics->CaptureRenderTarget(texture);
-			stbi_write_png("stbpng.png", texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, 4, data.data(), texture->GetSizeAs2D().X * 4);
+
+			// save
+			// Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("stbpng.png");
+
+			// test
+			int rate = Bitmap2D::CompareBitmap(
+				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true), Bitmap2D("stbpng.png"), 5);
+			std::cout << rate;
 		}
 #endif
 	}
