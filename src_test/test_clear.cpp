@@ -3,11 +3,13 @@
 
 #define CAPTURE_TEST 0
 
+#if defined(__linux__) || defined(__APPLE__) || defined(WIN32)
 class ClearTest : public ::testing::Test
 {
 };
 
 TEST_F(ClearTest, Clear1) {}
+#endif
 
 void test_clear_update(LLGI::DeviceType deviceType)
 {

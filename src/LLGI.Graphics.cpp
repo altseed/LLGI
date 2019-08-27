@@ -15,7 +15,9 @@ void RenderPass::SetClearColor(const Color8& color) { color_ = color; }
 
 Texture* RenderPass::GetColorBuffer(int index)
 {
+#ifndef DISABLED_EXCEPTION
 	throw "Not implemented.";
+#endif
 	return nullptr;
 }
 
