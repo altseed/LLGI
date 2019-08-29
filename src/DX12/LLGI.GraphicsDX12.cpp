@@ -1,4 +1,5 @@
 #include "LLGI.GraphicsDX12.h"
+#include "LLGI.BufferDX12.h"
 #include "LLGI.CommandListDX12.h"
 #include "LLGI.ConstantBufferDX12.h"
 #include "LLGI.IndexBufferDX12.h"
@@ -241,6 +242,75 @@ ID3D12Resource* GraphicsDX12::CreateResource(D3D12_HEAP_TYPE heapType,
 		return nullptr;
 	}
 	return resource;
+}
+
+std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
+{
+	if (!renderTarget)
+	{
+		return std::vector<uint8_t>();
+	}
+
+	auto device = GetDevice();
+
+	std::vector<uint8_t> result;
+	auto texture = static_cast<TextureDX12*>(renderTarget);
+	auto size = texture->GetSizeAs2D();
+
+	BufferDX12 dstBuffer;
+	if (!dstBuffer.Initialize(this, size.X * size.Y * 4))
+		goto FAILED_EXIT;
+
+	ID3D12CommandAllocator* commandAllocator = nullptr;
+	ID3D12GraphicsCommandList* commandList = nullptr;
+
+	auto hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
+	if (FAILED(hr))
+		goto FAILED_EXIT;
+
+	hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator, NULL, IID_PPV_ARGS(&commandList));
+	if (FAILED(hr))
+	{
+		SafeRelease(commandAllocator);
+		goto FAILED_EXIT;
+	}
+
+	D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
+	D3D12_TEXTURE_COPY_LOCATION src = {}, dst = {};
+	UINT64 totalSize;
+	device->GetCopyableFootprints(&texture->Get()->GetDesc(), 0, 1, 0, &footprint, nullptr, nullptr, &totalSize);
+
+	src.pResource = texture->Get();
+	src.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+	src.SubresourceIndex = 0;
+
+	dst.pResource = dstBuffer.Get();
+	dst.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+	dst.PlacedFootprint = footprint;
+
+	texture->ResourceBarrior(commandList, D3D12_RESOURCE_STATE_COPY_SOURCE);
+	commandList->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
+	texture->ResourceBarrior(commandList, D3D12_RESOURCE_STATE_GENERIC_READ);
+
+	commandList->Close();
+	ID3D12CommandList* list[] = {commandList};
+	GetCommandQueue()->ExecuteCommandLists(1, list);
+
+	// TODO optimize it
+	WaitFinish();
+	SafeRelease(commandList);
+	SafeRelease(commandAllocator);
+
+	result.resize(dstBuffer.GetSize());
+	auto raw = dstBuffer.Lock();
+	memcpy(result.data(), raw, result.size());
+	dstBuffer.Unlock();
+
+	return result;
+
+FAILED_EXIT:
+	SafeRelease(commandList);
+	return std::vector<uint8_t>();
 }
 
 } // namespace LLGI

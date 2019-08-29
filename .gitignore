@@ -33,3 +33,4 @@
 .vs
 /msvc/*.user
 **/Debug
+/build

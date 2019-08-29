@@ -75,8 +75,6 @@ void TextureDX12::Unlock()
 	ID3D12GraphicsCommandList* commandList = nullptr;
 	D3D12_TEXTURE_COPY_LOCATION src = {}, dst = {};
 	
-	auto commandQueue = graphics_->GetCommandQueue();
-
 	auto hr = graphics_->GetDevice()->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
 	if (FAILED(hr))
 	{

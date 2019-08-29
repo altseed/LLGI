@@ -75,6 +75,8 @@ public:
 								   D3D12_RESOURCE_STATES resourceState,
 								   D3D12_RESOURCE_FLAGS flags,
 								   Vec2I size);
+
+	std::vector<uint8_t> CaptureRenderTarget(Texture* renderTarget);
 };
 
 } // namespace LLGI
