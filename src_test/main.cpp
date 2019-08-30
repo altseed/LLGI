@@ -55,7 +55,11 @@ void call_test(LLGI::DeviceType device)
 #if defined(__linux__) || defined(__APPLE__) || defined(WIN32)
 int main(int argc, char* argv[])
 {
+#if defined(WIN32) && 1
+	auto device = LLGI::DeviceType::DirectX12;
+#else
 	auto device = LLGI::DeviceType::Vulkan;
+#endif
 
 #if defined(__APPLE__)
 	TestHelper::SetRoot("Shaders/Metal/");
