@@ -138,7 +138,7 @@ CommandList* GraphicsDX12::CreateCommandList(SingleFrameMemoryPool* memoryPool)
 RenderPass* GraphicsDX12::CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture)
 {
 	if (textureCount > 1)
-		throw "Not inplemented";
+		throw "Not implemented";
 
 	auto renderPass = new RenderPassDX12(this, true);
 	if (!renderPass->Initialize((TextureDX12**)textures, textureCount, (TextureDX12*)depthTexture))
@@ -152,7 +152,7 @@ RenderPass* GraphicsDX12::CreateRenderPass(const Texture** textures, int32_t tex
 Texture* GraphicsDX12::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer)
 {
 	auto obj = new TextureDX12(this);
-	if (!obj->Initialize(size, isRenderPass, isDepthBuffer))
+	if (!obj->Initialize(size, isRenderPass, isDepthBuffer, TextureFormatType::R8G8B8A8_UNORM))
 	{
 		SafeRelease(obj);
 		return nullptr;
@@ -161,7 +161,31 @@ Texture* GraphicsDX12::CreateTexture(const Vec2I& size, bool isRenderPass, bool 
 	return obj;
 }
 
-Texture* GraphicsDX12::CreateTexture(uint64_t id) { throw "Not inplemented"; }
+Texture* GraphicsDX12::CreateTexture(uint64_t id) { throw "Not implemented"; }
+
+Texture* GraphicsDX12::CreateTexture(const TextureInitializationParameter& parameter)
+{
+	auto obj = new TextureDX12(this);
+	if (!obj->Initialize(parameter.Size, false, false, parameter.Format))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
+	return obj;
+}
+
+Texture* GraphicsDX12::CreateRenderTexture(const RenderTextureInitializationParameter& parameter)
+{
+	auto obj = new TextureDX12(this);
+	if (!obj->Initialize(parameter.Size, true, false, parameter.Format))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
+	return obj;
+}
+
+Texture* GraphicsDX12::CreateDepthTexture(const DepthTextureInitializationParameter& parameter) { throw "Not implemented"; }
 
 std::shared_ptr<RenderPassPipelineStateDX12> GraphicsDX12::CreateRenderPassPipelineState(bool isPresentMode, bool hasDepth)
 {
@@ -258,7 +282,7 @@ std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
 	auto size = texture->GetSizeAs2D();
 
 	BufferDX12 dstBuffer;
-	if (!dstBuffer.Initialize(this, size.X * size.Y * 4))
+	if (!dstBuffer.Initialize(this, texture->GetMemorySize()))
 		goto FAILED_EXIT;
 
 	ID3D12CommandAllocator* commandAllocator = nullptr;
