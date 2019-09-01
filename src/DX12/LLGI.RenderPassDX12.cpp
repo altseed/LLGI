@@ -35,11 +35,12 @@ bool RenderPassDX12::Initialize() { return false; }
 
 bool RenderPassDX12::Initialize(TextureDX12** textures, int numTextures, TextureDX12* depthTexture)
 {
-	if (textures[0]->Get() != nullptr)
+	if (textures[0]->Get() == nullptr)
 		return false;
 
 	isScreen_ = false;
 	renderTargets_.resize(numTextures);
+	numRenderTarget_ = numTextures;
 
 	for (size_t i = 0; i < numTextures; i++)
 	{
@@ -64,12 +65,12 @@ RenderPassPipelineState* RenderPassDX12::CreateRenderPassPipelineState()
 }
 */
 
-RenderPassPipelineStateDX12* RenderPassDX12::GetRenderPassPipelineState(int idx)
+/*RenderPassPipelineStateDX12* RenderPassDX12::GetRenderPassPipelineState(int idx)
 {
 	auto ret = renderTargets_[idx].renderPassPipelineState_;
 	SafeAddRef(ret);
 	return ret;
-}
+}*/
 
 bool RenderPassDX12::CreateRenderTargetViews(CommandListDX12* commandList, DescriptorHeapDX12* rtDescriptorHeap)
 {

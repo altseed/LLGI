@@ -98,8 +98,7 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 	{
 		if (!renderPass_->GetIsScreen())
 		{
-			auto r = renderPass_->CreateRenderTargetViews(this, swapBuffer.rtDescriptorHeap.get());
-			assert(r);
+			renderPass_->CreateRenderTargetViews(this, swapBuffer.rtDescriptorHeap.get());
 		}
 
 		// Set render target
@@ -258,7 +257,7 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 					{
 						D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 						srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-						srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+						srvDesc.Format = texture->GetDXGIFormat();
 						srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 						srvDesc.Texture2D.MipLevels = 1;
 						srvDesc.Texture2D.MostDetailedMip = 0;
