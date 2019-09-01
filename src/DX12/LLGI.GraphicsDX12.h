@@ -10,6 +10,8 @@
 
 namespace LLGI
 {
+class RenderPassDX12;
+
 class GraphicsDX12 : public Graphics
 {
 private:

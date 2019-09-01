@@ -58,12 +58,8 @@ void GraphicsDX12::WaitFinish()
 RenderPass* GraphicsDX12::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared)
 {
 	auto currentParam = getScreenFunc_();
-	currentScreen.handleRtv_ = std::get<0>(currentParam);
-	currentScreen.renderPass_ = std::get<1>(currentParam);
-	currentScreen.SetClearColor(clearColor);
-	currentScreen.SetIsColorCleared(isColorCleared);
-	currentScreen.SetIsDepthCleared(isDepthCleared);
-	currentScreen.screenWindowSize = windowSize_;
+	currentScreen.CreateScreenRenderTarget(
+		std::get<0>(currentParam), std::get<1>(currentParam), clearColor, isColorCleared, isDepthCleared, windowSize_);
 
 	return &currentScreen;
 }
@@ -137,9 +133,6 @@ CommandList* GraphicsDX12::CreateCommandList(SingleFrameMemoryPool* memoryPool)
 
 RenderPass* GraphicsDX12::CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture)
 {
-	if (textureCount > 1)
-		throw "Not implemented";
-
 	auto renderPass = new RenderPassDX12(this, true);
 	if (!renderPass->Initialize((TextureDX12**)textures, textureCount, (TextureDX12*)depthTexture))
 	{

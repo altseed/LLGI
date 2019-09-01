@@ -17,6 +17,8 @@ private:
 	ID3D12Resource* buffer_ = nullptr;
 	D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint_;
 	D3D12_RESOURCE_STATES state_ = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COMMON;
+	DXGI_FORMAT format_;
+	TextureFormatType formatType_;
 
 	Vec2I textureSize_;
 	int32_t memorySize_;
@@ -35,8 +37,10 @@ public:
 	void* Lock() override;
 	void Unlock() override;
 	Vec2I GetSizeAs2D() override;
-	ID3D12Resource* Get() { return texture_; }
-	int32_t GetMemorySize() { return memorySize_; }
+	ID3D12Resource* Get() const { return texture_; }
+	int32_t GetMemorySize() const { return memorySize_; }
+	TextureFormatType GetFormat() const override { return formatType_; }
+	DXGI_FORMAT GetDXGIFormat() const { return format_; }
 	bool IsRenderTexture() const override;
 	bool IsDepthTexture() const override;
 
