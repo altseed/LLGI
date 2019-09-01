@@ -124,6 +124,29 @@ float4 main(PS_INPUT input) : SV_TARGET
 	LLGI::Shader* shader_vs = nullptr;
 	LLGI::Shader* shader_ps = nullptr;
 
+	std::vector<LLGI::DataStructure> data_vs;
+	std::vector<LLGI::DataStructure> data_ps;
+
+	if (compiler == nullptr)
+	{
+		auto binary_vs = TestHelper::LoadData("simple_texture_rectangle.vert.spv");
+		auto binary_ps = TestHelper::LoadData("simple_texture_rectangle.frag.spv");
+
+		LLGI::DataStructure d_vs;
+		LLGI::DataStructure d_ps;
+
+		d_vs.Data = binary_vs.data();
+		d_vs.Size = binary_vs.size();
+		d_ps.Data = binary_ps.data();
+		d_ps.Size = binary_ps.size();
+
+		data_vs.push_back(d_vs);
+		data_ps.push_back(d_ps);
+
+		shader_vs = graphics->CreateShader(data_vs.data(), data_vs.size());
+		shader_ps = graphics->CreateShader(data_ps.data(), data_ps.size());
+	}
+	else
 	{
 		LLGI::CompilerResult result_vs;
 		LLGI::CompilerResult result_ps;
