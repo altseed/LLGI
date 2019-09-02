@@ -2,5 +2,4 @@
 
 namespace LLGI
 {
-
 } // namespace LLGI

@@ -180,11 +180,14 @@ Texture* GraphicsDX12::CreateRenderTexture(const RenderTextureInitializationPara
 
 Texture* GraphicsDX12::CreateDepthTexture(const DepthTextureInitializationParameter& parameter) { throw "Not implemented"; }
 
-std::shared_ptr<RenderPassPipelineStateDX12> GraphicsDX12::CreateRenderPassPipelineState(bool isPresentMode, bool hasDepth)
+std::shared_ptr<RenderPassPipelineStateDX12>
+GraphicsDX12::CreateRenderPassPipelineState(bool isPresentMode, bool hasDepth, RenderPassDX12* renderpass)
 {
 	RenderPassPipelineStateDX12Key key;
 	key.isPresentMode = isPresentMode;
 	key.hasDepth = hasDepth;
+	key.renderPass = renderpass;
+
 
 	// already?
 	{
@@ -199,8 +202,7 @@ std::shared_ptr<RenderPassPipelineStateDX12> GraphicsDX12::CreateRenderPassPipel
 		}
 	}
 
-	std::shared_ptr<RenderPassPipelineStateDX12> ret = std::make_shared<RenderPassPipelineStateDX12>(this);
-
+	auto ret = std::make_shared<RenderPassPipelineStateDX12>(this);
 	renderPassPipelineStates[key] = ret;
 
 	return ret;
@@ -243,8 +245,8 @@ ID3D12Resource* GraphicsDX12::CreateResource(D3D12_HEAP_TYPE heapType,
 	clearValue.Format = format;
 	clearValue.Color[0] = 0.0f;
 	clearValue.Color[1] = 0.0f;
-	clearValue.Color[1] = 0.0f;
-	clearValue.Color[1] = 0.0f;
+	clearValue.Color[2] = 0.0f;
+	clearValue.Color[3] = 0.0f;
 	auto setClearValue =
 		resourceDimention != D3D12_RESOURCE_DIMENSION_BUFFER &&
 		(((flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET) != 0) || ((flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) != 0));

@@ -107,21 +107,26 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 		// TODO depth...
 
 		// Reset scissor
-		D3D12_RECT rect;
-		rect.top = 0;
-		rect.left = 0;
-		rect.right = renderPass_->GetScreenWindowSize().X;
-		rect.bottom = renderPass_->GetScreenWindowSize().Y;
-		commandList->RSSetScissorRects(1, &rect);
+		D3D12_RECT rects[D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT];
+		D3D12_VIEWPORT viewports[D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT];
+		for (int i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT && i < renderPass_->GetCount(); i++)
+		{
+			auto size = (renderPass_->GetRenderTarget(i)->texture_ != nullptr) ? renderPass_->GetRenderTarget(i)->texture_->GetSizeAs2D()
+																			   : renderPass_->GetScreenWindowSize();
+			rects[i].top = 0;
+			rects[i].left = 0;
+			rects[i].right = size.X;
+			rects[i].bottom = size.Y;
 
-		D3D12_VIEWPORT viewport;
-		viewport.TopLeftX = 0.0f;
-		viewport.TopLeftY = 0.0f;
-		viewport.Width = static_cast<float>(renderPass_->GetScreenWindowSize().X);
-		viewport.Height = static_cast<float>(renderPass_->GetScreenWindowSize().Y);
-		viewport.MinDepth = 0.0f;
-		viewport.MaxDepth = 1.0f;
-		commandList->RSSetViewports(1, &viewport);
+			viewports[i].TopLeftX = 0.0f;
+			viewports[i].TopLeftY = 0.0f;
+			viewports[i].Width = static_cast<float>(size.X);
+			viewports[i].Height = static_cast<float>(size.Y);
+			viewports[i].MinDepth = 0.0f;
+			viewports[i].MaxDepth = 1.0f;
+		}
+		commandList->RSSetScissorRects(renderPass_->GetCount(), rects);
+		commandList->RSSetViewports(renderPass_->GetCount(), viewports);
 
 		// Clear color
 		if (renderPass_->GetIsColorCleared())

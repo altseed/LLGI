@@ -23,6 +23,7 @@ private:
 	std::vector<RenderTargetDX12> renderTargets_;
 	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> handleRTV_;
 	int32_t numRenderTarget_;
+	std::shared_ptr<RenderPassPipelineStateDX12> renderPassPipelineState_;
 	Vec2I screenWindowSize_;
 
 public:
@@ -32,9 +33,7 @@ public:
 	bool Initialize();
 	bool Initialize(TextureDX12** textures, int numTextures, TextureDX12* depthTexture);
 
-	// RenderPassPipelineState* CreateRenderPassPipelineState() override;
-
-	RenderPassPipelineStateDX12* GetRenderPassPipelineState(int idx);
+	RenderPassPipelineState* CreateRenderPassPipelineState() override;
 
 	const D3D12_CPU_DESCRIPTOR_HANDLE* GetHandleRTV() const { return handleRTV_.data(); }
 	const RenderTargetDX12* GetRenderTarget(int idx) const { return &renderTargets_[idx]; }
@@ -56,7 +55,6 @@ class RenderTargetDX12
 public:
 	TextureDX12* texture_ = nullptr;
 	ID3D12Resource* renderPass_ = nullptr;
-	RenderPassPipelineStateDX12* renderPassPipelineState_ = nullptr;
 
 	RenderTargetDX12() {}
 };

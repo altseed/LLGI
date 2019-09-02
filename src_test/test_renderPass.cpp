@@ -424,7 +424,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 	auto renderTexture = graphics->CreateTexture(LLGI::Vec2I(256, 256), true, false);
 	auto renderTexture2 = graphics->CreateTexture(LLGI::Vec2I(256, 256), true, false);
 	const LLGI::Texture* renderTextures[2] = {(const LLGI::Texture*)renderTexture, (const LLGI::Texture*)renderTexture2};
-	auto renderPass = graphics->CreateRenderPass(&renderTextures[0], 2, nullptr);
+	auto renderPass = graphics->CreateRenderPass((const LLGI::Texture**)renderTextures, 2, nullptr);
 
 	auto texture = graphics->CreateTexture(LLGI::Vec2I(256, 256), false, false);
 
@@ -544,7 +544,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 	ib_buf2[3] = 0;
 	ib_buf2[4] = 2;
 	ib_buf2[5] = 3;
-	ib->Unlock();
+	ib2->Unlock();
 
 	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pips;
 
@@ -639,7 +639,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 		commandList->SetVertexBuffer(vb2, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib2);
 		commandList->SetTexture(
-			renderTexture2, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+			renderTexture, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 
 		commandList->EndRenderPass();
