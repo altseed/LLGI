@@ -5,6 +5,7 @@
 
 namespace LLGI
 {
+class CommandListPool;
 
 struct TextureInitializationParameter
 {
@@ -100,7 +101,7 @@ public:
 	Graphics() = default;
 	virtual ~Graphics() = default;
 
-	virtual void SetWindowSize(const Vec2I& windowSize);
+	[[deprecated("use Platform::SetWindowSize.")]] virtual void SetWindowSize(const Vec2I& windowSize);
 
 	/**
 		@brief	Execute commands
@@ -112,15 +113,17 @@ public:
 	/**
 	@brief	to prevent instances to be disposed before finish rendering, finish all renderings.
 	*/
-	virtual void WaitFinish() {}
+	virtual void WaitFinish(){}
 
-	/**
-		@brief get render pass of screen to show on a display.
-		@note
-		Don't release and addref it.
-		Don't use it for the many purposes, please input Clear or SetRenderPass immediately.
-	*/
-	virtual RenderPass* GetCurrentScreen(const Color8& clearColor = Color8(), bool isColorCleared = false, bool isDepthCleared = false);
+		/**
+			@brief get render pass of screen to show on a display.
+			@note
+			Don't release and addref it.
+			Don't use it for the many purposes, please input Clear or SetRenderPass immediately.
+		*/
+		[[deprecated("use Platform::GetCurrentScreen.")]] virtual RenderPass* GetCurrentScreen(const Color8& clearColor = Color8(),
+																							   bool isColorCleared = false,
+																							   bool isDepthCleared = false);
 
 	/**
 		@brief	create a vertex buffer
@@ -140,13 +143,17 @@ public:
 	/**
 		@brief create a memory pool
 	*/
-	virtual SingleFrameMemoryPool* CreateSingleFrameMemoryPool(int32_t constantBufferPoolSize, int32_t drawingCount);
+	[[deprecated("use Graphics::CreateCommandListPool.")]] virtual SingleFrameMemoryPool*
+	CreateSingleFrameMemoryPool(int32_t constantBufferPoolSize, int32_t drawingCount);
 
 	/**
 		@brief
 		@param memoryPool if memory pool is null, allocate memory from graphics
 	*/
-	virtual CommandList* CreateCommandList(SingleFrameMemoryPool* memoryPool);
+	[[deprecated("use Graphics::CreateCommandListPool.")]] virtual CommandList* CreateCommandList(SingleFrameMemoryPool* memoryPool);
+
+	// TODO: see https://github.com/altseed/LLGI/issues/26
+	virtual CommandListPool* CreateCommandListPool(int32_t constantBufferPoolSize, int32_t drawingCount, int32_t swapbufferCount);
 
 	/**
 		@brief	create a constant buffer
@@ -162,8 +169,8 @@ public:
 
 	virtual Texture* CreateDepthTexture(const DepthTextureInitializationParameter& parameter) { return nullptr; }
 
-	[[deprecated("please use CreateTexture, CreateRenderTexture and CreateDepthTexture")]]
-	virtual Texture* CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer);
+	[[deprecated("please use CreateTexture, CreateRenderTexture and CreateDepthTexture")]] virtual Texture*
+	CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer);
 
 	/**
 		@brief	create texture from pointer or id in current platform

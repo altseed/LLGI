@@ -9,7 +9,6 @@ namespace LLGI
 class Texture : public ReferenceObject
 {
 private:
-
 protected:
 	TextureFormatType format_ = TextureFormatType::Uknown;
 
@@ -23,9 +22,11 @@ public:
 		CommandList::UpdateTexture must be called in some platforms.
 	*/
 	virtual void* GetBuffer() const;
-	
-	virtual void* Lock();
-	virtual void Unlock();
+
+	[[deprecated("use CommandList::SetImageData2D.")]] virtual void* Lock();
+
+	[[deprecated("use CommandList::SetImageData2D.")]] virtual void Unlock();
+
 	virtual Vec2I GetSizeAs2D();
 	virtual bool IsRenderTexture() const;
 	virtual bool IsDepthTexture() const;

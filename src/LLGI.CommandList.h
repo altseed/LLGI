@@ -74,7 +74,7 @@ public:
 
 	/**
 	@brief
-	added a command into supecified context. 
+	added a command into supecified context.
 	This function can be called once by a frame.
 	*/
 	virtual void Begin();
@@ -114,9 +114,34 @@ public:
 	virtual bool EndRenderPassWithPlatformPtr() { return false; }
 
 	/**
+		@brief	send a memory in specified VertexBuffer from cpu to gpu
+	*/
+	virtual void SetData(VertexBuffer* vertexBuffer, int32_t offset, int32_t size, const void* data);
+
+	/**
+		@brief	send a memory in specified IndexBuffer from cpu to gpu
+	*/
+	virtual void SetData(IndexBuffer* indexBuffer, int32_t offset, int32_t size, const void* data);
+
+	/**
+		@brief	send a memory in specified ConstantBuffer from cpu to gpu
+	*/
+	virtual void SetData(ConstantBuffer* constantBuffer, int32_t offset, int32_t size, const void* data);
+
+	/**
 		@brief	send a memory in specified texture from cpu to gpu
 	*/
-	virtual void SendTextureFromCPUToGPU(Texture* texture) {}
+	virtual void SetImageData2D(Texture* texture, int32_t x, int32_t y, int32_t width, int32_t height, const void* data);
+};
+
+// TODO: see https://github.com/altseed/LLGI/issues/26
+class CommandListPool : public ReferenceObject
+{
+public:
+	CommandListPool(int32_t swapCount);
+	virtual ~CommandListPool() = default;
+
+	virtual CommandList* Get();
 };
 
 } // namespace LLGI
