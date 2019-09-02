@@ -4,12 +4,12 @@
 #include "LLGI.GraphicsDX12.h"
 #include "LLGI.IndexBufferDX12.h"
 #include "LLGI.PipelineStateDX12.h"
+#include "LLGI.RenderPassDX12.h"
 #include "LLGI.TextureDX12.h"
 #include "LLGI.VertexBufferDX12.h"
 
 namespace LLGI
 {
-
 CommandListDX12::CommandListDX12() {}
 
 CommandListDX12::~CommandListDX12() { swapBuffers_.clear(); }
@@ -48,8 +48,8 @@ bool CommandListDX12::Initialize(GraphicsDX12* graphics, int32_t drawingCount)
 			graphics_, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, drawingCount * NumTexture + 2, 2);
 
 		// the maximum render target is defined temporary
-		swapBuffers_[i].rtDescriptorHeap =
-			std::make_shared<DescriptorHeapDX12>(graphics_, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_RTV, drawingCount / 2, 2);
+		swapBuffers_[i].rtDescriptorHeap = std::make_shared<DescriptorHeapDX12>(
+			graphics_, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_RTV, drawingCount / 2, 2);
 		swapBuffers_[i].smpDescriptorHeap = std::make_shared<DescriptorHeapDX12>(
 			graphics_, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, drawingCount * NumTexture, 2);
 	}
@@ -98,21 +98,11 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 	{
 		if (!renderPass_->GetIsScreen())
 		{
-			D3D12_RENDER_TARGET_VIEW_DESC desc = {};
-			desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-			desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-			auto cpuHandle = swapBuffer.rtDescriptorHeap->GetCpuHandle();
-			graphics_->GetDevice()->CreateRenderTargetView(renderPass_->GetTextures()[0]->Get(), &desc, cpuHandle);
-			renderPass_->handleRtv_ = cpuHandle;
-			swapBuffer.rtDescriptorHeap->IncrementCpuHandle(1);
-			swapBuffer.rtDescriptorHeap->IncrementGpuHandle(1);
-
-			// memory barrior to make a rendertarget
-			renderPass_->GetTextures()[0]->ResourceBarrior(commandList.get(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+			renderPass_->CreateRenderTargetViews(this, swapBuffer.rtDescriptorHeap.get());
 		}
 
 		// Set render target
-		commandList->OMSetRenderTargets(1, &(renderPass_->handleRtv_), FALSE, nullptr);
+		commandList->OMSetRenderTargets(renderPass_->GetCount(), renderPass_->GetHandleRTV(), FALSE, nullptr);
 
 		// TODO depth...
 
@@ -120,15 +110,15 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 		D3D12_RECT rect;
 		rect.top = 0;
 		rect.left = 0;
-		rect.right = renderPass_->screenWindowSize.X;
-		rect.bottom = renderPass_->screenWindowSize.Y;
+		rect.right = renderPass_->GetScreenWindowSize().X;
+		rect.bottom = renderPass_->GetScreenWindowSize().Y;
 		commandList->RSSetScissorRects(1, &rect);
 
 		D3D12_VIEWPORT viewport;
 		viewport.TopLeftX = 0.0f;
 		viewport.TopLeftY = 0.0f;
-		viewport.Width = static_cast<float>(renderPass_->screenWindowSize.X);
-		viewport.Height = static_cast<float>(renderPass_->screenWindowSize.Y);
+		viewport.Width = static_cast<float>(renderPass_->GetScreenWindowSize().X);
+		viewport.Height = static_cast<float>(renderPass_->GetScreenWindowSize().Y);
 		viewport.MinDepth = 0.0f;
 		viewport.MaxDepth = 1.0f;
 		commandList->RSSetViewports(1, &viewport);
@@ -267,7 +257,7 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 					{
 						D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 						srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-						srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+						srvDesc.Format = texture->GetDXGIFormat();
 						srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 						srvDesc.Texture2D.MipLevels = 1;
 						srvDesc.Texture2D.MostDetailedMip = 0;
@@ -333,7 +323,11 @@ void CommandListDX12::Clear(const Color8& color)
 
 	float color_[] = {color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f};
 
-	commandList->ClearRenderTargetView(rt->handleRtv_, color_, 0, nullptr);
+	auto handle = rt->GetHandleRTV();
+	for (int i = 0; i < rt->GetCount(); i++)
+	{
+		commandList->ClearRenderTargetView(handle[i], color_, 0, nullptr);
+	}
 }
 
 ID3D12GraphicsCommandList* CommandListDX12::GetCommandList() const

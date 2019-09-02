@@ -1,4 +1,6 @@
 #include "LLGI.RenderPassDX12.h"
+#include "LLGI.CommandListDX12.h"
+#include "LLGI.DescriptorHeapDX12.h"
 #include "LLGI.GraphicsDX12.h"
 #include "LLGI.TextureDX12.h"
 
@@ -15,11 +17,13 @@ RenderPassDX12::RenderPassDX12(GraphicsDX12* graphics, bool isStrongRef) : graph
 
 RenderPassDX12 ::~RenderPassDX12()
 {
-	for (size_t i = 0; i < textures_.size(); i++)
+
+	for (size_t i = 0; i < numRenderTarget_; i++)
 	{
-		SafeRelease(textures_[i]);
+		if (renderTargets_[i].texture_ != nullptr)
+			SafeRelease(renderTargets_[i].texture_);
 	}
-	textures_.clear();
+	renderTargets_.clear();
 
 	if (isStrongRef_)
 	{
@@ -31,35 +35,87 @@ bool RenderPassDX12::Initialize() { return false; }
 
 bool RenderPassDX12::Initialize(TextureDX12** textures, int numTextures, TextureDX12* depthTexture)
 {
+	if (textures[0]->Get() == nullptr)
+		return false;
+
 	isScreen_ = false;
-	renderPass_ = textures[0]->Get();
-	textures_.resize(numTextures);
+	renderTargets_.resize(numTextures);
+	numRenderTarget_ = numTextures;
 
 	for (size_t i = 0; i < numTextures; i++)
 	{
-		textures_[i] = textures[i];
-		SafeAddRef(textures_[i]);
+		renderTargets_[i].texture_ = textures[i];
+		renderTargets_[i].renderPass_ = textures[i]->Get();
+		SafeAddRef(renderTargets_[i].texture_);
 	}
 
 	auto size = textures[0]->GetSizeAs2D();
-	screenWindowSize.X = size.X;
-	screenWindowSize.Y = size.Y;
+	screenWindowSize_.X = size.X;
+	screenWindowSize_.Y = size.Y;
 
-	return renderPass_ != nullptr;
+	return true;
 }
 
+/*
 RenderPassPipelineState* RenderPassDX12::CreateRenderPassPipelineState()
 {
 	auto ret = renderPassPipelineState.get();
 	SafeAddRef(ret);
 	return ret;
 }
+*/
 
-RenderPassPipelineStateDX12* RenderPassDX12::GetRenderPassPipelineState()
+/*RenderPassPipelineStateDX12* RenderPassDX12::GetRenderPassPipelineState(int idx)
 {
-	auto ret = renderPassPipelineState.get();
+	auto ret = renderTargets_[idx].renderPassPipelineState_;
 	SafeAddRef(ret);
 	return ret;
+}*/
+
+bool RenderPassDX12::CreateRenderTargetViews(CommandListDX12* commandList, DescriptorHeapDX12* rtDescriptorHeap)
+{
+	if (numRenderTarget_ == 0)
+		return false;
+
+	handleRTV_.resize(numRenderTarget_);
+
+	for (int i = 0; i < numRenderTarget_; i++)
+	{
+		D3D12_RENDER_TARGET_VIEW_DESC desc = {};
+		desc.Format = renderTargets_[i].texture_->GetDXGIFormat();
+		desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+		auto cpuHandle = rtDescriptorHeap->GetCpuHandle();
+		graphics_->GetDevice()->CreateRenderTargetView(renderTargets_[i].renderPass_, &desc, cpuHandle);
+		handleRTV_[i] = cpuHandle;
+		rtDescriptorHeap->IncrementCpuHandle(1);
+		rtDescriptorHeap->IncrementGpuHandle(1);
+
+		// memory barrior to make a rendertarget
+		renderTargets_[i].texture_->ResourceBarrior(commandList->GetCommandList(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+	}
+
+	return true;
+}
+
+bool RenderPassDX12::CreateScreenRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE handleRTV,
+											  ID3D12Resource* renderPass,
+											  const Color8& clearColor,
+											  const bool isColorCleared,
+											  const bool isDepthCleared,
+											  const Vec2I windowSize)
+{
+	numRenderTarget_ = 1;
+	handleRTV_.resize(1);
+	renderTargets_.resize(1);
+
+	renderTargets_[0].renderPass_ = renderPass;
+	handleRTV_[0] = handleRTV;
+	SetClearColor(clearColor);
+	SetIsColorCleared(isColorCleared);
+	SetIsDepthCleared(isDepthCleared);
+	screenWindowSize_ = windowSize;
+
+	return true;
 }
 
 } // namespace LLGI

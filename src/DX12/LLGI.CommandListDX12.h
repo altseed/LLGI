@@ -6,9 +6,11 @@
 #include "LLGI.DescriptorHeapDX12.h"
 #include "LLGI.GraphicsDX12.h"
 #include "LLGI.PipelineStateDX12.h"
+#include "LLGI.RenderPassDX12.h"
 
 namespace LLGI
 {
+class DescriptorHeapDX12;
 
 class CommandListDX12 : public CommandList
 {
