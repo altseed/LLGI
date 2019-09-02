@@ -1,6 +1,11 @@
+#include "TestHelper.h"
 #include "test.h"
 
-void test_depth_RenderPass()
+#include <fstream>
+#include <iostream>
+#include <map>
+
+void test_depth(LLGI::DeviceType deviceType)
 {
 	auto code_gl_vs = R"(
 #version 440 core
@@ -54,10 +59,32 @@ void main()
 	auto commandList = graphics->CreateCommandList(sfMemoryPool);
 	auto vb = graphics->CreateVertexBuffer(sizeof(SimpleVertex) * 4);
 	auto ib = graphics->CreateIndexBuffer(2, 6);
-	auto pip = graphics->CreatePiplineState();
 	LLGI::Shader* shader_vs = nullptr;
 	LLGI::Shader* shader_ps = nullptr;
 
+	std::vector<LLGI::DataStructure> data_vs;
+	std::vector<LLGI::DataStructure> data_ps;
+
+	if (compiler == nullptr)
+	{
+		auto binary_vs = TestHelper::LoadData("simple_rectangle.vert.spv");
+		auto binary_ps = TestHelper::LoadData("simple_rectangle.frag.spv");
+
+		LLGI::DataStructure d_vs;
+		LLGI::DataStructure d_ps;
+
+		d_vs.Data = binary_vs.data();
+		d_vs.Size = binary_vs.size();
+		d_ps.Data = binary_ps.data();
+		d_ps.Size = binary_ps.size();
+
+		data_vs.push_back(d_vs);
+		data_ps.push_back(d_ps);
+
+		shader_vs = graphics->CreateShader(data_vs.data(), data_vs.size());
+		shader_ps = graphics->CreateShader(data_ps.data(), data_ps.size());
+	}
+	else
 	{
 		LLGI::CompilerResult result_vs;
 		LLGI::CompilerResult result_ps;
@@ -91,13 +118,18 @@ void main()
 	auto vb_buf = (SimpleVertex*)vb->Lock();
 	vb_buf[0].Pos = LLGI::Vec3F(-0.5, 0.5, 0.5);
 	vb_buf[1].Pos = LLGI::Vec3F(0.5, 0.5, 0.5);
-	vb_buf[2].Pos = LLGI::Vec3F(0.5, -0.5, 0.5);
-	vb_buf[3].Pos = LLGI::Vec3F(-0.5, -0.5, 0.5);
+	vb_buf[2].Pos = LLGI::Vec3F(0.5, -0.5, 1.5);
+	vb_buf[3].Pos = LLGI::Vec3F(-0.5, -0.5, 1.5);
 
 	vb_buf[0].UV = LLGI::Vec2F(0.0f, 0.0f);
 	vb_buf[1].UV = LLGI::Vec2F(1.0f, 0.0f);
 	vb_buf[2].UV = LLGI::Vec2F(1.0f, 1.0f);
 	vb_buf[3].UV = LLGI::Vec2F(0.0f, 1.0f);
+
+	vb_buf[0].Color = LLGI::Color8();
+	vb_buf[1].Color = LLGI::Color8();
+	vb_buf[2].Color = LLGI::Color8();
+	vb_buf[3].Color = LLGI::Color8();
 
 	vb->Unlock();
 
@@ -110,14 +142,7 @@ void main()
 	ib_buf[5] = 3;
 	ib->Unlock();
 
-	pip->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
-	pip->VertexLayouts[1] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
-	pip->VertexLayouts[2] = LLGI::VertexLayoutFormat::R8G8B8A8_UNORM;
-	pip->VertexLayoutCount = 3;
-
-	pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs);
-	pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps);
-	pip->Compile();
+	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pips;
 
 	while (count < 1000)
 	{
@@ -130,11 +155,36 @@ void main()
 		color.B = 0;
 		color.A = 255;
 
+		auto renderPass = graphics->GetCurrentScreen(color, true, true);
+		auto renderPassPipelineState = LLGI::CreateSharedPtr(renderPass->CreateRenderPassPipelineState());
+
+		if (pips.count(renderPassPipelineState) == 0)
+		{
+			auto pip = graphics->CreatePiplineState();
+			pip->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
+			pip->VertexLayouts[1] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
+			pip->VertexLayouts[2] = LLGI::VertexLayoutFormat::R8G8B8A8_UNORM;
+			pip->VertexLayoutNames[0] = "POSITION";
+			pip->VertexLayoutNames[1] = "UV";
+			pip->VertexLayoutNames[2] = "COLOR";
+			pip->VertexLayoutCount = 3;
+
+			pip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan
+			pip->IsDepthTestEnabled = true;
+			pip->IsDepthWriteEnabled = true;
+			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs);
+			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps);
+			pip->SetRenderPassPipelineState(renderPassPipelineState.get());
+			pip->Compile();
+
+			pips[renderPassPipelineState] = LLGI::CreateSharedPtr(pip);
+		}
+
 		commandList->Begin();
-		commandList->BeginRenderPass(graphics->GetCurrentScreen(color, true));
+		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib);
-		commandList->SetPipelineState(pip);
+		commandList->SetPipelineState(pips[renderPassPipelineState].get());
 		commandList->Draw(2);
 		commandList->EndRenderPass();
 		commandList->End();
@@ -145,12 +195,13 @@ void main()
 		count++;
 	}
 
+	pips.clear();
+
 	graphics->WaitFinish();
 
 	LLGI::SafeRelease(sfMemoryPool);
 	LLGI::SafeRelease(shader_vs);
 	LLGI::SafeRelease(shader_ps);
-	LLGI::SafeRelease(pip);
 	LLGI::SafeRelease(ib);
 	LLGI::SafeRelease(vb);
 	LLGI::SafeRelease(commandList);
