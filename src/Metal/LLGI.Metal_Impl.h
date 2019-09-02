@@ -69,7 +69,7 @@ struct Shader_Impl
 
 	Shader_Impl();
 	~Shader_Impl();
-	bool Initialize(Graphics_Impl* graphics, void* data, int size);
+	bool Initialize(Graphics_Impl* graphics, const void* data, int size);
 };
 
 struct PipelineState_Impl
