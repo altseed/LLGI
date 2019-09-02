@@ -18,7 +18,7 @@ Shader_Impl::~Shader_Impl()
 	}
 }
 
-bool Shader_Impl::Initialize(Graphics_Impl* graphics, void* data, int size)
+bool Shader_Impl::Initialize(Graphics_Impl* graphics, const void* data, int size)
 {
 	auto device = graphics->device;
 
@@ -27,7 +27,7 @@ bool Shader_Impl::Initialize(Graphics_Impl* graphics, void* data, int size)
 
 	// check whether binary or code
 	bool isCode = false;
-	char* code = static_cast<char*>(data);
+	const char* code = static_cast<const char*>(data);
 
 	if (code[0] == 'm' || code[1] == 't' || code[2] == 'l' || code[3] == 'c' || code[4] == 'o' || code[5] == 'd' || code[6] == 'e')
 	{

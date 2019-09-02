@@ -68,6 +68,15 @@ struct RenderPassPipelineStateMetalKey
 	};
 };
 
+class SingleFrameMemoryPoolMetal : public SingleFrameMemoryPool
+{
+public:
+	SingleFrameMemoryPoolMetal(GraphicsMetal* graphics, int32_t constantBufferPoolSize, int32_t drawingCount) {}
+	virtual ~SingleFrameMemoryPoolMetal() = default;
+	virtual void NewFrame() override { printf("Warning: Not implemented.¥n"); }
+	virtual ConstantBuffer* CreateConstantBuffer(int32_t size) override { printf("Warning: Not implemented.¥n"); }
+};
+
 struct GraphicsView
 {
 	id<CAMetalDrawable> drawable;
@@ -89,8 +98,6 @@ public:
 
 	bool Initialize(std::function<GraphicsView()> getGraphicsView);
 
-	void NewFrame() override;
-
 	void SetWindowSize(const Vec2I& windowSize) override;
 
 	void Execute(CommandList* commandList) override;
@@ -107,9 +114,11 @@ public:
 
 	PipelineState* CreatePiplineState() override;
 
-	CommandList* CreateCommandList() override;
+	SingleFrameMemoryPool* CreateSingleFrameMemoryPool(int32_t constantBufferPoolSize, int32_t drawingCount) override;
 
-	ConstantBuffer* CreateConstantBuffer(int32_t size, ConstantBufferType type) override;
+	CommandList* CreateCommandList(SingleFrameMemoryPool* memoryPool) override;
+
+	ConstantBuffer* CreateConstantBuffer(int32_t size) override;
 
 	RenderPass* CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture) override;
 

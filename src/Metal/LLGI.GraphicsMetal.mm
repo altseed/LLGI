@@ -152,15 +152,6 @@ bool GraphicsMetal::Initialize(std::function<GraphicsView()> getGraphicsView)
 	return true;
 }
 
-void GraphicsMetal::NewFrame()
-{
-	if (getGraphicsView_ != nullptr)
-	{
-		auto view = getGraphicsView_();
-		impl->drawable = view.drawable;
-	}
-}
-
 void GraphicsMetal::SetWindowSize(const Vec2I& windowSize) { throw "Not inplemented"; }
 
 void GraphicsMetal::Execute(CommandList* commandList)
@@ -173,6 +164,12 @@ void GraphicsMetal::WaitFinish() { throw "Not inplemented"; }
 
 RenderPass* GraphicsMetal::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared)
 {
+	if (getGraphicsView_ != nullptr)
+	{
+		auto view = getGraphicsView_();
+		impl->drawable = view.drawable;
+	}
+
 	renderPass_->SetClearColor(clearColor);
 	renderPass_->SetIsColorCleared(isColorCleared);
 	renderPass_->SetIsDepthCleared(isDepthCleared);
@@ -226,7 +223,12 @@ PipelineState* GraphicsMetal::CreatePiplineState()
 	return nullptr;
 }
 
-CommandList* GraphicsMetal::CreateCommandList()
+SingleFrameMemoryPool* GraphicsMetal::CreateSingleFrameMemoryPool(int32_t constantBufferPoolSize, int32_t drawingCount)
+{
+	return new SingleFrameMemoryPoolMetal(this, constantBufferPoolSize, drawingCount);
+}
+
+CommandList* GraphicsMetal::CreateCommandList(SingleFrameMemoryPool* memoryPool)
 {
 	auto commandList = new CommandListMetal();
 	if (commandList->Initialize(this))
@@ -238,10 +240,7 @@ CommandList* GraphicsMetal::CreateCommandList()
 	return nullptr;
 }
 
-ConstantBuffer* GraphicsMetal::CreateConstantBuffer(int32_t size, ConstantBufferType type) {
-    
-    if(type == ConstantBufferType::ShortTime) throw "Not inplemented";
-    
+ConstantBuffer* GraphicsMetal::CreateConstantBuffer(int32_t size) {
     auto obj = new ConstantBufferMetal();
     if (obj->Initialize(this, size))
     {
