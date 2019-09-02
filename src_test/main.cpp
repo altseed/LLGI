@@ -30,6 +30,7 @@ void test_compile(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 
 // About renderPass
 void test_renderPass(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
+void test_multiRenderPass(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 
 void call_test(LLGI::DeviceType device)
 {
