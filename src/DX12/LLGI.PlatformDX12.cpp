@@ -243,10 +243,9 @@ bool PlatformDX12::Initialize(Vec2I windowSize)
 	commandListPresent->Close();
 
 	// Render target
-	D3D12_DESCRIPTOR_HEAP_DESC RenderPassHeapDesc;
+	D3D12_DESCRIPTOR_HEAP_DESC RenderPassHeapDesc = {};
 
 	// Render target DescriptorHeap
-	ZeroMemory(&RenderPassHeapDesc, sizeof(RenderPassHeapDesc));
 	RenderPassHeapDesc.NumDescriptors = SwapBufferCount;
 	RenderPassHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	RenderPassHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
@@ -260,6 +259,7 @@ bool PlatformDX12::Initialize(Vec2I windowSize)
 	auto descriptorHandleIncrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	for (int32_t i = 0; i < SwapBufferCount; ++i)
 	{
+
 		// get render target from swap chain
 		hr = swapChain->GetBuffer(i, IID_PPV_ARGS(&RenderPass[i]));
 		if (FAILED(hr))
@@ -267,9 +267,13 @@ bool PlatformDX12::Initialize(Vec2I windowSize)
 			goto FAILED_EXIT;
 		}
 
+		D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+		rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+
 		handleRTV[i] = descriptorHeapRTV->GetCPUDescriptorHandleForHeapStart();
 		handleRTV[i].ptr += descriptorHandleIncrementSize * i;
-		device->CreateRenderTargetView(RenderPass[i], nullptr, handleRTV[i]);
+		device->CreateRenderTargetView(RenderPass[i], &rtvDesc, handleRTV[i]);
 	}
 
 	return true;

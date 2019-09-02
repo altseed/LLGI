@@ -2,6 +2,7 @@
 #include "LLGI.CommandListDX12.h"
 #include "LLGI.DescriptorHeapDX12.h"
 #include "LLGI.GraphicsDX12.h"
+#include "LLGI.RenderPassPipelineStateDX12.h"
 #include "LLGI.TextureDX12.h"
 
 namespace LLGI
@@ -56,21 +57,18 @@ bool RenderPassDX12::Initialize(TextureDX12** textures, int numTextures, Texture
 	return true;
 }
 
-/*
 RenderPassPipelineState* RenderPassDX12::CreateRenderPassPipelineState()
 {
-	auto ret = renderPassPipelineState.get();
+	auto ret = renderPassPipelineState_.get();
+	if (ret == nullptr)
+	{
+		renderPassPipelineState_ = graphics_->CreateRenderPassPipelineState(false /*TODO*/, false /*TODO*/,this);
+		renderPassPipelineState_->SetRenderPass(this);
+		ret = renderPassPipelineState_.get();
+	}
 	SafeAddRef(ret);
 	return ret;
 }
-*/
-
-/*RenderPassPipelineStateDX12* RenderPassDX12::GetRenderPassPipelineState(int idx)
-{
-	auto ret = renderTargets_[idx].renderPassPipelineState_;
-	SafeAddRef(ret);
-	return ret;
-}*/
 
 bool RenderPassDX12::CreateRenderTargetViews(CommandListDX12* commandList, DescriptorHeapDX12* rtDescriptorHeap)
 {

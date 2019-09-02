@@ -26,56 +26,56 @@ bool TextureDX12::Initialize(const Vec2I& size, const bool isRenderPass, const b
 	switch (formatType)
 	{
 	case TextureFormatType::R8G8B8A8_UNORM:
-		format_ = DXGI_FORMAT_B8G8R8A8_UNORM;
+		dxgiFormat_ = DXGI_FORMAT_R8G8B8A8_UNORM;
 		memorySize_ = size.X * size.Y * 4;
 		break;
 	case TextureFormatType::R16G16B16A16_FLOAT:
-		format_ = DXGI_FORMAT_R16G16B16A16_FLOAT;
+		dxgiFormat_ = DXGI_FORMAT_R16G16B16A16_FLOAT;
 		memorySize_ = size.X * size.Y * 8;
 		break;
 	case TextureFormatType::R32G32B32A32_FLOAT:
-		format_ = DXGI_FORMAT_R32G32B32A32_FLOAT;
+		dxgiFormat_ = DXGI_FORMAT_R32G32B32A32_FLOAT;
 		memorySize_ = size.X * size.Y * 16;
 		break;
 	case TextureFormatType::R8G8B8A8_UNORM_SRGB:
-		format_ = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+		dxgiFormat_ = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 		memorySize_ = size.X * size.Y * 4;
 		break;
 	case TextureFormatType::R16G16_FLOAT:
-		format_ = DXGI_FORMAT_R16G16_FLOAT;
+		dxgiFormat_ = DXGI_FORMAT_R16G16_FLOAT;
 		memorySize_ = size.X * size.Y * 4;
 		break;
 	case TextureFormatType::R8_UNORM:
-		format_ = DXGI_FORMAT_R8_UNORM;
+		dxgiFormat_ = DXGI_FORMAT_R8_UNORM;
 		memorySize_ = size.X * size.Y * 1;
 		break;
-	default: 
+	default:
 		throw "Not implemented";
-	//case TextureFormatType::BC1:
-	//	format_ = DXGI_FORMAT_BC1_UNORM;
-	//	break;
-	//case TextureFormatType::BC2:
-	//	format_ = DXGI_FORMAT_BC2_UNORM;
-	//	break;
-	//case TextureFormatType::BC3:
-	//	format_ = DXGI_FORMAT_BC3_UNORM;
-	//	break;
-	//case TextureFormatType::BC1_SRGB:
-	//	format_ = DXGI_FORMAT_BC1_UNORM_SRGB;
-	//	break;
-	//case TextureFormatType::BC2_SRGB:
-	//	format_ = DXGI_FORMAT_BC1_UNORM_SRGB;
-	//	break;
-	//case TextureFormatType::BC3_SRGB:
-	//	format_ = DXGI_FORMAT_BC1_UNORM_SRGB;
-	//	break;
+		// case TextureFormatType::BC1:
+		//	dxgiFormat_ = DXGI_FORMAT_BC1_UNORM;
+		//	break;
+		// case TextureFormatType::BC2:
+		//	dxgiFormat_ = DXGI_FORMAT_BC2_UNORM;
+		//	break;
+		// case TextureFormatType::BC3:
+		//	dxgiFormat_ = DXGI_FORMAT_BC3_UNORM;
+		//	break;
+		// case TextureFormatType::BC1_SRGB:
+		//	dxgiFormat_ = DXGI_FORMAT_BC1_UNORM_SRGB;
+		//	break;
+		// case TextureFormatType::BC2_SRGB:
+		//	dxgiFormat_ = DXGI_FORMAT_BC1_UNORM_SRGB;
+		//	break;
+		// case TextureFormatType::BC3_SRGB:
+		//	dxgiFormat_ = DXGI_FORMAT_BC1_UNORM_SRGB;
+		//	break;
 	}
-	formatType_ = formatType;
+	format_ = formatType;
 
 	if (isRenderPass_)
 	{
 		texture_ = graphics_->CreateResource(D3D12_HEAP_TYPE_DEFAULT,
-											 format_,
+											 dxgiFormat_,
 											 D3D12_RESOURCE_DIMENSION_TEXTURE2D,
 											 D3D12_RESOURCE_STATE_GENERIC_READ,
 											 D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
@@ -85,7 +85,7 @@ bool TextureDX12::Initialize(const Vec2I& size, const bool isRenderPass, const b
 	else
 	{
 		texture_ = graphics_->CreateResource(
-			D3D12_HEAP_TYPE_DEFAULT, format_, D3D12_RESOURCE_DIMENSION_TEXTURE2D, D3D12_RESOURCE_STATE_COPY_DEST, size);
+			D3D12_HEAP_TYPE_DEFAULT, dxgiFormat_, D3D12_RESOURCE_DIMENSION_TEXTURE2D, D3D12_RESOURCE_STATE_COPY_DEST, size);
 
 		state_ = D3D12_RESOURCE_STATE_COPY_DEST;
 	}

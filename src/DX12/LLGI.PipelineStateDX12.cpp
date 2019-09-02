@@ -3,7 +3,10 @@
 #include "LLGI.PipelineStateDX12.h"
 #include "../LLGI.CommandList.h"
 #include "../LLGI.PipelineState.h"
+#include "LLGI.RenderPassDX12.h"
+#include "LLGI.RenderPassPipelineStateDX12.h"
 #include "LLGI.ShaderDX12.h"
+#include "LLGI.TextureDX12.h"
 
 namespace LLGI
 {
@@ -200,12 +203,30 @@ void PipelineStateDX12::Compile()
 	// TODO
 
 	// TODO (from renderpass)
+#if 1
+	auto renderpass = static_cast<RenderPassPipelineStateDX12*>(renderPassPipelineState_.get())->GetRenderPass();
+	pipelineStateDesc.NumRenderTargets = renderpass->GetCount();
+	for (int i = 0; i < 8; i++)
+		pipelineStateDesc.RTVFormats[i] = DXGI_FORMAT_UNKNOWN;
+	for (int i = 0; i < pipelineStateDesc.NumRenderTargets; i++)
+	{
+		if (renderpass->GetRenderTarget(i)->texture_ != nullptr)
+			pipelineStateDesc.RTVFormats[i] = renderpass->GetRenderTarget(i)->texture_->GetDXGIFormat();
+		else
+		{
+			pipelineStateDesc.RTVFormats[i] = DXGI_FORMAT_R8G8B8A8_UNORM; // TODO
+			break;
+		}
+	}
+#else
 	pipelineStateDesc.NumRenderTargets = 1;
+	for (int i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; i++)
+		pipelineStateDesc.RTVFormats[i] = DXGI_FORMAT_UNKNOWN;
 	pipelineStateDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+#endif
+
 	pipelineStateDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-
 	pipelineStateDesc.SampleDesc.Count = 1;
-
 	pipelineStateDesc.SampleMask = UINT_MAX;
 
 	auto hr = graphics_->GetDevice()->CreateGraphicsPipelineState(&pipelineStateDesc, IID_PPV_ARGS(&pipelineState_));

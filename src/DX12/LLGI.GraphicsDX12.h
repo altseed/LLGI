@@ -57,7 +57,8 @@ public:
 	Texture* CreateRenderTexture(const RenderTextureInitializationParameter& parameter) override;
 	Texture* CreateDepthTexture(const DepthTextureInitializationParameter& parameter) override;
 
-	std::shared_ptr<RenderPassPipelineStateDX12> CreateRenderPassPipelineState(bool isPresentMode, bool hasDepth);
+	std::shared_ptr<RenderPassPipelineStateDX12>
+	CreateRenderPassPipelineState(bool isPresentMode, bool hasDepth, RenderPassDX12* renderpass);
 
 	ID3D12Device* GetDevice();
 
