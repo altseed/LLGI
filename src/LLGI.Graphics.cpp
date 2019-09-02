@@ -17,6 +17,8 @@ Texture* RenderPass::GetColorBuffer(int index)
 {
 #ifndef DISABLED_EXCEPTION
 	throw "Not implemented.";
+#else
+	assert(0); // TODO: Not implemented.
 #endif
 	return nullptr;
 }
@@ -40,6 +42,12 @@ PipelineState* Graphics::CreatePiplineState() { return nullptr; }
 SingleFrameMemoryPool* Graphics::CreateSingleFrameMemoryPool(int32_t constantBufferPoolSize, int32_t drawingCount) { return nullptr; }
 
 CommandList* Graphics::CreateCommandList(SingleFrameMemoryPool* memoryPool) { return nullptr; }
+
+CommandListPool* Graphics::CreateCommandListPool(int32_t constantBufferPoolSize, int32_t drawingCount, int32_t swapbufferCount)
+{
+	assert(0); // TODO: Not implemented.
+	return nullptr;
+}
 
 ConstantBuffer* Graphics::CreateConstantBuffer(int32_t size) { return nullptr; }
 

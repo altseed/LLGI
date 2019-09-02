@@ -13,9 +13,12 @@ public:
 	VertexBuffer() = default;
 	virtual ~VertexBuffer() = default;
 
-	virtual void* Lock();
-	virtual void* Lock(int32_t offset, int32_t size);
-	virtual void Unlock();
+	[[deprecated("use CommandList::SetData.")]] virtual void* Lock();
+
+	[[deprecated("use CommandList::SetData.")]] virtual void* Lock(int32_t offset, int32_t size);
+
+	[[deprecated("use CommandList::SetData.")]] virtual void Unlock();
+
 	virtual int32_t GetSize();
 };
 
