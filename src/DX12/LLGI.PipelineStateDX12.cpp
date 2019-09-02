@@ -214,7 +214,7 @@ void PipelineStateDX12::Compile()
 			pipelineStateDesc.RTVFormats[i] = renderpass->GetRenderTarget(i)->texture_->GetDXGIFormat();
 		else
 		{
-			pipelineStateDesc.RTVFormats[i] = DXGI_FORMAT_B8G8R8A8_UNORM; // TODO
+			pipelineStateDesc.RTVFormats[i] = DXGI_FORMAT_R8G8B8A8_UNORM; // TODO
 			break;
 		}
 	}

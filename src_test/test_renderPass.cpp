@@ -399,12 +399,28 @@ struct PS_INPUT
     float4  Color    : COLOR0;
 };
 
-float4 main(PS_INPUT input) : SV_TARGET 
+struct PS_OUTPUT
+{
+    float4  Color0 : SV_TARGET0;
+    float4  Color1 : SV_TARGET1;
+};
+
+
+PS_OUTPUT main(PS_INPUT input)
 { 
+	PS_OUTPUT output;
+
 	float4 c;
 	c = txt.Sample(smp, input.UV);
 	c.a = 255;
-	return c;
+	output.Color0 = c;
+
+	c.r = 1.0f - c.r;
+	c.g = 1.0f - c.g;
+	c.b = 1.0f - c.b;
+	output.Color1 = c;
+
+	return output;
 }
 )";
 
@@ -639,7 +655,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 		commandList->SetVertexBuffer(vb2, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib2);
 		commandList->SetTexture(
-			renderTexture, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+			renderTexture2, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 
 		commandList->EndRenderPass();

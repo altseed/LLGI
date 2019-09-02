@@ -51,6 +51,7 @@ void call_test(LLGI::DeviceType device)
 
 	// About renderPass
 	// test_renderPass(device);
+	// test_multiRenderPass(device);
 }
 
 #if defined(__linux__) || defined(__APPLE__) || defined(WIN32)

@@ -273,7 +273,7 @@ bool PlatformDX12::Initialize(Vec2I windowSize)
 
 		handleRTV[i] = descriptorHeapRTV->GetCPUDescriptorHandleForHeapStart();
 		handleRTV[i].ptr += descriptorHandleIncrementSize * i;
-		device->CreateRenderTargetView(RenderPass[i], nullptr, handleRTV[i]);
+		device->CreateRenderTargetView(RenderPass[i], &rtvDesc, handleRTV[i]);
 	}
 
 	return true;
