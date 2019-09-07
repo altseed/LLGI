@@ -37,6 +37,8 @@ void test_depth(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 
 void call_test(LLGI::DeviceType device)
 {
+	LLGI::SetLogger([](LLGI::LogType logType, const char* message) { printf("%s\n", message); });
+
 	// Empty
 	test_empty(device);
 
@@ -58,6 +60,8 @@ void call_test(LLGI::DeviceType device)
 
 	// About depth
 	// test_depth(device);
+
+	LLGI::SetLogger(nullptr);
 }
 
 #if defined(__linux__) || defined(__APPLE__) || defined(WIN32)

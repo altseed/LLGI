@@ -3,6 +3,19 @@
 namespace LLGI
 {
 
+//! TODO should be moved
+static std::function<void(LogType, const char*)> g_logger;
+
+void SetLogger(const std::function<void(LogType, const char*)>& logger) { g_logger = logger; }
+
+void Log(LogType logType, const char* message)
+{
+	if (g_logger != nullptr)
+	{
+		g_logger(logType, message);
+	}
+}
+
 void SingleFrameMemoryPool::NewFrame() {}
 
 ConstantBuffer* SingleFrameMemoryPool::CreateConstantBuffer(int32_t size) { return nullptr; }
@@ -15,11 +28,8 @@ void RenderPass::SetClearColor(const Color8& color) { color_ = color; }
 
 Texture* RenderPass::GetColorBuffer(int index)
 {
-#ifndef DISABLED_EXCEPTION
-	throw "Not implemented.";
-#else
-	assert(0); // TODO: Not implemented.
-#endif
+	Log(LogType::Error, "GetColorBuffer is not implemented.");
+	assert(0);
 	return nullptr;
 }
 
@@ -45,7 +55,8 @@ CommandList* Graphics::CreateCommandList(SingleFrameMemoryPool* memoryPool) { re
 
 CommandListPool* Graphics::CreateCommandListPool(int32_t constantBufferPoolSize, int32_t drawingCount, int32_t swapbufferCount)
 {
-	assert(0); // TODO: Not implemented.
+	Log(LogType::Error, "GetColorBuffer is not implemented.");
+	assert(0);
 	return nullptr;
 }
 
@@ -57,9 +68,8 @@ Texture* Graphics::CreateTexture(uint64_t id) { return nullptr; }
 
 std::vector<uint8_t> Graphics::CaptureRenderTarget(Texture* renderTarget)
 {
-#ifndef DISABLED_EXCEPTION
-	throw "Not implemented.";
-#endif
+	Log(LogType::Error, "GetColorBuffer is not implemented.");
+	assert(0);
 	return std::vector<uint8_t>();
 }
 
