@@ -35,12 +35,14 @@ void test_multiRenderPass(LLGI::DeviceType deviceType = LLGI::DeviceType::Defaul
 // About depth
 void test_depth(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 
+void test_stencil(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
+
 void call_test(LLGI::DeviceType device)
 {
 	LLGI::SetLogger([](LLGI::LogType logType, const char* message) { printf("%s\n", message); });
 
 	// Empty
-	// test_empty(device);
+	test_empty(device);
 
 	// About clear
 	// test_clear(device);
@@ -50,7 +52,7 @@ void call_test(LLGI::DeviceType device)
 	// test_compile(device);
 
 	// Render
-	test_simple_rectangle(device);
+	// test_simple_rectangle(device);
 	// test_simple_constant_rectangle(LLGI::ConstantBufferType::LongTime, device);
 	// test_simple_texture_rectangle(device);
 
@@ -60,6 +62,7 @@ void call_test(LLGI::DeviceType device)
 
 	// About depth
 	// test_depth(device);
+	// test_stencil(device);
 
 	LLGI::SetLogger(nullptr);
 }
