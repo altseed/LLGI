@@ -16,7 +16,7 @@ void Platform::SetWindowSize(const Vec2I& windowSize)
 
 RenderPass* Platform::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared)
 {
-	assert(0); // TODO: Not implemented.
+	Log(LogType::Warning, "GetCurrentScreen is not implemented.");
 	return nullptr;
 }
 
