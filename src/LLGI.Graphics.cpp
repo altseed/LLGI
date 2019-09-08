@@ -35,6 +35,15 @@ Texture* RenderPass::GetColorBuffer(int index)
 
 RenderPassPipelineState* RenderPass::CreateRenderPassPipelineState() { return nullptr; }
 
+Graphics::~Graphics()
+{
+	if (disposed_ != nullptr)
+	{
+		disposed_();
+	}
+}
+
+
 void Graphics::SetWindowSize(const Vec2I& windowSize) { windowSize_ = windowSize; }
 
 void Graphics::Execute(CommandList* commandList) {}
@@ -71,6 +80,11 @@ std::vector<uint8_t> Graphics::CaptureRenderTarget(Texture* renderTarget)
 	Log(LogType::Error, "GetColorBuffer is not implemented.");
 	assert(0);
 	return std::vector<uint8_t>();
+}
+
+void Graphics::SetDisposed(const std::function<void()>& disposed)
+{
+	disposed_ = disposed;
 }
 
 } // namespace LLGI

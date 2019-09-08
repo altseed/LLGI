@@ -40,7 +40,7 @@ void call_test(LLGI::DeviceType device)
 	LLGI::SetLogger([](LLGI::LogType logType, const char* message) { printf("%s\n", message); });
 
 	// Empty
-	test_empty(device);
+	// test_empty(device);
 
 	// About clear
 	// test_clear(device);
@@ -50,7 +50,7 @@ void call_test(LLGI::DeviceType device)
 	// test_compile(device);
 
 	// Render
-	// test_simple_rectangle(device);
+	test_simple_rectangle(device);
 	// test_simple_constant_rectangle(LLGI::ConstantBufferType::LongTime, device);
 	// test_simple_texture_rectangle(device);
 
@@ -74,10 +74,18 @@ int main(int argc, char* argv[])
 #endif
 
 #if defined(__APPLE__)
-	TestHelper::SetRoot("Shaders/Metal/");
+	auto device = LLGI::DeviceType::Metal;
 #endif
 
-	if (device == LLGI::DeviceType::Vulkan)
+	if (device == LLGI::DeviceType::DirectX12)
+	{
+		TestHelper::SetRoot("Shaders/HLSL_DX12/");
+	}
+	else if (device == LLGI::DeviceType::Metal)
+	{
+		TestHelper::SetRoot("Shaders/Metal/");
+	}
+	else if (device == LLGI::DeviceType::Vulkan)
 	{
 		TestHelper::SetRoot("Shaders/SPIRV/");
 	}

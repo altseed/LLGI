@@ -96,10 +96,11 @@ class Graphics : public ReferenceObject
 {
 protected:
 	Vec2I windowSize_;
+	std::function<void()> disposed_;
 
 public:
 	Graphics() = default;
-	virtual ~Graphics() = default;
+	virtual ~Graphics();
 
 	[[deprecated("use Platform::SetWindowSize.")]] virtual void SetWindowSize(const Vec2I& windowSize);
 
@@ -179,6 +180,12 @@ public:
 
 	/** For testing. Wait for all commands in queue to complete. Then read data from specified render target. */
 	virtual std::vector<uint8_t> CaptureRenderTarget(Texture* renderTarget);
+
+	/**
+		@brief	specify a function which is called when this instance is disposed.
+		@param	disposed	called function
+	*/
+	void SetDisposed(const std::function<void()>& disposed);
 };
 
 } // namespace LLGI
