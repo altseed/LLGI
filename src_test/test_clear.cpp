@@ -98,7 +98,7 @@ void test_clear(LLGI::DeviceType deviceType)
 			auto data = graphics->CaptureRenderTarget(texture);
 
 			// save
-			// Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("stbpng.png");
+			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("stbpng.png");
 
 			// test
 			int rate = Bitmap2D::CompareBitmap(

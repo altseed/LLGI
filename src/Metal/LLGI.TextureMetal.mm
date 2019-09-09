@@ -50,6 +50,13 @@ bool Texture_Impl::Initialize(Graphics_Impl* graphics, const Vec2I& size, bool i
 	return true;
 }
 
+void Texture_Impl::Reset(id<MTLTexture> nativeTexture)
+{
+    texture = nativeTexture;
+	size_.X = texture.width;
+	size_.Y = texture.height;
+}
+
 void Texture_Impl::Write(const uint8_t* data)
 {
 	MTLRegion region = {{0, 0, 0}, {static_cast<uint32_t>(size_.X), static_cast<uint32_t>(size_.Y), 1}};
@@ -75,6 +82,21 @@ bool TextureMetal::Initialize(Graphics* graphics, Vec2I size, bool isRenderTextu
 
 	data.resize(size.X * size.Y * 4);
 	return impl->Initialize(graphics_->GetImpl(), size, isRenderTexture_, isDepthTexture_);
+}
+
+bool TextureMetal::Initialize(Graphics* graphics)
+{   
+    isRenderTexture_ = false;
+    isDepthTexture_ = false;
+	graphics_ = static_cast<GraphicsMetal*>(graphics);
+	SafeAddRef(graphics_);
+    return true;
+}
+
+void TextureMetal::Reset(id<MTLTexture> nativeTexture)
+{
+    isRenderTexture_ = true;
+    impl->Reset(nativeTexture);
 }
 
 void* TextureMetal::Lock() { return data.data(); }

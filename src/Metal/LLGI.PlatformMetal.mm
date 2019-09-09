@@ -115,6 +115,7 @@ struct PlatformMetal_Impl
 		window.contentView.layer = layer;
 		window.contentView.wantsLayer = YES;
 		layer.drawableSize = CGSizeMake(width, height);
+		layer.framebufferOnly = false;	// Enable capture (getBytes)
 
 		pool = [[NSAutoreleasePool alloc] init];
 
