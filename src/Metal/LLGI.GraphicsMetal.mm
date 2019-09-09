@@ -114,6 +114,8 @@ void RenderPassMetal::SetClearColor(const Color8& color)
 	RenderPass::SetClearColor(color);
 }
 
+Texture* RenderPassMetal::GetColorBuffer(int index) { return colorBuffers_[index].get(); }
+	
 RenderPass_Impl* RenderPassMetal::GetImpl() const { return impl; }
 
 RenderPassPipelineState* RenderPassMetal::CreateRenderPassPipelineState()
@@ -126,6 +128,23 @@ RenderPassPipelineState* RenderPassMetal::CreateRenderPassPipelineState()
 	auto ret = renderPassPipelineState.get();
 	SafeAddRef(ret);
 	return ret;
+}
+
+void RenderPassMetal::UpdateTarget(GraphicsMetal* graphics)
+{
+    GetImpl()->UpdateTarget(graphics->GetImpl());
+	
+	// create backbuffer wrapper texture if needed.
+	if (!colorBuffers_[0]) {
+		auto texture = std::make_shared<TextureMetal>();
+		if (!texture->Initialize(graphics)) {
+			return;
+		}
+		colorBuffers_[0] = texture;
+	}
+
+	id<MTLTexture> texture = [graphics->GetImpl()->drawable texture];
+	colorBuffers_[0]->Reset(texture);
 }
 
 RenderPassPipelineStateMetal::RenderPassPipelineStateMetal() { impl = new RenderPassPipelineState_Impl(); }
@@ -173,7 +192,8 @@ RenderPass* GraphicsMetal::GetCurrentScreen(const Color8& clearColor, bool isCol
 	renderPass_->SetClearColor(clearColor);
 	renderPass_->SetIsColorCleared(isColorCleared);
 	renderPass_->SetIsDepthCleared(isDepthCleared);
-    renderPass_->GetImpl()->UpdateTarget(impl);
+	renderPass_->UpdateTarget(this);
+	
 	return renderPass_.get();
 }
 
@@ -311,6 +331,26 @@ std::shared_ptr<RenderPassPipelineStateMetal> GraphicsMetal::CreateRenderPassPip
 	renderPassPipelineStates[key] = ret;
 
 	return ret;
+}
+
+std::vector<uint8_t> GraphicsMetal::CaptureRenderTarget(Texture* renderTarget)
+{
+	auto metalTexture = static_cast<TextureMetal*>(renderTarget);
+	auto width = metalTexture->GetSizeAs2D().X;
+	auto height = metalTexture->GetSizeAs2D().Y;
+	auto impl = metalTexture->GetImpl();
+	
+	NSUInteger bytesPerPixel = 4;	// TODO: backbuffer only
+	NSUInteger imageByteCount = width * height * bytesPerPixel;
+	NSUInteger bytesPerRow = width * bytesPerPixel;
+	MTLRegion region = MTLRegionMake2D(0, 0, width, height);
+	
+	std::vector<uint8_t> data;
+	data.resize(imageByteCount);
+	[impl->texture getBytes:data.data() bytesPerRow:bytesPerRow fromRegion:region mipmapLevel:0];
+	// order: B=[0], G=[1], R=[2], A=[3]
+	
+	return data;
 }
 
 Graphics_Impl* GraphicsMetal::GetImpl() const { return impl; }

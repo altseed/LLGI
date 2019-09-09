@@ -72,12 +72,10 @@ int main(int argc, char* argv[])
 {
 #if defined(WIN32) && 1
 	auto device = LLGI::DeviceType::DirectX12;
+#elif defined(__APPLE__)
+	auto device = LLGI::DeviceType::Metal;
 #else
 	auto device = LLGI::DeviceType::Vulkan;
-#endif
-
-#if defined(__APPLE__)
-	auto device = LLGI::DeviceType::Metal;
 #endif
 
 	if (device == LLGI::DeviceType::DirectX12)

@@ -23,6 +23,8 @@ public:
 	virtual ~TextureMetal();
 
 	bool Initialize(Graphics* graphics, Vec2I size, bool isRenderTexture, bool isDepthTexture);
+	bool Initialize(Graphics* graphics);		// for wrap swapchain backbuffer.
+	void Reset(id<MTLTexture> nativeTexture);	// for wrap swapchain backbuffer.
 	void* Lock() override;
 	void Unlock() override;
 	Vec2I GetSizeAs2D() override;
