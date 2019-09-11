@@ -1,4 +1,5 @@
 
+#include <string>
 #include "TestHelper.h"
 #include "test.h"
 
@@ -77,18 +78,27 @@ int main(int argc, char* argv[])
 #else
 	auto device = LLGI::DeviceType::Vulkan;
 #endif
+	
+	// make shaders folder path from __FILE__
+	auto path = std::string(__FILE__);
+#if defined(WIN32)
+	auto pos = path.find_last_of("¥¥");
+#else
+	auto pos = path.find_last_of("/");
+#endif
+	path = path.substr(0, pos);
 
 	if (device == LLGI::DeviceType::DirectX12)
 	{
-		TestHelper::SetRoot("Shaders/HLSL_DX12/");
+		TestHelper::SetRoot((path + "/Shaders/HLSL_DX12/").c_str());
 	}
 	else if (device == LLGI::DeviceType::Metal)
 	{
-		TestHelper::SetRoot("Shaders/Metal/");
+		TestHelper::SetRoot((path + "/Shaders/Metal/").c_str());
 	}
 	else if (device == LLGI::DeviceType::Vulkan)
 	{
-		TestHelper::SetRoot("Shaders/SPIRV/");
+		TestHelper::SetRoot((path + "/Shaders/SPIRV/").c_str());
 	}
 
 #if 0

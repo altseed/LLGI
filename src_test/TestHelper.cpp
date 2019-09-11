@@ -20,8 +20,10 @@ std::vector<uint8_t> TestHelper::LoadData(const char* path)
 	FILE* fp = fopen(path_.c_str(), "rb");
 #endif
 
-	if (fp == nullptr)
+	if (fp == nullptr) {
+		std::cerr << "Error: " << path << std::endl;
 		return ret;
+	}
 
 	fseek(fp, 0, SEEK_END);
 	auto size = ftell(fp);
