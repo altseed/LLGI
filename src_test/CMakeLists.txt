@@ -25,4 +25,6 @@ target_link_libraries(
 	optimized gtest
 )
 
+add_dependencies(LLGI_Test ExternalProject_googletest)
+
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)

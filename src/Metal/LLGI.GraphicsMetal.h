@@ -16,71 +16,22 @@ class GraphicsMetal;
 class RenderPassMetal;
 class RenderPassPipelineStateMetal;
 class TextureMetal;
-
-class RenderPassMetal : public RenderPass
-{
-	GraphicsMetal* graphics_ = nullptr;
-	bool isStrongRef_ = false;
-	RenderPass_Impl* impl = nullptr;
-	std::shared_ptr<RenderPassPipelineStateMetal> renderPassPipelineState;
-	std::array<std::shared_ptr<TextureMetal>, 4> colorBuffers_ = {};
-
-public:
-	RenderPassMetal(GraphicsMetal* graphics, bool isStrongRef);
-
-	virtual ~RenderPassMetal();
-
-	void SetIsColorCleared(bool isColorCleared) override;
-
-	void SetIsDepthCleared(bool isDepthCleared) override;
-
-	void SetClearColor(const Color8& color) override;
-	
-	Texture* GetColorBuffer(int index) override;
-	
-	RenderPass_Impl* GetImpl() const;
-
-	RenderPassPipelineState* CreateRenderPassPipelineState() override;
-
-	void UpdateTarget(GraphicsMetal* graphics);
-};
-
-class RenderPassPipelineStateMetal : public RenderPassPipelineState
-{
-private:
-	RenderPassPipelineState_Impl* impl = nullptr;
-
-public:
-	RenderPassPipelineStateMetal();
-	virtual ~RenderPassPipelineStateMetal();
-
-	RenderPassPipelineState_Impl* GetImpl() const;
-};
-
+    
 struct RenderPassPipelineStateMetalKey
 {
-	MTLPixelFormat format;
-
-	bool operator==(const RenderPassPipelineStateMetalKey& value) const { return (format == value.format); }
-
-	struct Hash
-	{
-		typedef std::size_t result_type;
-
-		std::size_t operator()(const RenderPassPipelineStateMetalKey& key) const
-		{
-			return std::hash<std::int32_t>()(static_cast<int>(key.format));
-		}
-	};
-};
-
-class SingleFrameMemoryPoolMetal : public SingleFrameMemoryPool
-{
-public:
-	SingleFrameMemoryPoolMetal(GraphicsMetal* graphics, int32_t constantBufferPoolSize, int32_t drawingCount) {}
-	virtual ~SingleFrameMemoryPoolMetal() = default;
-	virtual void NewFrame() override { printf("Warning: Not implemented.¥n"); }
-	virtual ConstantBuffer* CreateConstantBuffer(int32_t size) override { printf("Warning: Not implemented.¥n"); }
+    MTLPixelFormat format;
+        
+    bool operator==(const RenderPassPipelineStateMetalKey& value) const { return (format == value.format); }
+        
+    struct Hash
+    {
+        typedef std::size_t result_type;
+            
+        std::size_t operator()(const RenderPassPipelineStateMetalKey& key) const
+        {
+            return std::hash<std::int32_t>()(static_cast<int>(key.format));
+        }
+    };
 };
 
 struct GraphicsView

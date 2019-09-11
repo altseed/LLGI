@@ -45,9 +45,7 @@ add_subdirectory("src")
 if(BUILD_TEST)
   ExternalProject_Add(
     ExternalProject_googletest
-    GIT_REPOSITORY    https://github.com/google/googletest.git
-    GIT_TAG           release-1.8.1
-    SOURCE_DIR        ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/Source/googletest
+    SOURCE_DIR        ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/googletest
     BINARY_DIR        ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/Build/googletest
     PREFIX            ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/Build/googletest
     INSTALL_DIR       ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/Install/googletest

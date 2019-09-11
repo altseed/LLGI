@@ -6,6 +6,7 @@
 #include "LLGI.PipelineStateMetal.h"
 #include "LLGI.TextureMetal.h"
 #include "LLGI.VertexBufferMetal.h"
+#include "LLGI.RenderPassMetal.h"
 
 #import <MetalKit/MetalKit.h>
 
