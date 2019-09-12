@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../LLGI.ConstantBuffer.h"
+#include "LLGI.BufferMetal.h"
 
 namespace LLGI
 {
@@ -10,13 +11,17 @@ struct Buffer_Impl;
 class ConstantBufferMetal : public ConstantBuffer
 {
 private:
-	Buffer_Impl* impl = nullptr;
-
+	BufferMetal* buffer_ = nullptr;
+    int32_t size_ = 0;
+    int32_t offset_ = 0;
+    
 public:
 	ConstantBufferMetal();
 	virtual ~ConstantBufferMetal();
 
 	bool Initialize(Graphics* graphics, int32_t size);
+
+    bool InitializeAsShortTime(BufferMetal* buffer, int32_t offset, int32_t size);
 
 	void* Lock() override;
 
@@ -26,7 +31,7 @@ public:
 
 	int32_t GetSize() override;
 
-	Buffer_Impl* GetImpl() const { return impl; }
+    Buffer_Impl* GetImpl() const;
 };
 
 } // namespace LLGI

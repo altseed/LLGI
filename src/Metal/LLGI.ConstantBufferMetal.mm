@@ -7,29 +7,49 @@
 namespace LLGI
 {
 
-ConstantBufferMetal::ConstantBufferMetal() { impl = new Buffer_Impl(); }
+ConstantBufferMetal::ConstantBufferMetal() { }
 
-ConstantBufferMetal::~ConstantBufferMetal() { SafeDelete(impl); }
+ConstantBufferMetal::~ConstantBufferMetal() { SafeRelease(buffer_); }
 
 bool ConstantBufferMetal::Initialize(Graphics* graphics, int32_t size)
 {
-	auto graphics_ = static_cast<GraphicsMetal*>(graphics);
-	return impl->Initialize(graphics_->GetImpl(), size);
+    auto buffer = new BufferMetal();
+    if(buffer->Initialize(graphics, size))
+    {
+        buffer_ = buffer;
+        size_ = size;
+        offset_ = 0;
+        return true;
+    }
+    
+    SafeRelease(buffer);
+    return nullptr;
+}
+    
+bool ConstantBufferMetal::InitializeAsShortTime(BufferMetal* buffer, int32_t offset, int32_t size)
+{
+    SafeAddRef(buffer);
+    buffer_ = buffer;
+    size_ = size;
+    offset_ = offset;
+    return true;
 }
 
-void* ConstantBufferMetal::Lock() { return impl->GetBuffer(); }
+void* ConstantBufferMetal::Lock() { return buffer_->GetImpl()->GetBuffer(); }
 
 void* ConstantBufferMetal::Lock(int32_t offset, int32_t size)
 {
-	NSCAssert(0 <= offset && offset + size <= impl->size_, @"Run off the buffer");
+	NSCAssert(0 <= offset && offset + offset_ + size <= buffer_->GetImpl()->size_, @"Run off the buffer");
 
-	auto buffer_ = static_cast<uint8_t*>(impl->GetBuffer());
-	buffer_ += offset;
-	return buffer_;
+	auto buffer = static_cast<uint8_t*>(buffer_->GetImpl()->GetBuffer());
+	buffer += offset + offset_;
+	return buffer;
 }
 
 void ConstantBufferMetal::Unlock() {}
 
-int32_t ConstantBufferMetal::GetSize() { return impl->size_; }
+int32_t ConstantBufferMetal::GetSize() { return buffer_->GetImpl()->size_; }
 
+Buffer_Impl* ConstantBufferMetal::GetImpl() const { return buffer_->GetImpl(); }
+    
 }

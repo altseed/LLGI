@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../LLGI.Graphics.h"
+#include "LLGI.BufferMetal.h"
 #import <MetalKit/MetalKit.h>
 #include <functional>
 #include <unordered_map>
@@ -19,7 +20,7 @@ class TextureMetal;
 class InternalSingleFrameMemoryPoolMetal
 {
 private:
-    Buffer_Impl* impl = nullptr;
+    BufferMetal* buffer_ = nullptr;
     int32_t constantBufferSize_ = 0;
     int32_t constantBufferOffset_ = 0;
         
