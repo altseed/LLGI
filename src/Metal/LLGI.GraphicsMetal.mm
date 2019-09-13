@@ -129,8 +129,8 @@ PipelineState* GraphicsMetal::CreatePiplineState()
 }
 
 SingleFrameMemoryPool* GraphicsMetal::CreateSingleFrameMemoryPool(int32_t constantBufferPoolSize, int32_t drawingCount)
-{
-	return new SingleFrameMemoryPoolMetal(this, constantBufferPoolSize, drawingCount);
+{    
+	return new SingleFrameMemoryPoolMetal(this, false, constantBufferPoolSize, drawingCount);
 }
 
 CommandList* GraphicsMetal::CreateCommandList(SingleFrameMemoryPool* memoryPool)

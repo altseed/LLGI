@@ -27,14 +27,22 @@ private:
 public:
     InternalSingleFrameMemoryPoolMetal(GraphicsMetal* graphics, int32_t constantBufferPoolSize, int32_t drawingCount);
     virtual ~InternalSingleFrameMemoryPoolMetal();
-    bool GetConstantBuffer(int32_t size, Buffer_Impl*& buffer, int32_t& offset);
+    bool GetConstantBuffer(int32_t size, BufferMetal*& buffer, int32_t& offset);
     void Reset();
 };
     
 class SingleFrameMemoryPoolMetal : public SingleFrameMemoryPool
 {
+private:
+    
+    GraphicsMetal* graphics_ = nullptr;
+    bool isStrongRef_ = false;
+    std::vector<std::shared_ptr<InternalSingleFrameMemoryPoolMetal>> memoryPools;
+    int32_t currentSwap_ = 0;
+    int32_t drawingCount_ = 0;
+    
 public:
-    SingleFrameMemoryPoolMetal(GraphicsMetal* graphics, int32_t constantBufferPoolSize, int32_t drawingCount);
+    SingleFrameMemoryPoolMetal(GraphicsMetal* graphics, bool isStrongRef, int32_t constantBufferPoolSize, int32_t drawingCount);
 	virtual ~SingleFrameMemoryPoolMetal();
     virtual void NewFrame() override;
     virtual ConstantBuffer* CreateConstantBuffer(int32_t size) override;
