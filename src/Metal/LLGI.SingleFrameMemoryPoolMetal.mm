@@ -8,6 +8,8 @@ namespace LLGI
 
     InternalSingleFrameMemoryPoolMetal::InternalSingleFrameMemoryPoolMetal(GraphicsMetal* graphics, int32_t constantBufferPoolSize, int32_t drawingCount)
     {
+		constantBufferSize_ = (constantBufferPoolSize + 255) & ~255; // buffer size should be multiple of 256
+
         buffer_ = new BufferMetal();
         buffer_->Initialize(graphics, constantBufferSize_);
     }
