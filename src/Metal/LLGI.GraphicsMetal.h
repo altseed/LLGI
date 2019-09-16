@@ -83,8 +83,11 @@ public:
 
 	Texture* CreateTexture(uint64_t id) override;
 
+    //! internal function
 	std::shared_ptr<RenderPassPipelineStateMetal> CreateRenderPassPipelineState(MTLPixelFormat format);
 
+    RenderPassPipelineState* CreateRenderPassPipelineState(RenderPass* renderPass) override;
+    
 	std::vector<uint8_t> CaptureRenderTarget(Texture* renderTarget) override;
 
 	Graphics_Impl* GetImpl() const;

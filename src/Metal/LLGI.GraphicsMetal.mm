@@ -217,6 +217,17 @@ std::shared_ptr<RenderPassPipelineStateMetal> GraphicsMetal::CreateRenderPassPip
 
 	return ret;
 }
+    
+RenderPassPipelineState* GraphicsMetal::CreateRenderPassPipelineState(RenderPass* renderPass)
+{
+    auto renderPass_ = static_cast<RenderPassMetal*>(renderPass);
+    
+    auto renderPassPipelineState = CreateRenderPassPipelineState(renderPass_->GetImpl()->pixelFormat);
+
+    auto ret = renderPassPipelineState.get();
+    SafeAddRef(ret);
+    return ret;
+}
 
 std::vector<uint8_t> GraphicsMetal::CaptureRenderTarget(Texture* renderTarget)
 {

@@ -99,14 +99,7 @@ RenderPass_Impl* RenderPassMetal::GetImpl() const { return impl; }
 
 RenderPassPipelineState* RenderPassMetal::CreateRenderPassPipelineState()
 {
-	if (renderPassPipelineState == nullptr)
-	{
-		renderPassPipelineState = graphics_->CreateRenderPassPipelineState(GetImpl()->pixelFormat);
-	}
-
-	auto ret = renderPassPipelineState.get();
-	SafeAddRef(ret);
-	return ret;
+    return graphics_->CreateRenderPassPipelineState(this);
 }
 
 void RenderPassMetal::UpdateTarget(GraphicsMetal* graphics)
