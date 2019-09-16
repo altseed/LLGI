@@ -74,6 +74,7 @@ public:
 		This is a function to create an object.
 		But it is very fast. So it can call it in everyframe.
 	*/
+	[[deprecated("Graphics::CreateRenderPassPipelineState")]] 
 	virtual RenderPassPipelineState* CreateRenderPassPipelineState();
 };
 
@@ -114,17 +115,16 @@ public:
 	/**
 	@brief	to prevent instances to be disposed before finish rendering, finish all renderings.
 	*/
-	virtual void WaitFinish(){}
+	virtual void WaitFinish() {}
 
-		/**
-			@brief get render pass of screen to show on a display.
-			@note
-			Don't release and addref it.
-			Don't use it for the many purposes, please input Clear or SetRenderPass immediately.
-		*/
-		[[deprecated("use Platform::GetCurrentScreen.")]] virtual RenderPass* GetCurrentScreen(const Color8& clearColor = Color8(),
-																							   bool isColorCleared = false,
-																							   bool isDepthCleared = false);
+	/**
+		@brief get render pass of screen to show on a display.
+		@note
+		Don't release and addref it.
+		Don't use it for the many purposes, please input Clear or SetRenderPass immediately.
+	*/
+	[[deprecated("use Platform::GetCurrentScreen.")]] virtual RenderPass*
+	GetCurrentScreen(const Color8& clearColor = Color8(), bool isColorCleared = false, bool isDepthCleared = false);
 
 	/**
 		@brief	create a vertex buffer
@@ -177,6 +177,14 @@ public:
 		@brief	create texture from pointer or id in current platform
 	*/
 	virtual Texture* CreateTexture(uint64_t id);
+
+	/**
+		@brief	create a RenderPassPipelineState
+		@note
+		This is a function to create an object.
+		But it is very fast. So it can call it in everyframe.
+	*/
+	virtual RenderPassPipelineState* CreateRenderPassPipelineState(RenderPass* renderPass);
 
 	/** For testing. Wait for all commands in queue to complete. Then read data from specified render target. */
 	virtual std::vector<uint8_t> CaptureRenderTarget(Texture* renderTarget);

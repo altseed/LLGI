@@ -43,7 +43,6 @@ Graphics::~Graphics()
 	}
 }
 
-
 void Graphics::SetWindowSize(const Vec2I& windowSize) { windowSize_ = windowSize; }
 
 void Graphics::Execute(CommandList* commandList) {}
@@ -75,6 +74,8 @@ Texture* Graphics::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDe
 
 Texture* Graphics::CreateTexture(uint64_t id) { return nullptr; }
 
+RenderPassPipelineState* Graphics::CreateRenderPassPipelineState(RenderPass* renderPass) { return nullptr; }
+
 std::vector<uint8_t> Graphics::CaptureRenderTarget(Texture* renderTarget)
 {
 	Log(LogType::Error, "GetColorBuffer is not implemented.");
@@ -82,9 +83,6 @@ std::vector<uint8_t> Graphics::CaptureRenderTarget(Texture* renderTarget)
 	return std::vector<uint8_t>();
 }
 
-void Graphics::SetDisposed(const std::function<void()>& disposed)
-{
-	disposed_ = disposed;
-}
+void Graphics::SetDisposed(const std::function<void()>& disposed) { disposed_ = disposed; }
 
 } // namespace LLGI
