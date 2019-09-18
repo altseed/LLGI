@@ -21,11 +21,17 @@ bool Texture_Impl::Initialize(Graphics_Impl* graphics, const Vec2I& size, bool i
     
     if(isDepthTexture)
     {
-        textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatDepth24Unorm_Stencil8
-                                                                                                     width:size.X
-                                                                                                    height:size.Y
-                                                                                                 mipmapped:YES];
-
+		id<MTLDevice> device = graphics->device;
+		bool supported = device.isDepth24Stencil8PixelFormatSupported;
+		
+		auto format = (supported) ? MTLPixelFormatDepth24Unorm_Stencil8 : MTLPixelFormatDepth32Float_Stencil8;
+        textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:format
+																			   width:size.X
+																			  height:size.Y
+																		   mipmapped:NO];
+		textureDescriptor.usage = MTLTextureUsageRenderTarget;
+		textureDescriptor.textureType = MTLTextureType2D;
+		textureDescriptor.storageMode = MTLStorageModePrivate;
     }
     else
     {
