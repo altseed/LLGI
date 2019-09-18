@@ -43,7 +43,8 @@ class GraphicsMetal : public Graphics
 {
 	Graphics_Impl* impl = nullptr;
 
-	std::unordered_map<RenderPassPipelineStateMetalKey, std::weak_ptr<RenderPassPipelineStateMetal>, RenderPassPipelineStateMetalKey::Hash>
+    //! cached
+	std::unordered_map<RenderPassPipelineStateMetalKey, std::shared_ptr<RenderPassPipelineStateMetal>, RenderPassPipelineStateMetalKey::Hash>
 		renderPassPipelineStates;
 
 	std::shared_ptr<RenderPassMetal> renderPass_ = nullptr;

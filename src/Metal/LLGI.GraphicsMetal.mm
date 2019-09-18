@@ -40,7 +40,10 @@ void Graphics_Impl::Execute(CommandList_Impl* commandBuffer) { [commandBuffer->c
 
 GraphicsMetal::GraphicsMetal() { impl = new Graphics_Impl(); }
 
-GraphicsMetal::~GraphicsMetal() { SafeDelete(impl); }
+GraphicsMetal::~GraphicsMetal() {
+    renderPassPipelineStates.clear();
+    SafeDelete(impl);
+}
 
 bool GraphicsMetal::Initialize(std::function<GraphicsView()> getGraphicsView)
 {
@@ -203,7 +206,7 @@ std::shared_ptr<RenderPassPipelineStateMetal> GraphicsMetal::CreateRenderPassPip
 
 		if (it != renderPassPipelineStates.end())
 		{
-			auto ret = it->second.lock();
+            auto ret = it->second;
 
 			if (ret != nullptr)
 				return ret;
