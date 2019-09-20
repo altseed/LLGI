@@ -75,6 +75,10 @@ void test_clear(LLGI::DeviceType deviceType)
 		sfMemoryPool->NewFrame();
 
 		auto renderPass = graphics->GetCurrentScreen(color, true);
+		if (renderPass == nullptr)
+		{
+			renderPass = graphics->GetCurrentScreen(color, true);
+		}
 
 		// It need to create a command buffer between NewFrame and Present.
 		// Because get current screen returns other values by every frame.
@@ -94,7 +98,7 @@ void test_clear(LLGI::DeviceType deviceType)
 			auto data = graphics->CaptureRenderTarget(texture);
 
 			// save
-			// Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("stbpng.png");
+			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("stbpng.png");
 
 			// test
 			int rate = Bitmap2D::CompareBitmap(

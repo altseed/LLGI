@@ -12,6 +12,7 @@
 #include <queue>
 #include <string>
 #include <vector>
+#include <functional>
 
 namespace LLGI
 {
@@ -281,5 +282,17 @@ class CommandList;
 class Compiler;
 class RenderPass;
 class RenderPassPipelineState;
+
+enum class LogType
+{
+	Info,
+	Warning,
+	Error,
+	Debug,
+};
+
+void SetLogger(const std::function<void(LogType, const char*)>& logger);
+
+void Log(LogType logType, const char* message);
 
 } // namespace LLGI

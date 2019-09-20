@@ -2,6 +2,7 @@
 #include "LLGI.GraphicsMetal.h"
 #include "LLGI.Metal_Impl.h"
 #include "LLGI.ShaderMetal.h"
+#include "LLGI.RenderPassMetal.h"
 
 #import <MetalKit/MetalKit.h>
 

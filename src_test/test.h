@@ -2,7 +2,7 @@
 #pragma once
 
 #if defined(__linux__) || defined(__APPLE__) || defined(WIN32)
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 #endif
 
 #include <LLGI.CommandList.h>

@@ -7,6 +7,8 @@
 #include "LLGI.ShaderMetal.h"
 #include "LLGI.VertexBufferMetal.h"
 #include "LLGI.TextureMetal.h"
+#include "LLGI.SingleFrameMemoryPoolMetal.h"
+#include "LLGI.RenderPassMetal.h"
 #import <MetalKit/MetalKit.h>
 
 namespace LLGI
@@ -36,107 +38,12 @@ bool Graphics_Impl::Initialize()
 
 void Graphics_Impl::Execute(CommandList_Impl* commandBuffer) { [commandBuffer->commandBuffer commit]; }
 
-RenderPass_Impl::RenderPass_Impl() {}
-
-RenderPass_Impl::~RenderPass_Impl()
-{
-	if (renderPassDescriptor != nullptr)
-	{
-		[renderPassDescriptor release];
-		renderPassDescriptor = nullptr;
-	}
-}
-
-bool RenderPass_Impl::Initialize()
-{
-	renderPassDescriptor = [[MTLRenderPassDescriptor alloc] init];
-	return true;
-}
-
-void RenderPass_Impl::UpdateTarget(Graphics_Impl* graphics)
-{
-    renderPassDescriptor.colorAttachments[0].texture = graphics->drawable.texture;
-    pixelFormat = graphics->drawable.texture.pixelFormat;
-}
-    
-void RenderPass_Impl::UpdateTarget(Texture_Impl** textures, int32_t textureCount, Texture_Impl* depthTexture)
-{
-    for(int i = 0; i < textureCount; i++)
-    {
-        renderPassDescriptor.colorAttachments[i].texture = textures[i]->texture;
-    }
-    
-    if(depthTexture != nullptr)
-    {
-        renderPassDescriptor.depthAttachment.texture = depthTexture->texture;
-    }
-    
-    pixelFormat = textures[0]->texture.pixelFormat;
-}
-
-    
-RenderPassMetal::RenderPassMetal(GraphicsMetal* graphics, bool isStrongRef) : graphics_(graphics), isStrongRef_(isStrongRef)
-{
-	if (isStrongRef_)
-	{
-		SafeAddRef(graphics_);
-	}
-
-	impl = new RenderPass_Impl();
-	impl->Initialize();
-}
-
-RenderPassMetal::~RenderPassMetal()
-{
-	SafeDelete(impl);
-
-	if (isStrongRef_)
-	{
-		SafeRelease(graphics_);
-	}
-}
-
-void RenderPassMetal::SetIsColorCleared(bool isColorCleared)
-{
-	impl->isColorCleared = isColorCleared;
-	RenderPass::SetIsColorCleared(isColorCleared);
-}
-
-void RenderPassMetal::SetIsDepthCleared(bool isDepthCleared)
-{
-	impl->isDepthCleared = isDepthCleared;
-	RenderPass::SetIsDepthCleared(isDepthCleared);
-}
-
-void RenderPassMetal::SetClearColor(const Color8& color)
-{
-	impl->clearColor = color;
-	RenderPass::SetClearColor(color);
-}
-
-RenderPass_Impl* RenderPassMetal::GetImpl() const { return impl; }
-
-RenderPassPipelineState* RenderPassMetal::CreateRenderPassPipelineState()
-{
-	if (renderPassPipelineState == nullptr)
-	{
-		renderPassPipelineState = graphics_->CreateRenderPassPipelineState(GetImpl()->pixelFormat);
-	}
-
-	auto ret = renderPassPipelineState.get();
-	SafeAddRef(ret);
-	return ret;
-}
-
-RenderPassPipelineStateMetal::RenderPassPipelineStateMetal() { impl = new RenderPassPipelineState_Impl(); }
-
-RenderPassPipelineStateMetal::~RenderPassPipelineStateMetal() { SafeDelete(impl); }
-
-RenderPassPipelineState_Impl* RenderPassPipelineStateMetal::GetImpl() const { return impl; }
-
 GraphicsMetal::GraphicsMetal() { impl = new Graphics_Impl(); }
 
-GraphicsMetal::~GraphicsMetal() { SafeDelete(impl); }
+GraphicsMetal::~GraphicsMetal() {
+    renderPassPipelineStates.clear();
+    SafeDelete(impl);
+}
 
 bool GraphicsMetal::Initialize(std::function<GraphicsView()> getGraphicsView)
 {
@@ -173,7 +80,8 @@ RenderPass* GraphicsMetal::GetCurrentScreen(const Color8& clearColor, bool isCol
 	renderPass_->SetClearColor(clearColor);
 	renderPass_->SetIsColorCleared(isColorCleared);
 	renderPass_->SetIsDepthCleared(isDepthCleared);
-    renderPass_->GetImpl()->UpdateTarget(impl);
+	renderPass_->UpdateTarget(this);
+	
 	return renderPass_.get();
 }
 
@@ -224,8 +132,8 @@ PipelineState* GraphicsMetal::CreatePiplineState()
 }
 
 SingleFrameMemoryPool* GraphicsMetal::CreateSingleFrameMemoryPool(int32_t constantBufferPoolSize, int32_t drawingCount)
-{
-	return new SingleFrameMemoryPoolMetal(this, constantBufferPoolSize, drawingCount);
+{    
+	return new SingleFrameMemoryPoolMetal(this, false, constantBufferPoolSize, drawingCount);
 }
 
 CommandList* GraphicsMetal::CreateCommandList(SingleFrameMemoryPool* memoryPool)
@@ -298,19 +206,50 @@ std::shared_ptr<RenderPassPipelineStateMetal> GraphicsMetal::CreateRenderPassPip
 
 		if (it != renderPassPipelineStates.end())
 		{
-			auto ret = it->second.lock();
+            auto ret = it->second;
 
 			if (ret != nullptr)
 				return ret;
 		}
 	}
 
-	std::shared_ptr<RenderPassPipelineStateMetal> ret = std::make_shared<RenderPassPipelineStateMetal>();
+	std::shared_ptr<RenderPassPipelineStateMetal> ret = LLGI::CreateSharedPtr<>(new RenderPassPipelineStateMetal());
 	ret->GetImpl()->pixelFormat = format;
 
 	renderPassPipelineStates[key] = ret;
 
 	return ret;
+}
+    
+RenderPassPipelineState* GraphicsMetal::CreateRenderPassPipelineState(RenderPass* renderPass)
+{
+    auto renderPass_ = static_cast<RenderPassMetal*>(renderPass);
+    
+    auto renderPassPipelineState = CreateRenderPassPipelineState(renderPass_->GetImpl()->pixelFormat);
+
+    auto ret = renderPassPipelineState.get();
+    SafeAddRef(ret);
+    return ret;
+}
+
+std::vector<uint8_t> GraphicsMetal::CaptureRenderTarget(Texture* renderTarget)
+{
+	auto metalTexture = static_cast<TextureMetal*>(renderTarget);
+	auto width = metalTexture->GetSizeAs2D().X;
+	auto height = metalTexture->GetSizeAs2D().Y;
+	auto impl = metalTexture->GetImpl();
+	
+	NSUInteger bytesPerPixel = 4;	// TODO: backbuffer only
+	NSUInteger imageByteCount = width * height * bytesPerPixel;
+	NSUInteger bytesPerRow = width * bytesPerPixel;
+	MTLRegion region = MTLRegionMake2D(0, 0, width, height);
+	
+	std::vector<uint8_t> data;
+	data.resize(imageByteCount);
+	[impl->texture getBytes:data.data() bytesPerRow:bytesPerRow fromRegion:region mipmapLevel:0];
+	// order: B=[0], G=[1], R=[2], A=[3]
+	
+	return data;
 }
 
 Graphics_Impl* GraphicsMetal::GetImpl() const { return impl; }

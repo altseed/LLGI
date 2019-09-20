@@ -8,230 +8,35 @@
 
 void test_simple_rectangle(LLGI::DeviceType deviceType)
 {
-	auto code_gl_vs = R"(
-#version 440 core
-    layout(location = 0) in vec3 a_position;
-    layout(location = 1) in vec2 a_uv;
-    layout(location = 2) in vec4 a_color;
-    
-    out gl_PerVertex
-    {
-        vec4 gl_Position;
-    };
-    
-    out vec2 v_uv;
-    out vec4 v_color;
-    
-    void main()
-    {
-        gl_Position.x  = a_position.x;
-        gl_Position.y  = a_position.y;
-        gl_Position.z  = a_position.z;
-        gl_Position.w  = 1.0f;
-        v_uv = a_uv;
-        v_color = a_color;
-    }
-    
-    )";
-
-	auto code_gl_ps = R"(
-#version 440 core
-#extension GL_NV_gpu_shader5:require
-    
-    in vec2 v_uv;
-    in vec4 v_color;
-    
-    layout(location = 0) out vec4 color;
-    
-    void main()
-    {
-        color = v_color;
-    }
-    
-    )";
-
-	auto code_dx_vs = R"(
-    struct VS_INPUT{
-        float3 g_position : POSITION0;
-		float2 g_uv : UV0;
-        float4 g_color : COLOR0;
-    };
-    struct VS_OUTPUT{
-        float4 g_position : SV_POSITION;
-        float4 g_color : COLOR0;
-    };
-    
-    VS_OUTPUT main(VS_INPUT input){
-        VS_OUTPUT output;
-        
-        output.g_position = float4(input.g_position, 1.0f);
-        output.g_color = input.g_color;
-        
-        return output;
-    }
-    )";
-
-	auto code_dx_ps = R"(
-    struct PS_INPUT{
-        float4 g_position : SV_POSITION;
-        float4 g_color : COLOR0;
-    };
-    
-    float4 main(PS_INPUT input) : SV_TARGET{
-        return input.g_color;
-    }
-    
-    )";
-
-	auto code_metal_vs = R"(
-    
-    struct VertexIn {
-        metal::float3 position [[attribute(0)]];
-        metal::float2 uv [[attribute(1)]];
-        metal::float4 color [[attribute(2)]];
-    };
-    
-    struct VertexOut {
-        metal::float4 position [[position]];
-        metal::float2 uv;
-        metal::float4 color;
-    };
-    
-    vertex VertexOut main0(VertexIn vertex_array [[stage_in]], unsigned int vid [[vertex_id]]) {
-        
-        VertexOut vo;
-        vo.position = metal::float4(vertex_array.position, 1.0);
-        vo.color = (metal::float4)vertex_array.color;
-        return vo;
-    }
-    
-    )";
-
-	auto code_metal_ps = R"(
-    
-    
-    struct VertexOut {
-        metal::float4 position [[position]];
-        metal::float2 uv;
-        metal::float4 color;
-    };
-    
-    fragment metal::half4 main0(VertexOut input [[stage_in]]) {
-        return metal::half4(input.color);
-    }
-    
-    )";
-
-	auto compiler = LLGI::CreateCompiler(deviceType);
-
 	int count = 0;
 
 	auto platform = LLGI::CreatePlatform(deviceType);
+	LLGI::SafeAddRef(platform);
+
 	auto graphics = platform->CreateGraphics();
+	graphics->SetDisposed([platform]() -> void { platform->Release(); });
+
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
 	auto commandList = graphics->CreateCommandList(sfMemoryPool);
-	auto vb = graphics->CreateVertexBuffer(sizeof(SimpleVertex) * 4);
-	auto ib = graphics->CreateIndexBuffer(2, 6);
-	LLGI::Shader* shader_vs = nullptr;
-	LLGI::Shader* shader_ps = nullptr;
 
-	{
-		LLGI::CompilerResult result_vs;
-		LLGI::CompilerResult result_ps;
+	std::shared_ptr<LLGI::Shader> shader_vs = nullptr;
+	std::shared_ptr<LLGI::Shader> shader_ps = nullptr;
 
-		if (compiler == nullptr)
-		{
-		}
-		else if (compiler->GetDeviceType() == LLGI::DeviceType::DirectX12)
-		{
-			compiler->Compile(result_vs, code_dx_vs, LLGI::ShaderStageType::Vertex);
-			compiler->Compile(result_ps, code_dx_ps, LLGI::ShaderStageType::Pixel);
-		}
-		else if (compiler->GetDeviceType() == LLGI::DeviceType::Metal)
-		{
-			compiler->Compile(result_vs, code_metal_vs, LLGI::ShaderStageType::Vertex);
-			compiler->Compile(result_ps, code_metal_ps, LLGI::ShaderStageType::Pixel);
-		}
-		else
-		{
-			compiler->Compile(result_vs, code_gl_vs, LLGI::ShaderStageType::Vertex);
-			compiler->Compile(result_ps, code_gl_ps, LLGI::ShaderStageType::Pixel);
-		}
+	TestHelper::CreateShader(graphics, deviceType, "simple_rectangle.vert", "simple_rectangle.frag", shader_vs, shader_ps);
 
-		if (result_vs.Message != "")
-			std::cout << result_vs.Message << std::endl;
-		if (result_ps.Message != "")
-			std::cout << result_ps.Message << std::endl;
-
-		std::vector<LLGI::DataStructure> data_vs;
-		std::vector<LLGI::DataStructure> data_ps;
-
-		if (compiler == nullptr)
-		{
-			auto binary_vs = TestHelper::LoadData("simple_rectangle.vert.spv");
-			auto binary_ps = TestHelper::LoadData("simple_rectangle.frag.spv");
-
-			LLGI::DataStructure d_vs;
-			LLGI::DataStructure d_ps;
-
-			d_vs.Data = binary_vs.data();
-			d_vs.Size = binary_vs.size();
-			d_ps.Data = binary_ps.data();
-			d_ps.Size = binary_ps.size();
-
-			data_vs.push_back(d_vs);
-			data_ps.push_back(d_ps);
-
-			shader_vs = graphics->CreateShader(data_vs.data(), data_vs.size());
-			shader_ps = graphics->CreateShader(data_ps.data(), data_ps.size());
-		}
-		else
-		{
-			for (auto& b : result_vs.Binary)
-			{
-				LLGI::DataStructure d;
-				d.Data = b.data();
-				d.Size = b.size();
-				data_vs.push_back(d);
-			}
-
-			for (auto& b : result_ps.Binary)
-			{
-				LLGI::DataStructure d;
-				d.Data = b.data();
-				d.Size = b.size();
-				data_ps.push_back(d);
-			}
-
-			shader_vs = graphics->CreateShader(data_vs.data(), data_vs.size());
-			shader_ps = graphics->CreateShader(data_ps.data(), data_ps.size());
-		}
-	}
-
-	auto vb_buf = (SimpleVertex*)vb->Lock();
-	vb_buf[0].Pos = LLGI::Vec3F(-0.5, 0.5, 0.5);
-	vb_buf[1].Pos = LLGI::Vec3F(0.5, 0.5, 0.5);
-	vb_buf[2].Pos = LLGI::Vec3F(0.5, -0.5, 0.5);
-	vb_buf[3].Pos = LLGI::Vec3F(-0.5, -0.5, 0.5);
-
-	vb_buf[0].Color = LLGI::Color8(255, 255, 255, 255);
-	vb_buf[1].Color = LLGI::Color8(255, 255, 0, 255);
-	vb_buf[2].Color = LLGI::Color8(0, 255, 0, 255);
-	vb_buf[3].Color = LLGI::Color8(0, 0, 255, 255);
-	vb->Unlock();
-
-	auto ib_buf = (uint16_t*)ib->Lock();
-	ib_buf[0] = 0;
-	ib_buf[1] = 1;
-	ib_buf[2] = 2;
-	ib_buf[3] = 0;
-	ib_buf[4] = 2;
-	ib_buf[5] = 3;
-	ib->Unlock();
+	std::shared_ptr<LLGI::VertexBuffer> vb;
+	std::shared_ptr<LLGI::IndexBuffer> ib;
+	TestHelper::CreateRectangle(graphics,
+		LLGI::Vec3F(-0.5, 0.5, 0.5),
+		LLGI::Vec3F(0.5, -0.5, 0.5),
+		LLGI::Color8(255, 255, 255, 255),
+		LLGI::Color8(0, 255, 0, 255),
+		vb,
+		ib);
 
 	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pips;
 
-	while (count < 1000)
+	while (count < 100)
 	{
 		if (!platform->NewFrame())
 			break;
@@ -259,8 +64,8 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 			pip->VertexLayoutCount = 3;
 
 			pip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan
-			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs);
-			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps);
+			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs.get());
+			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps.get());
 			pip->SetRenderPassPipelineState(renderPassPipelineState.get());
 			pip->Compile();
 
@@ -269,8 +74,8 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 
 		commandList->Begin();
 		commandList->BeginRenderPass(renderPass);
-		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib);
+		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
+		commandList->SetIndexBuffer(ib.get());
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
 		commandList->Draw(2);
 		commandList->EndRenderPass();
@@ -287,15 +92,9 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 	graphics->WaitFinish();
 
 	LLGI::SafeRelease(sfMemoryPool);
-	LLGI::SafeRelease(shader_vs);
-	LLGI::SafeRelease(shader_ps);
-	LLGI::SafeRelease(ib);
-	LLGI::SafeRelease(vb);
 	LLGI::SafeRelease(commandList);
 	LLGI::SafeRelease(graphics);
 	LLGI::SafeRelease(platform);
-
-	LLGI::SafeRelease(compiler);
 }
 
 void test_simple_constant_rectangle(LLGI::ConstantBufferType type, LLGI::DeviceType deviceType)

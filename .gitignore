@@ -34,3 +34,5 @@
 /msvc/*.user
 **/Debug
 /build
+
+.DS_Store

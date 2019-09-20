@@ -106,6 +106,7 @@ struct Texture_Impl
 	virtual ~Texture_Impl();
 
 	bool Initialize(Graphics_Impl* graphics, const Vec2I& size, bool isRenderTexture, bool isDepthTexture);
+	void Reset(id<MTLTexture> nativeTexture);	// for wrap swapchain backbuffer.
 
 	void Write(const uint8_t* data);
 };

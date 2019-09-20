@@ -21,11 +21,17 @@ bool Texture_Impl::Initialize(Graphics_Impl* graphics, const Vec2I& size, bool i
     
     if(isDepthTexture)
     {
-        textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatDepth24Unorm_Stencil8
-                                                                                                     width:size.X
-                                                                                                    height:size.Y
-                                                                                                 mipmapped:YES];
-
+		id<MTLDevice> device = graphics->device;
+		bool supported = device.isDepth24Stencil8PixelFormatSupported;
+		
+		auto format = (supported) ? MTLPixelFormatDepth24Unorm_Stencil8 : MTLPixelFormatDepth32Float_Stencil8;
+        textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:format
+																			   width:size.X
+																			  height:size.Y
+																		   mipmapped:NO];
+		textureDescriptor.usage = MTLTextureUsageRenderTarget;
+		textureDescriptor.textureType = MTLTextureType2D;
+		textureDescriptor.storageMode = MTLStorageModePrivate;
     }
     else
     {
@@ -48,6 +54,13 @@ bool Texture_Impl::Initialize(Graphics_Impl* graphics, const Vec2I& size, bool i
 	size_ = size;
 
 	return true;
+}
+
+void Texture_Impl::Reset(id<MTLTexture> nativeTexture)
+{
+    texture = nativeTexture;
+	size_.X = texture.width;
+	size_.Y = texture.height;
 }
 
 void Texture_Impl::Write(const uint8_t* data)
@@ -75,6 +88,21 @@ bool TextureMetal::Initialize(Graphics* graphics, Vec2I size, bool isRenderTextu
 
 	data.resize(size.X * size.Y * 4);
 	return impl->Initialize(graphics_->GetImpl(), size, isRenderTexture_, isDepthTexture_);
+}
+
+bool TextureMetal::Initialize(Graphics* graphics)
+{   
+    isRenderTexture_ = false;
+    isDepthTexture_ = false;
+	graphics_ = static_cast<GraphicsMetal*>(graphics);
+	SafeAddRef(graphics_);
+    return true;
+}
+
+void TextureMetal::Reset(id<MTLTexture> nativeTexture)
+{
+    isRenderTexture_ = true;
+    impl->Reset(nativeTexture);
 }
 
 void* TextureMetal::Lock() { return data.data(); }
