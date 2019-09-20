@@ -10,6 +10,7 @@
 
 namespace LLGI
 {
+class PlatformDX12;
 class RenderPassDX12;
 
 class GraphicsDX12 : public Graphics
@@ -31,8 +32,11 @@ private:
 	std::unordered_map<RenderPassPipelineStateDX12Key, std::weak_ptr<RenderPassPipelineStateDX12>, RenderPassPipelineStateDX12Key::Hash>
 		renderPassPipelineStates;
 
+	PlatformDX12* platform_;
+
 public:
 	GraphicsDX12(ID3D12Device* device,
+				 PlatformDX12* platform,
 				 std::function<std::tuple<D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*>()> getScreenFunc,
 				 std::function<void()> waitFunc,
 				 ID3D12CommandQueue* commandQueue,
@@ -56,6 +60,8 @@ public:
 	Texture* CreateTexture(const TextureInitializationParameter& parameter) override;
 	Texture* CreateRenderTexture(const RenderTextureInitializationParameter& parameter) override;
 	Texture* CreateDepthTexture(const DepthTextureInitializationParameter& parameter) override;
+
+	Texture* GetScreenAsTexture(ID3D12Resource* renderpass);
 
 	std::shared_ptr<RenderPassPipelineStateDX12>
 	CreateRenderPassPipelineState(bool isPresentMode, bool hasDepth, RenderPassDX12* renderpass);
@@ -81,6 +87,8 @@ public:
 								   D3D12_RESOURCE_STATES resourceState,
 								   D3D12_RESOURCE_FLAGS flags,
 								   Vec2I size);
+
+	ID3D12Resource* GetSwapBuffer(int index);
 
 	std::vector<uint8_t> CaptureRenderTarget(Texture* renderTarget);
 };

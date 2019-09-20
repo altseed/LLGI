@@ -4,6 +4,7 @@
 #include "LLGI.ConstantBufferDX12.h"
 #include "LLGI.IndexBufferDX12.h"
 #include "LLGI.PipelineStateDX12.h"
+#include "LLGI.PlatformDX12.h"
 #include "LLGI.ShaderDX12.h"
 #include "LLGI.SingleFrameMemoryPoolDX12.h"
 #include "LLGI.TextureDX12.h"
@@ -13,11 +14,13 @@ namespace LLGI
 {
 
 GraphicsDX12::GraphicsDX12(ID3D12Device* device,
+						   PlatformDX12* platform,
 						   std::function<std::tuple<D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*>()> getScreenFunc,
 						   std::function<void()> waitFunc,
 						   ID3D12CommandQueue* commandQueue,
 						   int32_t swapBufferCount)
 	: device_(device)
+	, platform_(platform)
 	, getScreenFunc_(getScreenFunc)
 	, waitFunc_(waitFunc)
 	, commandQueue_(commandQueue)
@@ -26,6 +29,7 @@ GraphicsDX12::GraphicsDX12(ID3D12Device* device,
 {
 	SafeAddRef(device_);
 	SafeAddRef(commandQueue_);
+	SafeAddRef(platform_);
 
 	HRESULT hr;
 	// Create Command Allocator
@@ -38,6 +42,7 @@ GraphicsDX12::~GraphicsDX12()
 	SafeRelease(device_);
 	SafeRelease(commandQueue_);
 	SafeRelease(commandAllocator_);
+	SafeRelease(platform_);
 }
 
 void GraphicsDX12::Execute(CommandList* commandList)
@@ -178,6 +183,17 @@ Texture* GraphicsDX12::CreateRenderTexture(const RenderTextureInitializationPara
 	return obj;
 }
 
+Texture* GraphicsDX12::GetScreenAsTexture(ID3D12Resource* renderpass)
+{
+	auto obj = new TextureDX12(this);
+	if (!obj->Initialize(renderpass))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
+	return obj;
+}
+
 Texture* GraphicsDX12::CreateDepthTexture(const DepthTextureInitializationParameter& parameter) { throw "Not implemented"; }
 
 std::shared_ptr<RenderPassPipelineStateDX12>
@@ -187,7 +203,6 @@ GraphicsDX12::CreateRenderPassPipelineState(bool isPresentMode, bool hasDepth, R
 	key.isPresentMode = isPresentMode;
 	key.hasDepth = hasDepth;
 	key.renderPass = renderpass;
-
 
 	// already?
 	{
@@ -331,5 +346,7 @@ FAILED_EXIT:
 	SafeRelease(commandList);
 	return std::vector<uint8_t>();
 }
+
+ID3D12Resource* GraphicsDX12::GetSwapBuffer(int index) { return platform_->GetSwapBuffer(index); }
 
 } // namespace LLGI

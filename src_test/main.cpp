@@ -31,6 +31,7 @@ void test_compile(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 // About renderPass
 void test_renderPass(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 void test_multiRenderPass(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
+void test_capture(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 
 void call_test(LLGI::DeviceType device)
 {
@@ -52,6 +53,7 @@ void call_test(LLGI::DeviceType device)
 	// About renderPass
 	// test_renderPass(device);
 	// test_multiRenderPass(device);
+	// test_capture(device);
 }
 
 #if defined(__linux__) || defined(__APPLE__) || defined(WIN32)

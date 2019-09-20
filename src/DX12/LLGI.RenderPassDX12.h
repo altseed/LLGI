@@ -33,6 +33,8 @@ public:
 	bool Initialize();
 	bool Initialize(TextureDX12** textures, int numTextures, TextureDX12* depthTexture);
 
+	Texture* GetColorBuffer(int index) override;
+
 	RenderPassPipelineState* CreateRenderPassPipelineState() override;
 
 	const D3D12_CPU_DESCRIPTOR_HANDLE* GetHandleRTV() const { return handleRTV_.data(); }

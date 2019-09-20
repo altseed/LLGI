@@ -369,7 +369,7 @@ Graphics* PlatformDX12::CreateGraphics()
 
 	std::function<void()> waitFunc = [this]() -> void { this->Wait(); };
 
-	auto graphics = new GraphicsDX12(device, getScreenFunc, waitFunc, commandQueue, SwapBufferCount);
+	auto graphics = new GraphicsDX12(device, this, getScreenFunc, waitFunc, commandQueue, SwapBufferCount);
 
 	graphics->SetWindowSize(Vec2I(1280, 720));
 
@@ -377,5 +377,7 @@ Graphics* PlatformDX12::CreateGraphics()
 }
 
 ID3D12Device* PlatformDX12::GetDevice() { return device; }
+
+ID3D12Resource* PlatformDX12::GetSwapBuffer(int index) { return RenderPass[index]; }
 
 } // namespace LLGI

@@ -32,6 +32,7 @@ public:
 	virtual ~TextureDX12();
 
 	bool Initialize(const Vec2I& size, const bool isRenderPass, const bool isDepthBuffer, const TextureFormatType formatType);
+	bool Initialize(ID3D12Resource* renderpass);
 
 	void* Lock() override;
 	void Unlock() override;

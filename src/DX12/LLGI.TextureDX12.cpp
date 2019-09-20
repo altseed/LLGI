@@ -99,6 +99,64 @@ bool TextureDX12::Initialize(const Vec2I& size, const bool isRenderPass, const b
 	return true;
 }
 
+bool LLGI::TextureDX12::Initialize(ID3D12Resource* renderpass)
+{
+	auto desc = renderpass->GetDesc();
+	dxgiFormat_ = desc.Format;
+
+	switch (desc.Format)
+	{
+	case DXGI_FORMAT_R8G8B8A8_UNORM:
+		format_ = TextureFormatType::R8G8B8A8_UNORM;
+		memorySize_ = desc.Width * desc.Height * 4;
+		break;
+	case DXGI_FORMAT_R16G16B16A16_FLOAT:
+		format_ = TextureFormatType::R16G16B16A16_FLOAT;
+		memorySize_ = desc.Width * desc.Height * 8;
+		break;
+	case DXGI_FORMAT_R32G32B32A32_FLOAT:
+		format_ = TextureFormatType::R32G32B32A32_FLOAT;
+		memorySize_ = desc.Width * desc.Height * 16;
+		break;
+	case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
+		format_ = TextureFormatType::R8G8B8A8_UNORM_SRGB;
+		memorySize_ = desc.Width * desc.Height * 4;
+		break;
+	case DXGI_FORMAT_R16G16_FLOAT:
+		format_ = TextureFormatType::R16G16_FLOAT;
+		memorySize_ = desc.Width * desc.Height * 4;
+		break;
+	case DXGI_FORMAT_R8_UNORM:
+		format_ = TextureFormatType::R8_UNORM;
+		memorySize_ = desc.Width * desc.Height * 1;
+		break;
+	default:
+		throw "Not implemented";
+		// case DXGI_FORMAT_BC1:
+		//	format_=TextureFormatType::BC1_UNORM;
+		//	break;
+		// case DXGI_FORMAT_BC2:
+		//	format_=TextureFormatType::BC2_UNORM;
+		//	break;
+		// case DXGI_FORMAT_BC3:
+		//	format_=TextureFormatType::BC3_UNORM;
+		//	break;
+		// case DXGI_FORMAT_BC1_SRGB:
+		//	format_=TextureFormatType::BC1_UNORM_SRGB;
+		//	break;
+		// case DXGI_FORMAT_BC2_SRGB:
+		//	format_=TextureFormatType::BC1_UNORM_SRGB;
+		//	break;
+		// case DXGI_FORMAT_BC3_SRGB:
+		//	format_=TextureFormatType::BC1_UNORM_SRGB;
+		//	break;
+	}
+
+	texture_ = renderpass;
+	textureSize_ = Vec2I(desc.Width, desc.Height);
+	return true;
+}
+
 void TextureDX12::CreateBuffer()
 {
 	UINT64 size = 0;

@@ -50,6 +50,8 @@ public:
 	ID3D12Device* GetDevice();
 
 	DeviceType GetDeviceType() const override { return DeviceType::DirectX12; }
+
+	ID3D12Resource* GetSwapBuffer(int index);
 };
 
 } // namespace LLGI

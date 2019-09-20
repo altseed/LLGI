@@ -57,12 +57,14 @@ bool RenderPassDX12::Initialize(TextureDX12** textures, int numTextures, Texture
 	return true;
 }
 
+Texture* RenderPassDX12::GetColorBuffer(int index) { return graphics_->GetScreenAsTexture(graphics_->GetSwapBuffer(index)); }
+
 RenderPassPipelineState* RenderPassDX12::CreateRenderPassPipelineState()
 {
 	auto ret = renderPassPipelineState_.get();
 	if (ret == nullptr)
 	{
-		renderPassPipelineState_ = graphics_->CreateRenderPassPipelineState(false /*TODO*/, false /*TODO*/,this);
+		renderPassPipelineState_ = graphics_->CreateRenderPassPipelineState(false /*TODO*/, false /*TODO*/, this);
 		renderPassPipelineState_->SetRenderPass(this);
 		ret = renderPassPipelineState_.get();
 	}
