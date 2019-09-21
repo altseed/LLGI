@@ -20,7 +20,7 @@ private:
 	int32_t currentSwapBufferIndex = -1;
 
 	ID3D12Device* device_ = nullptr;
-	std::function<std::tuple<D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*>()> getScreenFunc_;
+	std::function<std::tuple<D3D12_CPU_DESCRIPTOR_HANDLE, Texture*>()> getScreenFunc_;
 	std::function<void()> waitFunc_;
 
 	const D3D12_COMMAND_LIST_TYPE commandListType_ = D3D12_COMMAND_LIST_TYPE_DIRECT;
@@ -29,15 +29,12 @@ private:
 
 	RenderPassDX12 currentScreen;
 
-	std::unordered_map<RenderPassPipelineStateDX12Key, std::weak_ptr<RenderPassPipelineStateDX12>, RenderPassPipelineStateDX12Key::Hash>
+	std::unordered_map<RenderPassPipelineStateDX12Key, std::shared_ptr<RenderPassPipelineStateDX12>, RenderPassPipelineStateDX12Key::Hash>
 		renderPassPipelineStates;
-
-	PlatformDX12* platform_;
 
 public:
 	GraphicsDX12(ID3D12Device* device,
-				 PlatformDX12* platform,
-				 std::function<std::tuple<D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*>()> getScreenFunc,
+				 std::function<std::tuple<D3D12_CPU_DESCRIPTOR_HANDLE, Texture*>()> getScreenFunc,
 				 std::function<void()> waitFunc,
 				 ID3D12CommandQueue* commandQueue,
 				 int32_t swapBufferCount);
@@ -61,10 +58,12 @@ public:
 	Texture* CreateRenderTexture(const RenderTextureInitializationParameter& parameter) override;
 	Texture* CreateDepthTexture(const DepthTextureInitializationParameter& parameter) override;
 
-	Texture* GetScreenAsTexture(ID3D12Resource* renderpass);
+	std::shared_ptr<RenderPassPipelineStateDX12> CreateRenderPassPipelineState(bool isPresentMode,
+																			   bool hasDepth,
+																			   int32_t renderTargetCount,
+																			   std::array<DXGI_FORMAT, 8> renderTargetFormats);
 
-	std::shared_ptr<RenderPassPipelineStateDX12>
-	CreateRenderPassPipelineState(bool isPresentMode, bool hasDepth, RenderPassDX12* renderpass);
+	RenderPassPipelineState* CreateRenderPassPipelineState(RenderPass* renderpass) override;
 
 	ID3D12Device* GetDevice();
 
@@ -87,8 +86,6 @@ public:
 								   D3D12_RESOURCE_STATES resourceState,
 								   D3D12_RESOURCE_FLAGS flags,
 								   Vec2I size);
-
-	ID3D12Resource* GetSwapBuffer(int index);
 
 	std::vector<uint8_t> CaptureRenderTarget(Texture* renderTarget);
 };

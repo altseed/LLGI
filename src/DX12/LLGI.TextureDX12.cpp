@@ -3,17 +3,96 @@
 
 namespace LLGI
 {
-TextureDX12::TextureDX12(GraphicsDX12* graphics) : graphics_(graphics)
+
+TextureDX12::TextureDX12(GraphicsDX12* graphics, bool hasStrongRef) : graphics_(graphics), hasStrongRef_(hasStrongRef)
 {
-	SafeAddRef(graphics_);
+	if (hasStrongRef_)
+	{
+		SafeAddRef(graphics_);
+	}
+
+	assert(graphics_ != nullptr);
+	device_ = graphics_->GetDevice();
+	commandQueue_ = graphics_->GetCommandQueue();
+
+	SafeAddRef(device_);
+	SafeAddRef(commandQueue_);
 	memset(&footprint_, 0, sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT));
+}
+
+TextureDX12::TextureDX12(ID3D12Resource* textureResource, ID3D12Device* device, ID3D12CommandQueue* commandQueue)
+	: texture_(textureResource), commandQueue_(commandQueue), device_(device)
+{
+	SafeAddRef(texture_);
+	SafeAddRef(device_);
+	SafeAddRef(commandQueue_);
+	memset(&footprint_, 0, sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT));
+
+	auto desc = texture_->GetDesc();
+	dxgiFormat_ = desc.Format;
+
+	switch (desc.Format)
+	{
+	case DXGI_FORMAT_R8G8B8A8_UNORM:
+		format_ = TextureFormatType::R8G8B8A8_UNORM;
+		memorySize_ = desc.Width * desc.Height * 4;
+		break;
+	case DXGI_FORMAT_R16G16B16A16_FLOAT:
+		format_ = TextureFormatType::R16G16B16A16_FLOAT;
+		memorySize_ = desc.Width * desc.Height * 8;
+		break;
+	case DXGI_FORMAT_R32G32B32A32_FLOAT:
+		format_ = TextureFormatType::R32G32B32A32_FLOAT;
+		memorySize_ = desc.Width * desc.Height * 16;
+		break;
+	case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
+		format_ = TextureFormatType::R8G8B8A8_UNORM_SRGB;
+		memorySize_ = desc.Width * desc.Height * 4;
+		break;
+	case DXGI_FORMAT_R16G16_FLOAT:
+		format_ = TextureFormatType::R16G16_FLOAT;
+		memorySize_ = desc.Width * desc.Height * 4;
+		break;
+	case DXGI_FORMAT_R8_UNORM:
+		format_ = TextureFormatType::R8_UNORM;
+		memorySize_ = desc.Width * desc.Height * 1;
+		break;
+	default:
+		throw "Not implemented";
+		// case DXGI_FORMAT_BC1:
+		//	format_=TextureFormatType::BC1_UNORM;
+		//	break;
+		// case DXGI_FORMAT_BC2:
+		//	format_=TextureFormatType::BC2_UNORM;
+		//	break;
+		// case DXGI_FORMAT_BC3:
+		//	format_=TextureFormatType::BC3_UNORM;
+		//	break;
+		// case DXGI_FORMAT_BC1_SRGB:
+		//	format_=TextureFormatType::BC1_UNORM_SRGB;
+		//	break;
+		// case DXGI_FORMAT_BC2_SRGB:
+		//	format_=TextureFormatType::BC1_UNORM_SRGB;
+		//	break;
+		// case DXGI_FORMAT_BC3_SRGB:
+		//	format_=TextureFormatType::BC1_UNORM_SRGB;
+		//	break;
+	}
+
+	textureSize_ = Vec2I(desc.Width, desc.Height);
 }
 
 TextureDX12::~TextureDX12()
 {
 	SafeRelease(texture_);
 	SafeRelease(buffer_);
-	SafeRelease(graphics_);
+
+	if (hasStrongRef_)
+	{
+		SafeRelease(graphics_);
+	}
+	SafeRelease(device_);
+	SafeRelease(commandQueue_);
 }
 
 bool TextureDX12::Initialize(const Vec2I& size, const bool isRenderPass, const bool isDepthBuffer, const TextureFormatType formatType)
@@ -74,18 +153,24 @@ bool TextureDX12::Initialize(const Vec2I& size, const bool isRenderPass, const b
 
 	if (isRenderPass_)
 	{
-		texture_ = graphics_->CreateResource(D3D12_HEAP_TYPE_DEFAULT,
-											 dxgiFormat_,
-											 D3D12_RESOURCE_DIMENSION_TEXTURE2D,
-											 D3D12_RESOURCE_STATE_GENERIC_READ,
-											 D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
-											 size);
+		texture_ = CreateResourceBuffer(device_,
+										D3D12_HEAP_TYPE_DEFAULT,
+										dxgiFormat_,
+										D3D12_RESOURCE_DIMENSION_TEXTURE2D,
+										D3D12_RESOURCE_STATE_GENERIC_READ,
+										D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
+										size);
 		state_ = D3D12_RESOURCE_STATE_GENERIC_READ;
 	}
 	else
 	{
-		texture_ = graphics_->CreateResource(
-			D3D12_HEAP_TYPE_DEFAULT, dxgiFormat_, D3D12_RESOURCE_DIMENSION_TEXTURE2D, D3D12_RESOURCE_STATE_COPY_DEST, size);
+		texture_ = CreateResourceBuffer(device_,
+										D3D12_HEAP_TYPE_DEFAULT,
+										dxgiFormat_,
+										D3D12_RESOURCE_DIMENSION_TEXTURE2D,
+										D3D12_RESOURCE_STATE_COPY_DEST,
+										D3D12_RESOURCE_FLAG_NONE,
+										size);
 
 		state_ = D3D12_RESOURCE_STATE_COPY_DEST;
 	}
@@ -99,71 +184,18 @@ bool TextureDX12::Initialize(const Vec2I& size, const bool isRenderPass, const b
 	return true;
 }
 
-bool LLGI::TextureDX12::Initialize(ID3D12Resource* renderpass)
-{
-	auto desc = renderpass->GetDesc();
-	dxgiFormat_ = desc.Format;
-
-	switch (desc.Format)
-	{
-	case DXGI_FORMAT_R8G8B8A8_UNORM:
-		format_ = TextureFormatType::R8G8B8A8_UNORM;
-		memorySize_ = desc.Width * desc.Height * 4;
-		break;
-	case DXGI_FORMAT_R16G16B16A16_FLOAT:
-		format_ = TextureFormatType::R16G16B16A16_FLOAT;
-		memorySize_ = desc.Width * desc.Height * 8;
-		break;
-	case DXGI_FORMAT_R32G32B32A32_FLOAT:
-		format_ = TextureFormatType::R32G32B32A32_FLOAT;
-		memorySize_ = desc.Width * desc.Height * 16;
-		break;
-	case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
-		format_ = TextureFormatType::R8G8B8A8_UNORM_SRGB;
-		memorySize_ = desc.Width * desc.Height * 4;
-		break;
-	case DXGI_FORMAT_R16G16_FLOAT:
-		format_ = TextureFormatType::R16G16_FLOAT;
-		memorySize_ = desc.Width * desc.Height * 4;
-		break;
-	case DXGI_FORMAT_R8_UNORM:
-		format_ = TextureFormatType::R8_UNORM;
-		memorySize_ = desc.Width * desc.Height * 1;
-		break;
-	default:
-		throw "Not implemented";
-		// case DXGI_FORMAT_BC1:
-		//	format_=TextureFormatType::BC1_UNORM;
-		//	break;
-		// case DXGI_FORMAT_BC2:
-		//	format_=TextureFormatType::BC2_UNORM;
-		//	break;
-		// case DXGI_FORMAT_BC3:
-		//	format_=TextureFormatType::BC3_UNORM;
-		//	break;
-		// case DXGI_FORMAT_BC1_SRGB:
-		//	format_=TextureFormatType::BC1_UNORM_SRGB;
-		//	break;
-		// case DXGI_FORMAT_BC2_SRGB:
-		//	format_=TextureFormatType::BC1_UNORM_SRGB;
-		//	break;
-		// case DXGI_FORMAT_BC3_SRGB:
-		//	format_=TextureFormatType::BC1_UNORM_SRGB;
-		//	break;
-	}
-
-	texture_ = renderpass;
-	textureSize_ = Vec2I(desc.Width, desc.Height);
-	return true;
-}
-
 void TextureDX12::CreateBuffer()
 {
 	UINT64 size = 0;
-	graphics_->GetDevice()->GetCopyableFootprints(&texture_->GetDesc(), 0, 1, 0, &footprint_, nullptr, nullptr, &size);
+	device_->GetCopyableFootprints(&texture_->GetDesc(), 0, 1, 0, &footprint_, nullptr, nullptr, &size);
 
-	buffer_ = graphics_->CreateResource(
-		D3D12_HEAP_TYPE_UPLOAD, DXGI_FORMAT_UNKNOWN, D3D12_RESOURCE_DIMENSION_BUFFER, D3D12_RESOURCE_STATE_GENERIC_READ, Vec2I(size, 1));
+	buffer_ = CreateResourceBuffer(device_,
+								   D3D12_HEAP_TYPE_UPLOAD,
+								   DXGI_FORMAT_UNKNOWN,
+								   D3D12_RESOURCE_DIMENSION_BUFFER,
+								   D3D12_RESOURCE_STATE_GENERIC_READ,
+								   D3D12_RESOURCE_FLAG_NONE,
+								   Vec2I(size, 1));
 	assert(buffer_ != nullptr);
 }
 
@@ -182,13 +214,13 @@ void TextureDX12::Unlock()
 	ID3D12GraphicsCommandList* commandList = nullptr;
 	D3D12_TEXTURE_COPY_LOCATION src = {}, dst = {};
 
-	auto hr = graphics_->GetDevice()->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
+	auto hr = device_->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
 	if (FAILED(hr))
 	{
 		goto FAILED_EXIT;
 	}
 
-	hr = graphics_->GetDevice()->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator, NULL, IID_PPV_ARGS(&commandList));
+	hr = device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator, NULL, IID_PPV_ARGS(&commandList));
 	if (FAILED(hr))
 	{
 		SafeRelease(commandAllocator);
@@ -209,10 +241,14 @@ void TextureDX12::Unlock()
 
 	commandList->Close();
 	ID3D12CommandList* list[] = {commandList};
-	graphics_->GetCommandQueue()->ExecuteCommandLists(1, list);
+	commandQueue_->ExecuteCommandLists(1, list);
 
 	// TODO optimize it
-	graphics_->WaitFinish();
+	if (graphics_ != nullptr)
+	{
+		graphics_->WaitFinish();
+	}
+
 	SafeRelease(commandList);
 	SafeRelease(commandAllocator);
 	return;

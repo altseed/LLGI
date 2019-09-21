@@ -14,33 +14,52 @@ class RenderPassDX12;
 class RenderPassPipelineStateDX12 : public RenderPassPipelineState
 {
 private:
-	GraphicsDX12* graphics_ = nullptr;
-	RenderPassDX12* renderPass_;
-
 public:
-	RenderPassPipelineStateDX12(GraphicsDX12* graphics) : graphics_(graphics) {}
-	RenderPassDX12* GetRenderPass() const { return renderPass_; }
-	void SetRenderPass(RenderPassDX12* renderPass) { renderPass_ = renderPass; }
+	RenderPassPipelineStateDX12() {}
 
 	virtual ~RenderPassPipelineStateDX12() {}
+
+	std::array<DXGI_FORMAT, 8> RenderTargetFormats;
+	int32_t RenderTargetCount = 0;
 };
 
 struct RenderPassPipelineStateDX12Key
 {
 	bool isPresentMode;
 	bool hasDepth;
-	RenderPassDX12* renderPass;
+	std::array<DXGI_FORMAT, 8> RenderTargetFormats;
+	int32_t RenderTargetCount = 0;
 
 	bool operator==(const RenderPassPipelineStateDX12Key& value) const
 	{
-		return (isPresentMode == value.isPresentMode && hasDepth == value.hasDepth && renderPass == value.renderPass);
+		if (RenderTargetCount != value.RenderTargetCount)
+			return false;
+
+		for (int32_t i = 0; i < RenderTargetCount; i++)
+		{
+			if (RenderTargetFormats[i] != value.RenderTargetFormats[i])
+				return false;
+		}
+
+		return (isPresentMode == value.isPresentMode && hasDepth == value.hasDepth);
 	}
 
 	struct Hash
 	{
 		typedef std::size_t result_type;
 
-		std::size_t operator()(const RenderPassPipelineStateDX12Key& key) const { return std::hash<bool>()(key.hasDepth); }
+		std::size_t operator()(const RenderPassPipelineStateDX12Key& key) const
+		{
+			auto ret = std::hash<bool>()(key.isPresentMode);
+			ret += std::hash<bool>()(key.hasDepth);
+
+			for (int32_t i = 0; i < key.RenderTargetCount; i++)
+			{
+				ret += std::hash<uint64_t>()(key.RenderTargetFormats[i]);
+			}
+
+			return ret;
+		}
 	};
 };
 

@@ -9,18 +9,17 @@
 #include "LLGI.SingleFrameMemoryPoolDX12.h"
 #include "LLGI.TextureDX12.h"
 #include "LLGI.VertexBufferDX12.h"
+#include "LLGI.BaseDX12.h"
 
 namespace LLGI
 {
 
 GraphicsDX12::GraphicsDX12(ID3D12Device* device,
-						   PlatformDX12* platform,
-						   std::function<std::tuple<D3D12_CPU_DESCRIPTOR_HANDLE, ID3D12Resource*>()> getScreenFunc,
+						   std::function<std::tuple<D3D12_CPU_DESCRIPTOR_HANDLE, Texture*>()> getScreenFunc,
 						   std::function<void()> waitFunc,
 						   ID3D12CommandQueue* commandQueue,
 						   int32_t swapBufferCount)
 	: device_(device)
-	, platform_(platform)
 	, getScreenFunc_(getScreenFunc)
 	, waitFunc_(waitFunc)
 	, commandQueue_(commandQueue)
@@ -29,7 +28,6 @@ GraphicsDX12::GraphicsDX12(ID3D12Device* device,
 {
 	SafeAddRef(device_);
 	SafeAddRef(commandQueue_);
-	SafeAddRef(platform_);
 
 	HRESULT hr;
 	// Create Command Allocator
@@ -42,7 +40,6 @@ GraphicsDX12::~GraphicsDX12()
 	SafeRelease(device_);
 	SafeRelease(commandQueue_);
 	SafeRelease(commandAllocator_);
-	SafeRelease(platform_);
 }
 
 void GraphicsDX12::Execute(CommandList* commandList)
@@ -64,7 +61,7 @@ RenderPass* GraphicsDX12::GetCurrentScreen(const Color8& clearColor, bool isColo
 {
 	auto currentParam = getScreenFunc_();
 	currentScreen.CreateScreenRenderTarget(
-		std::get<0>(currentParam), std::get<1>(currentParam), clearColor, isColorCleared, isDepthCleared, windowSize_);
+		static_cast<TextureDX12*>(std::get<1>(currentParam)), std::get<0>(currentParam), clearColor, isColorCleared, isDepthCleared, windowSize_);
 
 	return &currentScreen;
 }
@@ -149,7 +146,7 @@ RenderPass* GraphicsDX12::CreateRenderPass(const Texture** textures, int32_t tex
 
 Texture* GraphicsDX12::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer)
 {
-	auto obj = new TextureDX12(this);
+	auto obj = new TextureDX12(this, true);
 	if (!obj->Initialize(size, isRenderPass, isDepthBuffer, TextureFormatType::R8G8B8A8_UNORM))
 	{
 		SafeRelease(obj);
@@ -163,7 +160,7 @@ Texture* GraphicsDX12::CreateTexture(uint64_t id) { throw "Not implemented"; }
 
 Texture* GraphicsDX12::CreateTexture(const TextureInitializationParameter& parameter)
 {
-	auto obj = new TextureDX12(this);
+	auto obj = new TextureDX12(this, true);
 	if (!obj->Initialize(parameter.Size, false, false, parameter.Format))
 	{
 		SafeRelease(obj);
@@ -174,19 +171,8 @@ Texture* GraphicsDX12::CreateTexture(const TextureInitializationParameter& param
 
 Texture* GraphicsDX12::CreateRenderTexture(const RenderTextureInitializationParameter& parameter)
 {
-	auto obj = new TextureDX12(this);
+	auto obj = new TextureDX12(this, true);
 	if (!obj->Initialize(parameter.Size, true, false, parameter.Format))
-	{
-		SafeRelease(obj);
-		return nullptr;
-	}
-	return obj;
-}
-
-Texture* GraphicsDX12::GetScreenAsTexture(ID3D12Resource* renderpass)
-{
-	auto obj = new TextureDX12(this);
-	if (!obj->Initialize(renderpass))
 	{
 		SafeRelease(obj);
 		return nullptr;
@@ -196,13 +182,16 @@ Texture* GraphicsDX12::GetScreenAsTexture(ID3D12Resource* renderpass)
 
 Texture* GraphicsDX12::CreateDepthTexture(const DepthTextureInitializationParameter& parameter) { throw "Not implemented"; }
 
-std::shared_ptr<RenderPassPipelineStateDX12>
-GraphicsDX12::CreateRenderPassPipelineState(bool isPresentMode, bool hasDepth, RenderPassDX12* renderpass)
+std::shared_ptr<RenderPassPipelineStateDX12> GraphicsDX12::CreateRenderPassPipelineState(bool isPresentMode,
+																						 bool hasDepth,
+																						 int32_t renderTargetCount,
+																						 std::array<DXGI_FORMAT, 8> renderTargetFormats)
 {
 	RenderPassPipelineStateDX12Key key;
 	key.isPresentMode = isPresentMode;
 	key.hasDepth = hasDepth;
-	key.renderPass = renderpass;
+	key.RenderTargetCount = renderTargetCount;
+	key.RenderTargetFormats = renderTargetFormats;
 
 	// already?
 	{
@@ -210,17 +199,46 @@ GraphicsDX12::CreateRenderPassPipelineState(bool isPresentMode, bool hasDepth, R
 
 		if (it != renderPassPipelineStates.end())
 		{
-			auto ret = it->second.lock();
+			auto ret = it->second;
 
 			if (ret != nullptr)
 				return ret;
 		}
 	}
 
-	auto ret = std::make_shared<RenderPassPipelineStateDX12>(this);
+	auto ret = CreateSharedPtr<>(new RenderPassPipelineStateDX12());
 	renderPassPipelineStates[key] = ret;
 
+	ret->RenderTargetCount = renderTargetCount;
+	ret->RenderTargetFormats = renderTargetFormats;
+
 	return ret;
+}
+
+RenderPassPipelineState* GraphicsDX12::CreateRenderPassPipelineState(RenderPass* renderPass)
+{
+	auto renderPass_ = static_cast<RenderPassDX12*>(renderPass);
+
+	std::array<DXGI_FORMAT, 8> renderTargetFormats;
+	renderTargetFormats.fill(DXGI_FORMAT_UNKNOWN);
+	int32_t renderTargetCount = renderTargetFormats.size();
+	;
+	for (int32_t i = 0; i < renderPass_->GetCount(); i++)
+	{
+		if (renderPass_->GetRenderTarget(i) == nullptr)
+		{
+			renderTargetCount = i;
+			break;
+		}
+
+		renderTargetFormats[i] = renderPass_->GetRenderTarget(i)->texture_->GetDXGIFormat();
+	}
+
+	auto ret = CreateRenderPassPipelineState(renderPass_->GetIsScreen(), /*TODO*/ false, renderTargetCount, renderTargetFormats);
+
+	auto ptr = ret.get();
+	SafeAddRef(ptr);
+	return ptr;
 }
 
 ID3D12Device* GraphicsDX12::GetDevice() { return device_; }
@@ -234,48 +252,7 @@ ID3D12Resource* GraphicsDX12::CreateResource(D3D12_HEAP_TYPE heapType,
 											 D3D12_RESOURCE_FLAGS flags,
 											 Vec2I size)
 {
-	D3D12_HEAP_PROPERTIES heapProps = {};
-	D3D12_RESOURCE_DESC resDesc = {};
-
-	ID3D12Resource* resource = nullptr;
-
-	heapProps.Type = heapType;
-	heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-	heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-
-	heapProps.CreationNodeMask = 1; // TODO: set properly for multi-adaptor.
-	heapProps.VisibleNodeMask = 1;  // TODO: set properly for multi-adaptor.
-
-	resDesc.Dimension = resourceDimention;
-	resDesc.Width = size.X;
-	resDesc.Height = size.Y;
-	resDesc.DepthOrArraySize = 1;
-	resDesc.MipLevels = 1;
-	resDesc.Format = format;
-	resDesc.Layout = (resourceDimention == D3D12_RESOURCE_DIMENSION_BUFFER ? D3D12_TEXTURE_LAYOUT_ROW_MAJOR : D3D12_TEXTURE_LAYOUT_UNKNOWN);
-	resDesc.SampleDesc.Count = 1;
-	resDesc.Flags = flags;
-
-	D3D12_CLEAR_VALUE clearValue = {};
-	clearValue.Format = format;
-	clearValue.Color[0] = 0.0f;
-	clearValue.Color[1] = 0.0f;
-	clearValue.Color[2] = 0.0f;
-	clearValue.Color[3] = 0.0f;
-	auto setClearValue =
-		resourceDimention != D3D12_RESOURCE_DIMENSION_BUFFER &&
-		(((flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET) != 0) || ((flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) != 0));
-
-	// clearValue causes CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE
-	auto hr = GetDevice()->CreateCommittedResource(
-		&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, resourceState, (setClearValue ? &clearValue : nullptr), IID_PPV_ARGS(&resource));
-
-	if (FAILED(hr))
-	{
-		SafeRelease(resource);
-		return nullptr;
-	}
-	return resource;
+	return CreateResourceBuffer(device_, heapType, format, resourceDimention, resourceState, flags, size);
 }
 
 std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
@@ -346,7 +323,5 @@ FAILED_EXIT:
 	SafeRelease(commandList);
 	return std::vector<uint8_t>();
 }
-
-ID3D12Resource* GraphicsDX12::GetSwapBuffer(int index) { return platform_->GetSwapBuffer(index); }
 
 } // namespace LLGI

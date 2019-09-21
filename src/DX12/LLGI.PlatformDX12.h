@@ -3,6 +3,7 @@
 
 #include "../LLGI.Platform.h"
 #include "LLGI.BaseDX12.h"
+#include "LLGI.TextureDX12.h"
 
 #ifdef _WIN32
 #include "../Win/LLGI.WindowWin.h"
@@ -17,6 +18,8 @@ private:
 	static const int SwapBufferCount = 2;
 	WindowWin window;
 
+	Vec2I windowSize_;
+
 	ID3D12Device* device = nullptr;
 	IDXGIFactory4* dxgiFactory = nullptr;
 	ID3D12CommandQueue* commandQueue = nullptr;
@@ -26,7 +29,8 @@ private:
 
 	ID3D12DescriptorHeap* descriptorHeapRTV = nullptr;
 	D3D12_CPU_DESCRIPTOR_HANDLE handleRTV[SwapBufferCount];
-	ID3D12Resource* RenderPass[SwapBufferCount];
+	ID3D12Resource* renderPass[SwapBufferCount];
+	std::array<TextureDX12*, SwapBufferCount> renderTargets;
 
 	ID3D12CommandAllocator* commandAllocator = nullptr;
 	ID3D12GraphicsCommandList* commandListStart = nullptr;
@@ -50,8 +54,6 @@ public:
 	ID3D12Device* GetDevice();
 
 	DeviceType GetDeviceType() const override { return DeviceType::DirectX12; }
-
-	ID3D12Resource* GetSwapBuffer(int index);
 };
 
 } // namespace LLGI

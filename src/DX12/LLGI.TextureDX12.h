@@ -12,6 +12,10 @@ class TextureDX12 : public Texture
 {
 private:
 	GraphicsDX12* graphics_ = nullptr;
+	bool hasStrongRef_ = false;
+	ID3D12Device* device_ = nullptr;
+	ID3D12CommandQueue* commandQueue_ = nullptr;
+	
 	ID3D12Resource* texture_ = nullptr;
 
 	ID3D12Resource* buffer_ = nullptr;
@@ -28,12 +32,14 @@ private:
 	void CreateBuffer();
 
 public:
-	TextureDX12(GraphicsDX12* graphics);
+	TextureDX12(GraphicsDX12* graphics, bool hasStrongRef);
+
+	TextureDX12(ID3D12Resource* textureResource, ID3D12Device* device, ID3D12CommandQueue* commandQueue);
+
 	virtual ~TextureDX12();
 
 	bool Initialize(const Vec2I& size, const bool isRenderPass, const bool isDepthBuffer, const TextureFormatType formatType);
-	bool Initialize(ID3D12Resource* renderpass);
-
+	
 	void* Lock() override;
 	void Unlock() override;
 	Vec2I GetSizeAs2D() override;

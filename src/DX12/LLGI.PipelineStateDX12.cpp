@@ -44,7 +44,11 @@ void PipelineStateDX12::Compile()
 
 	for (size_t i = 0; i < shaders_.size(); i++)
 	{
-		auto& shaderData = static_cast<ShaderDX12*>(shaders_[i])->GetData();
+		auto shader = static_cast<ShaderDX12*>(shaders_.at(i));
+		if (shader == nullptr)
+			return;
+
+		auto& shaderData = shader->GetData();
 
 		if (i == static_cast<int>(ShaderStageType::Pixel))
 		{
@@ -204,19 +208,12 @@ void PipelineStateDX12::Compile()
 
 	// TODO (from renderpass)
 #if 1
-	auto renderpass = static_cast<RenderPassPipelineStateDX12*>(renderPassPipelineState_.get())->GetRenderPass();
-	pipelineStateDesc.NumRenderTargets = renderpass->GetCount();
-	for (int i = 0; i < 8; i++)
-		pipelineStateDesc.RTVFormats[i] = DXGI_FORMAT_UNKNOWN;
+	auto renderPassPipelineState = static_cast<RenderPassPipelineStateDX12*>(renderPassPipelineState_.get());
+	pipelineStateDesc.NumRenderTargets = renderPassPipelineState->RenderTargetCount;
+
 	for (int i = 0; i < pipelineStateDesc.NumRenderTargets; i++)
 	{
-		if (renderpass->GetRenderTarget(i)->texture_ != nullptr)
-			pipelineStateDesc.RTVFormats[i] = renderpass->GetRenderTarget(i)->texture_->GetDXGIFormat();
-		else
-		{
-			pipelineStateDesc.RTVFormats[i] = DXGI_FORMAT_R8G8B8A8_UNORM; // TODO
-			break;
-		}
+		pipelineStateDesc.RTVFormats[i] = renderPassPipelineState->RenderTargetFormats[i];
 	}
 #else
 	pipelineStateDesc.NumRenderTargets = 1;

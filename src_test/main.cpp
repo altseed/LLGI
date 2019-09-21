@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
 	// make shaders folder path from __FILE__
 	auto path = std::string(__FILE__);
 #if defined(WIN32)
-	auto pos = path.find_last_of("¥¥");
+	auto pos = path.find_last_of("\\");
 #else
 	auto pos = path.find_last_of("/");
 #endif

@@ -57,20 +57,9 @@ bool RenderPassDX12::Initialize(TextureDX12** textures, int numTextures, Texture
 	return true;
 }
 
-Texture* RenderPassDX12::GetColorBuffer(int index) { return graphics_->GetScreenAsTexture(graphics_->GetSwapBuffer(index)); }
+Texture* RenderPassDX12::GetColorBuffer(int index) { return renderTargets_.at(index).texture_; }
 
-RenderPassPipelineState* RenderPassDX12::CreateRenderPassPipelineState()
-{
-	auto ret = renderPassPipelineState_.get();
-	if (ret == nullptr)
-	{
-		renderPassPipelineState_ = graphics_->CreateRenderPassPipelineState(false /*TODO*/, false /*TODO*/, this);
-		renderPassPipelineState_->SetRenderPass(this);
-		ret = renderPassPipelineState_.get();
-	}
-	SafeAddRef(ret);
-	return ret;
-}
+RenderPassPipelineState* RenderPassDX12::CreateRenderPassPipelineState() { return graphics_->CreateRenderPassPipelineState(this); }
 
 bool RenderPassDX12::CreateRenderTargetViews(CommandListDX12* commandList, DescriptorHeapDX12* rtDescriptorHeap)
 {
@@ -97,18 +86,26 @@ bool RenderPassDX12::CreateRenderTargetViews(CommandListDX12* commandList, Descr
 	return true;
 }
 
-bool RenderPassDX12::CreateScreenRenderTarget(D3D12_CPU_DESCRIPTOR_HANDLE handleRTV,
-											  ID3D12Resource* renderPass,
+bool RenderPassDX12::CreateScreenRenderTarget(TextureDX12* texture,
+											  D3D12_CPU_DESCRIPTOR_HANDLE handleRTV,
 											  const Color8& clearColor,
 											  const bool isColorCleared,
 											  const bool isDepthCleared,
 											  const Vec2I windowSize)
 {
+	for (auto& rt : renderTargets_)
+	{
+		SafeRelease(rt.texture_);	
+	}
+	
 	numRenderTarget_ = 1;
 	handleRTV_.resize(1);
 	renderTargets_.resize(1);
 
-	renderTargets_[0].renderPass_ = renderPass;
+	renderTargets_[0].texture_ = texture;
+	renderTargets_[0].renderPass_ = texture->Get();
+	SafeAddRef(renderTargets_[0].texture_);
+
 	handleRTV_[0] = handleRTV;
 	SetClearColor(clearColor);
 	SetIsColorCleared(isColorCleared);

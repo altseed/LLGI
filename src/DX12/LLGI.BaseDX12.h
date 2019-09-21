@@ -17,4 +17,12 @@ class GraphicsDX12;
 class RenderPassDX12;
 class SingleFrameMemoryPoolDX12;
 
+ID3D12Resource* CreateResourceBuffer(ID3D12Device* device,
+							   D3D12_HEAP_TYPE heapType,
+							   DXGI_FORMAT format,
+							   D3D12_RESOURCE_DIMENSION resourceDimention,
+							   D3D12_RESOURCE_STATES resourceState,
+							   D3D12_RESOURCE_FLAGS flags,
+							   Vec2I size);
+
 } // namespace LLGI

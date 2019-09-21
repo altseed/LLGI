@@ -696,12 +696,15 @@ PS_OUTPUT main(PS_INPUT input)
 
 	LLGI::SafeRelease(sfMemoryPool);
 	LLGI::SafeRelease(renderTexture);
+	LLGI::SafeRelease(renderTexture2);
 	LLGI::SafeRelease(renderPass);
 	LLGI::SafeRelease(texture);
 	LLGI::SafeRelease(shader_vs);
 	LLGI::SafeRelease(shader_ps);
 	LLGI::SafeRelease(ib);
 	LLGI::SafeRelease(vb);
+	LLGI::SafeRelease(ib2);
+	LLGI::SafeRelease(vb2);
 	LLGI::SafeRelease(commandList);
 	LLGI::SafeRelease(graphics);
 	LLGI::SafeRelease(platform);
