@@ -48,6 +48,8 @@ void RenderPass_Impl::UpdateTarget(Texture_Impl** textures, int32_t textureCount
     if(depthTexture != nullptr)
     {
         renderPassDescriptor.depthAttachment.texture = depthTexture->texture;
+		renderPassDescriptor.stencilAttachment.texture = depthTexture->texture;
+		depthStencilFormat = depthTexture->texture.pixelFormat;
     }
     
     pixelFormat = textures[0]->texture.pixelFormat;

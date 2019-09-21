@@ -20,8 +20,9 @@ class TextureMetal;
 struct RenderPassPipelineStateMetalKey
 {
     MTLPixelFormat format;
+	MTLPixelFormat depthStencilFormat = MTLPixelFormatInvalid;	// MTLPixelFormatInvalid if texture is not set.
         
-    bool operator==(const RenderPassPipelineStateMetalKey& value) const { return (format == value.format); }
+    bool operator==(const RenderPassPipelineStateMetalKey& value) const { return (format == value.format && depthStencilFormat == value.depthStencilFormat); }
         
     struct Hash
     {
@@ -29,7 +30,7 @@ struct RenderPassPipelineStateMetalKey
             
         std::size_t operator()(const RenderPassPipelineStateMetalKey& key) const
         {
-            return std::hash<std::int32_t>()(static_cast<int>(key.format));
+            return std::hash<std::int32_t>()(static_cast<int>(key.format) + (static_cast<int>(key.depthStencilFormat) * 10000));
         }
     };
 };
@@ -85,7 +86,7 @@ public:
 	Texture* CreateTexture(uint64_t id) override;
 
     //! internal function
-	std::shared_ptr<RenderPassPipelineStateMetal> CreateRenderPassPipelineState(MTLPixelFormat format);
+	std::shared_ptr<RenderPassPipelineStateMetal> CreateRenderPassPipelineState(MTLPixelFormat format, MTLPixelFormat depthStencilFormat);
 
     RenderPassPipelineState* CreateRenderPassPipelineState(RenderPass* renderPass) override;
     
