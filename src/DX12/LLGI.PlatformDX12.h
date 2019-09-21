@@ -39,6 +39,8 @@ private:
 
 	int32_t frameIndex = 0;
 
+	RenderPassDX12* renderPass_ = nullptr;
+
 	void Wait();
 
 public:
@@ -52,6 +54,8 @@ public:
 	Graphics* CreateGraphics() override;
 
 	ID3D12Device* GetDevice();
+
+	RenderPass* GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) override;
 
 	DeviceType GetDeviceType() const override { return DeviceType::DirectX12; }
 };

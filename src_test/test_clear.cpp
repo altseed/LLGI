@@ -33,6 +33,12 @@ void test_clear_update(LLGI::DeviceType deviceType)
 		color.B = 0;
 		color.A = 255;
 
+		auto renderPass = platform->GetCurrentScreen(color, true);
+		if (renderPass == nullptr)
+		{
+			renderPass = graphics->GetCurrentScreen(color, true);
+		}
+
 		commandList->Begin();
 		commandList->BeginRenderPass(graphics->GetCurrentScreen(color, true));
 		commandList->EndRenderPass();
@@ -74,7 +80,7 @@ void test_clear(LLGI::DeviceType deviceType)
 
 		sfMemoryPool->NewFrame();
 
-		auto renderPass = graphics->GetCurrentScreen(color, true);
+		auto renderPass = platform->GetCurrentScreen(color, true);
 		if (renderPass == nullptr)
 		{
 			renderPass = graphics->GetCurrentScreen(color, true);

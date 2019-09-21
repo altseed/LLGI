@@ -59,12 +59,20 @@ bool RenderPassDX12::Initialize(TextureDX12** textures, int numTextures, Texture
 
 Texture* RenderPassDX12::GetColorBuffer(int index) { return renderTargets_.at(index).texture_; }
 
-RenderPassPipelineState* RenderPassDX12::CreateRenderPassPipelineState() { return graphics_->CreateRenderPassPipelineState(this); }
+RenderPassPipelineState* RenderPassDX12::CreateRenderPassPipelineState()
+{
+
+	assert(graphics_ != nullptr);
+
+	return graphics_->CreateRenderPassPipelineState(this);
+}
 
 bool RenderPassDX12::CreateRenderTargetViews(CommandListDX12* commandList, DescriptorHeapDX12* rtDescriptorHeap)
 {
 	if (numRenderTarget_ == 0)
 		return false;
+
+	assert(graphics_ != nullptr);
 
 	handleRTV_.resize(numRenderTarget_);
 
@@ -95,9 +103,9 @@ bool RenderPassDX12::CreateScreenRenderTarget(TextureDX12* texture,
 {
 	for (auto& rt : renderTargets_)
 	{
-		SafeRelease(rt.texture_);	
+		SafeRelease(rt.texture_);
 	}
-	
+
 	numRenderTarget_ = 1;
 	handleRTV_.resize(1);
 	renderTargets_.resize(1);

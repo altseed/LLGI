@@ -51,7 +51,6 @@ PlatformDX12::~PlatformDX12()
 		SafeRelease(renderTargets[i]);
 	}
 
-
 	SafeRelease(descriptorHeapRTV);
 
 	for (int32_t i = 0; i < SwapBufferCount; i++)
@@ -59,6 +58,8 @@ PlatformDX12::~PlatformDX12()
 		SafeRelease(renderPass[i]);
 		handleRTV[i] = {};
 	}
+
+	SafeRelease(renderPass_);
 
 	SafeRelease(commandAllocator);
 	SafeRelease(commandListStart);
@@ -287,6 +288,8 @@ bool PlatformDX12::Initialize(Vec2I windowSize)
 		renderTargets[i] = new TextureDX12(renderPass[i], device, commandQueue);
 	}
 
+	renderPass_ = new RenderPassDX12(nullptr, false);
+
 	return true;
 
 FAILED_EXIT:;
@@ -388,5 +391,12 @@ Graphics* PlatformDX12::CreateGraphics()
 }
 
 ID3D12Device* PlatformDX12::GetDevice() { return device; }
+
+RenderPass* PlatformDX12::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) 
+{ 
+	renderPass_->CreateScreenRenderTarget(
+		renderTargets[frameIndex], handleRTV[frameIndex], clearColor, isColorCleared, isDepthCleared, windowSize_);
+	return renderPass_; 
+}
 
 } // namespace LLGI
