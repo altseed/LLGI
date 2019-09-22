@@ -59,6 +59,19 @@ void CommandList_Impl::BeginRenderPass(RenderPass_Impl* renderPass)
 	{
 		renderPass->renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionDontCare;
 	}
+	
+	if (renderPass->isDepthCleared)
+	{
+		renderPass->renderPassDescriptor.depthAttachment.loadAction = MTLLoadActionClear;
+		renderPass->renderPassDescriptor.depthAttachment.clearDepth = 1.0;
+		renderPass->renderPassDescriptor.stencilAttachment.loadAction = MTLLoadActionClear;
+		renderPass->renderPassDescriptor.stencilAttachment.clearStencil = 0;
+	}
+	else
+	{
+		renderPass->renderPassDescriptor.depthAttachment.loadAction = MTLLoadActionDontCare;
+		renderPass->renderPassDescriptor.stencilAttachment.loadAction = MTLLoadActionDontCare;
+	}
 
 	renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPass->renderPassDescriptor];
 }
@@ -223,6 +236,8 @@ void CommandListMetal::Draw(int32_t pritimiveCount)
 	if (isPipDirtied)
 	{
 		[impl->renderEncoder setRenderPipelineState:pip->GetImpl()->pipelineState];
+        [impl->renderEncoder setDepthStencilState:pip->GetImpl()->depthStencilState];
+		[impl->renderEncoder setStencilReferenceValue:0xFF];
 	}
 
 	// draw

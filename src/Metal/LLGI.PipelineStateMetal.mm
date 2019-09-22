@@ -35,6 +35,7 @@ PipelineState_Impl::~PipelineState_Impl()
 void PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 {
 	auto self_ = static_cast<PipelineStateMetal*>(self);
+	auto renderPassPipelineStateMetal_ = static_cast<RenderPassPipelineStateMetal*>(self_->GetRenderPassPipelineState());
 
 	pipelineStateDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
 
@@ -116,7 +117,31 @@ void PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 	}
 	else
 	{
-		depthStencilDescriptor.depthCompareFunction = MTLCompareFunctionNever;
+		depthStencilDescriptor.depthCompareFunction = MTLCompareFunctionAlways;
+	}
+	
+	
+	if (renderPassPipelineStateMetal_->GetImpl()->depthStencilFormat != MTLPixelFormatInvalid)
+	{
+		if (self_->IsStencilTestEnabled)
+		{
+			depthStencilDescriptor.frontFaceStencil.depthFailureOperation = MTLStencilOperationKeep;
+			depthStencilDescriptor.frontFaceStencil.stencilFailureOperation = MTLStencilOperationKeep;
+			depthStencilDescriptor.frontFaceStencil.depthStencilPassOperation = MTLStencilOperationKeep;
+			depthStencilDescriptor.frontFaceStencil.stencilCompareFunction = MTLCompareFunctionEqual;
+			depthStencilDescriptor.frontFaceStencil.readMask = 0xFF;
+			depthStencilDescriptor.frontFaceStencil.writeMask = 0xFF;
+		}
+		else
+		{
+			// always write to stencil reference value
+			depthStencilDescriptor.frontFaceStencil.depthFailureOperation = MTLStencilOperationKeep;
+			depthStencilDescriptor.frontFaceStencil.stencilFailureOperation = MTLStencilOperationKeep;
+			depthStencilDescriptor.frontFaceStencil.depthStencilPassOperation = MTLStencilOperationReplace;
+			depthStencilDescriptor.frontFaceStencil.stencilCompareFunction = MTLCompareFunctionAlways;
+			depthStencilDescriptor.frontFaceStencil.readMask = 0xFF;
+			depthStencilDescriptor.frontFaceStencil.writeMask = 0xFF;
+		}
 	}
 
 	depthStencilState = [graphics->device newDepthStencilStateWithDescriptor:depthStencilDescriptor];
@@ -177,10 +202,15 @@ void PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 		colorAttachment.blendingEnabled = false;
 	}
 
-	auto renderPassPipelineStateMetal_ = static_cast<RenderPassPipelineStateMetal*>(self_->GetRenderPassPipelineState());
-
 	[pipelineStateDescriptor.colorAttachments objectAtIndexedSubscript:0].pixelFormat =
 		renderPassPipelineStateMetal_->GetImpl()->pixelFormat;
+	if (renderPassPipelineStateMetal_->GetImpl()->depthStencilFormat != MTLPixelFormatInvalid)
+	{
+		pipelineStateDescriptor.depthAttachmentPixelFormat = renderPassPipelineStateMetal_->GetImpl()->depthStencilFormat ;
+		pipelineStateDescriptor.stencilAttachmentPixelFormat = renderPassPipelineStateMetal_->GetImpl()->depthStencilFormat ;
+	}
+	
+	
 
 	NSError* pipelineError = nil;
 	pipelineState = [graphics->device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor error:&pipelineError];
