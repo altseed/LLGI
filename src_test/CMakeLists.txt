@@ -39,7 +39,8 @@ else()
     ${CMAKE_THREAD_LIBS_INIT}
     gtest
     pthread
-    X11)
+    X11
+    X11-xcb)
 endif()
 
 

@@ -383,6 +383,8 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 	vk::ApplicationInfo appInfo;
 	appInfo.pApplicationName = "Vulkan";
 	appInfo.pEngineName = "Vulkan";
+	appInfo.apiVersion = 1;
+	appInfo.engineVersion = 1;
 	appInfo.apiVersion = VK_API_VERSION_1_0;
 
 	// specify extension
@@ -391,7 +393,7 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 #ifdef _WIN32
 		VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
 #else
-		VK_KHR_XLIB_SURFACE_EXTENSION_NAME,
+		VK_KHR_XCB_SURFACE_EXTENSION_NAME,
 #endif
 #ifdef _DEBUG
 		VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
@@ -448,7 +450,7 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 		memcpy(&_version, &deviceProperties.apiVersion, sizeof(uint32_t));
 		vk::PhysicalDeviceFeatures deviceFeatures = vkPhysicalDevice.getFeatures();
 		vk::PhysicalDeviceMemoryProperties deviceMemoryProperties = vkPhysicalDevice.getMemoryProperties();
-
+		
 		// create surface
 	#ifdef _WIN32
 		vk::Win32SurfaceCreateInfoKHR surfaceCreateInfo;
@@ -456,19 +458,22 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 		surfaceCreateInfo.hwnd = window->GetHandle();
 		surface_ = vkInstance_.createWin32SurfaceKHR(surfaceCreateInfo);
 #else
-		vk::XlibSurfaceCreateInfoKHR surfaceCreateInfo;
-		surfaceCreateInfo.dpy = window->GetDisplay();
+		vk::XcbSurfaceCreateInfoKHR surfaceCreateInfo;
+		surfaceCreateInfo.connection = XGetXCBConnection(window->GetDisplay());
 		surfaceCreateInfo.window = window->GetWindow();
-		surface_ = vkInstance_.createXlibSurfaceKHR(surfaceCreateInfo);
+		surface_ = vkInstance_.createXcbSurfaceKHR(surfaceCreateInfo);
 #endif
 		// create device
 
 		// find queue for graphics
 		int32_t graphicsQueueInd = -1;
-		for (size_t i = 0; i < vkPhysicalDevice.getQueueFamilyProperties().size(); i++)
+		
+		auto queueFamilyProperties = vkPhysicalDevice.getQueueFamilyProperties();
+
+		for (size_t i = 0; i < queueFamilyProperties.size(); i++)
 		{
-			auto& queueProp = vkPhysicalDevice.getQueueFamilyProperties()[i];
-			if (queueProp.queueFlags & vk::QueueFlagBits::eGraphics && vkPhysicalDevice.getSurfaceSupportKHR(i, surface_))
+			auto& queueProp = queueFamilyProperties[i];
+			if (queueProp.queueFlags & vk::QueueFlagBits::eGraphics/* && vkPhysicalDevice.getSurfaceSupportKHR(i, surface_)*/)
 			{
 				graphicsQueueInd = i;
 				break;

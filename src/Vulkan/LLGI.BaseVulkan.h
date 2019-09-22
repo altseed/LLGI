@@ -9,7 +9,7 @@
 #define VK_USE_PLATFORM_WIN32_KHR
 #else
 #define VK_PROTOTYPES
-#define VK_USE_PLATFORM_XLIB_KHR
+#define VK_USE_PLATFORM_XCB_KHR
 #endif
 
 #include <vulkan/vulkan.h>

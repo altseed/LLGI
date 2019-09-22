@@ -3,6 +3,7 @@
 #include "../LLGI.Base.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/Xlib-xcb.h>
 #include <locale.h>
 #include <string>
 
