@@ -1,6 +1,9 @@
 #include "LLGI.PipelineStateVulkan.h"
 #include "LLGI.ShaderVulkan.h"
 
+// for x11
+#undef Always
+
 namespace LLGI
 {
 
@@ -172,7 +175,7 @@ void PipelineStateVulkan::Compile()
 	viewportStateInfo.viewportCount = 1;
 
 	vk::Rect2D scissor = {};
-	scissor.offset = {0, 0};
+	scissor.offset = vk::Offset2D(0, 0);
 	scissor.extent.width = 1280; // TODO : temp
 	scissor.extent.height = 720; // TODO : temp
 

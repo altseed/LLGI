@@ -56,7 +56,7 @@ public:
 
 template <typename T, size_t N> struct std::hash<LLGI::FixedSizeVector<T, N>>
 {
-	_NODISCARD size_t operator()(const LLGI::FixedSizeVector<T, N>& _Keyval) const noexcept
+	size_t operator()(const LLGI::FixedSizeVector<T, N>& _Keyval) const noexcept
 	{																
 		auto h = std::hash<size_t>()(_Keyval.size());
 		for (size_t i = 0; i < _Keyval.size(); i++)

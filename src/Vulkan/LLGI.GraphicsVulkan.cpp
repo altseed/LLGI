@@ -88,7 +88,8 @@ void GraphicsVulkan::SetWindowSize(const Vec2I& windowSize) { throw "Not inpleme
 void GraphicsVulkan::Execute(CommandList* commandList)
 {
 	auto commandList_ = static_cast<CommandListVulkan*>(commandList);
-	addCommand_(commandList_->GetCommandBuffer());
+	auto cmdBuf = commandList_->GetCommandBuffer();
+	addCommand_(cmdBuf);
 }
 
 void GraphicsVulkan::WaitFinish() { vkQueue.waitIdle(); }

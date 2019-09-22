@@ -83,7 +83,7 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const
 	image_ = graphics_->GetDevice().createImage(imageCreateInfo);
 
 	// get device
-	auto& device = graphics_->GetDevice();
+	auto device = graphics_->GetDevice();
 
 	// calculate size
 	memorySize = size.X * size.Y * 4;
@@ -266,8 +266,8 @@ void TextureVulkan::Unlock()
 	imageBufferCopy.imageSubresource.baseArrayLayer = 0;
 	imageBufferCopy.imageSubresource.layerCount = 1;
 
-	imageBufferCopy.imageOffset = {0, 0, 0};
-	imageBufferCopy.imageExtent = {static_cast<uint32_t>(GetSizeAs2D().X), static_cast<uint32_t>(GetSizeAs2D().Y), 1};
+	imageBufferCopy.imageOffset = vk::Offset3D(0,0,0);
+	imageBufferCopy.imageExtent = vk::Extent3D(static_cast<uint32_t>(GetSizeAs2D().X), static_cast<uint32_t>(GetSizeAs2D().Y), 1);
 
 	vk::ImageSubresourceRange colorSubRange;
 	colorSubRange.aspectMask = vk::ImageAspectFlagBits::eColor;

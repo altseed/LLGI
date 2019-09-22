@@ -145,7 +145,8 @@ void CommandListVulkan::Draw(int32_t pritimiveCount)
 	if (isVBDirtied)
 	{
 		vk::DeviceSize vertexOffsets = vb_.offset;
-		cmdBuffer.bindVertexBuffers(0, 1, &(vb->GetBuffer()), &vertexOffsets);
+		vk::Buffer vkBuf = vb->GetBuffer();
+		cmdBuffer.bindVertexBuffers(0, 1, &(vkBuf), &vertexOffsets);
 	}
 
 	// assign an index vuffer

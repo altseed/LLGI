@@ -164,7 +164,7 @@ vk::Fence PlatformVulkan::GetSubmitFence(bool destroy)
 	auto& image = swapBuffers[frameIndex];
 	while (image.fence)
 	{
-		vk::Result fenceRes = vkDevice_.waitForFences(image.fence, VK_TRUE, INT_MAX);
+		vk::Result fenceRes = vkDevice_.waitForFences(image.fence, VK_TRUE, std::numeric_limits<int>::max());
 		if (fenceRes == vk::Result::eSuccess)
 		{
 			if (destroy)
@@ -373,8 +373,10 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 {
 #ifdef _WIN32
 	window = std::make_shared<WindowWin>();
-	window->Initialize("Vulkan", windowSize);
+	#else
+	window = std::make_shared<WindowLinux>();	
 #endif
+	window->Initialize("Vulkan", windowSize);
 
 	// initialize Vulkan context
 
@@ -388,6 +390,8 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 		VK_KHR_SURFACE_EXTENSION_NAME,
 #ifdef _WIN32
 		VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
+#else
+		VK_KHR_XLIB_SURFACE_EXTENSION_NAME,
 #endif
 #ifdef _DEBUG
 		VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
@@ -446,11 +450,17 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 		vk::PhysicalDeviceMemoryProperties deviceMemoryProperties = vkPhysicalDevice.getMemoryProperties();
 
 		// create surface
+	#ifdef _WIN32
 		vk::Win32SurfaceCreateInfoKHR surfaceCreateInfo;
 		surfaceCreateInfo.hinstance = window->GetInstance();
 		surfaceCreateInfo.hwnd = window->GetHandle();
 		surface_ = vkInstance_.createWin32SurfaceKHR(surfaceCreateInfo);
-
+#else
+		vk::XlibSurfaceCreateInfoKHR surfaceCreateInfo;
+		surfaceCreateInfo.dpy = window->GetDisplay();
+		surfaceCreateInfo.window = window->GetWindow();
+		surface_ = vkInstance_.createXlibSurfaceKHR(surfaceCreateInfo);
+#endif
 		// create device
 
 		// find queue for graphics
@@ -489,9 +499,13 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 		deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
 		deviceCreateInfo.enabledExtensionCount = enabledExtensions.size();
 		deviceCreateInfo.ppEnabledExtensionNames = enabledExtensions.data();
+
+	#if defined(_DEBUG)
 		deviceCreateInfo.enabledLayerCount = validationLayers.size();
 		deviceCreateInfo.ppEnabledLayerNames = validationLayers.data();
-
+	#else
+		deviceCreateInfo.enabledLayerCount = 0;
+	#endif
 		vkDevice_ = vkPhysicalDevice.createDevice(deviceCreateInfo);
 
 #if defined(_DEBUG)
@@ -741,7 +755,7 @@ void PlatformVulkan::Present()
 
 		vk::Fence fence = GetSubmitFence(true);
 		vkQueue.submit(submitInfo, fence);
-		vk::Result fenceRes = vkDevice_.waitForFences(fence, VK_TRUE, INT_MAX);
+		vk::Result fenceRes = vkDevice_.waitForFences(fence, VK_TRUE, std::numeric_limits<int>::max());
 		assert(fenceRes == vk::Result::eSuccess);
 	}
 

@@ -6,9 +6,13 @@ file(GLOB files_pc PC/*.h PC/*.cpp)
 
 list(APPEND files ${files_pc})
 
-if(MSVC)
+if(WIN32)
   file(GLOB files_win Win/*.h Win/*.cpp)
   list(APPEND files ${files_win})
+elseif(APPLE)
+else()
+  file(GLOB files_linux Linux/*.h Linux/*.cpp)
+  list(APPEND files ${files_linux})
 endif()
 
 if(MSVC)

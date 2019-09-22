@@ -7,6 +7,8 @@
 
 #ifdef _WIN32
 #include "../Win/LLGI.WindowWin.h"
+#else
+#include "../Linux/LLGI.WindowLinux.h"
 #endif
 
 namespace LLGI
@@ -81,6 +83,8 @@ private:
 
 #ifdef _WIN32
 	std::shared_ptr<WindowWin> window = nullptr;
+#else
+	std::shared_ptr<WindowLinux> window = nullptr;
 #endif
 
 #ifdef _DEBUG
