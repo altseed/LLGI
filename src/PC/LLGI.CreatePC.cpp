@@ -25,19 +25,6 @@ Platform* CreatePlatform(DeviceType platformDeviceType)
 	windowSize.X = 1280;
 	windowSize.Y = 720;
 
-#ifdef _WIN32
-
-	if (platformDeviceType == DeviceType::Default || platformDeviceType == DeviceType::DirectX12)
-	{
-		auto platform = new PlatformDX12();
-		if (!platform->Initialize(windowSize))
-		{
-			SafeRelease(platform);
-			return nullptr;
-		}
-		return platform;
-	}
-
 #ifdef ENABLE_VULKAN
 	if (platformDeviceType == DeviceType::Vulkan)
 	{
@@ -51,12 +38,27 @@ Platform* CreatePlatform(DeviceType platformDeviceType)
 	}
 #endif
 
-#endif
+#ifdef _WIN32
 
-#ifdef __APPLE__
+	if (platformDeviceType == DeviceType::Default || platformDeviceType == DeviceType::DirectX12)
+	{
+		auto platform = new PlatformDX12();
+		if (!platform->Initialize(windowSize))
+		{
+			SafeRelease(platform);
+			return nullptr;
+		}
+		return platform;
+	}
+
+#elif defined(__APPLE__)
 	auto obj = new PlatformMetal();
 	return obj;
+#else
+
 #endif
+
+
 
 	return nullptr;
 }

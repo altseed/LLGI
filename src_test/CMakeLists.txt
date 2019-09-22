@@ -38,7 +38,8 @@ else()
     PRIVATE 
     ${CMAKE_THREAD_LIBS_INIT}
     gtest
-    pthread)
+    pthread
+    X11)
 endif()
 
 

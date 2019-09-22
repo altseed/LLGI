@@ -478,6 +478,7 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 		if (graphicsQueueInd < 0)
 		{
 			exitWithError();
+			Log(LogType::Warning, "Faile to get graphics queue index.");
 			return false;
 		}
 
