@@ -13,7 +13,8 @@ class TextureVulkan : public Texture
 {
 private:
 	GraphicsVulkan* graphics_ = nullptr;
-	vk::Image image = nullptr;
+	bool isStrongRef_ = false;
+	vk::Image image_ = nullptr;
 	vk::ImageView view = nullptr;
 	vk::DeviceMemory devMem = nullptr;
 	vk::Format vkTextureFormat;
@@ -29,7 +30,7 @@ private:
 	bool isExternalResource_ = false;
 
 public:
-	TextureVulkan(GraphicsVulkan* graphics);
+	TextureVulkan(GraphicsVulkan* graphics, bool isStrongRef);
 	virtual ~TextureVulkan();
 
 	bool Initialize(const Vec2I& size, bool isRenderPass, bool isDepthBuffer);
@@ -41,7 +42,7 @@ public:
 	bool IsRenderTexture() const override;
 	bool IsDepthTexture() const override;
 
-	const vk::Image& GetImage() const { return image; }
+	const vk::Image& GetImage() const { return image_; }
 	const vk::ImageView& GetView() const { return view; }
 
 	vk::Format GetVulkanFormat() const { return vkTextureFormat; }

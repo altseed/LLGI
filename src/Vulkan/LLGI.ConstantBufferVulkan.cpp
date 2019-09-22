@@ -23,14 +23,14 @@ bool ConstantBufferVulkan::Initialize(GraphicsVulkan* graphics, int32_t size, Co
 		vk::BufferCreateInfo IndexBufferInfo;
 		IndexBufferInfo.size = size;
 		IndexBufferInfo.usage = vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst;
-		buffer_->buffer = graphics_->GetDevice().createBuffer(IndexBufferInfo);
+		buffer_->buffer_ = graphics_->GetDevice().createBuffer(IndexBufferInfo);
 
-		vk::MemoryRequirements memReqs = graphics_->GetDevice().getBufferMemoryRequirements(buffer_->buffer);
+		vk::MemoryRequirements memReqs = graphics_->GetDevice().getBufferMemoryRequirements(buffer_->buffer_);
 		vk::MemoryAllocateInfo memAlloc;
 		memAlloc.allocationSize = memReqs.size;
 		memAlloc.memoryTypeIndex = graphics_->GetMemoryTypeIndex(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible);
 		buffer_->devMem = graphics_->GetDevice().allocateMemory(memAlloc);
-		graphics_->GetDevice().bindBufferMemory(buffer_->buffer, buffer_->devMem, 0);
+		graphics_->GetDevice().bindBufferMemory(buffer_->buffer_, buffer_->devMem, 0);
 	}
 
 	return true;
@@ -44,7 +44,7 @@ bool ConstantBufferVulkan::InitializeAsShortTime(SingleFrameMemoryPoolVulkan* me
 	VkBuffer buffer;
 	if (memoryPool->GetConstantBuffer(size_, &buffer, &offset_))
 	{
-		buffer_->buffer = vk::Buffer(buffer);
+		buffer_->buffer_ = vk::Buffer(buffer);
 		// SafeAddRef(constantBuffer_);
 		memSize_ = size;
 		// actualSize_ = size_;

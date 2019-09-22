@@ -39,7 +39,7 @@ class Buffer
 	std::shared_ptr<GraphicsVulkan> graphics_;
 
 public:
-	vk::Buffer buffer;
+	vk::Buffer buffer_;
 	vk::DeviceMemory devMem;
 
 	Buffer(GraphicsVulkan* graphics);

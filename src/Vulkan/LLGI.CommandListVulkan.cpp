@@ -23,15 +23,15 @@ DescriptorPoolVulkan::DescriptorPoolVulkan(std::shared_ptr<GraphicsVulkan> graph
 	poolInfo.pPoolSizes = poolSizes.data();
 	poolInfo.maxSets = size * stage;
 
-	descriptorPool = graphics_->GetDevice().createDescriptorPool(poolInfo);
+	descriptorPool_ = graphics_->GetDevice().createDescriptorPool(poolInfo);
 }
 
 DescriptorPoolVulkan ::~DescriptorPoolVulkan()
 {
-	if (descriptorPool != nullptr)
+	if (descriptorPool_)
 	{
-		graphics_->GetDevice().destroyDescriptorPool(descriptorPool);
-		descriptorPool = nullptr;
+		graphics_->GetDevice().destroyDescriptorPool(descriptorPool_);
+		descriptorPool_ = nullptr;
 	}
 }
 
@@ -45,7 +45,7 @@ const std::vector<vk::DescriptorSet>& DescriptorPoolVulkan::Get(PipelineStateVul
 
 	// TODO : improve it
 	vk::DescriptorSetAllocateInfo allocateInfo;
-	allocateInfo.descriptorPool = descriptorPool;
+	allocateInfo.descriptorPool = descriptorPool_;
 	allocateInfo.descriptorSetCount = 2;
 	allocateInfo.pSetLayouts = (pip->GetDescriptorSetLayout().data());
 
@@ -382,7 +382,7 @@ void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
 
 	// begin renderpass
 	vk::RenderPassBeginInfo renderPassBeginInfo;
-	renderPassBeginInfo.framebuffer = renderPass_->frameBuffer;
+	renderPassBeginInfo.framebuffer = renderPass_->frameBuffer_;
 	renderPassBeginInfo.renderPass = renderPass_->renderPassPipelineState->GetRenderPass();
 	renderPassBeginInfo.renderArea.extent = vk::Extent2D(renderPass_->GetImageSize().X, renderPass_->GetImageSize().Y);
 	renderPassBeginInfo.clearValueCount = 2;

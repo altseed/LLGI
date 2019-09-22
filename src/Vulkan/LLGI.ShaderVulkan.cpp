@@ -7,10 +7,10 @@ ShaderVulkan::ShaderVulkan() {}
 
 ShaderVulkan::~ShaderVulkan()
 {
-	if (shaderModule != nullptr)
+	if (shaderModule_)
 	{
-		graphics_->GetDevice().destroyShaderModule(shaderModule);
-		shaderModule = nullptr;
+		graphics_->GetDevice().destroyShaderModule(shaderModule_);
+		shaderModule_ = nullptr;
 	}
 
 	SafeRelease(graphics_);
@@ -34,11 +34,11 @@ bool ShaderVulkan::Initialize(GraphicsVulkan* graphics, DataStructure* data, int
 	info.pCode = reinterpret_cast<const uint32_t*>(buffer.data());
 	info.codeSize = buffer.size();
 
-	shaderModule = graphics_->GetDevice().createShaderModule(info);
+	shaderModule_ = graphics_->GetDevice().createShaderModule(info);
 
 	return true;
 }
 
-vk::ShaderModule ShaderVulkan::GetShaderModule() const { return shaderModule; }
+vk::ShaderModule ShaderVulkan::GetShaderModule() const { return shaderModule_; }
 
 } // namespace LLGI

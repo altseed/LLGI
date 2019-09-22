@@ -26,16 +26,16 @@ PipelineStateVulkan ::~PipelineStateVulkan()
 		descriptorSetLayouts[i] = nullptr;
 	}
 
-	if (pipelineLayout != nullptr)
+	if (pipelineLayout_)
 	{
-		graphics_->GetDevice().destroyPipelineLayout(pipelineLayout);
-		pipelineLayout = nullptr;
+		graphics_->GetDevice().destroyPipelineLayout(pipelineLayout_);
+		pipelineLayout_ = nullptr;
 	}
 
-	if (pipeline != nullptr)
+	if (pipeline_)
 	{
-		graphics_->GetDevice().destroyPipeline(pipeline);
-		pipeline = nullptr;
+		graphics_->GetDevice().destroyPipeline(pipeline_);
+		pipeline_ = nullptr;
 	}
 
 	SafeRelease(graphics_);
@@ -333,11 +333,11 @@ void PipelineStateVulkan::Compile()
 	layoutInfo.pushConstantRangeCount = 0;
 	layoutInfo.pPushConstantRanges = nullptr;
 
-	pipelineLayout = graphics_->GetDevice().createPipelineLayout(layoutInfo);
-	graphicsPipelineInfo.layout = pipelineLayout;
+	pipelineLayout_ = graphics_->GetDevice().createPipelineLayout(layoutInfo);
+	graphicsPipelineInfo.layout = pipelineLayout_;
 
 	// setup a pipeline
-	pipeline = graphics_->GetDevice().createGraphicsPipeline(nullptr, graphicsPipelineInfo);
+	pipeline_ = graphics_->GetDevice().createGraphicsPipeline(nullptr, graphicsPipelineInfo);
 }
 
 } // namespace LLGI

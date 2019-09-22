@@ -25,7 +25,7 @@ private:
 public:
 	std::shared_ptr<RenderPassPipelineStateVulkan> renderPassPipelineState;
 
-	vk::Framebuffer frameBuffer;
+	vk::Framebuffer frameBuffer_;
 
 	std::array<vk::Image, 4> colorBuffers;
 	vk::Image depthBuffer;
@@ -65,7 +65,7 @@ public:
 
 	virtual ~RenderPassPipelineStateVulkan();
 
-	vk::RenderPass renderPass;
+	vk::RenderPass renderPass_;
 
 	vk::RenderPass GetRenderPass() const;
 };
@@ -133,7 +133,7 @@ private:
 	vk::CommandPool vkCmdPool;
 	vk::PhysicalDevice vkPysicalDevice;
 
-	vk::Sampler defaultSampler = nullptr;
+	vk::Sampler defaultSampler_ = nullptr;
 
 	std::function<void(vk::CommandBuffer&)> addCommand_;
 	std::function<void(PlatformStatus&)> getStatus_;
@@ -181,7 +181,7 @@ public:
 	bool EndSingleTimeCommands(VkCommandBuffer commandBuffer);
 
 	//! temp
-	vk::Sampler& GetDefaultSampler() { return defaultSampler; };
+	vk::Sampler& GetDefaultSampler() { return defaultSampler_; };
 };
 
 } // namespace LLGI

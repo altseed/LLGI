@@ -22,9 +22,9 @@ RenderPassVulkan::RenderPassVulkan(GraphicsVulkan* graphics, bool isStrongRef) :
 
 RenderPassVulkan::~RenderPassVulkan()
 {
-	if (frameBuffer != nullptr)
+	if (frameBuffer_)
 	{
-		graphics_->GetDevice().destroyFramebuffer(frameBuffer);
+		graphics_->GetDevice().destroyFramebuffer(frameBuffer_);
 	}
 
 	if (isStrongRef_)
@@ -59,12 +59,12 @@ bool RenderPassVulkan::Initialize(const vk::Image& imageColor,
 	framebufferCreateInfo.height = imageSize.Y;
 	framebufferCreateInfo.layers = 1;
 
-	frameBuffer = graphics_->GetDevice().createFramebuffer(framebufferCreateInfo);
+	frameBuffer_ = graphics_->GetDevice().createFramebuffer(framebufferCreateInfo);
 
 	colorBuffers[0] = imageColor;
 	depthBuffer = imageDepth;
 
-	auto texture = CreateSharedPtr(new TextureVulkan(graphics_));
+	auto texture = CreateSharedPtr(new TextureVulkan(graphics_, false));
 	if (!texture->Initialize(imageColor, imageColorView, format, imageSize))
 	{
 		return false;
@@ -147,13 +147,13 @@ RenderPassPipelineStateVulkan::RenderPassPipelineStateVulkan(GraphicsVulkan* gra
 
 RenderPassPipelineStateVulkan::~RenderPassPipelineStateVulkan()
 {
-	if (renderPass != nullptr)
+	if (renderPass_)
 	{
-		graphics_->GetDevice().destroyRenderPass(renderPass);
+		graphics_->GetDevice().destroyRenderPass(renderPass_);
 	}
 }
 
-vk::RenderPass RenderPassPipelineStateVulkan::GetRenderPass() const { return renderPass; }
+vk::RenderPass RenderPassPipelineStateVulkan::GetRenderPass() const { return renderPass_; }
 
 GraphicsVulkan::GraphicsVulkan(const vk::Device& device,
 							   const vk::Queue& quque,
@@ -173,7 +173,7 @@ GraphicsVulkan::GraphicsVulkan(const vk::Device& device,
 
 	for (size_t i = 0; i < static_cast<size_t>(swapBufferCount_); i++)
 	{
-		auto renderPass = std::make_shared<RenderPassVulkan>(this, false);
+		auto renderPass = CreateSharedPtr(new RenderPassVulkan(this, false));
 		renderPass->Initialize(platformView.colors[i],
 							   platformView.depths[i],
 							   platformView.colorViews[i],
@@ -200,15 +200,16 @@ GraphicsVulkan::GraphicsVulkan(const vk::Device& device,
 	samplerInfo.minLod = 0.0f;
 	samplerInfo.maxLod = 0.0f;
 
-	defaultSampler = vkDevice.createSampler(samplerInfo);
+	defaultSampler_ = vkDevice.createSampler(samplerInfo);
 }
 
 GraphicsVulkan::~GraphicsVulkan()
 {
+	renderPasses.clear();
 
-	if (defaultSampler != nullptr)
+	if (defaultSampler_)
 	{
-		vkDevice.destroySampler(defaultSampler);
+		vkDevice.destroySampler(defaultSampler_);
 	}
 }
 
@@ -330,7 +331,7 @@ RenderPass* GraphicsVulkan::CreateRenderPass(const Texture** textures, int32_t t
 }
 Texture* GraphicsVulkan::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer)
 {
-	auto obj = new TextureVulkan(this);
+	auto obj = new TextureVulkan(this, true);
 	if (!obj->Initialize(size, isRenderPass, isDepthBuffer))
 	{
 		SafeRelease(obj);
@@ -568,13 +569,13 @@ GraphicsVulkan::CreateRenderPassPipelineState(bool isPresentMode, bool hasDepth,
 		renderPassInfo.pDependencies = nullptr;
 
 		auto renderPass = GetDevice().createRenderPass(renderPassInfo);
-		if (renderPass == nullptr)
+		if (!renderPass)
 		{
 			return nullptr;
 		}
 
 		std::shared_ptr<RenderPassPipelineStateVulkan> ret = std::make_shared<RenderPassPipelineStateVulkan>(this);
-		ret->renderPass = renderPass;
+		ret->renderPass_ = renderPass;
 
 		renderPassPipelineStates[key] = ret;
 

@@ -13,7 +13,7 @@ class ShaderVulkan : public Shader
 private:
 	GraphicsVulkan* graphics_ = nullptr;
 	std::vector<uint8_t> buffer;
-	vk::ShaderModule shaderModule;
+	vk::ShaderModule shaderModule_;
 
 public:
 	ShaderVulkan();

@@ -54,11 +54,11 @@ Buffer::Buffer(GraphicsVulkan* graphics)
 
 Buffer::~Buffer()
 {
-	if (buffer != nullptr)
+	if (buffer_)
 	{
-		graphics_->GetDevice().destroyBuffer(buffer);
+		graphics_->GetDevice().destroyBuffer(buffer_);
 		graphics_->GetDevice().freeMemory(devMem);
-		buffer = nullptr;
+		buffer_ = nullptr;
 	}
 }
 

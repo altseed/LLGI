@@ -44,11 +44,11 @@ VkBool32 PlatformVulkan::DebugMessageCallback(VkDebugReportFlagsEXT flags,
 
 bool PlatformVulkan::CreateSwapChain(Vec2I windowSize, bool isVSyncEnabled)
 {
-	auto oldSwapChain = swapchain;
+	auto oldSwapChain = swapchain_;
 
 	frameIndex = 0;
 
-	auto caps = vkPhysicalDevice.getSurfaceCapabilitiesKHR(surface);
+	auto caps = vkPhysicalDevice.getSurfaceCapabilitiesKHR(surface_);
 	vk::Extent2D swapchainExtent(windowSize.X, windowSize.Y);
 	if (caps.currentExtent.width != 0xFFFFFFFF)
 	{
@@ -59,7 +59,7 @@ bool PlatformVulkan::CreateSwapChain(Vec2I windowSize, bool isVSyncEnabled)
 	vk::PresentModeKHR swapchainPresentMode = vk::PresentModeKHR::eFifo;
 	if (!isVSyncEnabled)
 	{
-		for (auto mode : vkPhysicalDevice.getSurfacePresentModesKHR(surface))
+		for (auto mode : vkPhysicalDevice.getSurfacePresentModesKHR(surface_))
 
 		{
 			if (mode == vk::PresentModeKHR::eMailbox)
@@ -90,7 +90,7 @@ bool PlatformVulkan::CreateSwapChain(Vec2I windowSize, bool isVSyncEnabled)
 
 	// create swapchain
 	vk::SwapchainCreateInfoKHR swapchainCreateInfo;
-	swapchainCreateInfo.surface = surface;
+	swapchainCreateInfo.surface = surface_;
 	swapchainCreateInfo.minImageCount = desiredSwapBufferCount;
 	swapchainCreateInfo.imageFormat = surfaceFormat;
 	swapchainCreateInfo.imageColorSpace = surfaceColorSpace;
@@ -107,16 +107,16 @@ bool PlatformVulkan::CreateSwapChain(Vec2I windowSize, bool isVSyncEnabled)
 	swapchainCreateInfo.clipped = true;
 	swapchainCreateInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
 
-	swapchain = vkDevice.createSwapchainKHR(swapchainCreateInfo);
+	swapchain_ = vkDevice_.createSwapchainKHR(swapchainCreateInfo);
 
 	// remove old swap chain
 	if (oldSwapChain)
 	{
 		for (uint32_t i = 0; i < swapBuffers.size(); i++)
 		{
-			vkDevice.destroyImageView(swapBuffers[i].view);
+			vkDevice_.destroyImageView(swapBuffers[i].view);
 		}
-		vkDevice.destroySwapchainKHR(oldSwapChain);
+		vkDevice_.destroySwapchainKHR(oldSwapChain);
 	}
 
 	vk::ImageViewCreateInfo viewCreateInfo;
@@ -126,7 +126,7 @@ bool PlatformVulkan::CreateSwapChain(Vec2I windowSize, bool isVSyncEnabled)
 	viewCreateInfo.subresourceRange.layerCount = 1;
 	viewCreateInfo.viewType = vk::ImageViewType::e2D;
 
-	auto swapChainImages = vkDevice.getSwapchainImagesKHR(swapchain);
+	auto swapChainImages = vkDevice_.getSwapchainImagesKHR(swapchain_);
 	swapBufferCount = static_cast<uint32_t>(swapChainImages.size());
 
 	swapBuffers.resize(swapBufferCount);
@@ -134,7 +134,7 @@ bool PlatformVulkan::CreateSwapChain(Vec2I windowSize, bool isVSyncEnabled)
 	{
 		swapBuffers[i].image = swapChainImages[i];
 		viewCreateInfo.image = swapChainImages[i];
-		swapBuffers[i].view = vkDevice.createImageView(viewCreateInfo);
+		swapBuffers[i].view = vkDevice_.createImageView(viewCreateInfo);
 		swapBuffers[i].fence = vk::Fence();
 	}
 
@@ -143,7 +143,7 @@ bool PlatformVulkan::CreateSwapChain(Vec2I windowSize, bool isVSyncEnabled)
 
 uint32_t PlatformVulkan::AcquireNextImage(vk::Semaphore& semaphore)
 {
-	auto resultValue = vkDevice.acquireNextImageKHR(swapchain, UINT64_MAX, semaphore, vk::Fence());
+	auto resultValue = vkDevice_.acquireNextImageKHR(swapchain_, UINT64_MAX, semaphore, vk::Fence());
 	assert(resultValue.result == vk::Result::eSuccess);
 
 	frameIndex = resultValue.value;
@@ -155,18 +155,18 @@ vk::Fence PlatformVulkan::GetSubmitFence(bool destroy)
 	auto& image = swapBuffers[frameIndex];
 	while (image.fence)
 	{
-		vk::Result fenceRes = vkDevice.waitForFences(image.fence, VK_TRUE, INT_MAX);
+		vk::Result fenceRes = vkDevice_.waitForFences(image.fence, VK_TRUE, INT_MAX);
 		if (fenceRes == vk::Result::eSuccess)
 		{
 			if (destroy)
 			{
-				vkDevice.destroyFence(image.fence);
+				vkDevice_.destroyFence(image.fence);
 			}
 			image.fence = vk::Fence();
 		}
 	}
 
-	image.fence = vkDevice.createFence(vk::FenceCreateFlags());
+	image.fence = vkDevice_.createFence(vk::FenceCreateFlags());
 	return image.fence;
 }
 
@@ -174,7 +174,7 @@ vk::Result PlatformVulkan::Present(vk::Semaphore semaphore)
 {
 	vk::PresentInfoKHR presentInfo;
 	presentInfo.swapchainCount = 1;
-	presentInfo.pSwapchains = &swapchain;
+	presentInfo.pSwapchains = &swapchain_;
 	presentInfo.pImageIndices = &frameIndex;
 	presentInfo.waitSemaphoreCount = semaphore ? 1 : 0;
 	presentInfo.pWaitSemaphores = &semaphore;
@@ -235,59 +235,59 @@ void PlatformVulkan::SetImageBarrior(vk::CommandBuffer cmdbuffer,
 
 void PlatformVulkan::Reset()
 {
-	if (vkDevice != nullptr)
+	if (vkDevice_)
 	{
 		for (auto& swapBuffer : swapBuffers)
 		{
-			if (swapBuffer.view != nullptr)
+			if (swapBuffer.view)
 			{
-				vkDevice.destroyImageView(swapBuffer.view);
+				vkDevice_.destroyImageView(swapBuffer.view);
 			}
 
-			if (swapBuffer.fence != nullptr)
+			if (swapBuffer.fence)
 			{
-				vkDevice.destroyFence(swapBuffer.fence);
+				vkDevice_.destroyFence(swapBuffer.fence);
 			}
 		}
 		swapBuffers.clear();
 
-		if (swapchain != nullptr)
+		if (swapchain_)
 		{
-			vkDevice.destroySwapchainKHR(swapchain);
-			swapchain = nullptr;
+			vkDevice_.destroySwapchainKHR(swapchain_);
+			swapchain_ = nullptr;
 		}
 
-		if (vkPipelineCache != nullptr)
+		if (vkPipelineCache_)
 		{
-			vkDevice.destroyPipelineCache(vkPipelineCache);
-			vkPipelineCache = nullptr;
+			vkDevice_.destroyPipelineCache(vkPipelineCache_);
+			vkPipelineCache_ = nullptr;
 		}
 
-		if (vkPresentComplete != nullptr)
+		if (vkPresentComplete_)
 		{
-			vkDevice.destroySemaphore(vkPresentComplete);
-			vkPresentComplete = nullptr;
+			vkDevice_.destroySemaphore(vkPresentComplete_);
+			vkPresentComplete_ = nullptr;
 		}
 
-		if (vkRenderComplete != nullptr)
+		if (vkRenderComplete_)
 		{
-			vkDevice.destroySemaphore(vkRenderComplete);
-			vkRenderComplete = nullptr;
+			vkDevice_.destroySemaphore(vkRenderComplete_);
+			vkRenderComplete_ = nullptr;
 		}
 
-		if (vkCmdPool != nullptr)
+		if (vkCmdPool_)
 		{
-			vkDevice.destroyCommandPool(vkCmdPool);
-			vkCmdPool = nullptr;
+			vkDevice_.destroyCommandPool(vkCmdPool_);
+			vkCmdPool_ = nullptr;
 		}
 	}
 
-	if (vkInstance != nullptr)
+	if (vkInstance_)
 	{
-		if (surface != nullptr)
+		if (surface_)
 		{
-			vkInstance.destroySurfaceKHR(surface);
-			surface = nullptr;
+			vkInstance_.destroySurfaceKHR(surface_);
+			surface_ = nullptr;
 		}
 	}
 
@@ -309,39 +309,39 @@ PlatformVulkan::~PlatformVulkan()
 		vkQueue.waitIdle();
 	}
 
-	if (vkDevice)
+	if (vkDevice_)
 	{
-		vkDevice.waitIdle();
+		vkDevice_.waitIdle();
 	}
 
 	Reset();
 
-	if (depthStencilBuffer.image != nullptr)
+	if (depthStencilBuffer.image)
 	{
-		vkDevice.destroyImageView(depthStencilBuffer.view);
-		vkDevice.destroyImage(depthStencilBuffer.image);
-		vkDevice.freeMemory(depthStencilBuffer.devMem);
+		vkDevice_.destroyImageView(depthStencilBuffer.view);
+		vkDevice_.destroyImage(depthStencilBuffer.image);
+		vkDevice_.freeMemory(depthStencilBuffer.devMem);
 
 		depthStencilBuffer.image = nullptr;
 		depthStencilBuffer.view = nullptr;
 	}
 
-	if (vkDevice)
+	if (vkDevice_)
 	{
-		vkDevice.destroy();
-		vkDevice = nullptr;
+		vkDevice_.destroy();
+		vkDevice_ = nullptr;
 	}
 
 #if defined(_DEBUG)
-	if (vkInstance)
+	if (vkInstance_)
 	{
-		destroyDebugReportCallback((VkInstance)vkInstance, debugReportCallback, nullptr);
+		destroyDebugReportCallback((VkInstance)vkInstance_, debugReportCallback, nullptr);
 	}
 #endif
-	if (vkInstance)
+	if (vkInstance_)
 	{
-		vkInstance.destroy();
-		vkInstance = nullptr;
+		vkInstance_.destroy();
+		vkInstance_ = nullptr;
 	}
 
 	// destroy windows
@@ -380,16 +380,16 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 	auto exitWithError = [this]() -> void {
 		Reset();
 
-		if (vkDevice)
+		if (vkDevice_)
 		{
-			vkDevice.destroy();
-			vkDevice = nullptr;
+			vkDevice_.destroy();
+			vkDevice_ = nullptr;
 		}
 
-		if (vkInstance)
+		if (vkInstance_)
 		{
-			vkInstance.destroy();
-			vkInstance = nullptr;
+			vkInstance_.destroy();
+			vkInstance_ = nullptr;
 		}
 	};
 
@@ -407,10 +407,10 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 		instanceCreateInfo.ppEnabledLayerNames = validationLayers.data();
 #endif
 
-		vkInstance = vk::createInstance(instanceCreateInfo);
+		vkInstance_ = vk::createInstance(instanceCreateInfo);
 
 		// get physics device
-		auto physicalDevices = vkInstance.enumeratePhysicalDevices();
+		auto physicalDevices = vkInstance_.enumeratePhysicalDevices();
 		vkPhysicalDevice = physicalDevices[0];
 
 		struct Version
@@ -429,7 +429,7 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 		vk::Win32SurfaceCreateInfoKHR surfaceCreateInfo;
 		surfaceCreateInfo.hinstance = window->GetInstance();
 		surfaceCreateInfo.hwnd = window->GetHandle();
-		surface = vkInstance.createWin32SurfaceKHR(surfaceCreateInfo);
+		surface_ = vkInstance_.createWin32SurfaceKHR(surfaceCreateInfo);
 
 		// create device
 
@@ -438,7 +438,7 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 		for (size_t i = 0; i < vkPhysicalDevice.getQueueFamilyProperties().size(); i++)
 		{
 			auto& queueProp = vkPhysicalDevice.getQueueFamilyProperties()[i];
-			if (queueProp.queueFlags & vk::QueueFlagBits::eGraphics && vkPhysicalDevice.getSurfaceSupportKHR(i, surface))
+			if (queueProp.queueFlags & vk::QueueFlagBits::eGraphics && vkPhysicalDevice.getSurfaceSupportKHR(i, surface_))
 			{
 				graphicsQueueInd = i;
 				break;
@@ -472,13 +472,13 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 		deviceCreateInfo.enabledLayerCount = validationLayers.size();
 		deviceCreateInfo.ppEnabledLayerNames = validationLayers.data();
 
-		vkDevice = vkPhysicalDevice.createDevice(deviceCreateInfo);
+		vkDevice_ = vkPhysicalDevice.createDevice(deviceCreateInfo);
 
 #if defined(_DEBUG)
 		// get callbacks
-		createDebugReportCallback = (PFN_vkCreateDebugReportCallbackEXT)vkInstance.getProcAddr("vkCreateDebugReportCallbackEXT");
-		destroyDebugReportCallback = (PFN_vkDestroyDebugReportCallbackEXT)vkInstance.getProcAddr("vkDestroyDebugReportCallbackEXT");
-		debugReportMessage = (PFN_vkDebugReportMessageEXT)vkInstance.getProcAddr("vkDebugReportMessageEXT");
+		createDebugReportCallback = (PFN_vkCreateDebugReportCallbackEXT)vkInstance_.getProcAddr("vkCreateDebugReportCallbackEXT");
+		destroyDebugReportCallback = (PFN_vkDestroyDebugReportCallbackEXT)vkInstance_.getProcAddr("vkDestroyDebugReportCallbackEXT");
+		debugReportMessage = (PFN_vkDebugReportMessageEXT)vkInstance_.getProcAddr("vkDebugReportMessageEXT");
 
 		VkDebugReportCallbackCreateInfoEXT dbgCreateInfo = {};
 		vk::DebugReportFlagsEXT flags = vk::DebugReportFlagBitsEXT::eError | vk::DebugReportFlagBitsEXT::eWarning;
@@ -486,7 +486,7 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 		dbgCreateInfo.pfnCallback = (PFN_vkDebugReportCallbackEXT)DebugMessageCallback;
 		dbgCreateInfo.flags = flags.operator VkSubpassDescriptionFlags();
 
-		VkResult err = createDebugReportCallback((VkInstance)vkInstance, &dbgCreateInfo, nullptr, &debugReportCallback);
+		VkResult err = createDebugReportCallback((VkInstance)vkInstance_, &dbgCreateInfo, nullptr, &debugReportCallback);
 		if (err)
 		{
 			exitWithError();
@@ -494,18 +494,18 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 		}
 #endif
 
-		vkPipelineCache = vkDevice.createPipelineCache(vk::PipelineCacheCreateInfo());
+		vkPipelineCache_ = vkDevice_.createPipelineCache(vk::PipelineCacheCreateInfo());
 
-		vkQueue = vkDevice.getQueue(graphicsQueueInd, 0);
+		vkQueue = vkDevice_.getQueue(graphicsQueueInd, 0);
 
 		// create command pool
 		vk::CommandPoolCreateInfo cmdPoolInfo;
 		cmdPoolInfo.queueFamilyIndex = graphicsQueueInd;
 		cmdPoolInfo.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
-		vkCmdPool = vkDevice.createCommandPool(cmdPoolInfo);
+		vkCmdPool_ = vkDevice_.createCommandPool(cmdPoolInfo);
 
 		// get supported formats
-		auto surfaceFormats = vkPhysicalDevice.getSurfaceFormatsKHR(surface);
+		auto surfaceFormats = vkPhysicalDevice.getSurfaceFormatsKHR(surface_);
 
 		surfaceFormat = vk::Format::eR8G8B8A8Unorm;
 		if (surfaceFormats[0].format != vk::Format::eUndefined)
@@ -525,15 +525,15 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 		// create semaphore
 		vk::SemaphoreCreateInfo semaphoreCreateInfo;
 
-		vkPresentComplete = vkDevice.createSemaphore(semaphoreCreateInfo);
+		vkPresentComplete_ = vkDevice_.createSemaphore(semaphoreCreateInfo);
 
-		vkRenderComplete = vkDevice.createSemaphore(semaphoreCreateInfo);
+		vkRenderComplete_ = vkDevice_.createSemaphore(semaphoreCreateInfo);
 
 		// create command buffer
 		vk::CommandBufferAllocateInfo allocInfo;
-		allocInfo.commandPool = vkCmdPool;
+		allocInfo.commandPool = vkCmdPool_;
 		allocInfo.commandBufferCount = swapBufferCount;
-		vkCmdBuffers = vkDevice.allocateCommandBuffers(allocInfo);
+		vkCmdBuffers = vkDevice_.allocateCommandBuffers(allocInfo);
 
 		// create depth buffer
 		{
@@ -552,16 +552,16 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 			imageCreateInfo.mipLevels = 1;
 			imageCreateInfo.arrayLayers = 1;
 			imageCreateInfo.usage = vk::ImageUsageFlagBits::eDepthStencilAttachment;
-			depthStencilBuffer.image = vkDevice.createImage(imageCreateInfo);
+			depthStencilBuffer.image = vkDevice_.createImage(imageCreateInfo);
 
 			// allocate memory
-			vk::MemoryRequirements memReqs = vkDevice.getImageMemoryRequirements(depthStencilBuffer.image);
+			vk::MemoryRequirements memReqs = vkDevice_.getImageMemoryRequirements(depthStencilBuffer.image);
 			vk::MemoryAllocateInfo memAlloc;
 			memAlloc.allocationSize = memReqs.size;
 			memAlloc.memoryTypeIndex =
 				GetMemoryTypeIndex(vkPhysicalDevice, memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
-			depthStencilBuffer.devMem = vkDevice.allocateMemory(memAlloc);
-			vkDevice.bindImageMemory(depthStencilBuffer.image, depthStencilBuffer.devMem, 0);
+			depthStencilBuffer.devMem = vkDevice_.allocateMemory(memAlloc);
+			vkDevice_.bindImageMemory(depthStencilBuffer.image, depthStencilBuffer.devMem, 0);
 
 			// create view
 			vk::ImageViewCreateInfo viewCreateInfo;
@@ -573,7 +573,7 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 			viewCreateInfo.subresourceRange.levelCount = 1;
 			viewCreateInfo.subresourceRange.layerCount = 1;
 			viewCreateInfo.image = depthStencilBuffer.image;
-			depthStencilBuffer.view = vkDevice.createImageView(viewCreateInfo);
+			depthStencilBuffer.view = vkDevice_.createImageView(viewCreateInfo);
 
 			// change layout(nt needed?)
 
@@ -597,11 +597,11 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 				vkCmdBuffers[0].end();
 
 				// submit and wait
-				vk::SubmitInfo copySubmitInfo;
-				copySubmitInfo.commandBufferCount = 1;
-				copySubmitInfo.pCommandBuffers = &vkCmdBuffers[0];
+				std::array<vk::SubmitInfo, 1> copySubmitInfos;
+				copySubmitInfos[0].commandBufferCount = 1;
+				copySubmitInfos[0].pCommandBuffers = &vkCmdBuffers[0];
 
-				vkQueue.submit(copySubmitInfo, VK_NULL_HANDLE);
+				vkQueue.submit(copySubmitInfos.size(), copySubmitInfos.data(), vk::Fence());
 				vkQueue.waitIdle();
 			}
 		}
@@ -626,7 +626,7 @@ bool PlatformVulkan::NewFrame()
 		return false;
 	}
 
-	AcquireNextImage(vkPresentComplete);
+	AcquireNextImage(vkPresentComplete_);
 	executedCommandCount = 0;
 	return true;
 }
@@ -686,7 +686,7 @@ void PlatformVulkan::Present()
 
 		// send semaphore to be need to wait
 		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &vkPresentComplete;
+		submitInfo.pWaitSemaphores = &vkPresentComplete_;
 
 		// set command
 		submitInfo.commandBufferCount = 1;
@@ -694,15 +694,15 @@ void PlatformVulkan::Present()
 
 		// set a semaphore which notify to finish to execute commands
 		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &vkRenderComplete;
+		submitInfo.pSignalSemaphores = &vkRenderComplete_;
 
 		vk::Fence fence = GetSubmitFence(true);
 		vkQueue.submit(submitInfo, fence);
-		vk::Result fenceRes = vkDevice.waitForFences(fence, VK_TRUE, INT_MAX);
+		vk::Result fenceRes = vkDevice_.waitForFences(fence, VK_TRUE, INT_MAX);
 		assert(fenceRes == vk::Result::eSuccess);
 	}
 
-	Present(vkRenderComplete);
+	Present(vkRenderComplete_);
 }
 
 Graphics* PlatformVulkan::CreateGraphics()
@@ -723,15 +723,15 @@ Graphics* PlatformVulkan::CreateGraphics()
 	auto getStatus = [this](PlatformStatus& status) -> void { status.currentSwapBufferIndex = this->frameIndex; };
 
 	auto addCommand = [this](vk::CommandBuffer& commandBuffer) -> void {
-		vk::SubmitInfo copySubmitInfo;
-		copySubmitInfo.commandBufferCount = 1;
-		copySubmitInfo.pCommandBuffers = &commandBuffer;
-		vkQueue.submit(copySubmitInfo, VK_NULL_HANDLE);
+		std::array<vk::SubmitInfo,1> copySubmitInfos;
+		copySubmitInfos[0].commandBufferCount = 1;
+		copySubmitInfos[0].pCommandBuffers = &commandBuffer;
+		vkQueue.submit(copySubmitInfos.size(), copySubmitInfos.data(), vk::Fence());
 
 		this->executedCommandCount++;
 	};
 
-	auto graphics = new GraphicsVulkan(vkDevice, vkQueue, vkCmdPool, vkPhysicalDevice, platformView, addCommand, getStatus);
+	auto graphics = new GraphicsVulkan(vkDevice_, vkQueue, vkCmdPool_, vkPhysicalDevice, platformView, addCommand, getStatus);
 
 	return graphics;
 }

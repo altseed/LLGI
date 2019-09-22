@@ -30,7 +30,7 @@ public:
 	void Unlock() override;
 	int32_t GetSize() override;
 
-	vk::Buffer GetBuffer() { return buffer_->buffer; }
+	vk::Buffer GetBuffer() { return buffer_->buffer_; }
 };
 
 } // namespace LLGI

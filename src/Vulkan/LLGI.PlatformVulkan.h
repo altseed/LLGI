@@ -43,24 +43,24 @@ private:
 
 	int32_t swapBufferCount = 2;
 
-	vk::Instance vkInstance = nullptr;
+	vk::Instance vkInstance_ = nullptr;
 	vk::PhysicalDevice vkPhysicalDevice = nullptr;
-	vk::Device vkDevice = nullptr;
-	vk::PipelineCache vkPipelineCache = nullptr;
+	vk::Device vkDevice_ = nullptr;
+	vk::PipelineCache vkPipelineCache_ = nullptr;
 	vk::Queue vkQueue = nullptr;
-	vk::CommandPool vkCmdPool = nullptr;
+	vk::CommandPool vkCmdPool_ = nullptr;
 
 	Vec2I windowSize_;
 
 	//! to check to finish present
-	vk::Semaphore vkPresentComplete;
+	vk::Semaphore vkPresentComplete_;
 
 	//! to check to finish render
-	vk::Semaphore vkRenderComplete;
+	vk::Semaphore vkRenderComplete_;
 	std::vector<vk::CommandBuffer> vkCmdBuffers;
 
-	vk::SurfaceKHR surface = nullptr;
-	vk::SwapchainKHR swapchain = nullptr;
+	vk::SurfaceKHR surface_ = nullptr;
+	vk::SwapchainKHR swapchain_ = nullptr;
 	vk::PresentInfoKHR presentInfo;
 
 	vk::Format surfaceFormat;

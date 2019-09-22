@@ -20,14 +20,14 @@ bool IndexBufferVulkan::Initialize(GraphicsVulkan* graphics, int32_t stride, int
 		vk::BufferCreateInfo IndexBufferInfo;
 		IndexBufferInfo.size = memSize;
 		IndexBufferInfo.usage = vk::BufferUsageFlagBits::eTransferSrc;
-		cpuBuf->buffer = graphics_->GetDevice().createBuffer(IndexBufferInfo);
+		cpuBuf->buffer_ = graphics_->GetDevice().createBuffer(IndexBufferInfo);
 
-		vk::MemoryRequirements memReqs = graphics_->GetDevice().getBufferMemoryRequirements(cpuBuf->buffer);
+		vk::MemoryRequirements memReqs = graphics_->GetDevice().getBufferMemoryRequirements(cpuBuf->buffer_);
 		vk::MemoryAllocateInfo memAlloc;
 		memAlloc.allocationSize = memReqs.size;
 		memAlloc.memoryTypeIndex = graphics_->GetMemoryTypeIndex(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible);
 		cpuBuf->devMem = graphics_->GetDevice().allocateMemory(memAlloc);
-		graphics_->GetDevice().bindBufferMemory(cpuBuf->buffer, cpuBuf->devMem, 0);
+		graphics_->GetDevice().bindBufferMemory(cpuBuf->buffer_, cpuBuf->devMem, 0);
 	}
 
 	// create a buffer on gpu
@@ -35,14 +35,14 @@ bool IndexBufferVulkan::Initialize(GraphicsVulkan* graphics, int32_t stride, int
 		vk::BufferCreateInfo IndexBufferInfo;
 		IndexBufferInfo.size = memSize;
 		IndexBufferInfo.usage = vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst;
-		gpuBuf->buffer = graphics_->GetDevice().createBuffer(IndexBufferInfo);
+		gpuBuf->buffer_ = graphics_->GetDevice().createBuffer(IndexBufferInfo);
 
-		vk::MemoryRequirements memReqs = graphics_->GetDevice().getBufferMemoryRequirements(gpuBuf->buffer);
+		vk::MemoryRequirements memReqs = graphics_->GetDevice().getBufferMemoryRequirements(gpuBuf->buffer_);
 		vk::MemoryAllocateInfo memAlloc;
 		memAlloc.allocationSize = memReqs.size;
 		memAlloc.memoryTypeIndex = graphics_->GetMemoryTypeIndex(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
 		gpuBuf->devMem = graphics_->GetDevice().allocateMemory(memAlloc);
-		graphics_->GetDevice().bindBufferMemory(gpuBuf->buffer, gpuBuf->devMem, 0);
+		graphics_->GetDevice().bindBufferMemory(gpuBuf->buffer_, gpuBuf->devMem, 0);
 	}
 
 	return true;
@@ -82,16 +82,16 @@ void IndexBufferVulkan::Unlock()
 
 	vk::BufferCopy copyRegion;
 	copyRegion.size = memSize;
-	copyCommandBuffer.copyBuffer(cpuBuf->buffer, gpuBuf->buffer, copyRegion);
+	copyCommandBuffer.copyBuffer(cpuBuf->buffer_, gpuBuf->buffer_, copyRegion);
 
 	copyCommandBuffer.end();
 
 	// submit and wait to execute command
-	vk::SubmitInfo copySubmitInfo;
-	copySubmitInfo.commandBufferCount = 1;
-	copySubmitInfo.pCommandBuffers = &copyCommandBuffer;
+	std::array<vk::SubmitInfo, 1> copySubmitInfos;
+	copySubmitInfos[0].commandBufferCount = 1;
+	copySubmitInfos[0].pCommandBuffers = &copyCommandBuffer;
 
-	graphics_->GetQueue().submit(copySubmitInfo, VK_NULL_HANDLE);
+	graphics_->GetQueue().submit(copySubmitInfos.size(), copySubmitInfos.data(), vk::Fence());
 	graphics_->GetQueue().waitIdle();
 
 	graphics_->GetDevice().freeCommandBuffers(graphics_->GetCommandPool(), copyCommandBuffer);

@@ -31,7 +31,7 @@ public:
 	int32_t GetStride() override;
 	int32_t GetCount() override;
 
-	vk::Buffer GetBuffer() { return gpuBuf->buffer; }
+	vk::Buffer GetBuffer() { return gpuBuf->buffer_; }
 };
 
 } // namespace LLGI
