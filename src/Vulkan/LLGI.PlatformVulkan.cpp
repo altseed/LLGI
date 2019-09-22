@@ -1,6 +1,7 @@
 
 #include "LLGI.PlatformVulkan.h"
 #include "LLGI.GraphicsVulkan.h"
+#include "LLGI.TextureVulkan.h"
 #include <iostream>
 
 #ifdef _WIN32
@@ -95,8 +96,8 @@ bool PlatformVulkan::CreateSwapChain(Vec2I windowSize, bool isVSyncEnabled)
 	swapchainCreateInfo.imageFormat = surfaceFormat;
 	swapchainCreateInfo.imageColorSpace = surfaceColorSpace;
 	swapchainCreateInfo.imageExtent = swapchainExtent;
-	swapchainCreateInfo.imageUsage =
-		vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eTransferSrc; // eTransferSrc: for capture
+	swapchainCreateInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferDst |
+									 vk::ImageUsageFlagBits::eTransferSrc; // eTransferSrc: for capture
 	swapchainCreateInfo.preTransform = preTransform;
 	swapchainCreateInfo.imageArrayLayers = 1;
 	swapchainCreateInfo.imageSharingMode = vk::SharingMode::eExclusive;
@@ -115,6 +116,7 @@ bool PlatformVulkan::CreateSwapChain(Vec2I windowSize, bool isVSyncEnabled)
 		for (uint32_t i = 0; i < swapBuffers.size(); i++)
 		{
 			vkDevice_.destroyImageView(swapBuffers[i].view);
+			SafeRelease(swapBuffers[i].texture);
 		}
 		vkDevice_.destroySwapchainKHR(oldSwapChain);
 	}
@@ -136,6 +138,13 @@ bool PlatformVulkan::CreateSwapChain(Vec2I windowSize, bool isVSyncEnabled)
 		viewCreateInfo.image = swapChainImages[i];
 		swapBuffers[i].view = vkDevice_.createImageView(viewCreateInfo);
 		swapBuffers[i].fence = vk::Fence();
+
+		swapBuffers[i].texture = new TextureVulkan();
+		if (!swapBuffers[i].texture->InitializeAsScreen(swapBuffers[i].image, swapBuffers[i].view, surfaceFormat, windowSize))
+		{
+			Log(LogType::Error, "failed to create a texture while creating swap buffers.");
+			throw "failed to create a texture while creating swap buffers.";
+		}
 	}
 
 	return true;
@@ -248,6 +257,8 @@ void PlatformVulkan::Reset()
 			{
 				vkDevice_.destroyFence(swapBuffer.fence);
 			}
+
+			SafeRelease(swapBuffer.texture);
 		}
 		swapBuffers.clear();
 
@@ -256,6 +267,8 @@ void PlatformVulkan::Reset()
 			vkDevice_.destroySwapchainKHR(swapchain_);
 			swapchain_ = nullptr;
 		}
+
+		renderPasses.clear();
 
 		if (vkPipelineCache_)
 		{
@@ -316,6 +329,8 @@ PlatformVulkan::~PlatformVulkan()
 
 	Reset();
 
+	SafeRelease(depthStencilTexture_);
+	/*
 	if (depthStencilBuffer.image)
 	{
 		vkDevice_.destroyImageView(depthStencilBuffer.view);
@@ -325,6 +340,9 @@ PlatformVulkan::~PlatformVulkan()
 		depthStencilBuffer.image = nullptr;
 		depthStencilBuffer.view = nullptr;
 	}
+	*/
+
+	SafeRelease(renderPassPipelineStateCache_);
 
 	if (vkDevice_)
 	{
@@ -379,6 +397,8 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 
 	auto exitWithError = [this]() -> void {
 		Reset();
+
+		SafeRelease(depthStencilTexture_);
 
 		if (vkDevice_)
 		{
@@ -536,6 +556,14 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 		vkCmdBuffers = vkDevice_.allocateCommandBuffers(allocInfo);
 
 		// create depth buffer
+		depthStencilTexture_ = new TextureVulkan();
+		if (!depthStencilTexture_->InitializeAsDepthStencil(vkDevice_, vkPhysicalDevice, windowSize, nullptr))
+		{
+			exitWithError();
+			return false;
+		}
+
+		/*
 		{
 			// check a format whether specified format is supported
 			vk::Format depthFormat = vk::Format::eD32SfloatS8Uint;
@@ -605,8 +633,23 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 				vkQueue.waitIdle();
 			}
 		}
+		*/
 
 		windowSize_ = windowSize;
+		renderPassPipelineStateCache_ = new RenderPassPipelineStateCacheVulkan(vkDevice_, renderPassPipelineStateCache_);
+
+		// create renderpasses
+		for (size_t i = 0; i < swapBuffers.size(); i++)
+		{
+			auto renderPass = new RenderPassVulkan(renderPassPipelineStateCache_, vkDevice_, nullptr);
+
+			std::array<TextureVulkan*, 1> textures;
+			textures[0] = swapBuffers[i].texture;
+
+			renderPass->Initialize(const_cast<const TextureVulkan**>(textures.data()), 1, depthStencilTexture_);
+
+			renderPasses.emplace_back(CreateSharedPtr(renderPass));
+		}
 
 		return true;
 	}
@@ -711,19 +754,19 @@ Graphics* PlatformVulkan::CreateGraphics()
 
 	for (size_t i = 0; i < swapBuffers.size(); i++)
 	{
-		platformView.colors.push_back(swapBuffers[i].image);
-		platformView.colorViews.push_back(swapBuffers[i].view);
-		platformView.depths.push_back(depthStencilBuffer.image);
-		platformView.depthViews.push_back(depthStencilBuffer.view);
+		// platformView.colors.push_back(swapBuffers[i].image);
+		// platformView.colorViews.push_back(swapBuffers[i].view);
+		// platformView.depths.push_back(depthStencilBuffer.image);
+		// platformView.depthViews.push_back(depthStencilBuffer.view);
 	}
-
+	platformView.renderPasses = renderPasses;
 	platformView.imageSize = windowSize_;
 	platformView.format = surfaceFormat;
 
 	auto getStatus = [this](PlatformStatus& status) -> void { status.currentSwapBufferIndex = this->frameIndex; };
 
 	auto addCommand = [this](vk::CommandBuffer& commandBuffer) -> void {
-		std::array<vk::SubmitInfo,1> copySubmitInfos;
+		std::array<vk::SubmitInfo, 1> copySubmitInfos;
 		copySubmitInfos[0].commandBufferCount = 1;
 		copySubmitInfos[0].pCommandBuffers = &commandBuffer;
 		vkQueue.submit(copySubmitInfos.size(), copySubmitInfos.data(), vk::Fence());
@@ -731,9 +774,19 @@ Graphics* PlatformVulkan::CreateGraphics()
 		this->executedCommandCount++;
 	};
 
-	auto graphics = new GraphicsVulkan(vkDevice_, vkQueue, vkCmdPool_, vkPhysicalDevice, platformView, addCommand, getStatus);
+	auto graphics = new GraphicsVulkan(
+		vkDevice_, vkQueue, vkCmdPool_, vkPhysicalDevice, platformView, addCommand, getStatus, renderPassPipelineStateCache_);
 
 	return graphics;
+}
+
+RenderPass* PlatformVulkan::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) {
+	auto currentRenderPass = renderPasses[frameIndex];
+
+	currentRenderPass->SetClearColor(clearColor);
+	currentRenderPass->SetIsColorCleared(isColorCleared);
+	currentRenderPass->SetIsDepthCleared(isDepthCleared);
+	return currentRenderPass.get();
 }
 
 } // namespace LLGI

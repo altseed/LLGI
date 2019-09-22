@@ -27,6 +27,9 @@ namespace LLGI
 
 class GraphicsVulkan;
 class PipelineStateVulkan;
+class TextureVulkan;
+class RenderPassVulkan;
+class RenderPassPipelineStateCacheVulkan;
 
 class VulkanHelper
 {

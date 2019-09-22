@@ -4,13 +4,7 @@
 namespace LLGI
 {
 
-TextureVulkan::TextureVulkan(GraphicsVulkan* graphics, bool isStrongRef) : graphics_(graphics), isStrongRef_(isStrongRef)
-{
-	if (isStrongRef_)
-	{
-		SafeAddRef(graphics_);
-	}
-}
+TextureVulkan::TextureVulkan() {}
 
 TextureVulkan::~TextureVulkan()
 {
@@ -18,12 +12,12 @@ TextureVulkan::~TextureVulkan()
 	{
 		if (!isExternalResource_)
 		{
-			graphics_->GetDevice().destroyImageView(view);
-			graphics_->GetDevice().destroyImage(image_);
-			graphics_->GetDevice().freeMemory(devMem);
+			device_.destroyImageView(view_);
+			device_.destroyImage(image_);
+			device_.freeMemory(devMem_);
 
 			image_ = nullptr;
-			view = nullptr;
+			view_ = nullptr;
 		}
 	}
 
@@ -31,10 +25,18 @@ TextureVulkan::~TextureVulkan()
 	{
 		SafeRelease(graphics_);
 	}
+
+	SafeRelease(owner_);
 }
 
-bool TextureVulkan::Initialize(const Vec2I& size, bool isRenderPass, bool isDepthBuffer)
+bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const Vec2I& size, bool isRenderPass, bool isDepthBuffer)
 {
+	graphics_ = graphics;
+	if (isStrongRef_)
+	{
+		SafeAddRef(graphics_);
+	}
+
 	if (isRenderPass)
 		throw "Not implemented";
 
@@ -107,8 +109,8 @@ bool TextureVulkan::Initialize(const Vec2I& size, bool isRenderPass, bool isDept
 		vk::MemoryAllocateInfo memAlloc;
 		memAlloc.allocationSize = memReqs.size;
 		memAlloc.memoryTypeIndex = graphics_->GetMemoryTypeIndex(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
-		devMem = device.allocateMemory(memAlloc);
-		graphics_->GetDevice().bindImageMemory(image_, devMem, 0);
+		devMem_ = device.allocateMemory(memAlloc);
+		graphics_->GetDevice().bindImageMemory(image_, devMem_, 0);
 	}
 
 	// create a texture view
@@ -122,34 +124,123 @@ bool TextureVulkan::Initialize(const Vec2I& size, bool isRenderPass, bool isDept
 		imageViewInfo.subresourceRange.levelCount = 1;
 		imageViewInfo.subresourceRange.baseArrayLayer = 0;
 		imageViewInfo.subresourceRange.layerCount = 1;
-		view = device.createImageView(imageViewInfo);
+		view_ = device.createImageView(imageViewInfo);
 	}
 
 	textureSize = size;
-	vkTextureFormat = imageCreateInfo.format;
+	vkTextureFormat_ = imageCreateInfo.format;
+	device_ = graphics_->GetDevice();
 
 	return true;
 }
 
-bool TextureVulkan::Initialize(const vk::Image& image, const vk::ImageView& imageVew, vk::Format format, const Vec2I& size)
+bool TextureVulkan::InitializeAsScreen(const vk::Image& image, const vk::ImageView& imageVew, vk::Format format, const Vec2I& size)
 {
 	this->image_ = image;
-	this->view = imageVew;
-	vkTextureFormat = format;
+	this->view_ = imageVew;
+	vkTextureFormat_ = format;
 	textureSize = size;
 	memorySize = size.X * size.Y * 4; // TODO: format
 	isExternalResource_ = true;
 	return true;
 }
 
+bool TextureVulkan::InitializeAsDepthStencil(vk::Device device,
+											 vk::PhysicalDevice physicalDevice,
+											 const Vec2I& size,
+											 ReferenceObject* owner)
+{
+	owner_ = owner;
+	SafeAddRef(owner_);
+	device_ = device;
+
+	// check a format whether specified format is supported
+	vk::Format depthFormat = vk::Format::eD32SfloatS8Uint;
+	vk::FormatProperties formatProps = physicalDevice.getFormatProperties(depthFormat);
+	assert(formatProps.optimalTilingFeatures & vk::FormatFeatureFlagBits::eDepthStencilAttachment);
+
+	vk::ImageAspectFlags aspect = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
+
+	// create an image
+	vk::ImageCreateInfo imageCreateInfo;
+	imageCreateInfo.imageType = vk::ImageType::e2D;
+	imageCreateInfo.extent = vk::Extent3D(size.X, size.Y, 1);
+	imageCreateInfo.format = depthFormat;
+	imageCreateInfo.mipLevels = 1;
+	imageCreateInfo.arrayLayers = 1;
+	imageCreateInfo.usage = vk::ImageUsageFlagBits::eDepthStencilAttachment;
+	image_ = device.createImage(imageCreateInfo);
+
+	// allocate memory
+	vk::MemoryRequirements memReqs = device.getImageMemoryRequirements(image_);
+	vk::MemoryAllocateInfo memAlloc;
+	memAlloc.allocationSize = memReqs.size;
+	memAlloc.memoryTypeIndex = GetMemoryTypeIndex(physicalDevice, memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
+	devMem_ = device.allocateMemory(memAlloc);
+	device.bindImageMemory(image_, devMem_, 0);
+
+	// create view
+	vk::ImageViewCreateInfo viewCreateInfo;
+	viewCreateInfo.viewType = vk::ImageViewType::e2D;
+	viewCreateInfo.format = depthFormat;
+	viewCreateInfo.components = {vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eG, vk::ComponentSwizzle::eB, vk::ComponentSwizzle::eA};
+	viewCreateInfo.subresourceRange.aspectMask = aspect;
+	viewCreateInfo.subresourceRange.levelCount = 1;
+	viewCreateInfo.subresourceRange.layerCount = 1;
+	viewCreateInfo.image = image_;
+	view_ = device.createImageView(viewCreateInfo);
+
+	vkTextureFormat_ = depthFormat;
+
+	return true;
+	// change layout(nt needed?)
+	/*
+	{
+		vk::CommandBufferBeginInfo cmdBufferBeginInfo;
+		vk::BufferCopy copyRegion;
+
+		// start to store commands
+		vkCmdBuffers[0].begin(cmdBufferBeginInfo);
+
+		vk::ImageSubresourceRange subresourceRange;
+		subresourceRange.aspectMask = aspect;
+		subresourceRange.levelCount = 1;
+		subresourceRange.layerCount = 1;
+		SetImageBarrior(vkCmdBuffers[0],
+						depthStencilBuffer.image,
+						vk::ImageLayout::eUndefined,
+						vk::ImageLayout::eDepthStencilAttachmentOptimal,
+						subresourceRange);
+
+		vkCmdBuffers[0].end();
+
+		// submit and wait
+		std::array<vk::SubmitInfo, 1> copySubmitInfos;
+		copySubmitInfos[0].commandBufferCount = 1;
+		copySubmitInfos[0].pCommandBuffers = &vkCmdBuffers[0];
+
+		vkQueue.submit(copySubmitInfos.size(), copySubmitInfos.data(), vk::Fence());
+		vkQueue.waitIdle();
+	}
+	*/
+}
+
 void* TextureVulkan::Lock()
 {
+	if (graphics_ == nullptr)
+		return nullptr;
+
 	data = graphics_->GetDevice().mapMemory(cpuBuf->devMem, 0, memorySize, vk::MemoryMapFlags());
 	return data;
 }
 
 void TextureVulkan::Unlock()
 {
+	if (graphics_ == nullptr)
+	{
+		return;
+	}
+
 	graphics_->GetDevice().unmapMemory(cpuBuf->devMem);
 
 	// copy buffer

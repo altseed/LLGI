@@ -32,6 +32,7 @@ private:
 		vk::Image image = nullptr;
 		vk::ImageView view = nullptr;
 		vk::Fence fence = nullptr;
+		TextureVulkan* texture = nullptr;
 	};
 
 	struct DepthStencilBuffer
@@ -67,7 +68,12 @@ private:
 	vk::ColorSpaceKHR surfaceColorSpace;
 
 	//! depth buffer
-	DepthStencilBuffer depthStencilBuffer;
+	//DepthStencilBuffer depthStencilBuffer;
+	TextureVulkan* depthStencilTexture_ = nullptr;
+
+	RenderPassPipelineStateCacheVulkan* renderPassPipelineStateCache_ = nullptr;
+
+	std::vector<std::shared_ptr<RenderPassVulkan>> renderPasses;
 
 	std::vector<SwapBuffer> swapBuffers;
 
@@ -117,6 +123,8 @@ public:
 	bool NewFrame() override;
 	void Present() override;
 	Graphics* CreateGraphics() override;
+
+	RenderPass* GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) override;
 
 	DeviceType GetDeviceType() const override { return DeviceType::Vulkan; }
 };

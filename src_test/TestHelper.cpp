@@ -20,8 +20,9 @@ std::vector<uint8_t> TestHelper::LoadData(const char* path)
 	FILE* fp = fopen(path_.c_str(), "rb");
 #endif
 
-	if (fp == nullptr) {
-		std::cerr << "Error: " << path << std::endl;
+	if (fp == nullptr)
+	{
+		std::cout << "Error: " << path << std::endl;
 		return ret;
 	}
 
@@ -95,8 +96,8 @@ void TestHelper::CreateShader(LLGI::Graphics* graphics,
 
 		if (deviceType == LLGI::DeviceType::Vulkan)
 		{
-			vsBinaryPath_ += ".srv";
-			psBinaryPath_ += ".srv";
+			vsBinaryPath_ += ".spv";
+			psBinaryPath_ += ".spv";
 		}
 
 		auto binary_vs = TestHelper::LoadData(vsBinaryPath_.c_str());
@@ -112,6 +113,9 @@ void TestHelper::CreateShader(LLGI::Graphics* graphics,
 
 		data_vs.push_back(d_vs);
 		data_ps.push_back(d_ps);
+
+		vs = LLGI::CreateSharedPtr(graphics->CreateShader(data_vs.data(), data_vs.size()));
+		ps = LLGI::CreateSharedPtr(graphics->CreateShader(data_ps.data(), data_ps.size()));
 	}
 	else
 	{
