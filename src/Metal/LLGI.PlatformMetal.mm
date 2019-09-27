@@ -5,6 +5,8 @@
 #import "../LLGI.Platform.h"
 #import "LLGI.GraphicsMetal.h"
 #import "LLGI.PlatformMetal.h"
+#import "LLGI.RenderPassMetal.h"
+#import "LLGI.TextureMetal.h"
 
 @interface LLGIApplication : NSApplication
 {
@@ -180,7 +182,12 @@ PlatformMetal::PlatformMetal()
 	impl = new PlatformMetal_Impl();
 }
 
-PlatformMetal::~PlatformMetal() { delete impl; }
+PlatformMetal::~PlatformMetal()
+{
+    SafeRelease(renderTexture_);
+    SafeRelease(renderPass_);
+    delete impl;
+}
 
 bool PlatformMetal::NewFrame() { return impl->newFrame(); }
 
@@ -204,5 +211,25 @@ Graphics* PlatformMetal::CreateGraphics()
 	SafeRelease(ret);
 	return nullptr;
 }
+    
+RenderPass* PlatformMetal::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared)
+{
+    // delay init
+    if(renderPass_ == nullptr)
+    {
+        renderTexture_ = new TextureMetal();
+        renderTexture_->Initialize();
+        renderTexture_->Reset(this->impl->drawable.texture);
+        
+        renderPass_ = new RenderPassMetal((Texture**)&renderTexture_, 1, nullptr);
+    }
+    
+    renderTexture_->Reset(this->impl->drawable.texture);
+    renderPass_->SetClearColor(clearColor);
+    renderPass_->SetIsColorCleared(isColorCleared);
+    renderPass_->SetIsDepthCleared(isDepthCleared);
+    return renderPass_;
+}
+
 
 }

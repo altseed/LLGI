@@ -5,11 +5,6 @@
 
 #ifdef _WIN32
 #pragma comment(lib, "d3dcompiler.lib")
-
-#ifdef ENABLE_VULKAN
-#pragma comment(lib, "vulkan-1.lib")
-#endif
-
 #endif
 
 // Empty
@@ -44,10 +39,10 @@ void call_test(LLGI::DeviceType device)
 	LLGI::SetLogger([](LLGI::LogType logType, const char* message) { printf("%s\n", message); });
 
 	// Empty
-	test_empty(device);
+	// test_empty(device);
 
 	// About clear
-	// test_clear(device);
+	test_clear(device);
 	// test_clear_update(device);
 
 	// About compile

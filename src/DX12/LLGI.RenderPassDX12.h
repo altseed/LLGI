@@ -16,8 +16,7 @@ class DescriptorHeapDX12;
 class RenderPassDX12 : public RenderPass
 {
 private:
-	GraphicsDX12* graphics_ = nullptr;
-	bool isStrongRef_ = false;
+	ID3D12Device* device_ = nullptr;
 	bool isScreen_ = true;
 
 	std::vector<RenderTargetDX12> renderTargets_;
@@ -27,15 +26,13 @@ private:
 	Vec2I screenWindowSize_;
 
 public:
-	RenderPassDX12(GraphicsDX12* graphics, bool isStrongRef);
+	RenderPassDX12(ID3D12Device* device);
 	virtual ~RenderPassDX12();
 
 	bool Initialize();
 	bool Initialize(TextureDX12** textures, int numTextures, TextureDX12* depthTexture);
 
 	Texture* GetColorBuffer(int index) override;
-
-	RenderPassPipelineState* CreateRenderPassPipelineState() override;
 
 	const D3D12_CPU_DESCRIPTOR_HANDLE* GetHandleRTV() const { return handleRTV_.data(); }
 	const RenderTargetDX12* GetRenderTarget(int idx) const { return &renderTargets_[idx]; }

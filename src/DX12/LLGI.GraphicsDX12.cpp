@@ -23,7 +23,6 @@ GraphicsDX12::GraphicsDX12(ID3D12Device* device,
 	, getScreenFunc_(getScreenFunc)
 	, waitFunc_(waitFunc)
 	, commandQueue_(commandQueue)
-	, currentScreen(this, false)
 	, swapBufferCount_(swapBufferCount)
 {
 	SafeAddRef(device_);
@@ -55,15 +54,6 @@ void GraphicsDX12::WaitFinish()
 	{
 		waitFunc_();
 	}
-}
-
-RenderPass* GraphicsDX12::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared)
-{
-	auto currentParam = getScreenFunc_();
-	currentScreen.CreateScreenRenderTarget(
-		static_cast<TextureDX12*>(std::get<1>(currentParam)), std::get<0>(currentParam), clearColor, isColorCleared, isDepthCleared, windowSize_);
-
-	return &currentScreen;
 }
 
 VertexBuffer* GraphicsDX12::CreateVertexBuffer(int32_t size)
@@ -135,7 +125,7 @@ CommandList* GraphicsDX12::CreateCommandList(SingleFrameMemoryPool* memoryPool)
 
 RenderPass* GraphicsDX12::CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture)
 {
-	auto renderPass = new RenderPassDX12(this, true);
+	auto renderPass = new RenderPassDX12(this->device_);
 	if (!renderPass->Initialize((TextureDX12**)textures, textureCount, (TextureDX12*)depthTexture))
 	{
 		SafeRelease(renderPass);

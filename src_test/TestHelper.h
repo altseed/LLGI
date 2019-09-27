@@ -12,6 +12,9 @@ private:
 
 public:
 	static std::vector<uint8_t> LoadData(const char* path);
+
+	static std::vector<uint8_t> LoadDataWithoutRoot(const char* path);
+
 	static void SetRoot(const char* root);
 
 	/**

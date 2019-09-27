@@ -8,20 +8,19 @@ Texture_Impl::Texture_Impl() {}
 
 Texture_Impl::~Texture_Impl()
 {
-	if (texture != nullptr)
+	if (!fromExternal_ && texture != nullptr)
 	{
 		[texture release];
 		texture = nullptr;
 	}
 }
 
-bool Texture_Impl::Initialize(Graphics_Impl* graphics, const Vec2I& size, bool isRenderTexture, bool isDepthTexture)
+bool Texture_Impl::Initialize(id<MTLDevice> device, const Vec2I& size, bool isRenderTexture, bool isDepthTexture)
 {
     MTLTextureDescriptor* textureDescriptor = nullptr;
     
     if(isDepthTexture)
     {
-		id<MTLDevice> device = graphics->device;
 		bool supported = device.isDepth24Stencil8PixelFormatSupported;
 		
 		auto format = (supported) ? MTLPixelFormatDepth24Unorm_Stencil8 : MTLPixelFormatDepth32Float_Stencil8;
@@ -49,10 +48,12 @@ bool Texture_Impl::Initialize(Graphics_Impl* graphics, const Vec2I& size, bool i
         textureDescriptor.storageMode =MTLStorageModePrivate;
     }
     
-	texture = [graphics->device newTextureWithDescriptor:textureDescriptor];
+	texture = [device newTextureWithDescriptor:textureDescriptor];
 
 	size_ = size;
 
+    fromExternal_ = false;
+    
 	return true;
 }
 
@@ -61,6 +62,8 @@ void Texture_Impl::Reset(id<MTLTexture> nativeTexture)
     texture = nativeTexture;
 	size_.X = texture.width;
 	size_.Y = texture.height;
+    
+    fromExternal_ = true;
 }
 
 void Texture_Impl::Write(const uint8_t* data)
@@ -75,27 +78,24 @@ TextureMetal::TextureMetal() { impl = new Texture_Impl(); }
 TextureMetal::~TextureMetal()
 {
 	SafeDelete(impl);
-	SafeRelease(graphics_);
+	SafeRelease(owner_);
 }
 
-bool TextureMetal::Initialize(Graphics* graphics, Vec2I size, bool isRenderTexture, bool isDepthTexture)
+bool TextureMetal::Initialize(id<MTLDevice> device, ReferenceObject* owner, Vec2I size, bool isRenderTexture, bool isDepthTexture)
 {
     isRenderTexture_ = isRenderTexture;
     isDepthTexture_ = isDepthTexture;
     
-	graphics_ = static_cast<GraphicsMetal*>(graphics);
-	SafeAddRef(graphics_);
+    SafeAssign(owner_, owner);
 
 	data.resize(size.X * size.Y * 4);
-	return impl->Initialize(graphics_->GetImpl(), size, isRenderTexture_, isDepthTexture_);
+	return impl->Initialize(device, size, isRenderTexture_, isDepthTexture_);
 }
 
-bool TextureMetal::Initialize(Graphics* graphics)
+bool TextureMetal::Initialize()
 {   
     isRenderTexture_ = false;
     isDepthTexture_ = false;
-	graphics_ = static_cast<GraphicsMetal*>(graphics);
-	SafeAddRef(graphics_);
     return true;
 }
 

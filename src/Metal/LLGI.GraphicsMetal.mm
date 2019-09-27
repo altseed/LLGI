@@ -54,7 +54,7 @@ bool GraphicsMetal::Initialize(std::function<GraphicsView()> getGraphicsView)
 		return false;
 	}
 
-	renderPass_ = std::make_shared<RenderPassMetal>(this, false);
+	renderPass_ = CreateSharedPtr(new RenderPassMetal());
 
 	return true;
 }
@@ -69,8 +69,11 @@ void GraphicsMetal::Execute(CommandList* commandList)
 
 void GraphicsMetal::WaitFinish() { throw "Not inplemented"; }
 
+/*
 RenderPass* GraphicsMetal::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared)
 {
+    assert(false);
+    
 	if (getGraphicsView_ != nullptr)
 	{
 		auto view = getGraphicsView_();
@@ -80,10 +83,11 @@ RenderPass* GraphicsMetal::GetCurrentScreen(const Color8& clearColor, bool isCol
 	renderPass_->SetClearColor(clearColor);
 	renderPass_->SetIsColorCleared(isColorCleared);
 	renderPass_->SetIsDepthCleared(isDepthCleared);
-	renderPass_->UpdateTarget(this);
+	//renderPass_->UpdateTarget(this);
 	
 	return renderPass_.get();
 }
+*/
 
 VertexBuffer* GraphicsMetal::CreateVertexBuffer(int32_t size)
 {
@@ -161,7 +165,7 @@ ConstantBuffer* GraphicsMetal::CreateConstantBuffer(int32_t size) {
 
 RenderPass* GraphicsMetal::CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture)
 {
-    auto renderPass = new RenderPassMetal(this, true);
+    auto renderPass = new RenderPassMetal();
 
     std::array<Texture_Impl*, 16> textures_;
     Texture_Impl* depth_ = nullptr;
@@ -184,7 +188,7 @@ RenderPass* GraphicsMetal::CreateRenderPass(const Texture** textures, int32_t te
 
 Texture* GraphicsMetal::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer) {
     auto o = new TextureMetal();
-    if (o->Initialize(this, size, isRenderPass, isDepthBuffer))
+    if (o->Initialize(this->GetImpl()->device, this, size, isRenderPass, isDepthBuffer))
     {
         return o;
     }
