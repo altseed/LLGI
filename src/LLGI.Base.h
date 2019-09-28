@@ -312,4 +312,31 @@ void SetLogger(const std::function<void(LogType, const char*)>& logger);
 
 void Log(LogType logType, const char* message);
 
+/**
+	@brief	window abstraction class
+*/
+class Window
+{
+public:
+	Window() = default;
+
+	virtual ~Window() = default;
+
+	/**
+		@brief	called when platform calls newframe, if it need to exit, return false
+	*/
+	virtual bool OnNewFrame() = 0;
+
+	/**
+		@brief return native window ptr
+	*/
+	virtual void* GetNativePtr(int32_t index) = 0;
+
+	/**
+		@brief	return current window size
+	*/
+	virtual Vec2I GetWindowSize() const = 0;
+};
+
+
 } // namespace LLGI

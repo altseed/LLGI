@@ -11,7 +11,9 @@ void test_depth_stencil(LLGI::DeviceType deviceType, bool is_test_depth, bool is
 
 	int count = 0;
 
-	auto platform = LLGI::CreateSharedPtr(LLGI::CreatePlatform(LLGI::DeviceType::Default));
+	auto window = std::unique_ptr<LLGI::Window>(LLGI::CreateWindow("DepthStencil", LLGI::Vec2I(1280, 720)));
+	auto platform = LLGI::CreatePlatform(deviceType, window.get());
+
 	auto graphics = LLGI::CreateSharedPtr(platform->CreateGraphics());
 	auto sfMemoryPool = LLGI::CreateSharedPtr(graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128));
 	auto commandList = LLGI::CreateSharedPtr(graphics->CreateCommandList(sfMemoryPool.get()));

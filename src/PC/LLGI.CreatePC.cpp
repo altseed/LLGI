@@ -9,17 +9,52 @@
 #ifdef _WIN32
 #include "../DX12/LLGI.CompilerDX12.h"
 #include "../DX12/LLGI.PlatformDX12.h"
+#include "../Win/LLGI.WindowWin.h"
 #endif
 
 #ifdef __APPLE__
 #include "../Metal/LLGI.CompilerMetal.h"
 #include "../Metal/LLGI.PlatformMetal.h"
+#include "../Mac/LLGI.WindowMac.h"
+#endif
+
+#ifdef __linux__
+#include "../Linux/LLGI.WindowLinux.h"
+#endif
+
+#ifdef _WIN32
+#undef CreateWindow
 #endif
 
 namespace LLGI
 {
 
-Platform* CreatePlatform(DeviceType platformDeviceType)
+Window* CreateWindow(const char* title, Vec2I windowSize)
+{
+#ifdef _WIN32
+	auto window = new WindowWin();
+	if (window->Initialize(title, windowSize))
+	{
+		return window;
+	}
+#elif __APPLE__
+    auto window = new WindowMac();
+    if (window->Initialize(title, windowSize))
+    {
+        return window;
+    }
+#elif __linux__
+    auto window = new WindowLinux();
+    if (window->Initialize(title, windowSize))
+    {
+        return window;
+    }
+#endif
+
+	return nullptr;
+}
+
+Platform* CreatePlatform(DeviceType platformDeviceType, Window* window)
 {
 	Vec2I windowSize;
 	windowSize.X = 1280;
@@ -29,7 +64,7 @@ Platform* CreatePlatform(DeviceType platformDeviceType)
 	if (platformDeviceType == DeviceType::Vulkan)
 	{
 		auto platform = new PlatformVulkan();
-		if (!platform->Initialize(windowSize))
+		if (!platform->Initialize(window))
 		{
 			SafeRelease(platform);
 			return nullptr;
@@ -43,7 +78,7 @@ Platform* CreatePlatform(DeviceType platformDeviceType)
 	if (platformDeviceType == DeviceType::Default || platformDeviceType == DeviceType::DirectX12)
 	{
 		auto platform = new PlatformDX12();
-		if (!platform->Initialize(windowSize))
+		if (!platform->Initialize(window))
 		{
 			SafeRelease(platform);
 			return nullptr;
@@ -52,13 +87,11 @@ Platform* CreatePlatform(DeviceType platformDeviceType)
 	}
 
 #elif defined(__APPLE__)
-	auto obj = new PlatformMetal(windowSize);
+	auto obj = new PlatformMetal(window);
 	return obj;
 #else
 
 #endif
-
-
 
 	return nullptr;
 }

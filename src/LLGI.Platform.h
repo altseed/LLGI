@@ -3,10 +3,16 @@
 
 #include "LLGI.Base.h"
 
+#ifdef _WIN32
+#undef CreateWindow
+#endif
+
 namespace LLGI
 {
 
-Platform* CreatePlatform(DeviceType platformDeviceType);
+Window* CreateWindow(const char* title, Vec2I windowSize);
+
+Platform* CreatePlatform(DeviceType platformDeviceType, Window* window);
 
 class Platform : public ReferenceObject
 {

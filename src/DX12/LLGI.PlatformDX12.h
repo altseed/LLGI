@@ -16,7 +16,7 @@ class PlatformDX12 : public Platform
 {
 private:
 	static const int SwapBufferCount = 2;
-	WindowWin window;
+	Window* window_ = nullptr;
 
 	Vec2I windowSize_;
 
@@ -47,7 +47,7 @@ public:
 	PlatformDX12();
 	virtual ~PlatformDX12();
 
-	bool Initialize(Vec2I windowSize);
+	bool Initialize(Window* window);
 
 	bool NewFrame() override;
 	void Present() override;

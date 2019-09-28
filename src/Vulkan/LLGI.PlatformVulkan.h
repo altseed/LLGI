@@ -81,11 +81,7 @@ private:
 
 	int32_t executedCommandCount = 0;
 
-#ifdef _WIN32
-	std::shared_ptr<WindowWin> window = nullptr;
-#else
-	std::shared_ptr<WindowLinux> window = nullptr;
-#endif
+	Window* window_ = nullptr;
 
 #ifdef _DEBUG
 	PFN_vkCreateDebugReportCallbackEXT createDebugReportCallback = nullptr;
@@ -122,7 +118,7 @@ public:
 	PlatformVulkan();
 	virtual ~PlatformVulkan();
 
-	bool Initialize(Vec2I windowSize);
+	bool Initialize(Window* window);
 
 	bool NewFrame() override;
 	void Present() override;

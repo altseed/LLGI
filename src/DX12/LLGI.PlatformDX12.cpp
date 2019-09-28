@@ -75,18 +75,13 @@ PlatformDX12::~PlatformDX12()
 		CloseHandle(fenceEvent);
 		fenceEvent = nullptr;
 	}
-
-	window.Terminate();
 }
 
-bool PlatformDX12::Initialize(Vec2I windowSize)
+bool PlatformDX12::Initialize(Window* window)
 {
 	// Windows
-	windowSize_ = windowSize;
-	if (!window.Initialize("DirectX12", windowSize))
-	{
-		return false;
-	}
+	window_ = window;
+	windowSize_ = window->GetWindowSize();
 
 	// DirectX12
 	HRESULT hr;
@@ -199,9 +194,9 @@ bool PlatformDX12::Initialize(Vec2I windowSize)
 	DXGI_SWAP_CHAIN_DESC DXGISwapChainDesc;
 	ZeroMemory(&DXGISwapChainDesc, sizeof(DXGISwapChainDesc));
 
-	DXGISwapChainDesc.BufferDesc.Width = windowSize.X;
-	DXGISwapChainDesc.BufferDesc.Height = windowSize.Y;
-	DXGISwapChainDesc.OutputWindow = window.GetHandle();
+	DXGISwapChainDesc.BufferDesc.Width = windowSize_.X;
+	DXGISwapChainDesc.BufferDesc.Height = windowSize_.Y;
+	DXGISwapChainDesc.OutputWindow = (HWND)window_->GetNativePtr(0);
 	DXGISwapChainDesc.Windowed = TRUE;
 	DXGISwapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	DXGISwapChainDesc.BufferCount = SwapBufferCount;
@@ -322,7 +317,7 @@ FAILED_EXIT:;
 
 bool PlatformDX12::NewFrame()
 {
-	if (!window.DoEvent())
+	if (!window_->OnNewFrame())
 	{
 		return false;
 	}
