@@ -31,6 +31,12 @@ protected:
 		int32_t offset = 0;
 	};
 
+	struct BindingIndexBuffer
+	{
+		IndexBuffer* indexBuffer = nullptr;
+		int32_t offset = 0;
+	};
+
 	struct BindingTexture
 	{
 		Texture* texture = nullptr;
@@ -49,7 +55,8 @@ private:
 	std::vector<SwapObject> swapObjects;
 
 	BindingVertexBuffer bindingVertexBuffer;
-	IndexBuffer* currentIndexBuffer = nullptr;
+	BindingIndexBuffer bindingIndexBuffer;
+
 	PipelineState* currentPipelineState = nullptr;
 
 	bool isVertexBufferDirtied = true;
@@ -63,7 +70,7 @@ protected:
 
 protected:
 	void GetCurrentVertexBuffer(BindingVertexBuffer& buffer, bool& isDirtied);
-	void GetCurrentIndexBuffer(IndexBuffer*& buffer, bool& isDirtied);
+	void GetCurrentIndexBuffer(BindingIndexBuffer& buffer, bool& isDirtied);
 	void GetCurrentPipelineState(PipelineState*& pipelineState, bool& isDirtied);
 	void GetCurrentConstantBuffer(ShaderStageType type, ConstantBuffer*& buffer);
 	void RegisterReferencedObject(ReferenceObject* referencedObject);
@@ -92,7 +99,7 @@ public:
 	virtual void SetScissor(int32_t x, int32_t y, int32_t width, int32_t height);
 	virtual void Draw(int32_t pritimiveCount);
 	virtual void SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride, int32_t offset);
-	virtual void SetIndexBuffer(IndexBuffer* indexBuffer);
+	virtual void SetIndexBuffer(IndexBuffer* indexBuffer, int32_t offset = 0);
 	virtual void SetPipelineState(PipelineState* pipelineState);
 	virtual void SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageType shaderStage);
 	virtual void

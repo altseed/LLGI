@@ -97,6 +97,97 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 	LLGI::SafeRelease(platform);
 }
 
+void test_index_offset(LLGI::DeviceType deviceType)
+{
+	int count = 0;
+
+	auto platform = LLGI::CreatePlatform(deviceType);
+	LLGI::SafeAddRef(platform);
+
+	auto graphics = platform->CreateGraphics();
+	graphics->SetDisposed([platform]() -> void { platform->Release(); });
+
+	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
+	auto commandList = graphics->CreateCommandList(sfMemoryPool);
+
+	std::shared_ptr<LLGI::Shader> shader_vs = nullptr;
+	std::shared_ptr<LLGI::Shader> shader_ps = nullptr;
+
+	TestHelper::CreateShader(graphics, deviceType, "simple_rectangle.vert", "simple_rectangle.frag", shader_vs, shader_ps);
+
+	std::shared_ptr<LLGI::VertexBuffer> vb;
+	std::shared_ptr<LLGI::IndexBuffer> ib;
+	TestHelper::CreateRectangle(graphics,
+								LLGI::Vec3F(-0.5, 0.5, 0.5),
+								LLGI::Vec3F(0.5, -0.5, 0.5),
+								LLGI::Color8(255, 255, 255, 255),
+								LLGI::Color8(0, 255, 0, 255),
+								vb,
+								ib);
+
+	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pips;
+
+	while (count < 100)
+	{
+		if (!platform->NewFrame())
+			break;
+
+		sfMemoryPool->NewFrame();
+
+		LLGI::Color8 color;
+		color.R = count % 255;
+		color.G = 0;
+		color.B = 0;
+		color.A = 255;
+
+		auto renderPass = graphics->GetCurrentScreen(color, true);
+		auto renderPassPipelineState = LLGI::CreateSharedPtr(renderPass->CreateRenderPassPipelineState());
+
+		if (pips.count(renderPassPipelineState) == 0)
+		{
+			auto pip = graphics->CreatePiplineState();
+			pip->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
+			pip->VertexLayouts[1] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
+			pip->VertexLayouts[2] = LLGI::VertexLayoutFormat::R8G8B8A8_UNORM;
+			pip->VertexLayoutNames[0] = "POSITION";
+			pip->VertexLayoutNames[1] = "UV";
+			pip->VertexLayoutNames[2] = "COLOR";
+			pip->VertexLayoutCount = 3;
+
+			pip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan
+			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs.get());
+			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps.get());
+			pip->SetRenderPassPipelineState(renderPassPipelineState.get());
+			pip->Compile();
+
+			pips[renderPassPipelineState] = LLGI::CreateSharedPtr(pip);
+		}
+
+		commandList->Begin();
+		commandList->BeginRenderPass(renderPass);
+		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
+		commandList->SetIndexBuffer(ib.get(), 2 * 3);
+		commandList->SetPipelineState(pips[renderPassPipelineState].get());
+		commandList->Draw(1);
+		commandList->EndRenderPass();
+		commandList->End();
+
+		graphics->Execute(commandList);
+
+		platform->Present();
+		count++;
+	}
+
+	pips.clear();
+
+	graphics->WaitFinish();
+
+	LLGI::SafeRelease(sfMemoryPool);
+	LLGI::SafeRelease(commandList);
+	LLGI::SafeRelease(graphics);
+	LLGI::SafeRelease(platform);
+}
+
 void test_simple_constant_rectangle(LLGI::ConstantBufferType type, LLGI::DeviceType deviceType)
 {
 	auto code_gl_vs = R"(

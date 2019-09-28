@@ -16,6 +16,7 @@ void test_clear_update(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 
 // Render
 void test_simple_rectangle(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
+void test_index_offset(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 
 void test_simple_constant_rectangle(LLGI::ConstantBufferType type, LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 
@@ -50,6 +51,7 @@ void call_test(LLGI::DeviceType device)
 
 	// Render
 	// test_simple_rectangle(device);
+	// test_index_offset(device);
 	// test_simple_constant_rectangle(LLGI::ConstantBufferType::LongTime, device);
 	// test_simple_texture_rectangle(device);
 

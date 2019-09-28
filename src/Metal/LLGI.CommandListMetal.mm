@@ -166,7 +166,7 @@ void CommandListMetal::SetScissor(int32_t x, int32_t y, int32_t width, int32_t h
 void CommandListMetal::Draw(int32_t pritimiveCount)
 {
 	BindingVertexBuffer vb_;
-	IndexBuffer* ib_ = nullptr;
+	BindingIndexBuffer ib_;
 	PipelineState* pip_ = nullptr;
 
 	bool isVBDirtied = false;
@@ -178,11 +178,11 @@ void CommandListMetal::Draw(int32_t pritimiveCount)
 	GetCurrentPipelineState(pip_, isPipDirtied);
 
 	assert(vb_.vertexBuffer != nullptr);
-	assert(ib_ != nullptr);
+	assert(ib_.indexBuffer != nullptr);
 	assert(pip_ != nullptr);
 
 	auto vb = static_cast<VertexBufferMetal*>(vb_.vertexBuffer);
-	auto ib = static_cast<IndexBufferMetal*>(ib_);
+	auto ib = static_cast<IndexBufferMetal*>(ib_.indexBuffer);
 	auto pip = static_cast<PipelineStateMetal*>(pip_);
 
 	if (isVBDirtied)
@@ -264,7 +264,7 @@ void CommandListMetal::Draw(int32_t pritimiveCount)
 									indexCount:pritimiveCount * indexPerPrim
 									 indexType:indexType
 								   indexBuffer:ib->GetImpl()->buffer
-							 indexBufferOffset:0];
+							 indexBufferOffset:ib_.offset];
 }
 
 void CommandListMetal::BeginRenderPass(RenderPass* renderPass)
