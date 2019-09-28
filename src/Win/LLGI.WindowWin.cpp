@@ -16,9 +16,12 @@ LRESULT LLGI_WndProc_Win(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 #endif
 
-bool WindowWin::Initialize(const char* title, const Vec2I& windowSize) {
+WindowWin::~WindowWin() { Terminate(); }
 
-    WNDCLASSEXA wcex;
+bool WindowWin::Initialize(const char* title, const Vec2I& windowSize)
+{
+
+	WNDCLASSEXA wcex;
 	memset(&wcex, 0, sizeof(WNDCLASSEXA));
 
 	wcex.cbSize = sizeof(WNDCLASSEXA);
@@ -26,7 +29,7 @@ bool WindowWin::Initialize(const char* title, const Vec2I& windowSize) {
 	wcex.lpfnWndProc = (WNDPROC)LLGI_WndProc_Win;
 	wcex.lpszClassName = title;
 	wcex.hInstance = GetModuleHandle(NULL);
-	hInstance = wcex.hInstance;
+	hInstance_ = wcex.hInstance;
 	RegisterClassExA(&wcex);
 
 	auto wflags = WS_OVERLAPPEDWINDOW;
@@ -36,19 +39,36 @@ bool WindowWin::Initialize(const char* title, const Vec2I& windowSize) {
 	rect.bottom = windowSize.Y;
 	::AdjustWindowRect(&rect, wflags, false);
 
-	hwnd = CreateWindowA(title, title, wflags, 100, 100, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, wcex.hInstance, NULL);
+	hwnd_ = CreateWindowA(title, title, wflags, 100, 100, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, wcex.hInstance, NULL);
 
-	ShowWindow(hwnd, SW_SHOWDEFAULT);
-	UpdateWindow(hwnd);
+	ShowWindow(hwnd_, SW_SHOWDEFAULT);
+	UpdateWindow(hwnd_);
 
 	title_ = title;
+	windowSize_ = windowSize;
 
 	// TODO : check many things
+
 	return true;
 }
 
-bool WindowWin::DoEvent() {
+bool WindowWin::DoEvent() { return false; }
 
+void WindowWin::Terminate()
+{
+
+#ifdef _WIN32
+	if (hwnd_ != nullptr)
+	{
+		DestroyWindow(hwnd_);
+		UnregisterClassA(title_.c_str(), GetModuleHandle(NULL));
+	}
+	hwnd_ = nullptr;
+#endif
+}
+
+bool WindowWin::OnNewFrame()
+{
 	MSG msg;
 	ZeroMemory(&msg, sizeof(msg));
 	while (msg.message != WM_QUIT)
@@ -72,12 +92,16 @@ bool WindowWin::DoEvent() {
 	return true;
 }
 
-void WindowWin::Terminate() {
+void* WindowWin::GetNativePtr(int32_t index)
+{
+	if (index == 0)
+		return hwnd_;
+	if (index == 1)
+		return hInstance_;
 
-#ifdef _WIN32
-	DestroyWindow(hwnd);
-	UnregisterClassA(title_.c_str(), GetModuleHandle(NULL));
-#endif
+	return nullptr;
 }
+
+Vec2I WindowWin::GetWindowSize() const { return windowSize_; }
 
 } // namespace LLGI

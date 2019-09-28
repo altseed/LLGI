@@ -14,7 +14,7 @@ namespace LLGI
 
 struct PlatformMetal_Impl
 {
-    std::shared_ptr<WindowMac> window_ = nullptr;
+    Window* window_ = nullptr;
 
 	id<MTLDevice> device;
 	id<MTLCommandQueue> commandQueue;
@@ -22,12 +22,11 @@ struct PlatformMetal_Impl
 	CAMetalLayer* layer;
 	id<CAMetalDrawable> drawable;
 
-	PlatformMetal_Impl(Vec2I windowSize)
+	PlatformMetal_Impl(Window* window)
 	{
-        window_ = std::make_shared<WindowMac>();
-        window_->Initialize("LLGI", windowSize);
-
-        NSWindow* nswindow = (NSWindow*)window_->GetNSWindowAsVoidPtr();
+        window_ = window;
+        NSWindow* nswindow = (NSWindow*)window_->GetNativePtr(0);
+        auto windowSize = window_->GetWindowSize();
         
 		device = MTLCreateSystemDefaultDevice();
 		layer = [CAMetalLayer layer];
@@ -43,13 +42,11 @@ struct PlatformMetal_Impl
 
 	~PlatformMetal_Impl()
 	{
-        window_->Terminate();
-        window_.reset();
 	}
 
 	bool newFrame()
 	{
-        if(!window_->DoEvent())
+        if(!window_->OnNewFrame())
         {
             return false;
         }
@@ -67,9 +64,9 @@ struct PlatformMetal_Impl
 	}
 };
 
-PlatformMetal::PlatformMetal(Vec2I windowSize)
+PlatformMetal::PlatformMetal(Window* window)
 {
-	impl = new PlatformMetal_Impl(windowSize);
+	impl = new PlatformMetal_Impl(window);
     
     ringBuffers_.resize(6);
     for(size_t i = 0; i < ringBuffers_.size(); i++)

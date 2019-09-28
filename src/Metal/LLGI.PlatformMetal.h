@@ -26,7 +26,7 @@ class PlatformMetal : public Platform
     std::vector<RingBuffer> ringBuffers_;
     
 public:
-	PlatformMetal(Vec2I windowSize);
+	PlatformMetal(Window* window);
 	~PlatformMetal();
 	bool NewFrame() override;
 	void Present() override;

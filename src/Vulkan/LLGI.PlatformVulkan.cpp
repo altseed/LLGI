@@ -364,22 +364,11 @@ PlatformVulkan::~PlatformVulkan()
 		vkInstance_.destroy();
 		vkInstance_ = nullptr;
 	}
-
-	// destroy windows
-#ifdef _WIN32
-	window->Terminate();
-	window.reset();
-#endif
 }
 
-bool PlatformVulkan::Initialize(Vec2I windowSize)
+bool PlatformVulkan::Initialize(Window* window)
 {
-#ifdef _WIN32
-	window = std::make_shared<WindowWin>();
-#else
-	window = std::make_shared<WindowLinux>();
-#endif
-	window->Initialize("Vulkan", windowSize);
+	window_ = window;
 
 	// initialize Vulkan context
 
@@ -457,13 +446,13 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 		// create surface
 #ifdef _WIN32
 		vk::Win32SurfaceCreateInfoKHR surfaceCreateInfo;
-		surfaceCreateInfo.hinstance = window->GetInstance();
-		surfaceCreateInfo.hwnd = window->GetHandle();
+		surfaceCreateInfo.hinstance = (HINSTANCE)window->GetNativePtr(1);
+		surfaceCreateInfo.hwnd = (HWND)window->GetNativePtr(0);
 		surface_ = vkInstance_.createWin32SurfaceKHR(surfaceCreateInfo);
 #else
 		vk::XcbSurfaceCreateInfoKHR surfaceCreateInfo;
-		surfaceCreateInfo.connection = XGetXCBConnection(window->GetDisplay());
-		surfaceCreateInfo.window = window->GetWindow();
+		surfaceCreateInfo.connection = XGetXCBConnection((Display*)window->GetNativePtr(0));
+		surfaceCreateInfo.window = *((::Window*)window->GetNativePtr(1));
 		surface_ = vkInstance_.createXcbSurfaceKHR(surfaceCreateInfo);
 #endif
 		// create device
@@ -564,7 +553,7 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 			
 		}
 
-		if (!CreateSwapChain(windowSize, true))
+		if (!CreateSwapChain(window->GetWindowSize(), true))
 		{
 			Log(LogType::Error, "Swapchain is not supported.");
 			exitWithError();
@@ -586,7 +575,7 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 
 		// create depth buffer
 		depthStencilTexture_ = new TextureVulkan();
-		if (!depthStencilTexture_->InitializeAsDepthStencil(vkDevice_, vkPhysicalDevice, windowSize, nullptr))
+		if (!depthStencilTexture_->InitializeAsDepthStencil(vkDevice_, vkPhysicalDevice, window->GetWindowSize(), nullptr))
 		{
 			exitWithError();
 			return false;
@@ -664,7 +653,7 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 		}
 		*/
 
-		windowSize_ = windowSize;
+		windowSize_ = window->GetWindowSize();
 		renderPassPipelineStateCache_ = new RenderPassPipelineStateCacheVulkan(vkDevice_, renderPassPipelineStateCache_);
 
 		// create renderpasses
@@ -693,7 +682,7 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 
 bool PlatformVulkan::NewFrame()
 {
-	if (!window->DoEvent())
+	if (!window_->OnNewFrame())
 	{
 		return false;
 	}

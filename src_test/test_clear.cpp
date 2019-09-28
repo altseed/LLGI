@@ -15,7 +15,9 @@ void test_clear_update(LLGI::DeviceType deviceType)
 {
 	int count = 0;
 
-	auto platform = LLGI::CreatePlatform(deviceType);
+	auto window = std::unique_ptr<LLGI::Window>(LLGI::CreateWindow("ClearUpdate", LLGI::Vec2I(1280, 720)));
+	auto platform = LLGI::CreatePlatform(deviceType, window.get());
+
 	auto graphics = platform->CreateGraphics();
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
 	auto commandList = graphics->CreateCommandList(sfMemoryPool);
@@ -56,7 +58,9 @@ void test_clear(LLGI::DeviceType deviceType)
 {
 	int count = 0;
 
-	auto platform = LLGI::CreatePlatform(deviceType);
+	auto window = std::unique_ptr<LLGI::Window>(LLGI::CreateWindow("Clear", LLGI::Vec2I(1280, 720)));
+	auto platform = LLGI::CreatePlatform(deviceType, window.get());
+
 	auto graphics = platform->CreateGraphics();
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
 	auto commandList = graphics->CreateCommandList(sfMemoryPool);
