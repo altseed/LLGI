@@ -25,9 +25,9 @@ class RenderPassMetal : public RenderPass
 public:
 	RenderPassMetal();
 
-    RenderPassMetal(Texture** textures, int32_t textureCount, Texture* depthTexture);
-
 	virtual ~RenderPassMetal();
+    
+    void UpdateRenderTarget(Texture** textures, int32_t textureCount, Texture* depthTexture);
     
 	void SetIsColorCleared(bool isColorCleared) override;
 

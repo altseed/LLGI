@@ -52,7 +52,7 @@ Platform* CreatePlatform(DeviceType platformDeviceType)
 	}
 
 #elif defined(__APPLE__)
-	auto obj = new PlatformMetal();
+	auto obj = new PlatformMetal(windowSize);
 	return obj;
 #else
 

@@ -10,16 +10,23 @@ struct PlatformMetal_Impl;
 
 class TextureMetal;
 class RenderPassMetal;
+class WindowMac;
     
 class PlatformMetal : public Platform
 {
 	PlatformMetal_Impl* impl = nullptr;
     
-    TextureMetal* renderTexture_ = nullptr;
-    RenderPassMetal* renderPass_ = nullptr;
+    struct RingBuffer
+    {
+        std::shared_ptr<TextureMetal> renderTexture = nullptr;
+        std::shared_ptr<RenderPassMetal> renderPass = nullptr;
+    };
+    
+    int32_t ringIndex_ = 0;
+    std::vector<RingBuffer> ringBuffers_;
     
 public:
-	PlatformMetal();
+	PlatformMetal(Vec2I windowSize);
 	~PlatformMetal();
 	bool NewFrame() override;
 	void Present() override;

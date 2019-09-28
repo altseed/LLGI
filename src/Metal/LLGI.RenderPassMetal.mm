@@ -64,11 +64,13 @@ RenderPassMetal::RenderPassMetal()
 	impl->Initialize();
 }
 
-RenderPassMetal::RenderPassMetal(Texture** textures, int32_t textureCount, Texture* depthTexture)
+RenderPassMetal::~RenderPassMetal()
 {
-    impl = new RenderPass_Impl();
-    impl->Initialize();
-    
+    SafeDelete(impl);
+}
+
+void RenderPassMetal::UpdateRenderTarget(Texture** textures, int32_t textureCount, Texture* depthTexture)
+{
     std::array<Texture_Impl*, 8> texturesImpl;
     texturesImpl.fill(nullptr);
     Texture_Impl* depthTextureImpl = nullptr;
@@ -90,12 +92,7 @@ RenderPassMetal::RenderPassMetal(Texture** textures, int32_t textureCount, Textu
     
     impl->UpdateTarget(texturesImpl.data(), textureCount, depthTextureImpl);
 }
-
-RenderPassMetal::~RenderPassMetal()
-{
-    SafeDelete(impl);
-}
-
+    
 void RenderPassMetal::SetIsColorCleared(bool isColorCleared)
 {
 	impl->isColorCleared = isColorCleared;
@@ -117,25 +114,6 @@ void RenderPassMetal::SetClearColor(const Color8& color)
 Texture* RenderPassMetal::GetColorBuffer(int index) { return colorBuffers_[index].get(); }
 	
 RenderPass_Impl* RenderPassMetal::GetImpl() const { return impl; }
-
-/*
-void RenderPassMetal::UpdateTarget(GraphicsMetal* graphics)
-{
-    GetImpl()->UpdateTarget(graphics->GetImpl());
-	
-	// create backbuffer wrapper texture if needed.
-	if (!colorBuffers_[0]) {
-		auto texture = std::make_shared<TextureMetal>();
-		if (!texture->Initialize(graphics)) {
-			return;
-		}
-		colorBuffers_[0] = texture;
-	}
-
-	id<MTLTexture> texture = [graphics->GetImpl()->drawable texture];
-	colorBuffers_[0]->Reset(texture);
-}
-*/
 
 RenderPassPipelineStateMetal::RenderPassPipelineStateMetal() { impl = new RenderPassPipelineState_Impl(); }
 
