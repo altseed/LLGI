@@ -144,7 +144,7 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 	auto commandList = swapBuffer.commandList;
 
 	BindingVertexBuffer vb_;
-	IndexBuffer* ib_ = nullptr;
+	BindingIndexBuffer ib_;
 	ConstantBuffer* cb = nullptr;
 	PipelineState* pip_ = nullptr;
 
@@ -157,11 +157,11 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 	GetCurrentPipelineState(pip_, isPipDirtied);
 
 	assert(vb_.vertexBuffer != nullptr);
-	assert(ib_ != nullptr);
+	assert(ib_.indexBuffer != nullptr);
 	assert(pip_ != nullptr);
 
 	auto vb = static_cast<VertexBufferDX12*>(vb_.vertexBuffer);
-	auto ib = static_cast<IndexBufferDX12*>(ib_);
+	auto ib = static_cast<IndexBufferDX12*>(ib_.indexBuffer);
 	auto pip = static_cast<PipelineStateDX12*>(pip_);
 
 	{
@@ -178,7 +178,7 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 	if (ib != nullptr)
 	{
 		D3D12_INDEX_BUFFER_VIEW indexView;
-		indexView.BufferLocation = ib->Get()->GetGPUVirtualAddress();
+		indexView.BufferLocation = ib->Get()->GetGPUVirtualAddress() + ib_.offset;
 		indexView.SizeInBytes = ib->GetStride() * ib->GetCount();
 		indexView.Format = ib->GetStride() == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
 		commandList->IASetIndexBuffer(&indexView);

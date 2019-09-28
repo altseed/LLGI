@@ -16,9 +16,9 @@ void CommandList::GetCurrentVertexBuffer(BindingVertexBuffer& buffer, bool& isDi
 	isDirtied = isVertexBufferDirtied;
 }
 
-void CommandList::GetCurrentIndexBuffer(IndexBuffer*& buffer, bool& isDirtied)
+void CommandList::GetCurrentIndexBuffer(BindingIndexBuffer& buffer, bool& isDirtied)
 {
-	buffer = currentIndexBuffer;
+	buffer = bindingIndexBuffer;
 	isDirtied = isCurrentIndexBufferDirtied;
 }
 
@@ -86,7 +86,7 @@ CommandList::~CommandList()
 void CommandList::Begin()
 {
 	bindingVertexBuffer.vertexBuffer = nullptr;
-	currentIndexBuffer = nullptr;
+	bindingIndexBuffer.indexBuffer = nullptr;
 	currentPipelineState = nullptr;
 	isVertexBufferDirtied = true;
 	isCurrentIndexBufferDirtied = true;
@@ -123,10 +123,11 @@ void CommandList::SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride, in
 	RegisterReferencedObject(vertexBuffer);
 }
 
-void CommandList::SetIndexBuffer(IndexBuffer* indexBuffer)
+void CommandList::SetIndexBuffer(IndexBuffer* indexBuffer, int32_t offset)
 {
-	isCurrentIndexBufferDirtied |= currentIndexBuffer != indexBuffer;
-	currentIndexBuffer = indexBuffer;
+	isCurrentIndexBufferDirtied |= bindingIndexBuffer.indexBuffer != indexBuffer || bindingIndexBuffer.offset != offset;
+	bindingIndexBuffer.indexBuffer = indexBuffer;
+	bindingIndexBuffer.offset = offset;
 
 	RegisterReferencedObject(indexBuffer);
 }

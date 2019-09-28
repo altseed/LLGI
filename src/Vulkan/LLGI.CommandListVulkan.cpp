@@ -120,7 +120,7 @@ void CommandListVulkan::SetScissor(int32_t x, int32_t y, int32_t width, int32_t 
 void CommandListVulkan::Draw(int32_t pritimiveCount)
 {
 	BindingVertexBuffer vb_;
-	IndexBuffer* ib_ = nullptr;
+	BindingIndexBuffer ib_;
 	PipelineState* pip_ = nullptr;
 
 	bool isVBDirtied = false;
@@ -132,11 +132,11 @@ void CommandListVulkan::Draw(int32_t pritimiveCount)
 	GetCurrentPipelineState(pip_, isPipDirtied);
 
 	assert(vb_.vertexBuffer != nullptr);
-	assert(ib_ != nullptr);
+	assert(ib_.indexBuffer != nullptr);
 	assert(pip_ != nullptr);
 
 	auto vb = static_cast<VertexBufferVulkan*>(vb_.vertexBuffer);
-	auto ib = static_cast<IndexBufferVulkan*>(ib_);
+	auto ib = static_cast<IndexBufferVulkan*>(ib_.indexBuffer);
 	auto pip = static_cast<PipelineStateVulkan*>(pip_);
 
 	auto& cmdBuffer = commandBuffers[currentSwapBufferIndex_];
@@ -152,7 +152,7 @@ void CommandListVulkan::Draw(int32_t pritimiveCount)
 	// assign an index vuffer
 	if (isIBDirtied)
 	{
-		vk::DeviceSize indexOffset = 0;
+		vk::DeviceSize indexOffset = ib_.offset;
 		vk::IndexType indexType = vk::IndexType::eUint16;
 
 		if (ib->GetStride() == 2)
