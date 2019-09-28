@@ -27,19 +27,10 @@ public:
 	std::vector<std::shared_ptr<RenderPassVulkan>> renderPasses;
 };
 
-class PlatformStatus
-{
-public:
-	int currentSwapBufferIndex;
-};
-
 class GraphicsVulkan : public Graphics
 {
 private:
 	int32_t swapBufferCount_ = 0;
-
-	std::vector<std::shared_ptr<RenderPassVulkan>> renderPasses;
-	vk::Image currentColorBuffer;
 
 	vk::Device vkDevice;
 	vk::Queue vkQueue;
@@ -49,7 +40,6 @@ private:
 	vk::Sampler defaultSampler_ = nullptr;
 
 	std::function<void(vk::CommandBuffer&)> addCommand_;
-	std::function<void(PlatformStatus&)> getStatus_;
 	RenderPassPipelineStateCacheVulkan* renderPassPipelineStateCache_ = nullptr;
 
 public:
@@ -59,7 +49,6 @@ public:
 				   const vk::PhysicalDevice& pysicalDevice,
 				   const PlatformView& platformView,
 				   std::function<void(vk::CommandBuffer&)> addCommand,
-				   std::function<void(PlatformStatus&)> getStatus,
 				   RenderPassPipelineStateCacheVulkan* renderPassPipelineStateCache = nullptr);
 
 	virtual ~GraphicsVulkan();
@@ -70,7 +59,6 @@ public:
 
 	void WaitFinish() override;
 
-	RenderPass* GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) override;
 	VertexBuffer* CreateVertexBuffer(int32_t size) override;
 	IndexBuffer* CreateIndexBuffer(int32_t stride, int32_t count) override;
 	Shader* CreateShader(DataStructure* data, int32_t count) override;

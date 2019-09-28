@@ -19,17 +19,16 @@ class TextureMetal;
 
 class RenderPassMetal : public RenderPass
 {
-	GraphicsMetal* graphics_ = nullptr;
-	bool isStrongRef_ = false;
-	RenderPass_Impl* impl = nullptr;
-	std::shared_ptr<RenderPassPipelineStateMetal> renderPassPipelineState;
-	std::array<std::shared_ptr<TextureMetal>, 4> colorBuffers_ = {};
+    RenderPass_Impl* impl = nullptr;
+	std::array<std::shared_ptr<TextureMetal>, 8> colorBuffers_ = {};
 
 public:
-	RenderPassMetal(GraphicsMetal* graphics, bool isStrongRef);
+	RenderPassMetal();
+
+    RenderPassMetal(Texture** textures, int32_t textureCount, Texture* depthTexture);
 
 	virtual ~RenderPassMetal();
-
+    
 	void SetIsColorCleared(bool isColorCleared) override;
 
 	void SetIsDepthCleared(bool isDepthCleared) override;
@@ -39,10 +38,6 @@ public:
 	Texture* GetColorBuffer(int index) override;
 	
 	RenderPass_Impl* GetImpl() const;
-
-	RenderPassPipelineState* CreateRenderPassPipelineState() override;
-
-	void UpdateTarget(GraphicsMetal* graphics);
 };
 
 class RenderPassPipelineStateMetal : public RenderPassPipelineState

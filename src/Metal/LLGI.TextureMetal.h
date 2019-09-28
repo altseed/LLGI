@@ -12,7 +12,7 @@ struct Texture_Impl;
 class TextureMetal : public Texture
 {
 private:
-	GraphicsMetal* graphics_ = nullptr;
+    ReferenceObject* owner_ = nullptr;
 	Texture_Impl* impl = nullptr;
 	std::vector<uint8_t> data;
     bool isRenderTexture_ = false;
@@ -22,9 +22,9 @@ public:
 	TextureMetal();
 	virtual ~TextureMetal();
 
-	bool Initialize(Graphics* graphics, Vec2I size, bool isRenderTexture, bool isDepthTexture);
-	bool Initialize(Graphics* graphics);		// for wrap swapchain backbuffer.
-	void Reset(id<MTLTexture> nativeTexture);	// for wrap swapchain backbuffer.
+	bool Initialize(id<MTLDevice> device, ReferenceObject* owner, Vec2I size, bool isRenderTexture, bool isDepthTexture);
+	bool Initialize();
+	void Reset(id<MTLTexture> nativeTexture);
 	void* Lock() override;
 	void Unlock() override;
 	Vec2I GetSizeAs2D() override;

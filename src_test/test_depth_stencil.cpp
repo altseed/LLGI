@@ -61,7 +61,7 @@ void test_depth_stencil(LLGI::DeviceType deviceType, bool is_test_depth, bool is
 		color.A = 255;
 
 		int swapIndex = count % 3;
-		auto screenRenderPass = graphics->GetCurrentScreen(color, true, true);
+		auto screenRenderPass = platform->GetCurrentScreen(color, true, true);
 		LLGI::RenderPass* renderPass;
 		if (!renderPasses[swapIndex])
 		{
@@ -80,7 +80,7 @@ void test_depth_stencil(LLGI::DeviceType deviceType, bool is_test_depth, bool is
 		renderPass->SetIsDepthCleared(true);
 		
 		
-		auto renderPassPipelineState = LLGI::CreateSharedPtr(renderPass->CreateRenderPassPipelineState());
+		auto renderPassPipelineState = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPass));
 
 		if (pips.count(renderPassPipelineState) == 0)
 		{

@@ -49,8 +49,8 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 		color.B = 0;
 		color.A = 255;
 
-		auto renderPass = graphics->GetCurrentScreen(color, true);
-		auto renderPassPipelineState = LLGI::CreateSharedPtr(renderPass->CreateRenderPassPipelineState());
+		auto renderPass = platform->GetCurrentScreen(color, true);
+		auto renderPassPipelineState = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPass));
 
 		if (pips.count(renderPassPipelineState) == 0)
 		{
@@ -368,8 +368,8 @@ float4 main(PS_INPUT input) : SV_TARGET
 		color.B = 0;
 		color.A = 255;
 
-		auto renderPass = graphics->GetCurrentScreen(color, true);
-		auto renderPassPipelineState = LLGI::CreateSharedPtr(renderPass->CreateRenderPassPipelineState());
+		auto renderPass = platform->GetCurrentScreen(color, true);
+		auto renderPassPipelineState = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPass));
 
 		if (pips.count(renderPassPipelineState) == 0)
 		{
@@ -659,8 +659,8 @@ float4 main(PS_INPUT input) : SV_TARGET
 		color.B = 0;
 		color.A = 255;
 
-		auto renderPass = graphics->GetCurrentScreen(color, true);
-		auto renderPassPipelineState = LLGI::CreateSharedPtr(renderPass->CreateRenderPassPipelineState());
+		auto renderPass = platform->GetCurrentScreen(color, true);
+		auto renderPassPipelineState = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPass));
 
 		if (pips.count(renderPassPipelineState) == 0)
 		{

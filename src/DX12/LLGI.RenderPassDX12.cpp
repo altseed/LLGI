@@ -8,17 +8,10 @@
 namespace LLGI
 {
 
-RenderPassDX12::RenderPassDX12(GraphicsDX12* graphics, bool isStrongRef) : graphics_(graphics), isStrongRef_(isStrongRef)
-{
-	if (isStrongRef_)
-	{
-		SafeAddRef(graphics_);
-	}
-}
+RenderPassDX12::RenderPassDX12(ID3D12Device* device) : device_(device) { SafeAddRef(device_); }
 
 RenderPassDX12 ::~RenderPassDX12()
 {
-
 	for (size_t i = 0; i < numRenderTarget_; i++)
 	{
 		if (renderTargets_[i].texture_ != nullptr)
@@ -26,10 +19,7 @@ RenderPassDX12 ::~RenderPassDX12()
 	}
 	renderTargets_.clear();
 
-	if (isStrongRef_)
-	{
-		SafeRelease(graphics_);
-	}
+	SafeRelease(device_);
 }
 
 bool RenderPassDX12::Initialize() { return false; }
@@ -59,20 +49,10 @@ bool RenderPassDX12::Initialize(TextureDX12** textures, int numTextures, Texture
 
 Texture* RenderPassDX12::GetColorBuffer(int index) { return renderTargets_.at(index).texture_; }
 
-RenderPassPipelineState* RenderPassDX12::CreateRenderPassPipelineState()
-{
-
-	assert(graphics_ != nullptr);
-
-	return graphics_->CreateRenderPassPipelineState(this);
-}
-
 bool RenderPassDX12::CreateRenderTargetViews(CommandListDX12* commandList, DescriptorHeapDX12* rtDescriptorHeap)
 {
 	if (numRenderTarget_ == 0)
 		return false;
-
-	assert(graphics_ != nullptr);
 
 	handleRTV_.resize(numRenderTarget_);
 
@@ -82,7 +62,7 @@ bool RenderPassDX12::CreateRenderTargetViews(CommandListDX12* commandList, Descr
 		desc.Format = renderTargets_[i].texture_->GetDXGIFormat();
 		desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 		auto cpuHandle = rtDescriptorHeap->GetCpuHandle();
-		graphics_->GetDevice()->CreateRenderTargetView(renderTargets_[i].renderPass_, &desc, cpuHandle);
+		device_->CreateRenderTargetView(renderTargets_[i].renderPass_, &desc, cpuHandle);
 		handleRTV_[i] = cpuHandle;
 		rtDescriptorHeap->IncrementCpuHandle(1);
 		rtDescriptorHeap->IncrementGpuHandle(1);

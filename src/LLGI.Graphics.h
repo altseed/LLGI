@@ -67,15 +67,6 @@ public:
 	virtual void SetClearColor(const Color8& color);
 
 	virtual Texture* GetColorBuffer(int index);
-
-	/**
-		@brief	create a RenderPassPipelineState
-		@note
-		This is a function to create an object.
-		But it is very fast. So it can call it in everyframe.
-	*/
-	[[deprecated("Graphics::CreateRenderPassPipelineState")]] 
-	virtual RenderPassPipelineState* CreateRenderPassPipelineState();
 };
 
 /**
@@ -123,8 +114,8 @@ public:
 		Don't release and addref it.
 		Don't use it for the many purposes, please input Clear or SetRenderPass immediately.
 	*/
-	[[deprecated("use Platform::GetCurrentScreen.")]] virtual RenderPass*
-	GetCurrentScreen(const Color8& clearColor = Color8(), bool isColorCleared = false, bool isDepthCleared = false);
+	//[[deprecated("use Platform::GetCurrentScreen.")]] virtual RenderPass*
+	//GetCurrentScreen(const Color8& clearColor = Color8(), bool isColorCleared = false, bool isDepthCleared = false);
 
 	/**
 		@brief	create a vertex buffer

@@ -270,6 +270,23 @@ template <typename T> struct ReferenceDeleter
 
 template <typename T> static std::shared_ptr<T> CreateSharedPtr(T* p) { return std::shared_ptr<T>(p, ReferenceDeleter<T>()); }
 
+template<typename T>
+inline std::unique_ptr<T, ReferenceDeleter<T>> CreateUniqueReference(T* ptr, bool addRef = false)
+{
+    if (ptr == nullptr)
+        return std::unique_ptr<T, ReferenceDeleter<T>>(nullptr);
+        
+    if (addRef)
+    {
+        ptr->AddRef();
+    }
+        
+    return std::unique_ptr<T, ReferenceDeleter<T>>(ptr);
+}
+    
+template<typename T>
+using unique_ref = std::unique_ptr<T, ReferenceDeleter<T>>;
+    
 class VertexBuffer;
 class IndexBuffer;
 class ConstantBuffer;

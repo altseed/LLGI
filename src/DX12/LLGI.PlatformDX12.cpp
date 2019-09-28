@@ -288,7 +288,7 @@ bool PlatformDX12::Initialize(Vec2I windowSize)
 		renderTargets[i] = new TextureDX12(renderPass[i], device, commandQueue);
 	}
 
-	renderPass_ = new RenderPassDX12(nullptr, false);
+	renderPass_ = new RenderPassDX12(device);
 
 	return true;
 

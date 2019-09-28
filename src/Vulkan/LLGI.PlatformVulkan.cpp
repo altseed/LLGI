@@ -1,3 +1,6 @@
+#ifdef _WIN32
+#define NOMINMAX
+#endif
 
 #include "LLGI.PlatformVulkan.h"
 #include "LLGI.GraphicsVulkan.h"
@@ -373,8 +376,8 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 {
 #ifdef _WIN32
 	window = std::make_shared<WindowWin>();
-	#else
-	window = std::make_shared<WindowLinux>();	
+#else
+	window = std::make_shared<WindowLinux>();
 #endif
 	window->Initialize("Vulkan", windowSize);
 
@@ -450,9 +453,9 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 		memcpy(&_version, &deviceProperties.apiVersion, sizeof(uint32_t));
 		vk::PhysicalDeviceFeatures deviceFeatures = vkPhysicalDevice.getFeatures();
 		vk::PhysicalDeviceMemoryProperties deviceMemoryProperties = vkPhysicalDevice.getMemoryProperties();
-		
+
 		// create surface
-	#ifdef _WIN32
+#ifdef _WIN32
 		vk::Win32SurfaceCreateInfoKHR surfaceCreateInfo;
 		surfaceCreateInfo.hinstance = window->GetInstance();
 		surfaceCreateInfo.hwnd = window->GetHandle();
@@ -467,13 +470,13 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 
 		// find queue for graphics
 		int32_t graphicsQueueInd = -1;
-		
+
 		auto queueFamilyProperties = vkPhysicalDevice.getQueueFamilyProperties();
 
 		for (size_t i = 0; i < queueFamilyProperties.size(); i++)
 		{
 			auto& queueProp = queueFamilyProperties[i];
-			if (queueProp.queueFlags & vk::QueueFlagBits::eGraphics/* && vkPhysicalDevice.getSurfaceSupportKHR(i, surface_)*/)
+			if (queueProp.queueFlags & vk::QueueFlagBits::eGraphics /* && vkPhysicalDevice.getSurfaceSupportKHR(i, surface_)*/)
 			{
 				graphicsQueueInd = i;
 				break;
@@ -506,12 +509,12 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 		deviceCreateInfo.enabledExtensionCount = enabledExtensions.size();
 		deviceCreateInfo.ppEnabledExtensionNames = enabledExtensions.data();
 
-	#if defined(_DEBUG)
+#if defined(_DEBUG)
 		deviceCreateInfo.enabledLayerCount = validationLayers.size();
 		deviceCreateInfo.ppEnabledLayerNames = validationLayers.data();
-	#else
+#else
 		deviceCreateInfo.enabledLayerCount = 0;
-	#endif
+#endif
 		vkDevice_ = vkPhysicalDevice.createDevice(deviceCreateInfo);
 
 #if defined(_DEBUG)
@@ -556,8 +559,14 @@ bool PlatformVulkan::Initialize(Vec2I windowSize)
 		surfaceColorSpace = surfaceFormats[0].colorSpace;
 
 		// create swapchain
+		if (!vkPhysicalDevice.getSurfaceSupportKHR(graphicsQueueInd, surface_))
+		{
+			
+		}
+
 		if (!CreateSwapChain(windowSize, true))
 		{
+			Log(LogType::Error, "Swapchain is not supported.");
 			exitWithError();
 			return false;
 		}
@@ -783,8 +792,6 @@ Graphics* PlatformVulkan::CreateGraphics()
 	platformView.imageSize = windowSize_;
 	platformView.format = surfaceFormat;
 
-	auto getStatus = [this](PlatformStatus& status) -> void { status.currentSwapBufferIndex = this->frameIndex; };
-
 	auto addCommand = [this](vk::CommandBuffer& commandBuffer) -> void {
 		std::array<vk::SubmitInfo, 1> copySubmitInfos;
 		copySubmitInfos[0].commandBufferCount = 1;
@@ -795,12 +802,13 @@ Graphics* PlatformVulkan::CreateGraphics()
 	};
 
 	auto graphics = new GraphicsVulkan(
-		vkDevice_, vkQueue, vkCmdPool_, vkPhysicalDevice, platformView, addCommand, getStatus, renderPassPipelineStateCache_);
+		vkDevice_, vkQueue, vkCmdPool_, vkPhysicalDevice, platformView, addCommand, renderPassPipelineStateCache_);
 
 	return graphics;
 }
 
-RenderPass* PlatformVulkan::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) {
+RenderPass* PlatformVulkan::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared)
+{
 	auto currentRenderPass = renderPasses[frameIndex];
 
 	currentRenderPass->SetClearColor(clearColor);

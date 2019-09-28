@@ -1,7 +1,7 @@
 #include "TestHelper.h"
 #include "test.h"
 
-#define CAPTURE_TEST 0
+// #define CAPTURE_TEST 1
 
 #if defined(__linux__) || defined(__APPLE__) || defined(WIN32)
 class ClearTest : public ::testing::Test
@@ -33,14 +33,8 @@ void test_clear_update(LLGI::DeviceType deviceType)
 		color.B = 0;
 		color.A = 255;
 
-		auto renderPass = platform->GetCurrentScreen(color, true);
-		if (renderPass == nullptr)
-		{
-			renderPass = graphics->GetCurrentScreen(color, true);
-		}
-
 		commandList->Begin();
-		commandList->BeginRenderPass(graphics->GetCurrentScreen(color, true));
+		commandList->BeginRenderPass(platform->GetCurrentScreen(color, true));
 		commandList->EndRenderPass();
 		commandList->End();
 
@@ -80,16 +74,10 @@ void test_clear(LLGI::DeviceType deviceType)
 
 		sfMemoryPool->NewFrame();
 
-		auto renderPass = platform->GetCurrentScreen(color, true);
-		if (renderPass == nullptr)
-		{
-			renderPass = graphics->GetCurrentScreen(color, true);
-		}
-
 		// It need to create a command buffer between NewFrame and Present.
 		// Because get current screen returns other values by every frame.
 		commandList->Begin();
-		commandList->BeginRenderPass(renderPass);
+		commandList->BeginRenderPass(platform->GetCurrentScreen(color, true));
 		commandList->EndRenderPass();
 		commandList->End();
 
@@ -99,8 +87,10 @@ void test_clear(LLGI::DeviceType deviceType)
 		count++;
 
 #if CAPTURE_TEST
+		if (count == 5)
 		{
-			auto texture = renderPass->GetColorBuffer(0);
+			// TODO wait to finish commandList
+			auto texture = platform->GetCurrentScreen(color, true)->GetColorBuffer(0);
 			auto data = graphics->CaptureRenderTarget(texture);
 
 			// save

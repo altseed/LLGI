@@ -167,13 +167,6 @@ Vec2I RenderPassVulkan::GetImageSize() const { return imageSize_; }
 
 Texture* RenderPassVulkan::GetColorBuffer(int index) { return renderTargetProperties.at(index).colorBufferPtr.get(); }
 
-RenderPassPipelineState* RenderPassVulkan::CreateRenderPassPipelineState()
-{
-	auto ret = renderPassPipelineState;
-	SafeAddRef(ret);
-	return ret;
-}
-
 RenderPassPipelineStateVulkan::RenderPassPipelineStateVulkan(vk::Device device, ReferenceObject* owner)
 {
 	device_ = device;

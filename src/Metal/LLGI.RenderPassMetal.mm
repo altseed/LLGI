@@ -32,11 +32,13 @@ bool RenderPass_Impl::Initialize()
 	return true;
 }
 
+/*
 void RenderPass_Impl::UpdateTarget(Graphics_Impl* graphics)
 {
     renderPassDescriptor.colorAttachments[0].texture = graphics->drawable.texture;
     pixelFormat = graphics->drawable.texture.pixelFormat;
 }
+*/
     
 void RenderPass_Impl::UpdateTarget(Texture_Impl** textures, int32_t textureCount, Texture_Impl* depthTexture)
 {
@@ -56,25 +58,42 @@ void RenderPass_Impl::UpdateTarget(Texture_Impl** textures, int32_t textureCount
 }
 
     
-RenderPassMetal::RenderPassMetal(GraphicsMetal* graphics, bool isStrongRef) : graphics_(graphics), isStrongRef_(isStrongRef)
+RenderPassMetal::RenderPassMetal()
 {
-	if (isStrongRef_)
-	{
-		SafeAddRef(graphics_);
-	}
-
-	impl = new RenderPass_Impl();
+    impl = new RenderPass_Impl();
 	impl->Initialize();
+}
+
+RenderPassMetal::RenderPassMetal(Texture** textures, int32_t textureCount, Texture* depthTexture)
+{
+    impl = new RenderPass_Impl();
+    impl->Initialize();
+    
+    std::array<Texture_Impl*, 8> texturesImpl;
+    texturesImpl.fill(nullptr);
+    Texture_Impl* depthTextureImpl = nullptr;
+    
+    for(int32_t i = 0; i < textureCount; i++)
+    {
+        if(textures[i] == nullptr)
+            continue;
+        
+        texturesImpl.at(i) = reinterpret_cast<TextureMetal*>(textures[i])->GetImpl();
+        SafeAddRef(textures[i]);
+        colorBuffers_.at(i) = CreateSharedPtr(reinterpret_cast<TextureMetal*>(textures[i]));
+    }
+    
+    if(depthTexture != nullptr)
+    {
+        depthTextureImpl = reinterpret_cast<const TextureMetal*>(depthTexture)->GetImpl();
+    }
+    
+    impl->UpdateTarget(texturesImpl.data(), textureCount, depthTextureImpl);
 }
 
 RenderPassMetal::~RenderPassMetal()
 {
-	SafeDelete(impl);
-
-	if (isStrongRef_)
-	{
-		SafeRelease(graphics_);
-	}
+    SafeDelete(impl);
 }
 
 void RenderPassMetal::SetIsColorCleared(bool isColorCleared)
@@ -99,11 +118,7 @@ Texture* RenderPassMetal::GetColorBuffer(int index) { return colorBuffers_[index
 	
 RenderPass_Impl* RenderPassMetal::GetImpl() const { return impl; }
 
-RenderPassPipelineState* RenderPassMetal::CreateRenderPassPipelineState()
-{
-    return graphics_->CreateRenderPassPipelineState(this);
-}
-
+/*
 void RenderPassMetal::UpdateTarget(GraphicsMetal* graphics)
 {
     GetImpl()->UpdateTarget(graphics->GetImpl());
@@ -120,6 +135,7 @@ void RenderPassMetal::UpdateTarget(GraphicsMetal* graphics)
 	id<MTLTexture> texture = [graphics->GetImpl()->drawable texture];
 	colorBuffers_[0]->Reset(texture);
 }
+*/
 
 RenderPassPipelineStateMetal::RenderPassPipelineStateMetal() { impl = new RenderPassPipelineState_Impl(); }
 

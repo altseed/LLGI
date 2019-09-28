@@ -11,13 +11,19 @@ std::vector<uint8_t> TestHelper::LoadData(const char* path)
 {
 	std::vector<uint8_t> ret;
 	auto path_ = root_ + path;
+	return LoadDataWithoutRoot(path_.c_str());
+}
+
+std::vector<uint8_t> TestHelper::LoadDataWithoutRoot(const char* path)
+{
+	std::vector<uint8_t> ret;
 
 #ifdef _WIN32
 	FILE* fp = nullptr;
-	fopen_s(&fp, path_.c_str(), "rb");
+	fopen_s(&fp, path, "rb");
 
 #else
-	FILE* fp = fopen(path_.c_str(), "rb");
+	FILE* fp = fopen(path, "rb");
 #endif
 
 	if (fp == nullptr)
@@ -36,6 +42,7 @@ std::vector<uint8_t> TestHelper::LoadData(const char* path)
 
 	return ret;
 }
+
 
 void TestHelper::SetRoot(const char* root) { root_ = root; }
 
@@ -171,7 +178,7 @@ Bitmap2D::Bitmap2D(const std::vector<uint8_t>& data, int width, int height, bool
 
 Bitmap2D::Bitmap2D(const char* filePath) : data_(), width_(0), height_(0)
 {
-	auto data = TestHelper::LoadData(filePath);
+	auto data = TestHelper::LoadDataWithoutRoot(filePath);
 
 	int width;
 	int height;

@@ -63,7 +63,7 @@ public:
 
 	void WaitFinish() override;
 
-	RenderPass* GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) override;
+	//RenderPass* GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) override;
 
 	VertexBuffer* CreateVertexBuffer(int32_t size) override;
 

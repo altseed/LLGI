@@ -254,10 +254,10 @@ float4 main(PS_INPUT input) : SV_TARGET
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib);
 
-		auto renderPassPipelineState = LLGI::CreateSharedPtr(renderPass->CreateRenderPassPipelineState());
+		auto renderPassPipelineState = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPass));
 
-		auto renderPassSc = graphics->GetCurrentScreen(color2, true);
-		auto renderPassPipelineStateSc = LLGI::CreateSharedPtr(renderPassSc->CreateRenderPassPipelineState());
+		auto renderPassSc = platform->GetCurrentScreen(color2, true);
+		auto renderPassPipelineStateSc = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPassSc));
 
 		if (pips.count(renderPassPipelineState) == 0)
 		{
@@ -285,7 +285,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 		commandList->Draw(2);
 		commandList->EndRenderPass();
 
-		commandList->BeginRenderPass(graphics->GetCurrentScreen(color2, true));
+		commandList->BeginRenderPass(platform->GetCurrentScreen(color2, true));
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib);
 
@@ -615,10 +615,10 @@ PS_OUTPUT main(PS_INPUT input)
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib);
 
-		auto renderPassPipelineState = LLGI::CreateSharedPtr(renderPass->CreateRenderPassPipelineState());
+		auto renderPassPipelineState = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPass));
 
-		auto renderPassSc = graphics->GetCurrentScreen(color2, true);
-		auto renderPassPipelineStateSc = LLGI::CreateSharedPtr(renderPassSc->CreateRenderPassPipelineState());
+		auto renderPassSc = platform->GetCurrentScreen(color2, true);
+		auto renderPassPipelineStateSc = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPassSc));
 
 		if (pips.count(renderPassPipelineState) == 0)
 		{
@@ -646,7 +646,7 @@ PS_OUTPUT main(PS_INPUT input)
 		commandList->Draw(2);
 		commandList->EndRenderPass();
 
-		commandList->BeginRenderPass(graphics->GetCurrentScreen(color2, true));
+		commandList->BeginRenderPass(platform->GetCurrentScreen(color2, true));
 		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib);
 
@@ -950,8 +950,8 @@ void test_capture(LLGI::DeviceType deviceType)
 		color.B = 0;
 		color.A = 255;
 
-		auto renderPass = graphics->GetCurrentScreen(color, true);
-		auto renderPassPipelineState = LLGI::CreateSharedPtr(renderPass->CreateRenderPassPipelineState());
+		auto renderPass = platform->GetCurrentScreen(color, true);
+		auto renderPassPipelineState = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPass));
 
 		if (pips.count(renderPassPipelineState) == 0)
 		{

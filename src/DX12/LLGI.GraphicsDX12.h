@@ -27,8 +27,6 @@ private:
 	ID3D12CommandQueue* commandQueue_ = nullptr;
 	ID3D12CommandAllocator* commandAllocator_ = nullptr;
 
-	RenderPassDX12 currentScreen;
-
 	std::unordered_map<RenderPassPipelineStateDX12Key, std::shared_ptr<RenderPassPipelineStateDX12>, RenderPassPipelineStateDX12Key::Hash>
 		renderPassPipelineStates;
 
@@ -43,7 +41,6 @@ public:
 	void Execute(CommandList* commandList) override;
 	void WaitFinish() override;
 
-	RenderPass* GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) override;
 	VertexBuffer* CreateVertexBuffer(int32_t size) override;
 	IndexBuffer* CreateIndexBuffer(int32_t stride, int32_t count) override;
 	ConstantBuffer* CreateConstantBuffer(int32_t size) override;

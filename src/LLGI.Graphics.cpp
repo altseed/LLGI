@@ -33,8 +33,6 @@ Texture* RenderPass::GetColorBuffer(int index)
 	return nullptr;
 }
 
-RenderPassPipelineState* RenderPass::CreateRenderPassPipelineState() { return nullptr; }
-
 Graphics::~Graphics()
 {
 	if (disposed_ != nullptr)
@@ -47,7 +45,7 @@ void Graphics::SetWindowSize(const Vec2I& windowSize) { windowSize_ = windowSize
 
 void Graphics::Execute(CommandList* commandList) {}
 
-RenderPass* Graphics::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) { return nullptr; }
+//RenderPass* Graphics::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) { return nullptr; }
 
 VertexBuffer* Graphics::CreateVertexBuffer(int32_t size) { return nullptr; }
 

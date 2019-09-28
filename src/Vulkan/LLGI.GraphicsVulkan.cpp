@@ -18,14 +18,12 @@ GraphicsVulkan::GraphicsVulkan(const vk::Device& device,
 							   const vk::PhysicalDevice& pysicalDevice,
 							   const PlatformView& platformView,
 							   std::function<void(vk::CommandBuffer&)> addCommand,
-							   std::function<void(PlatformStatus&)> getStatus,
 							   RenderPassPipelineStateCacheVulkan* renderPassPipelineStateCache)
 	: vkDevice(device)
 	, vkQueue(quque)
 	, vkCmdPool(commandPool)
 	, vkPysicalDevice(pysicalDevice)
 	, addCommand_(addCommand)
-	, getStatus_(getStatus)
 	, renderPassPipelineStateCache_(renderPassPipelineStateCache)
 {
 	swapBufferCount_ = platformView.renderPasses.size();
@@ -43,7 +41,6 @@ GraphicsVulkan::GraphicsVulkan(const vk::Device& device,
 		renderPasses.push_back(renderPass);
 		*/
 	}
-	renderPasses = platformView.renderPasses;
 
 	vk::SamplerCreateInfo samplerInfo;
 	samplerInfo.magFilter = vk::Filter::eLinear;
@@ -73,8 +70,6 @@ GraphicsVulkan::GraphicsVulkan(const vk::Device& device,
 
 GraphicsVulkan::~GraphicsVulkan()
 {
-	renderPasses.clear();
-
 	SafeRelease(renderPassPipelineStateCache_);
 
 	if (defaultSampler_)
@@ -93,18 +88,6 @@ void GraphicsVulkan::Execute(CommandList* commandList)
 }
 
 void GraphicsVulkan::WaitFinish() { vkQueue.waitIdle(); }
-
-RenderPass* GraphicsVulkan::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared)
-{
-	PlatformStatus status;
-	getStatus_(status);
-	auto currentRenderPass = renderPasses[status.currentSwapBufferIndex];
-
-	currentRenderPass->SetClearColor(clearColor);
-	currentRenderPass->SetIsColorCleared(isColorCleared);
-	currentRenderPass->SetIsDepthCleared(isDepthCleared);
-	return currentRenderPass.get();
-}
 
 VertexBuffer* GraphicsVulkan::CreateVertexBuffer(int32_t size)
 {
@@ -325,7 +308,7 @@ Exit:
 
 RenderPassPipelineState* GraphicsVulkan::CreateRenderPassPipelineState(RenderPass* renderPass)
 {
-	assert(renderPass == nullptr);
+	assert(renderPass != nullptr);
 	auto rpvk = static_cast<RenderPassVulkan*>(renderPass);
 
 	auto ret = rpvk->renderPassPipelineState;
