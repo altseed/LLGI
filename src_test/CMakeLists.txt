@@ -12,7 +12,7 @@ if(BUILD_METAL)
   find_library(QUARTZ_CORE_LIBRARY QuartzCore)
 
   set(EXTRA_LIBS ${COCOA_LIBRARY} ${APPKIT_LIBRARY} ${METAL_LIBRARY} ${METALKIT_LIBRARY} ${QUARTZ_CORE_LIBRARY})
-  target_link_libraries(LLGI_Test ${EXTRA_LIBS})
+  target_link_libraries(LLGI_Test PRIVATE ${EXTRA_LIBS})
 
 endif()
 
@@ -31,6 +31,12 @@ if(MSVC)
 	  debug gtestd
 	  optimized gtest
   )
+elseif(APPLE)
+  target_link_libraries(
+    LLGI_Test 
+    PRIVATE
+    debug gtestd
+    optimized gtest)
 else()
 	find_package(Threads REQUIRED)
 	target_link_libraries(
