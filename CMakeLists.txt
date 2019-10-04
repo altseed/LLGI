@@ -9,6 +9,7 @@ set (CMAKE_CXX_STANDARD 11)
 option(BUILD_METAL "build metal" OFF)
 option(BUILD_VULKAN "build vulkan" OFF)
 option(BUILD_TEST "build test" OFF)
+option(BUILD_EXAMPLE "build examples" OFF)
 
 option(USE_MSVC_RUNTIME_LIBRARY_DLL "compile as multithreaded DLL" ON)
 
@@ -55,4 +56,8 @@ if(BUILD_TEST)
   set(LLGI_GOOGLETEST_INCLUDE ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/Install/googletest/include)
   set(LLGI_GOOGLETEST_LIBRARY_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/Install/googletest/lib)
   add_subdirectory("src_test")
+endif()
+
+if(BUILD_EXAMPLE)
+  add_subdirectory("examples")
 endif()
