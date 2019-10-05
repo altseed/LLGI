@@ -6,7 +6,6 @@ project(LLGI)
 include(ExternalProject)
 set (CMAKE_CXX_STANDARD 11)
 
-option(BUILD_METAL "build metal" OFF)
 option(BUILD_VULKAN "build vulkan" OFF)
 option(BUILD_TEST "build test" OFF)
 option(BUILD_EXAMPLE "build examples" OFF)
@@ -37,7 +36,7 @@ if(BUILD_VULKAN)
   add_definitions(-DENABLE_VULKAN)
 endif()
 
-if(BUILD_METAL)
+if(APPLE)
   add_definitions(-DENABLE_METAL)
 endif()
 

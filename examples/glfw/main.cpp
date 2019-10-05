@@ -5,6 +5,10 @@
 #define GLFW_EXPOSE_NATIVE_WIN32 1
 #endif
 
+#ifdef __APPLE__
+#define GLFW_EXPOSE_NATIVE_COCOA 1
+#endif
+
 #include <GLFW/glfw3native.h>
 #include <LLGI.CommandList.h>
 #include <LLGI.Graphics.h>
@@ -21,11 +25,10 @@ class LLGIWindow : public LLGI::Window
 public:
 	LLGIWindow(GLFWwindow* window) : window_(window) {}
 
-	bool OnNewFrame() { return glfwWindowShouldClose(window_) == GL_FALSE; }
+	bool OnNewFrame() override { return glfwWindowShouldClose(window_) == GL_FALSE; }
 
-	void* GetNativePtr(int32_t index)
+	void* GetNativePtr(int32_t index) override
 	{
-
 #ifdef _WIN32
 		if (index == 0)
 		{
@@ -34,9 +37,13 @@ public:
 
 		return (HINSTANCE)GetModuleHandle(0);
 #endif
+        
+#ifdef __APPLE__
+        return glfwGetCocoaWindow(window_);
+#endif
 	}
 
-	LLGI::Vec2I GetWindowSize() const
+	LLGI::Vec2I GetWindowSize() const override
 	{
 		int w, h;
 		glfwGetWindowSize(window_, &w, &h);

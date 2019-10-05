@@ -3,7 +3,7 @@ file(GLOB files *.h *.cpp)
 
 add_executable(LLGI_Test ${files})
 
-if(BUILD_METAL)
+if(APPLE)
 
   find_library(COCOA_LIBRARY Cocoa)
   find_library(METAL_LIBRARY Metal)

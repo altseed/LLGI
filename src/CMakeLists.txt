@@ -28,7 +28,7 @@ if(BUILD_VULKAN)
   add_definitions(-DENABLE_VULKAN)
 endif()
 
-if(BUILD_METAL)
+if(APPLE)
   file(GLOB files_metal Metal/*.h Metal/*.cpp Metal/*.mm)
   list(APPEND files ${files_metal})
 endif()
