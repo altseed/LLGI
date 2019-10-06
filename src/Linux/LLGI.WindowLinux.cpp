@@ -94,7 +94,7 @@ void* WindowLinux::GetNativePtr(int32_t index)
 	if (index == 0)
 		return GetDisplay();
 	if (index == 1)
-		return &GetWindow();
+		return reinterpret_cast<void*>(GetWindow());
 	return nullptr;
 }
 

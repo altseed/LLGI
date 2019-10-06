@@ -6,9 +6,18 @@ project(LLGI)
 include(ExternalProject)
 set (CMAKE_CXX_STANDARD 11)
 
+# linux flag
+if(UNIX AND NOT APPLE)
+  set(LINUX TRUE)
+endif()
+
 option(BUILD_VULKAN "build vulkan" OFF)
 option(BUILD_TEST "build test" OFF)
 option(BUILD_EXAMPLE "build examples" OFF)
+
+if(LINUX)
+  set(BUILD_VULKAN TRUE)
+endif()
 
 option(USE_MSVC_RUNTIME_LIBRARY_DLL "compile as multithreaded DLL" ON)
 

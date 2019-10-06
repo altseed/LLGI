@@ -27,4 +27,15 @@ if(APPLE)
     set(EXTRA_LIBS ${COCOA_LIBRARY} ${APPKIT_LIBRARY} ${METAL_LIBRARY} ${METALKIT_LIBRARY} ${QUARTZ_CORE_LIBRARY})
     target_link_libraries(example_glfw PRIVATE ${EXTRA_LIBS})
 
+else()
+
+	find_package(Threads REQUIRED)
+	target_link_libraries(
+    example_glfw 
+    PRIVATE 
+    ${CMAKE_THREAD_LIBS_INIT}
+    pthread
+    X11
+    X11-xcb)
+
 endif()

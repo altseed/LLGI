@@ -1,6 +1,4 @@
 
-#include <GLFW/glfw3.h>
-
 #ifdef _WIN32
 #define GLFW_EXPOSE_NATIVE_WIN32 1
 #endif
@@ -9,7 +7,18 @@
 #define GLFW_EXPOSE_NATIVE_COCOA 1
 #endif
 
+#ifdef __linux__
+#define GLFW_EXPOSE_NATIVE_X11 1
+#undef Always
+#endif
+
+#include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
+
+#ifdef __linux__
+#undef Always
+#endif
+
 #include <LLGI.CommandList.h>
 #include <LLGI.Graphics.h>
 #include <LLGI.Platform.h>
@@ -40,6 +49,15 @@ public:
         
 #ifdef __APPLE__
         return glfwGetCocoaWindow(window_);
+#endif
+
+#ifdef __linux__
+		if (index == 0)
+		{
+        	return glfwGetX11Display();
+		}
+
+		return reinterpret_cast<void*>(glfwGetX11Window(window_));
 #endif
 	}
 

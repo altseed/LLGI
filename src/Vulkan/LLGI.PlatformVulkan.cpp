@@ -11,6 +11,11 @@
 #include <Windows.h>
 #endif
 
+#ifdef __linux__
+#include <X11/Xlib-xcb.h>
+#undef Always
+#endif
+
 namespace LLGI
 {
 
@@ -452,7 +457,7 @@ bool PlatformVulkan::Initialize(Window* window)
 #else
 		vk::XcbSurfaceCreateInfoKHR surfaceCreateInfo;
 		surfaceCreateInfo.connection = XGetXCBConnection((Display*)window->GetNativePtr(0));
-		surfaceCreateInfo.window = *((::Window*)window->GetNativePtr(1));
+		surfaceCreateInfo.window = ((::Window)window->GetNativePtr(1));
 		surface_ = vkInstance_.createXcbSurfaceKHR(surfaceCreateInfo);
 #endif
 		// create device

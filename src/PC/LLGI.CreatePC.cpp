@@ -51,6 +51,7 @@ Window* CreateWindow(const char* title, Vec2I windowSize)
     }
 #endif
 
+	Log(LogType::Error, "Failed to create window.");
 	return nullptr;
 }
 
@@ -61,7 +62,11 @@ Platform* CreatePlatform(DeviceType platformDeviceType, Window* window)
 	windowSize.Y = 720;
 
 #ifdef ENABLE_VULKAN
+#if defined(__linux__)
+	if (platformDeviceType == DeviceType::Vulkan || platformDeviceType == DeviceType::Default)
+#else
 	if (platformDeviceType == DeviceType::Vulkan)
+#endif
 	{
 		auto platform = new PlatformVulkan();
 		if (!platform->Initialize(window))
@@ -89,10 +94,10 @@ Platform* CreatePlatform(DeviceType platformDeviceType, Window* window)
 #elif defined(__APPLE__)
 	auto obj = new PlatformMetal(window);
 	return obj;
-#else
 
 #endif
 
+	Log(LogType::Error, "Specified device is not valid.");
 	return nullptr;
 }
 
