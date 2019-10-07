@@ -328,15 +328,15 @@ float4 main(PS_INPUT input) : SV_TARGET
 		LLGI::DataStructure d_ps;
 
 		d_vs.Data = binary_vs.data();
-		d_vs.Size = binary_vs.size();
+		d_vs.Size = static_cast<int32_t>(binary_vs.size());
 		d_ps.Data = binary_ps.data();
-		d_ps.Size = binary_ps.size();
+		d_ps.Size = static_cast<int32_t>(binary_ps.size());
 
 		data_vs.push_back(d_vs);
 		data_ps.push_back(d_ps);
 
-		shader_vs = graphics->CreateShader(data_vs.data(), data_vs.size());
-		shader_ps = graphics->CreateShader(data_ps.data(), data_ps.size());
+		shader_vs = graphics->CreateShader(data_vs.data(), static_cast<int32_t>(data_vs.size()));
+		shader_ps = graphics->CreateShader(data_ps.data(), static_cast<int32_t>(data_ps.size()));
 	}
 	else
 	{
@@ -378,12 +378,12 @@ float4 main(PS_INPUT input) : SV_TARGET
 		{
 			LLGI::DataStructure d;
 			d.Data = b.data();
-			d.Size = b.size();
+			d.Size = static_cast<int32_t>(b.size());
 			data_ps.push_back(d);
 		}
 
-		shader_vs = graphics->CreateShader(data_vs.data(), data_vs.size());
-		shader_ps = graphics->CreateShader(data_ps.data(), data_ps.size());
+		shader_vs = graphics->CreateShader(data_vs.data(), static_cast<int32_t>(data_vs.size()));
+		shader_ps = graphics->CreateShader(data_ps.data(), static_cast<int32_t>(data_ps.size()));
 	}
 
 	auto vb_buf = (SimpleVertex*)vb->Lock();

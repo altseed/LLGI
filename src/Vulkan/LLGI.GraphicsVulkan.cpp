@@ -26,7 +26,7 @@ GraphicsVulkan::GraphicsVulkan(const vk::Device& device,
 	, addCommand_(addCommand)
 	, renderPassPipelineStateCache_(renderPassPipelineStateCache)
 {
-	swapBufferCount_ = platformView.renderPasses.size();
+	swapBufferCount_ = static_cast<int32_t>(platformView.renderPasses.size());
 
 	for (size_t i = 0; i < static_cast<size_t>(swapBufferCount_); i++)
 	{

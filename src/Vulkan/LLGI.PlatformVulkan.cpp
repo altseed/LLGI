@@ -421,12 +421,12 @@ bool PlatformVulkan::Initialize(Window* window)
 		// create instance
 		vk::InstanceCreateInfo instanceCreateInfo;
 		instanceCreateInfo.pApplicationInfo = &appInfo;
-		instanceCreateInfo.enabledExtensionCount = extensions.size();
+		instanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
 		instanceCreateInfo.ppEnabledExtensionNames = extensions.data();
 #if defined(_DEBUG)
 		const std::vector<const char*> validationLayers = {"VK_LAYER_LUNARG_standard_validation"};
 
-		instanceCreateInfo.enabledLayerCount = validationLayers.size();
+		instanceCreateInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
 		instanceCreateInfo.ppEnabledLayerNames = validationLayers.data();
 #endif
 
@@ -472,7 +472,7 @@ bool PlatformVulkan::Initialize(Window* window)
 			auto& queueProp = queueFamilyProperties[i];
 			if (queueProp.queueFlags & vk::QueueFlagBits::eGraphics /* && vkPhysicalDevice.getSurfaceSupportKHR(i, surface_)*/)
 			{
-				graphicsQueueInd = i;
+				graphicsQueueInd = static_cast<int32_t>(i);
 				break;
 			}
 		}
@@ -500,11 +500,11 @@ bool PlatformVulkan::Initialize(Window* window)
 		deviceCreateInfo.queueCreateInfoCount = 1;
 		deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
 		deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
-		deviceCreateInfo.enabledExtensionCount = enabledExtensions.size();
+		deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(enabledExtensions.size());
 		deviceCreateInfo.ppEnabledExtensionNames = enabledExtensions.data();
 
 #if defined(_DEBUG)
-		deviceCreateInfo.enabledLayerCount = validationLayers.size();
+		deviceCreateInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
 		deviceCreateInfo.ppEnabledLayerNames = validationLayers.data();
 #else
 		deviceCreateInfo.enabledLayerCount = 0;
@@ -790,7 +790,7 @@ Graphics* PlatformVulkan::CreateGraphics()
 		std::array<vk::SubmitInfo, 1> copySubmitInfos;
 		copySubmitInfos[0].commandBufferCount = 1;
 		copySubmitInfos[0].pCommandBuffers = &commandBuffer;
-		vkQueue.submit(copySubmitInfos.size(), copySubmitInfos.data(), vk::Fence());
+		vkQueue.submit(static_cast<uint32_t>(copySubmitInfos.size()), copySubmitInfos.data(), vk::Fence());
 
 		this->executedCommandCount++;
 	};

@@ -54,10 +54,13 @@ public:
 
 } // namespace LLGI
 
-template <typename T, size_t N> struct std::hash<LLGI::FixedSizeVector<T, N>>
+namespace std
+{
+
+template <typename T, size_t N> struct hash<LLGI::FixedSizeVector<T, N>>
 {
 	size_t operator()(const LLGI::FixedSizeVector<T, N>& _Keyval) const noexcept
-	{																
+	{
 		auto h = std::hash<size_t>()(_Keyval.size());
 		for (size_t i = 0; i < _Keyval.size(); i++)
 		{
@@ -66,3 +69,5 @@ template <typename T, size_t N> struct std::hash<LLGI::FixedSizeVector<T, N>>
 		return h;
 	}
 };
+
+} // namespace std

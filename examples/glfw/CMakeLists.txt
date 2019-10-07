@@ -16,7 +16,9 @@ target_link_libraries(
 	glfw
 )
 
-if(APPLE)
+if(WIN32)
+# None
+elseif(APPLE)
 
     find_library(COCOA_LIBRARY Cocoa)
     find_library(METAL_LIBRARY Metal)
