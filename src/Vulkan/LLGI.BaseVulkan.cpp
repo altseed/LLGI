@@ -87,7 +87,7 @@ bool VulkanBuffer::Initialize(GraphicsVulkan* graphics, VkDeviceSize size, VkBuf
 	VkMemoryAllocateInfo allocInfo = {};
 	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	allocInfo.allocationSize = memRequirements.size;
-	allocInfo.memoryTypeIndex = graphics_->GetMemoryTypeIndex(memRequirements.memoryTypeBits, vk::MemoryPropertyFlags(properties));
+	allocInfo.memoryTypeIndex = graphics_->GetMemoryTypeIndex(memRequirements.memoryTypeBits, (vk::MemoryPropertyFlags)properties);
 
 	LLGI_VK_CHECK(vkAllocateMemory(device, &allocInfo, nullptr, &nativeBufferMemory_));
 	LLGI_VK_CHECK(vkBindBufferMemory(device, nativeBuffer_, nativeBufferMemory_, 0));

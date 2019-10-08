@@ -3,6 +3,7 @@
 
 #include "../LLGI.Base.h"
 #include <iostream>
+#include <unordered_map>
 
 #ifdef _WIN32
 #define VK_PROTOTYPES
@@ -24,6 +25,17 @@
 			return false;                                                                                                                  \
 		}                                                                                                                                  \
 	}
+
+namespace std
+{
+
+template <>
+struct hash<vk::Format>
+{
+	size_t operator()(const vk::Format& _Keyval) const noexcept { return std::hash<uint32_t>()(static_cast<uint32_t>(_Keyval)); }
+};
+
+} // namespace std
 
 namespace LLGI
 {
