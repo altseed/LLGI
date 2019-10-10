@@ -786,11 +786,11 @@ Graphics* PlatformVulkan::CreateGraphics()
 	platformView.imageSize = windowSize_;
 	platformView.format = surfaceFormat;
 
-	auto addCommand = [this](vk::CommandBuffer& commandBuffer) -> void {
+	auto addCommand = [this](vk::CommandBuffer& commandBuffer, vk::Fence& fence) -> void {
 		std::array<vk::SubmitInfo, 1> copySubmitInfos;
 		copySubmitInfos[0].commandBufferCount = 1;
 		copySubmitInfos[0].pCommandBuffers = &commandBuffer;
-		vkQueue.submit(static_cast<uint32_t>(copySubmitInfos.size()), copySubmitInfos.data(), vk::Fence());
+		vkQueue.submit(copySubmitInfos.size(), copySubmitInfos.data(), fence);
 
 		this->executedCommandCount++;
 	};

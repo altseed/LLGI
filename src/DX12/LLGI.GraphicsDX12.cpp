@@ -46,6 +46,7 @@ void GraphicsDX12::Execute(CommandList* commandList)
 	auto cl = (CommandListDX12*)commandList;
 	auto cl_internal = cl->GetCommandList();
 	commandQueue_->ExecuteCommandLists(1, (ID3D12CommandList**)(&cl_internal));
+	commandQueue_->Signal(cl->GetFence(), cl->GetAndIncFenceValue());
 }
 
 void GraphicsDX12::WaitFinish()

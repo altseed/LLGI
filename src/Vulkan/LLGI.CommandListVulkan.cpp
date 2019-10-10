@@ -1,3 +1,7 @@
+#ifdef _WIN32
+#define NOMINMAX
+#endif
+
 #include "LLGI.CommandListVulkan.h"
 #include "LLGI.ConstantBufferVulkan.h"
 #include "LLGI.GraphicsVulkan.h"
@@ -64,6 +68,12 @@ CommandListVulkan::~CommandListVulkan()
 	commandBuffers.clear();
 
 	descriptorPools.clear();
+
+	for (size_t i = 0; i < fences_.size(); i++)
+	{
+		graphics_->GetDevice().destroyFence(fences_[i]);
+	}
+	fences_.clear();
 }
 
 bool CommandListVulkan::Initialize(GraphicsVulkan* graphics, int32_t drawingCount)
@@ -80,6 +90,8 @@ bool CommandListVulkan::Initialize(GraphicsVulkan* graphics, int32_t drawingCoun
 	{
 		auto dp = std::make_shared<DescriptorPoolVulkan>(graphics_, drawingCount, 2);
 		descriptorPools.push_back(dp);
+
+		fences_.emplace_back(graphics->GetDevice().createFence(vk::FenceCreateFlags()));
 	}
 
 	currentSwapBufferIndex_ = -1;
@@ -410,6 +422,14 @@ vk::CommandBuffer CommandListVulkan::GetCommandBuffer() const
 {
 	auto& cmdBuffer = commandBuffers[currentSwapBufferIndex_];
 	return cmdBuffer;
+}
+
+vk::Fence CommandListVulkan::GetFence() const { fences_[currentSwapBufferIndex_]; }
+
+void CommandListVulkan::WaitUntilCompleted()
+{
+	vk::Result fenceRes = graphics_->GetDevice().waitForFences(fences_[currentSwapBufferIndex_], VK_TRUE, std::numeric_limits<int>::max());
+	assert(fenceRes == vk::Result::eSuccess);
 }
 
 } // namespace LLGI

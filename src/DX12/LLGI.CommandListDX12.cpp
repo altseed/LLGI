@@ -10,6 +10,18 @@
 
 namespace LLGI
 {
+
+CommandListDX12::SwapBuffer::~SwapBuffer()
+{
+	SafeRelease(fence_);
+
+	if (fenceEvent_ != nullptr)
+	{
+		CloseHandle(fenceEvent_);
+		fenceEvent_ = nullptr;
+	}
+}
+
 CommandListDX12::CommandListDX12() {}
 
 CommandListDX12::~CommandListDX12() { swapBuffers_.clear(); }
@@ -52,6 +64,14 @@ bool CommandListDX12::Initialize(GraphicsDX12* graphics, int32_t drawingCount)
 			graphics_, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_RTV, drawingCount / 2, 2);
 		swapBuffers_[i].smpDescriptorHeap = std::make_shared<DescriptorHeapDX12>(
 			graphics_, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, drawingCount * NumTexture, 2);
+
+		
+		hr = graphics_->GetDevice()->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&swapBuffers_[i].fence_));
+		if (FAILED(hr))
+		{
+			goto FAILED_EXIT;
+		}
+		swapBuffers_[i].fenceEvent_ = CreateEvent(NULL, FALSE, FALSE, NULL);
 	}
 
 	return true;
@@ -341,6 +361,33 @@ ID3D12GraphicsCommandList* CommandListDX12::GetCommandList() const
 	auto commandList = swapBuffer.commandList;
 
 	return commandList.get();
+}
+
+ID3D12Fence* CommandListDX12::GetFence() const { 
+	auto& swapBuffer = swapBuffers_[currentSwap_]; 
+	return swapBuffer.fence_;
+}
+
+UINT64 CommandListDX12::GetAndIncFenceValue()
+{
+	auto& swapBuffer = swapBuffers_[currentSwap_];
+	auto ret = swapBuffer.fenceValue_;
+	swapBuffer.fenceValue_ += 1;
+	return ret;
+}
+
+void CommandListDX12::WaitUntilCompleted() { 
+	auto& swapBuffer = swapBuffers_[currentSwap_];
+
+	if (swapBuffer.fence_->GetCompletedValue() < swapBuffer.fenceValue_ - 1)
+	{
+		auto hr = swapBuffer.fence_->SetEventOnCompletion(swapBuffer.fenceValue_ - 1, swapBuffer.fenceEvent_);
+		if (FAILED(hr))
+		{
+			return;
+		}
+		WaitForSingleObject(swapBuffer.fenceEvent_, INFINITE);
+	}
 }
 
 } // namespace LLGI

@@ -30,6 +30,7 @@ private:
 	std::vector<vk::CommandBuffer> commandBuffers;
 	std::vector<std::shared_ptr<DescriptorPoolVulkan>> descriptorPools;
 	int32_t currentSwapBufferIndex_;
+	std::vector<vk::Fence> fences_;
 
 public:
 	CommandListVulkan();
@@ -45,6 +46,9 @@ public:
 	void BeginRenderPass(RenderPass* renderPass) override;
 	void EndRenderPass() override;
 	vk::CommandBuffer GetCommandBuffer() const;
+	vk::Fence GetFence() const;
+
+	void WaitUntilCompleted();
 };
 
 } // namespace LLGI
