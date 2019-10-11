@@ -424,7 +424,7 @@ vk::CommandBuffer CommandListVulkan::GetCommandBuffer() const
 	return cmdBuffer;
 }
 
-vk::Fence CommandListVulkan::GetFence() const { fences_[currentSwapBufferIndex_]; }
+vk::Fence CommandListVulkan::GetFence() const { return fences_[currentSwapBufferIndex_]; }
 
 void CommandListVulkan::WaitUntilCompleted()
 {

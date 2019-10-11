@@ -1,5 +1,6 @@
 #include "TestHelper.h"
 #include "test.h"
+#include <array>
 
 // #define CAPTURE_TEST 1
 
@@ -20,7 +21,10 @@ void test_clear_update(LLGI::DeviceType deviceType)
 
 	auto graphics = platform->CreateGraphics();
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
-	auto commandList = graphics->CreateCommandList(sfMemoryPool);
+
+	std::array<LLGI::CommandList*, 3> commandLists;
+	for (int i = 0; i < commandLists.size(); i++)
+		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
 
 	while (count < 1000)
 	{
@@ -35,6 +39,7 @@ void test_clear_update(LLGI::DeviceType deviceType)
 		color.B = 0;
 		color.A = 255;
 
+		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
 		commandList->BeginRenderPass(platform->GetCurrentScreen(color, true));
 		commandList->EndRenderPass();
@@ -49,7 +54,8 @@ void test_clear_update(LLGI::DeviceType deviceType)
 	graphics->WaitFinish();
 
 	LLGI::SafeRelease(sfMemoryPool);
-	LLGI::SafeRelease(commandList);
+	for (int i = 0; i < commandLists.size(); i++)
+		LLGI::SafeRelease(commandLists[i]);
 	LLGI::SafeRelease(graphics);
 	LLGI::SafeRelease(platform);
 }
@@ -63,7 +69,10 @@ void test_clear(LLGI::DeviceType deviceType)
 
 	auto graphics = platform->CreateGraphics();
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
-	auto commandList = graphics->CreateCommandList(sfMemoryPool);
+
+	std::array<LLGI::CommandList*, 3> commandLists;
+	for (int i = 0; i < commandLists.size(); i++)
+		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
 
 	LLGI::Color8 color;
 	color.R = 255;
@@ -80,6 +89,7 @@ void test_clear(LLGI::DeviceType deviceType)
 
 		// It need to create a command buffer between NewFrame and Present.
 		// Because get current screen returns other values by every frame.
+		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
 		commandList->BeginRenderPass(platform->GetCurrentScreen(color, true));
 		commandList->EndRenderPass();
@@ -111,7 +121,8 @@ void test_clear(LLGI::DeviceType deviceType)
 	graphics->WaitFinish();
 
 	LLGI::SafeRelease(sfMemoryPool);
-	LLGI::SafeRelease(commandList);
+	for (int i = 0; i < commandLists.size(); i++)
+		LLGI::SafeRelease(commandLists[i]);
 	LLGI::SafeRelease(graphics);
 	LLGI::SafeRelease(platform);
 }
