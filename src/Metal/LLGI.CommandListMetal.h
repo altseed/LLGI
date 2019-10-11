@@ -30,6 +30,8 @@ public:
 	void BeginRenderPass(RenderPass* renderPass) override;
 	void EndRenderPass() override;
 
+	void WaitUntilCompleted();
+	
 	CommandList_Impl* GetImpl();
 };
 

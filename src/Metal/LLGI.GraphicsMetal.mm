@@ -41,6 +41,12 @@ void Graphics_Impl::Execute(CommandList_Impl* commandBuffer) { [commandBuffer->c
 GraphicsMetal::GraphicsMetal() { impl = new Graphics_Impl(); }
 
 GraphicsMetal::~GraphicsMetal() {
+    
+    for (auto cb : executingCommandList_) {
+        cb->Release();
+    }
+    executingCommandList_.clear();
+    
     renderPassPipelineStates.clear();
     SafeDelete(impl);
 }
@@ -63,11 +69,37 @@ void GraphicsMetal::SetWindowSize(const Vec2I& windowSize) { throw "Not inplemen
 
 void GraphicsMetal::Execute(CommandList* commandList)
 {
+    // remove finished commands
+    auto it = std::remove_if(executingCommandList_.begin(), executingCommandList_.end(),
+      [](CommandList* cb) {
+        auto c = static_cast<CommandListMetal*>(cb);
+        if(c->GetImpl()->isCompleted)
+        {
+            cb->Release();
+            return true;
+        }
+        return false;
+    });
+    
+    executingCommandList_.erase(it, executingCommandList_.end());
+    
 	auto commandList_ = (CommandListMetal*)commandList;
+    commandList_->GetImpl()->isCompleted = false;
 	impl->Execute(commandList_->GetImpl());
+    
+    SafeAddRef(commandList);
+    executingCommandList_.push_back(commandList);
 }
 
-void GraphicsMetal::WaitFinish() { throw "Not inplemented"; }
+void GraphicsMetal::WaitFinish() {
+
+    for (auto cb : executingCommandList_) {
+        auto c = static_cast<CommandListMetal*>(cb);
+        c->WaitUntilCompleted();
+        cb->Release();
+    }
+    executingCommandList_.clear();
+}
 
 /*
 RenderPass* GraphicsMetal::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared)

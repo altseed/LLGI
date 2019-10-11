@@ -51,7 +51,8 @@ struct CommandList_Impl
 	Graphics_Impl* graphics_ = nullptr;
 	id<MTLCommandBuffer> commandBuffer = nullptr;
 	id<MTLRenderCommandEncoder> renderEncoder = nullptr;
-
+    bool isCompleted = true;
+    
 	CommandList_Impl();
 	~CommandList_Impl();
 

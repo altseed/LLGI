@@ -523,8 +523,6 @@ float4 main(PS_INPUT input) : SV_TARGET
 	LLGI::SafeRelease(cb_ps);
 	LLGI::SafeRelease(shader_vs);
 	LLGI::SafeRelease(shader_ps);
-	LLGI::SafeRelease(ib);
-	LLGI::SafeRelease(vb);
 	for (int i = 0; i < commandLists.size(); i++)
 		LLGI::SafeRelease(commandLists[i]);
 	LLGI::SafeRelease(graphics);
@@ -795,8 +793,6 @@ float4 main(PS_INPUT input) : SV_TARGET
 	LLGI::SafeRelease(texture);
 	LLGI::SafeRelease(shader_vs);
 	LLGI::SafeRelease(shader_ps);
-	LLGI::SafeRelease(ib);
-	LLGI::SafeRelease(vb);
 	for (int i = 0; i < commandLists.size(); i++)
 		LLGI::SafeRelease(commandLists[i]);
 	LLGI::SafeRelease(graphics);
