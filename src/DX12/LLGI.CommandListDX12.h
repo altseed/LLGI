@@ -15,20 +15,14 @@ class DescriptorHeapDX12;
 class CommandListDX12 : public CommandList
 {
 private:
-	struct SwapBuffer
-	{
-		std::shared_ptr<DescriptorHeapDX12> cbreDescriptorHeap;
-		std::shared_ptr<DescriptorHeapDX12> rtDescriptorHeap;
-		std::shared_ptr<DescriptorHeapDX12> smpDescriptorHeap;
-		std::shared_ptr<ID3D12GraphicsCommandList> commandList;
-		std::shared_ptr<ID3D12CommandAllocator> commandAllocator;
-	};
+	std::shared_ptr<DescriptorHeapDX12> cbreDescriptorHeap_;
+	std::shared_ptr<DescriptorHeapDX12> rtDescriptorHeap_;
+	std::shared_ptr<DescriptorHeapDX12> smpDescriptorHeap_;
+	std::shared_ptr<ID3D12GraphicsCommandList> commandList_;
+	std::shared_ptr<ID3D12CommandAllocator> commandAllocator_;
 
 	std::shared_ptr<GraphicsDX12> graphics_;
 	std::shared_ptr<RenderPassDX12> renderPass_;
-
-	std::vector<SwapBuffer> swapBuffers_;
-	int32_t currentSwap_ = -1;
 
 public:
 	CommandListDX12();

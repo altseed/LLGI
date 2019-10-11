@@ -2,6 +2,7 @@
 #include "TestHelper.h"
 #include "test.h"
 
+#include <array>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -19,7 +20,10 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 	graphics->SetDisposed([platform]() -> void { platform->Release(); });
 
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
-	auto commandList = graphics->CreateCommandList(sfMemoryPool);
+
+	std::array<LLGI::CommandList*, 3> commandLists;
+	for (int i = 0; i < commandLists.size(); i++)
+		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
 
 	std::shared_ptr<LLGI::Shader> shader_vs = nullptr;
 	std::shared_ptr<LLGI::Shader> shader_ps = nullptr;
@@ -38,7 +42,7 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 
 	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pips;
 
-	while (count < 100)
+	while (count < 1000)
 	{
 		if (!platform->NewFrame())
 			break;
@@ -74,6 +78,7 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 			pips[renderPassPipelineState] = LLGI::CreateSharedPtr(pip);
 		}
 
+		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
@@ -94,7 +99,8 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 	graphics->WaitFinish();
 
 	LLGI::SafeRelease(sfMemoryPool);
-	LLGI::SafeRelease(commandList);
+	for (int i = 0; i < commandLists.size(); i++)
+		LLGI::SafeRelease(commandLists[i]);
 	LLGI::SafeRelease(graphics);
 	LLGI::SafeRelease(platform);
 }
@@ -111,7 +117,10 @@ void test_index_offset(LLGI::DeviceType deviceType)
 	graphics->SetDisposed([platform]() -> void { platform->Release(); });
 
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
-	auto commandList = graphics->CreateCommandList(sfMemoryPool);
+
+	std::array<LLGI::CommandList*, 3> commandLists;
+	for (int i = 0; i < commandLists.size(); i++)
+		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
 
 	std::shared_ptr<LLGI::Shader> shader_vs = nullptr;
 	std::shared_ptr<LLGI::Shader> shader_ps = nullptr;
@@ -166,6 +175,7 @@ void test_index_offset(LLGI::DeviceType deviceType)
 			pips[renderPassPipelineState] = LLGI::CreateSharedPtr(pip);
 		}
 
+		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
@@ -186,7 +196,8 @@ void test_index_offset(LLGI::DeviceType deviceType)
 	graphics->WaitFinish();
 
 	LLGI::SafeRelease(sfMemoryPool);
-	LLGI::SafeRelease(commandList);
+	for (int i = 0; i < commandLists.size(); i++)
+		LLGI::SafeRelease(commandLists[i]);
 	LLGI::SafeRelease(graphics);
 	LLGI::SafeRelease(platform);
 }
@@ -307,9 +318,11 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 	auto graphics = platform->CreateGraphics();
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
-	auto commandList = graphics->CreateCommandList(sfMemoryPool);
-	auto vb = graphics->CreateVertexBuffer(sizeof(SimpleVertex) * 4);
-	auto ib = graphics->CreateIndexBuffer(2, 6);
+
+	std::array<LLGI::CommandList*, 3> commandLists;
+	for (int i = 0; i < commandLists.size(); i++)
+		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
+
 	LLGI::ConstantBuffer* cb_vs = nullptr;
 	LLGI::ConstantBuffer* cb_ps = nullptr;
 
@@ -386,26 +399,15 @@ float4 main(PS_INPUT input) : SV_TARGET
 		shader_ps = graphics->CreateShader(data_ps.data(), static_cast<int32_t>(data_ps.size()));
 	}
 
-	auto vb_buf = (SimpleVertex*)vb->Lock();
-	vb_buf[0].Pos = LLGI::Vec3F(-0.5, 0.5, 0.5);
-	vb_buf[1].Pos = LLGI::Vec3F(0.5, 0.5, 0.5);
-	vb_buf[2].Pos = LLGI::Vec3F(0.5, -0.5, 0.5);
-	vb_buf[3].Pos = LLGI::Vec3F(-0.5, -0.5, 0.5);
-
-	vb_buf[0].Color = LLGI::Color8(255, 255, 255, 255);
-	vb_buf[1].Color = LLGI::Color8(255, 255, 0, 255);
-	vb_buf[2].Color = LLGI::Color8(0, 255, 0, 255);
-	vb_buf[3].Color = LLGI::Color8(0, 0, 255, 255);
-	vb->Unlock();
-
-	auto ib_buf = (uint16_t*)ib->Lock();
-	ib_buf[0] = 0;
-	ib_buf[1] = 1;
-	ib_buf[2] = 2;
-	ib_buf[3] = 0;
-	ib_buf[4] = 2;
-	ib_buf[5] = 3;
-	ib->Unlock();
+	std::shared_ptr<LLGI::VertexBuffer> vb;
+	std::shared_ptr<LLGI::IndexBuffer> ib;
+	TestHelper::CreateRectangle(graphics,
+								LLGI::Vec3F(-0.5, 0.5, 0.5),
+								LLGI::Vec3F(0.5, -0.5, 0.5),
+								LLGI::Color8(255, 255, 255, 255),
+								LLGI::Color8(0, 255, 0, 255),
+								vb,
+								ib);
 
 	if (type == LLGI::ConstantBufferType::LongTime)
 	{
@@ -487,10 +489,11 @@ float4 main(PS_INPUT input) : SV_TARGET
 			pips[renderPassPipelineState] = LLGI::CreateSharedPtr(pip);
 		}
 
+		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
 		commandList->BeginRenderPass(renderPass);
-		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib);
+		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
+		commandList->SetIndexBuffer(ib.get());
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
 		commandList->SetConstantBuffer(cb_vs, LLGI::ShaderStageType::Vertex);
 		commandList->SetConstantBuffer(cb_ps, LLGI::ShaderStageType::Pixel);
@@ -522,7 +525,8 @@ float4 main(PS_INPUT input) : SV_TARGET
 	LLGI::SafeRelease(shader_ps);
 	LLGI::SafeRelease(ib);
 	LLGI::SafeRelease(vb);
-	LLGI::SafeRelease(commandList);
+	for (int i = 0; i < commandLists.size(); i++)
+		LLGI::SafeRelease(commandLists[i]);
 	LLGI::SafeRelease(graphics);
 	LLGI::SafeRelease(platform);
 
@@ -627,9 +631,11 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 	auto graphics = platform->CreateGraphics();
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
-	auto commandList = graphics->CreateCommandList(sfMemoryPool);
-	auto vb = graphics->CreateVertexBuffer(sizeof(SimpleVertex) * 4);
-	auto ib = graphics->CreateIndexBuffer(2, 6);
+
+	std::array<LLGI::CommandList*, 3> commandLists;
+	for (int i = 0; i < commandLists.size(); i++)
+		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
+
 	auto texture = graphics->CreateTexture(LLGI::Vec2I(256, 256), false, false);
 
 	auto texture_buf = (LLGI::Color8*)texture->Lock();
@@ -713,32 +719,15 @@ float4 main(PS_INPUT input) : SV_TARGET
 		shader_ps = graphics->CreateShader(data_ps.data(), data_ps.size());
 	}
 
-	auto vb_buf = (SimpleVertex*)vb->Lock();
-	vb_buf[0].Pos = LLGI::Vec3F(-0.5, 0.5, 0.5);
-	vb_buf[1].Pos = LLGI::Vec3F(0.5, 0.5, 0.5);
-	vb_buf[2].Pos = LLGI::Vec3F(0.5, -0.5, 0.5);
-	vb_buf[3].Pos = LLGI::Vec3F(-0.5, -0.5, 0.5);
-
-	vb_buf[0].UV = LLGI::Vec2F(0.0f, 0.0f);
-	vb_buf[1].UV = LLGI::Vec2F(1.0f, 0.0f);
-	vb_buf[2].UV = LLGI::Vec2F(1.0f, 1.0f);
-	vb_buf[3].UV = LLGI::Vec2F(0.0f, 1.0f);
-
-	vb_buf[0].Color = LLGI::Color8();
-	vb_buf[1].Color = LLGI::Color8();
-	vb_buf[2].Color = LLGI::Color8();
-	vb_buf[3].Color = LLGI::Color8();
-
-	vb->Unlock();
-
-	auto ib_buf = (uint16_t*)ib->Lock();
-	ib_buf[0] = 0;
-	ib_buf[1] = 1;
-	ib_buf[2] = 2;
-	ib_buf[3] = 0;
-	ib_buf[4] = 2;
-	ib_buf[5] = 3;
-	ib->Unlock();
+	std::shared_ptr<LLGI::VertexBuffer> vb;
+	std::shared_ptr<LLGI::IndexBuffer> ib;
+	TestHelper::CreateRectangle(graphics,
+								LLGI::Vec3F(-0.5, 0.5, 0.5),
+								LLGI::Vec3F(0.5, -0.5, 0.5),
+								LLGI::Color8(255, 255, 255, 255),
+								LLGI::Color8(0, 255, 0, 255),
+								vb,
+								ib);
 
 	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pips;
 
@@ -780,10 +769,11 @@ float4 main(PS_INPUT input) : SV_TARGET
 			pips[renderPassPipelineState] = LLGI::CreateSharedPtr(pip);
 		}
 
+		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
 		commandList->BeginRenderPass(renderPass);
-		commandList->SetVertexBuffer(vb, sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib);
+		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
+		commandList->SetIndexBuffer(ib.get());
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
 		commandList->SetTexture(
 			texture, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
@@ -807,7 +797,8 @@ float4 main(PS_INPUT input) : SV_TARGET
 	LLGI::SafeRelease(shader_ps);
 	LLGI::SafeRelease(ib);
 	LLGI::SafeRelease(vb);
-	LLGI::SafeRelease(commandList);
+	for (int i = 0; i < commandLists.size(); i++)
+		LLGI::SafeRelease(commandLists[i]);
 	LLGI::SafeRelease(graphics);
 	LLGI::SafeRelease(platform);
 
