@@ -103,6 +103,8 @@ void CommandListVulkan::Begin()
 	currentSwapBufferIndex_++;
 	currentSwapBufferIndex_ %= commandBuffers.size();
 
+	graphics_->GetDevice().resetFences(1, &(fences_[currentSwapBufferIndex_]));
+
 	auto& cmdBuffer = commandBuffers[currentSwapBufferIndex_];
 
 	cmdBuffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
@@ -428,8 +430,12 @@ vk::Fence CommandListVulkan::GetFence() const { return fences_[currentSwapBuffer
 
 void CommandListVulkan::WaitUntilCompleted()
 {
-	vk::Result fenceRes = graphics_->GetDevice().waitForFences(fences_[currentSwapBufferIndex_], VK_TRUE, std::numeric_limits<int>::max());
-	assert(fenceRes == vk::Result::eSuccess);
+	if (currentSwapBufferIndex_ >= 0)
+	{
+		vk::Result fenceRes =
+			graphics_->GetDevice().waitForFences(fences_[currentSwapBufferIndex_], VK_TRUE, std::numeric_limits<int>::max());
+		assert(fenceRes == vk::Result::eSuccess);	
+	}
 }
 
 } // namespace LLGI

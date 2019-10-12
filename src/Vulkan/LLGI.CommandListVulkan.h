@@ -48,7 +48,7 @@ public:
 	vk::CommandBuffer GetCommandBuffer() const;
 	vk::Fence GetFence() const;
 
-	void WaitUntilCompleted();
+	void WaitUntilCompleted() override;
 };
 
 } // namespace LLGI

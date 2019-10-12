@@ -45,7 +45,7 @@ public:
 	ID3D12Fence* GetFence() const;
 	UINT64 GetAndIncFenceValue();
 
-	void WaitUntilCompleted();
+	void WaitUntilCompleted() override;
 };
 
 } // namespace LLGI

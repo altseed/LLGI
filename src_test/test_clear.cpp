@@ -40,6 +40,8 @@ void test_clear_update(LLGI::DeviceType deviceType)
 		color.A = 255;
 
 		auto commandList = commandLists[count % commandLists.size()];
+		commandList->WaitUntilCompleted();
+
 		commandList->Begin();
 		commandList->BeginRenderPass(platform->GetCurrentScreen(color, true));
 		commandList->EndRenderPass();
@@ -90,6 +92,8 @@ void test_clear(LLGI::DeviceType deviceType)
 		// It need to create a command buffer between NewFrame and Present.
 		// Because get current screen returns other values by every frame.
 		auto commandList = commandLists[count % commandLists.size()];
+		commandList->WaitUntilCompleted();
+
 		commandList->Begin();
 		commandList->BeginRenderPass(platform->GetCurrentScreen(color, true));
 		commandList->EndRenderPass();

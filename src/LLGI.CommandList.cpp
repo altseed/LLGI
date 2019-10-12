@@ -186,6 +186,11 @@ void CommandList::SetImageData2D(Texture* texture, int32_t x, int32_t y, int32_t
 	assert(0); // TODO: Not implemented.
 }
 
+void CommandList::WaitUntilCompleted()
+{
+	assert(0); // TODO: Not implemented.
+}
+
 CommandListPool::CommandListPool(int32_t swapCount) {}
 
 CommandList* CommandListPool::Get()

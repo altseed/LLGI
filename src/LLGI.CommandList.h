@@ -139,6 +139,11 @@ public:
 		@brief	send a memory in specified texture from cpu to gpu
 	*/
 	virtual void SetImageData2D(Texture* texture, int32_t x, int32_t y, int32_t width, int32_t height, const void* data);
+
+	/**
+		@brief wait until this command is completed.
+	*/
+	virtual void WaitUntilCompleted();
 };
 
 // TODO: see https://github.com/altseed/LLGI/issues/26
