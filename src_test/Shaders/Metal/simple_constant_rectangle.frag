@@ -18,7 +18,7 @@ struct main0_in
     float4 v_color [[user(locn1)]];
 };
 
-fragment main0_out main0(main0_in in [[stage_in]], constant Block& _15 [[buffer(0)]])
+fragment main0_out main0(main0_in in [[stage_in]], constant Block& _15 [[buffer(1)]])
 {
     main0_out out = {};
     out.color = in.v_color + _15.u_offset;

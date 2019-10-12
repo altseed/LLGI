@@ -19,7 +19,7 @@ CommandList_Impl::~CommandList_Impl()
 {
 	if (commandBuffer != nullptr)
 	{
-		//[commandBuffer release];
+		[commandBuffer release];
 		commandBuffer = nullptr;
 	}
 
@@ -37,8 +37,21 @@ bool CommandList_Impl::Initialize(Graphics_Impl* graphics)
 
 void CommandList_Impl::Begin()
 {
-	// is it true?
+    if (commandBuffer != nullptr)
+    {
+        [commandBuffer release];
+        commandBuffer = nullptr;
+    }
+    
 	commandBuffer = [graphics_->commandQueue commandBuffer];
+    [commandBuffer retain];
+    
+    auto t = this;
+    
+    [commandBuffer addCompletedHandler:^(id buffer)
+    {
+        t->isCompleted = true;
+    }];
 }
 
 void CommandList_Impl::End() {}
@@ -100,10 +113,14 @@ void CommandList_Impl::SetVertexBuffer(Buffer_Impl* vertexBuffer, int32_t stride
 	[renderEncoder setVertexBuffer:vertexBuffer->buffer offset:offset atIndex:0];
 }
 
-CommandListMetal::CommandListMetal() { impl = new CommandList_Impl(); }
+CommandListMetal::CommandListMetal() {
+    impl = new CommandList_Impl();
+}
 
 CommandListMetal::~CommandListMetal()
 {
+    WaitUntilCompleted();
+    
 	for (int w = 0; w < 2; w++)
 	{
 		for (int f = 0; f < 2; f++)
@@ -112,7 +129,7 @@ CommandListMetal::~CommandListMetal()
 			[samplerStates[w][f] release];
 		}
 	}
-
+    
 	SafeDelete(impl);
 	SafeRelease(graphics_);
 }
@@ -159,7 +176,10 @@ void CommandListMetal::Begin()
 	CommandList::Begin();
 }
 
-void CommandListMetal::End() { impl->End(); }
+void CommandListMetal::End() { impl->End();
+    
+    CommandList::End();
+}
 
 void CommandListMetal::SetScissor(int32_t x, int32_t y, int32_t width, int32_t height) { impl->SetScissor(x, y, width, height); }
 
@@ -265,6 +285,8 @@ void CommandListMetal::Draw(int32_t pritimiveCount)
 									 indexType:indexType
 								   indexBuffer:ib->GetImpl()->buffer
 							 indexBufferOffset:ib_.offset];
+    
+    CommandList::Draw(pritimiveCount);
 }
 
 void CommandListMetal::BeginRenderPass(RenderPass* renderPass)
@@ -276,6 +298,11 @@ void CommandListMetal::BeginRenderPass(RenderPass* renderPass)
 }
 
 void CommandListMetal::EndRenderPass() { impl->EndRenderPass(); }
+
+void CommandListMetal::WaitUntilCompleted()
+{
+    [impl->commandBuffer waitUntilCompleted];
+}
 
 CommandList_Impl* CommandListMetal::GetImpl() { return impl; }
 

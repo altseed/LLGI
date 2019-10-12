@@ -11,10 +11,18 @@
 
 namespace LLGI
 {
+
 CommandListDX12::CommandListDX12() {}
 
 CommandListDX12::~CommandListDX12()
 { /*SafeRelease(graphics_);*/
+	SafeRelease(fence_);
+
+	if (fenceEvent_ != nullptr)
+	{
+		CloseHandle(fenceEvent_);
+		fenceEvent_ = nullptr;
+	}
 }
 
 bool CommandListDX12::Initialize(GraphicsDX12* graphics, int32_t drawingCount)
@@ -55,6 +63,12 @@ bool CommandListDX12::Initialize(GraphicsDX12* graphics, int32_t drawingCount)
 	smpDescriptorHeap_ = std::make_shared<DescriptorHeapDX12>(
 		graphics_, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, drawingCount * NumTexture, 2);
 
+		hr = graphics_->GetDevice()->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence_));
+		if (FAILED(hr))
+		{
+			goto FAILED_EXIT;
+		}
+		fenceEvent_ = CreateEvent(NULL, FALSE, FALSE, NULL);
 	return true;
 
 FAILED_EXIT:;
@@ -316,5 +330,29 @@ void CommandListDX12::Clear(const Color8& color)
 }
 
 ID3D12GraphicsCommandList* CommandListDX12::GetCommandList() const { return commandList_.get(); }
+
+ID3D12Fence* CommandListDX12::GetFence() const { 
+	return fence_;
+}
+
+UINT64 CommandListDX12::GetAndIncFenceValue()
+{
+	auto ret = fenceValue_;
+	fenceValue_ += 1;
+	return ret;
+}
+
+void CommandListDX12::WaitUntilCompleted() { 
+
+	if (fence_->GetCompletedValue() < fenceValue_ - 1)
+	{
+		auto hr = fence_->SetEventOnCompletion(fenceValue_ - 1, fenceEvent_);
+		if (FAILED(hr))
+		{
+			return;
+		}
+		WaitForSingleObject(fenceEvent_, INFINITE);
+	}
+}
 
 } // namespace LLGI

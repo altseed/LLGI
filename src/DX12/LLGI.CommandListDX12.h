@@ -20,6 +20,9 @@ private:
 	std::shared_ptr<DescriptorHeapDX12> smpDescriptorHeap_;
 	std::shared_ptr<ID3D12GraphicsCommandList> commandList_;
 	std::shared_ptr<ID3D12CommandAllocator> commandAllocator_;
+		ID3D12Fence* fence_ = nullptr;
+		HANDLE fenceEvent_ = nullptr;
+		UINT64 fenceValue_ = 1;
 
 	std::shared_ptr<GraphicsDX12> graphics_;
 	std::shared_ptr<RenderPassDX12> renderPass_;
@@ -38,6 +41,11 @@ public:
 	void Clear(const Color8& color);
 
 	ID3D12GraphicsCommandList* GetCommandList() const;
+
+	ID3D12Fence* GetFence() const;
+	UINT64 GetAndIncFenceValue();
+
+	void WaitUntilCompleted() override;
 };
 
 } // namespace LLGI

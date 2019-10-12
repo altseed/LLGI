@@ -50,7 +50,8 @@ class GraphicsMetal : public Graphics
 
 	std::shared_ptr<RenderPassMetal> renderPass_ = nullptr;
 	std::function<GraphicsView()> getGraphicsView_;
-
+    std::vector<CommandList*> executingCommandList_;
+    
 public:
 	GraphicsMetal();
 	virtual ~GraphicsMetal();

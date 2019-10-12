@@ -17,7 +17,7 @@ GraphicsVulkan::GraphicsVulkan(const vk::Device& device,
 							   const vk::CommandPool& commandPool,
 							   const vk::PhysicalDevice& pysicalDevice,
 							   const PlatformView& platformView,
-							   std::function<void(vk::CommandBuffer&)> addCommand,
+							   std::function<void(vk::CommandBuffer&, vk::Fence&)> addCommand,
 							   RenderPassPipelineStateCacheVulkan* renderPassPipelineStateCache)
 	: vkDevice(device)
 	, vkQueue(quque)
@@ -84,7 +84,7 @@ void GraphicsVulkan::Execute(CommandList* commandList)
 {
 	auto commandList_ = static_cast<CommandListVulkan*>(commandList);
 	auto cmdBuf = commandList_->GetCommandBuffer();
-	addCommand_(cmdBuf);
+	addCommand_(cmdBuf, commandList_->GetFence());
 }
 
 void GraphicsVulkan::WaitFinish() { vkQueue.waitIdle(); }
