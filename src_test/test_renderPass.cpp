@@ -321,8 +321,6 @@ float4 main(PS_INPUT input) : SV_TARGET
 	LLGI::SafeRelease(texture);
 	LLGI::SafeRelease(shader_vs);
 	LLGI::SafeRelease(shader_ps);
-	LLGI::SafeRelease(ib);
-	LLGI::SafeRelease(vb);
 	for (int i = 0; i < commandLists.size(); i++)
 		LLGI::SafeRelease(commandLists[i]);
 	LLGI::SafeRelease(graphics);
@@ -660,10 +658,6 @@ PS_OUTPUT main(PS_INPUT input)
 	LLGI::SafeRelease(texture);
 	LLGI::SafeRelease(shader_vs);
 	LLGI::SafeRelease(shader_ps);
-	LLGI::SafeRelease(ib);
-	LLGI::SafeRelease(vb);
-	LLGI::SafeRelease(ib2);
-	LLGI::SafeRelease(vb2);
 	for (int i = 0; i < commandLists.size(); i++)
 		LLGI::SafeRelease(commandLists[i]);
 	LLGI::SafeRelease(graphics);
@@ -962,8 +956,6 @@ void test_capture(LLGI::DeviceType deviceType)
 	LLGI::SafeRelease(sfMemoryPool);
 	LLGI::SafeRelease(shader_vs);
 	LLGI::SafeRelease(shader_ps);
-	LLGI::SafeRelease(ib);
-	LLGI::SafeRelease(vb);
 	for (int i = 0; i < commandLists.size(); i++)
 		LLGI::SafeRelease(commandLists[i]);
 	LLGI::SafeRelease(graphics);
