@@ -92,7 +92,7 @@ public:
 		Internal context is not used if platformContextPtr is null in Metal.
 		This function can be called once by a frame.
 	*/
-	virtual bool BeginWithPlatform(void* platformContextPtr) { return false; }
+	virtual bool BeginWithPlatform(void* platformContextPtr);
 
 	virtual void End();
 
@@ -110,7 +110,7 @@ public:
 		@brief
 		added a command into supecified renderpass. This function is supported in some platform.
 	*/
-	virtual bool BeginRenderPassWithPlatformPtr(void* platformPtr) { return false; }
+	virtual bool BeginRenderPassWithPlatformPtr(void* platformPtr);
 
 	virtual void EndRenderPass() {}
 

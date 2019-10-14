@@ -101,7 +101,7 @@ void TestHelper::CreateShader(LLGI::Graphics* graphics,
 		auto vsBinaryPath_ = std::string(vsBinaryPath);
 		auto psBinaryPath_ = std::string(psBinaryPath);
 
-		if (deviceType == LLGI::DeviceType::Vulkan)
+		//if (deviceType == LLGI::DeviceType::Vulkan)
 		{
 			vsBinaryPath_ += ".spv";
 			psBinaryPath_ += ".spv";

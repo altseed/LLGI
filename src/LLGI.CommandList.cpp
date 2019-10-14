@@ -101,6 +101,12 @@ void CommandList::Begin()
 	swapObjects[swapIndex_].referencedObjects.clear();
 }
 
+bool CommandList::BeginWithPlatform(void* platformContextPtr)
+{
+	Begin();
+	return true;
+}
+
 void CommandList::End() {}
 
 void CommandList::SetScissor(int32_t x, int32_t y, int32_t width, int32_t height) {}
@@ -160,6 +166,13 @@ void CommandList::SetTexture(
 }
 
 void CommandList::BeginRenderPass(RenderPass* renderPass)
+{
+	isVertexBufferDirtied = true;
+	isCurrentIndexBufferDirtied = true;
+	isPipelineDirtied = true;
+}
+
+bool CommandList::BeginRenderPassWithPlatformPtr(void* platformPtr)
 {
 	isVertexBufferDirtied = true;
 	isCurrentIndexBufferDirtied = true;
