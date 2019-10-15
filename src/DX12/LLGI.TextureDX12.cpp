@@ -187,7 +187,8 @@ bool TextureDX12::Initialize(const Vec2I& size, const bool isRenderPass, const b
 void TextureDX12::CreateBuffer()
 {
 	UINT64 size = 0;
-	device_->GetCopyableFootprints(&texture_->GetDesc(), 0, 1, 0, &footprint_, nullptr, nullptr, &size);
+	auto textureDesc = texture_->GetDesc();
+	device_->GetCopyableFootprints(&textureDesc, 0, 1, 0, &footprint_, nullptr, nullptr, &size);
 
 	buffer_ = CreateResourceBuffer(device_,
 								   D3D12_HEAP_TYPE_UPLOAD,

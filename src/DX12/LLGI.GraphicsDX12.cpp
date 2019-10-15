@@ -280,7 +280,8 @@ std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
 	D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
 	D3D12_TEXTURE_COPY_LOCATION src = {}, dst = {};
 	UINT64 totalSize;
-	device->GetCopyableFootprints(&texture->Get()->GetDesc(), 0, 1, 0, &footprint, nullptr, nullptr, &totalSize);
+	auto textureDesc = texture->Get()->GetDesc();
+	device->GetCopyableFootprints(&textureDesc, 0, 1, 0, &footprint, nullptr, nullptr, &totalSize);
 
 	src.pResource = texture->Get();
 	src.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
