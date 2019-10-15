@@ -177,6 +177,7 @@ bool CommandList::BeginRenderPassWithPlatformPtr(void* platformPtr)
 	isVertexBufferDirtied = true;
 	isCurrentIndexBufferDirtied = true;
 	isPipelineDirtied = true;
+	return true;
 }
 
 void CommandList::SetData(VertexBuffer* vertexBuffer, int32_t offset, int32_t size, const void* data)
