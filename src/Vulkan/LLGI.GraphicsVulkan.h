@@ -39,7 +39,7 @@ private:
 
 	vk::Sampler defaultSampler_ = nullptr;
 
-	std::function<void(vk::CommandBuffer&, vk::Fence&)> addCommand_;
+	std::function<void(vk::CommandBuffer, vk::Fence)> addCommand_;
 	RenderPassPipelineStateCacheVulkan* renderPassPipelineStateCache_ = nullptr;
 
 public:
@@ -48,7 +48,7 @@ public:
 				   const vk::CommandPool& commandPool,
 				   const vk::PhysicalDevice& pysicalDevice,
 				   const PlatformView& platformView,
-				   std::function<void(vk::CommandBuffer&,vk::Fence&)> addCommand,
+				   std::function<void(vk::CommandBuffer,vk::Fence)> addCommand,
 				   RenderPassPipelineStateCacheVulkan* renderPassPipelineStateCache = nullptr);
 
 	virtual ~GraphicsVulkan();

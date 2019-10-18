@@ -786,7 +786,7 @@ Graphics* PlatformVulkan::CreateGraphics()
 	platformView.imageSize = windowSize_;
 	platformView.format = surfaceFormat;
 
-	auto addCommand = [this](vk::CommandBuffer& commandBuffer, vk::Fence& fence) -> void {
+	auto addCommand = [this](vk::CommandBuffer commandBuffer, vk::Fence fence) -> void {
 		std::array<vk::SubmitInfo, 1> copySubmitInfos;
 		copySubmitInfos[0].commandBufferCount = 1;
 		copySubmitInfos[0].pCommandBuffers = &commandBuffer;
