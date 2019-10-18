@@ -74,6 +74,14 @@ if(BUILD_VULKAN)
   target_link_libraries(LLGI PRIVATE ${Vulkan_LIBRARIES})
 endif()
 
+if(WIN32)
+elseif(APPLE)
+else()
+  set_property(TARGET LLGI PROPERTY POSITION_INDEPENDENT_CODE TRUE) 
+endif()
+
+
+
 #--------------------
 # Install
 
