@@ -205,12 +205,4 @@ void CommandList::WaitUntilCompleted()
 	assert(0); // TODO: Not implemented.
 }
 
-CommandListPool::CommandListPool(int32_t swapCount) {}
-
-CommandList* CommandListPool::Get()
-{
-	assert(0); // TODO: Not implemented.
-	return nullptr;
-}
-
 } // namespace LLGI

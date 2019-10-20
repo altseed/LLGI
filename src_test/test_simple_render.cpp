@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <Utils/LLGI.CommandListPool.h>
 
 void test_simple_rectangle(LLGI::DeviceType deviceType)
 {
@@ -21,9 +22,7 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
 
-	std::array<LLGI::CommandList*, 3> commandLists;
-	for (int i = 0; i < commandLists.size(); i++)
-		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
+	auto commandListPool = std::make_shared<LLGI::CommandListPool>(graphics, sfMemoryPool, 3);
 
 	std::shared_ptr<LLGI::Shader> shader_vs = nullptr;
 	std::shared_ptr<LLGI::Shader> shader_ps = nullptr;
@@ -78,7 +77,7 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 			pips[renderPassPipelineState] = LLGI::CreateSharedPtr(pip);
 		}
 
-		auto commandList = commandLists[count % commandLists.size()];
+		auto commandList = commandListPool->Get();
 		commandList->Begin();
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
@@ -97,10 +96,7 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 	pips.clear();
 
 	graphics->WaitFinish();
-
 	LLGI::SafeRelease(sfMemoryPool);
-	for (int i = 0; i < commandLists.size(); i++)
-		LLGI::SafeRelease(commandLists[i]);
 	LLGI::SafeRelease(graphics);
 	LLGI::SafeRelease(platform);
 }

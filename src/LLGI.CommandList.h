@@ -146,14 +146,4 @@ public:
 	virtual void WaitUntilCompleted();
 };
 
-// TODO: see https://github.com/altseed/LLGI/issues/26
-class CommandListPool : public ReferenceObject
-{
-public:
-	CommandListPool(int32_t swapCount);
-	virtual ~CommandListPool() = default;
-
-	virtual CommandList* Get();
-};
-
 } // namespace LLGI
