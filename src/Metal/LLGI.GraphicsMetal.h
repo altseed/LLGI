@@ -53,6 +53,8 @@ class GraphicsMetal : public Graphics
     std::vector<CommandList*> executingCommandList_;
     
 public:
+	static const int MSAASampleCount;
+	
 	GraphicsMetal();
 	virtual ~GraphicsMetal();
 

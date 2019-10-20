@@ -4,7 +4,7 @@
 namespace LLGI
 {
 
-Texture_Impl::Texture_Impl() {}
+Texture_Impl::Texture_Impl() : msaaTexture_(nullptr) {}
 
 Texture_Impl::~Texture_Impl()
 {
@@ -12,6 +12,11 @@ Texture_Impl::~Texture_Impl()
 	{
 		[texture release];
 		texture = nullptr;
+	}
+	if (msaaTexture_ != nullptr)
+	{
+		[msaaTexture_ release];
+		msaaTexture_ = nullptr;
 	}
 }
 
@@ -48,6 +53,22 @@ bool Texture_Impl::Initialize(id<MTLDevice> device, const Vec2I& size, bool isRe
         textureDescriptor.storageMode =MTLStorageModePrivate;
     }
     
+	if (1)
+	{
+		multiSampled_ = true;
+		
+		MTLTextureDescriptor* desc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
+																						width:size.X
+																					   height:size.Y
+																					mipmapped:NO];
+		desc.textureType = MTLTextureType2DMultisample;
+		desc.storageMode = MTLStorageModePrivate;
+		desc.sampleCount = GraphicsMetal::MSAASampleCount;
+		desc.usage = MTLTextureUsageRenderTarget;
+
+		msaaTexture_ = [device newTextureWithDescriptor:desc];
+	}
+	
 	texture = [device newTextureWithDescriptor:textureDescriptor];
 
 	size_ = size;

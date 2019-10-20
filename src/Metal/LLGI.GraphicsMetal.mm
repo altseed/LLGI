@@ -13,6 +13,7 @@
 
 namespace LLGI
 {
+const int GraphicsMetal::MSAASampleCount = 8;
 
 Graphics_Impl::Graphics_Impl() {}
 

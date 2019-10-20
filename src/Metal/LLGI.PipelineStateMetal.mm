@@ -210,7 +210,10 @@ void PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 		pipelineStateDescriptor.stencilAttachmentPixelFormat = renderPassPipelineStateMetal_->GetImpl()->depthStencilFormat ;
 	}
 	
-	
+	if (self_->IsMSAA)
+	{
+		pipelineStateDescriptor.sampleCount = GraphicsMetal::MSAASampleCount;
+	}
 
 	NSError* pipelineError = nil;
 	pipelineState = [graphics->device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor error:&pipelineError];

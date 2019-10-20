@@ -32,6 +32,8 @@ public:
 	bool IsDepthWriteEnabled = false;
 	bool IsStencilTestEnabled = false;
 	DepthFuncType DepthFunc = DepthFuncType::Less;
+	
+	bool IsMSAA = false;
 
 	std::array<std::string, 16> VertexLayoutNames;
 	std::array<VertexLayoutFormat, 16> VertexLayouts;
