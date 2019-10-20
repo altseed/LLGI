@@ -31,6 +31,10 @@ private:
 	int32_t currentSwap_ = 0;
 	int32_t drawingCount_ = 0;
 
+	ConstantBuffer* CreateConstantBufferInternal(int32_t size) override;
+
+	ConstantBuffer* ReinitializeConstantBuffer(ConstantBuffer* cb, int32_t size) override;
+
 public:
 	SingleFrameMemoryPoolDX12(
 		GraphicsDX12* graphics, bool isStrongRef, int32_t swapBufferCount, int32_t constantBufferPoolSize, int32_t drawingCount);
@@ -43,8 +47,6 @@ public:
 	int32_t GetDrawingCount() const;
 
 	void NewFrame() override;
-
-	ConstantBuffer* CreateConstantBuffer(int32_t size) override;
 };
 
 } // namespace LLGI

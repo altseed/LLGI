@@ -33,7 +33,7 @@ void InternalSingleFrameMemoryPoolDX12::Reset() { constantBufferOffset_ = 0; }
 
 SingleFrameMemoryPoolDX12::SingleFrameMemoryPoolDX12(
 	GraphicsDX12* graphics, bool isStrongRef, int32_t swapBufferCount, int32_t constantBufferPoolSize, int32_t drawingCount)
-	: graphics_(graphics), isStrongRef_(isStrongRef), drawingCount_(drawingCount)
+	: SingleFrameMemoryPool(swapBufferCount), graphics_(graphics), isStrongRef_(isStrongRef), drawingCount_(drawingCount)
 {
 	if (isStrongRef)
 	{
@@ -59,6 +59,30 @@ SingleFrameMemoryPoolDX12 ::~SingleFrameMemoryPoolDX12()
 	}
 }
 
+ConstantBuffer* SingleFrameMemoryPoolDX12::CreateConstantBufferInternal(int32_t size)
+{
+	auto obj = new ConstantBufferDX12();
+	if (!obj->InitializeAsShortTime(this, size))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
+
+	return obj;
+}
+
+ConstantBuffer* SingleFrameMemoryPoolDX12::ReinitializeConstantBuffer(ConstantBuffer* cb, int32_t size)
+{
+	auto obj = static_cast<ConstantBufferDX12*>(cb);
+	if (!obj->InitializeAsShortTime(this, size))
+	{
+		return nullptr;
+	}
+
+	return obj;
+}
+
+
 bool SingleFrameMemoryPoolDX12::GetConstantBuffer(int32_t size, ID3D12Resource*& resource, int32_t& offset)
 {
 	assert(currentSwap_ >= 0);
@@ -74,17 +98,10 @@ void SingleFrameMemoryPoolDX12::NewFrame()
 	currentSwap_++;
 	currentSwap_ %= memoryPools.size();
 	memoryPools[currentSwap_]->Reset();
+	SingleFrameMemoryPool::NewFrame();
+
+	assert(currentSwap_ == currentSwapBuffer_);
 }
 
-ConstantBuffer* SingleFrameMemoryPoolDX12::CreateConstantBuffer(int32_t size)
-{
-	auto obj = new ConstantBufferDX12();
-	if (!obj->InitializeAsShortTime(this, size))
-	{
-		SafeRelease(obj);
-		return nullptr;
-	}
 
-	return obj;
-}
 } // namespace LLGI

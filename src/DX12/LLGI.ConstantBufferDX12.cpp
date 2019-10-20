@@ -24,10 +24,13 @@ bool ConstantBufferDX12::Initialize(GraphicsDX12* graphics, int32_t size)
 
 bool ConstantBufferDX12::InitializeAsShortTime(SingleFrameMemoryPoolDX12* memoryPool, int32_t size)
 {
+	auto old = constantBuffer_;
+
 	auto size_ = (size + 255) & ~255; // buffer size should be multiple of 256
 	if (memoryPool->GetConstantBuffer(size_, constantBuffer_, offset_))
 	{
 		SafeAddRef(constantBuffer_);
+		SafeRelease(old);
 		memSize_ = size;
 		actualSize_ = size_;
 		return true;

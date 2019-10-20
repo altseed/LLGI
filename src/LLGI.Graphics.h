@@ -29,9 +29,25 @@ struct DepthTextureInitializationParameter
 */
 class SingleFrameMemoryPool : public ReferenceObject
 {
+protected:
+	int32_t currentSwapBuffer_ = -1;
+	int32_t swapBufferCount_ = 0;
+	std::vector<int32_t> offsets_;
+	std::vector<std::vector<ConstantBuffer*>> constantBuffers_;
+
+	/**
+		@brief	create constant buffer
+	*/
+	virtual ConstantBuffer* CreateConstantBufferInternal(int32_t size) { return nullptr; }
+
+	/**
+		@brief	reinitialize buffer with a size
+	*/
+	virtual ConstantBuffer* ReinitializeConstantBuffer(ConstantBuffer* cb, int32_t size) { return nullptr; }
+
 public:
-	SingleFrameMemoryPool() = default;
-	virtual ~SingleFrameMemoryPool() = default;
+	SingleFrameMemoryPool(int32_t swapBufferCount = 3);
+	virtual ~SingleFrameMemoryPool();
 
 	/**
 	@brief	Start new frame
@@ -115,7 +131,7 @@ public:
 		Don't use it for the many purposes, please input Clear or SetRenderPass immediately.
 	*/
 	//[[deprecated("use Platform::GetCurrentScreen.")]] virtual RenderPass*
-	//GetCurrentScreen(const Color8& clearColor = Color8(), bool isColorCleared = false, bool isDepthCleared = false);
+	// GetCurrentScreen(const Color8& clearColor = Color8(), bool isColorCleared = false, bool isDepthCleared = false);
 
 	/**
 		@brief	create a vertex buffer

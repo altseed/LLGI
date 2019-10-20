@@ -1,4 +1,5 @@
 #include "LLGI.Graphics.h"
+#include "LLGI.ConstantBuffer.h"
 
 namespace LLGI
 {
@@ -16,9 +17,65 @@ void Log(LogType logType, const char* message)
 	}
 }
 
-void SingleFrameMemoryPool::NewFrame() {}
+SingleFrameMemoryPool::SingleFrameMemoryPool(int32_t swapBufferCount) : swapBufferCount_(swapBufferCount) {
 
-ConstantBuffer* SingleFrameMemoryPool::CreateConstantBuffer(int32_t size) { return nullptr; }
+	for (int i = 0; i < swapBufferCount_; i++)
+	{
+		offsets_.push_back(0);
+		constantBuffers_.push_back(std::vector<ConstantBuffer*>());
+	}
+}
+
+SingleFrameMemoryPool::~SingleFrameMemoryPool()
+{
+	for (auto& constantBuffer : constantBuffers_)
+	{
+		for (auto c : constantBuffer)
+		{
+			c->Release();
+		}
+	}
+}
+
+void SingleFrameMemoryPool::NewFrame() { 
+	currentSwapBuffer_++;
+	currentSwapBuffer_ %= swapBufferCount_;
+	offsets_[currentSwapBuffer_] = 0; 
+}
+
+ConstantBuffer* SingleFrameMemoryPool::CreateConstantBuffer(int32_t size)
+{
+	assert(currentSwapBuffer_ >= 0);
+
+	if (constantBuffers_[currentSwapBuffer_].size() <= offsets_[currentSwapBuffer_])
+	{
+		auto cb = CreateConstantBufferInternal(size);
+		if (cb == nullptr)
+		{
+			return nullptr;
+		}
+
+		constantBuffers_[currentSwapBuffer_].push_back(cb);
+		SafeAddRef(cb);
+		offsets_[currentSwapBuffer_]++;
+		return cb;
+	}
+	else
+	{
+		auto cb = constantBuffers_[currentSwapBuffer_][offsets_[currentSwapBuffer_]];
+		auto newCb = ReinitializeConstantBuffer(cb, size);
+		if (newCb == nullptr)
+		{
+			return nullptr;
+		}
+
+		SafeAddRef(newCb);
+		offsets_[currentSwapBuffer_]++;
+		return newCb;
+	}
+
+	return nullptr;
+}
 
 void RenderPass::SetIsColorCleared(bool isColorCleared) { isColorCleared_ = isColorCleared; }
 
@@ -45,7 +102,7 @@ void Graphics::SetWindowSize(const Vec2I& windowSize) { windowSize_ = windowSize
 
 void Graphics::Execute(CommandList* commandList) {}
 
-//RenderPass* Graphics::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) { return nullptr; }
+// RenderPass* Graphics::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) { return nullptr; }
 
 VertexBuffer* Graphics::CreateVertexBuffer(int32_t size) { return nullptr; }
 
