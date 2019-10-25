@@ -63,8 +63,9 @@ bool Texture_Impl::Initialize(id<MTLDevice> device, const Vec2I& size, bool isRe
 	return true;
 }
 
-bool Texture_Impl::Initialize(id<MTLDevice> device, const RenderTextureInitializationParameter& parameter)
+bool Texture_Impl::Initialize(Graphics_Impl* graphics, const RenderTextureInitializationParameter& parameter)
 {
+	id<MTLDevice> device = graphics->device;
     MTLTextureDescriptor* textureDescriptor = nullptr;
 
 	textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
@@ -86,7 +87,7 @@ bool Texture_Impl::Initialize(id<MTLDevice> device, const RenderTextureInitializ
 																					mipmapped:NO];
 		desc.textureType = MTLTextureType2DMultisample;
 		desc.storageMode = MTLStorageModePrivate;
-		desc.sampleCount = GraphicsMetal::MSAASampleCount;
+		desc.sampleCount = graphics->maxMultiSamplingCount;
 		desc.usage = MTLTextureUsageRenderTarget;
 
 		msaaTexture_ = [device newTextureWithDescriptor:desc];
@@ -136,18 +137,18 @@ bool TextureMetal::Initialize(id<MTLDevice> device, ReferenceObject* owner, Vec2
 	return impl->Initialize(device, size, isRenderTexture_, isDepthTexture_);
 }
 
-bool TextureMetal::Initialize(id<MTLDevice> device, ReferenceObject* owner, const RenderTextureInitializationParameter& parameter)
+bool TextureMetal::Initialize(GraphicsMetal* owner, const RenderTextureInitializationParameter& parameter)
 {
 	isRenderTexture_ = true;
 	isDepthTexture_ = false;
 	
-    SafeAssign(owner_, owner);
+    SafeAssign(owner_, static_cast<ReferenceObject*>(owner));
 
 	if (parameter.Format != TextureFormatType::R8G8B8A8_UNORM) {
 		throw "Not implemented.";
 	}
 	data.resize(parameter.Size.X * parameter.Size.Y * 4);	// TODO: pixel size
-	return impl->Initialize(device, parameter);
+	return impl->Initialize(owner->GetImpl(), parameter);
 }
 
 bool TextureMetal::Initialize()
