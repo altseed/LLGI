@@ -23,6 +23,7 @@ public:
 	virtual ~TextureMetal();
 
 	bool Initialize(id<MTLDevice> device, ReferenceObject* owner, Vec2I size, bool isRenderTexture, bool isDepthTexture);
+	bool Initialize(id<MTLDevice> device, ReferenceObject* owner, const RenderTextureInitializationParameter& parameter);
 	bool Initialize();
 	void Reset(id<MTLTexture> nativeTexture);
 	void* Lock() override;

@@ -44,7 +44,16 @@ void RenderPass_Impl::UpdateTarget(Texture_Impl** textures, int32_t textureCount
 {
     for(int i = 0; i < textureCount; i++)
     {
-        renderPassDescriptor.colorAttachments[i].texture = textures[i]->texture;
+		if (textures[i]->multiSampled_)
+		{
+			renderPassDescriptor.colorAttachments[i].texture = textures[i]->msaaTexture_;
+			renderPassDescriptor.colorAttachments[i].resolveTexture = textures[i]->texture;
+			renderPassDescriptor.colorAttachments[i].storeAction = MTLStoreActionMultisampleResolve;
+		}
+		else
+		{
+			renderPassDescriptor.colorAttachments[i].texture = textures[i]->texture;
+		}
     }
     
     if(depthTexture != nullptr)

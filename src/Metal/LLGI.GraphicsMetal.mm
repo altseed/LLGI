@@ -13,6 +13,7 @@
 
 namespace LLGI
 {
+const int GraphicsMetal::MSAASampleCount = 8;
 
 Graphics_Impl::Graphics_Impl() {}
 
@@ -218,15 +219,59 @@ RenderPass* GraphicsMetal::CreateRenderPass(const Texture** textures, int32_t te
     return renderPass;
 }
 
-Texture* GraphicsMetal::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer) {
-    auto o = new TextureMetal();
-    if (o->Initialize(this->GetImpl()->device, this, size, isRenderPass, isDepthBuffer))
+Texture* GraphicsMetal::CreateTexture(const TextureInitializationParameter& parameter)
+{
+	auto o = new TextureMetal();
+    if (o->Initialize(this->GetImpl()->device, this, parameter.Size, false, false))
     {
         return o;
     }
     
     SafeRelease(o);
-    return nullptr;    
+    return nullptr;
+}
+
+Texture* GraphicsMetal::CreateRenderTexture(const RenderTextureInitializationParameter& parameter)
+{
+	auto o = new TextureMetal();
+    if (o->Initialize(this->GetImpl()->device, this, parameter))
+    {
+        return o;
+    }
+    
+    SafeRelease(o);
+    return nullptr;
+}
+
+Texture* GraphicsMetal::CreateDepthTexture(const DepthTextureInitializationParameter& parameter)
+{
+	auto o = new TextureMetal();
+    if (o->Initialize(this->GetImpl()->device, this, parameter.Size, false, true))
+    {
+        return o;
+    }
+    
+    SafeRelease(o);
+    return nullptr;
+}
+
+Texture* GraphicsMetal::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer)
+{
+	if (isRenderPass) {
+		RenderTextureInitializationParameter params;
+		params.Size = size;
+		return CreateRenderTexture(params);
+	}
+	else if (isDepthBuffer) {
+		DepthTextureInitializationParameter params;
+		params.Size = size;
+		return CreateDepthTexture(params);
+	}
+	else {
+		TextureInitializationParameter params;
+		params.Size = size;
+		return CreateTexture(params);
+	}
 }
 
 Texture* GraphicsMetal::CreateTexture(uint64_t id) { throw "Not inplemented"; }

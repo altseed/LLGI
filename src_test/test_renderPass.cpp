@@ -3,7 +3,7 @@
 #include <array>
 #include <map>
 
-void test_renderPass(LLGI::DeviceType deviceType)
+void test_renderPass(LLGI::DeviceType deviceType, bool isMSAATest)
 {
 	auto code_gl_vs = R"(
 #version 440 core
@@ -106,7 +106,10 @@ float4 main(PS_INPUT input) : SV_TARGET
 	for (int i = 0; i < commandLists.size(); i++)
 		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
 
-	auto renderTexture = graphics->CreateTexture(LLGI::Vec2I(256, 256), true, false);
+	LLGI::RenderTextureInitializationParameter params;
+	params.Size = LLGI::Vec2I(256, 256);
+	params.IsMultiSampling = isMSAATest;
+	auto renderTexture = graphics->CreateRenderTexture(params);
 
 	auto renderPass = graphics->CreateRenderPass((const LLGI::Texture**)&renderTexture, 1, nullptr);
 
@@ -262,11 +265,13 @@ float4 main(PS_INPUT input) : SV_TARGET
 			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs);
 			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps);
 			pip->SetRenderPassPipelineState(renderPassPipelineState.get());
+			pip->IsMSAA = isMSAATest;
 			pip->Compile();
 
 			pips[renderPassPipelineState] = LLGI::CreateSharedPtr(pip);
 		}
 
+		// Render to RenderTargetTexture
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
 		commandList->SetTexture(
 			texture, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
@@ -297,6 +302,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 			pips[renderPassPipelineStateSc] = LLGI::CreateSharedPtr(pip);
 		}
 
+		// Render to backbuffer
 		commandList->SetPipelineState(pips[renderPassPipelineStateSc].get());
 		commandList->SetTexture(
 			renderTexture, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
@@ -597,6 +603,7 @@ PS_OUTPUT main(PS_INPUT input)
 			pips[renderPassPipelineState] = LLGI::CreateSharedPtr(pip);
 		}
 
+		// Render to RenderTargetTexture
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
 		commandList->SetTexture(
 			texture, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
@@ -627,6 +634,7 @@ PS_OUTPUT main(PS_INPUT input)
 			pips[renderPassPipelineStateSc] = LLGI::CreateSharedPtr(pip);
 		}
 
+		// Render to Backbuffer
 		commandList->SetPipelineState(pips[renderPassPipelineStateSc].get());
 		commandList->SetTexture(
 			renderTexture, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);

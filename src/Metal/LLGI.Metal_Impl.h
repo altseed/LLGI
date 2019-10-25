@@ -105,11 +105,14 @@ struct Texture_Impl
 	id<MTLTexture> texture;
 	Vec2I size_;
     bool fromExternal_ = false;
+	bool multiSampled_ = false;
+	id<MTLTexture> msaaTexture_;
     
 	Texture_Impl();
 	virtual ~Texture_Impl();
 
 	bool Initialize(id<MTLDevice> device, const Vec2I& size, bool isRenderTexture, bool isDepthTexture);
+	bool Initialize(id<MTLDevice> device, const RenderTextureInitializationParameter& parameter);
 	void Reset(id<MTLTexture> nativeTexture);	// for wrap swapchain backbuffer.
 
 	void Write(const uint8_t* data);
