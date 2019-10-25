@@ -13,7 +13,6 @@
 
 namespace LLGI
 {
-const int GraphicsMetal::MSAASampleCount = 8;
 
 Graphics_Impl::Graphics_Impl() {}
 
@@ -34,6 +33,21 @@ bool Graphics_Impl::Initialize()
 {
 	device = MTLCreateSystemDefaultDevice();
 	commandQueue = [device newCommandQueue];
+	
+	maxMultiSamplingCount = 0;
+	int testSampleCounts[] = {8, 4, 2, 1};
+	for (int count : testSampleCounts)
+	{
+		bool supported = [device supportsTextureSampleCount:count];
+		if (supported)
+		{
+			maxMultiSamplingCount = count;
+			break;
+		}
+	}
+	if (maxMultiSamplingCount == 0)
+		throw "Unsupported.";
+	
 	return true;
 }
 
@@ -234,7 +248,7 @@ Texture* GraphicsMetal::CreateTexture(const TextureInitializationParameter& para
 Texture* GraphicsMetal::CreateRenderTexture(const RenderTextureInitializationParameter& parameter)
 {
 	auto o = new TextureMetal();
-    if (o->Initialize(this->GetImpl()->device, this, parameter))
+    if (o->Initialize(this, parameter))
     {
         return o;
     }

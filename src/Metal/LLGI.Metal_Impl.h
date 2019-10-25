@@ -17,6 +17,7 @@ struct Graphics_Impl
 	id<MTLDevice> device = nullptr;
 	id<MTLCommandQueue> commandQueue = nullptr;
 	id<CAMetalDrawable> drawable;
+	int maxMultiSamplingCount = 0;
 
 	Graphics_Impl();
 	virtual ~Graphics_Impl();
@@ -112,7 +113,7 @@ struct Texture_Impl
 	virtual ~Texture_Impl();
 
 	bool Initialize(id<MTLDevice> device, const Vec2I& size, bool isRenderTexture, bool isDepthTexture);
-	bool Initialize(id<MTLDevice> device, const RenderTextureInitializationParameter& parameter);
+	bool Initialize(Graphics_Impl* graphics, const RenderTextureInitializationParameter& parameter);
 	void Reset(id<MTLTexture> nativeTexture);	// for wrap swapchain backbuffer.
 
 	void Write(const uint8_t* data);

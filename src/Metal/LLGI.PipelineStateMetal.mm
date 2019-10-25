@@ -212,7 +212,7 @@ void PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 	
 	if (self_->IsMSAA)
 	{
-		pipelineStateDescriptor.sampleCount = GraphicsMetal::MSAASampleCount;
+		pipelineStateDescriptor.sampleCount = graphics->maxMultiSamplingCount;
 	}
 
 	NSError* pipelineError = nil;
