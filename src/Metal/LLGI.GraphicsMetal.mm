@@ -234,7 +234,7 @@ Texture* GraphicsMetal::CreateTexture(const TextureInitializationParameter& para
 Texture* GraphicsMetal::CreateRenderTexture(const RenderTextureInitializationParameter& parameter)
 {
 	auto o = new TextureMetal();
-    if (o->Initialize(this->GetImpl()->device, this, parameter.Size, true, false))
+    if (o->Initialize(this->GetImpl()->device, this, parameter))
     {
         return o;
     }

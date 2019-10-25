@@ -53,13 +53,36 @@ bool Texture_Impl::Initialize(id<MTLDevice> device, const Vec2I& size, bool isRe
         textureDescriptor.storageMode =MTLStorageModePrivate;
     }
     
-	if (1)
+	
+	texture = [device newTextureWithDescriptor:textureDescriptor];
+
+	size_ = size;
+
+    fromExternal_ = false;
+    
+	return true;
+}
+
+bool Texture_Impl::Initialize(id<MTLDevice> device, const RenderTextureInitializationParameter& parameter)
+{
+    MTLTextureDescriptor* textureDescriptor = nullptr;
+
+	textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
+																							 width:parameter.Size.X
+																							height:parameter.Size.Y
+																						 mipmapped:NO];
+	textureDescriptor.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
+	textureDescriptor.textureType = MTLTextureType2D;
+	textureDescriptor.depth = 1;
+	textureDescriptor.storageMode =MTLStorageModePrivate;
+	
+	if (parameter.IsMultiSampling)
 	{
 		multiSampled_ = true;
 		
 		MTLTextureDescriptor* desc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
-																						width:size.X
-																					   height:size.Y
+																						width:parameter.Size.X
+																					   height:parameter.Size.Y
 																					mipmapped:NO];
 		desc.textureType = MTLTextureType2DMultisample;
 		desc.storageMode = MTLStorageModePrivate;
@@ -71,7 +94,7 @@ bool Texture_Impl::Initialize(id<MTLDevice> device, const Vec2I& size, bool isRe
 	
 	texture = [device newTextureWithDescriptor:textureDescriptor];
 
-	size_ = size;
+	size_ = parameter.Size;
 
     fromExternal_ = false;
     
@@ -111,6 +134,20 @@ bool TextureMetal::Initialize(id<MTLDevice> device, ReferenceObject* owner, Vec2
 
 	data.resize(size.X * size.Y * 4);
 	return impl->Initialize(device, size, isRenderTexture_, isDepthTexture_);
+}
+
+bool TextureMetal::Initialize(id<MTLDevice> device, ReferenceObject* owner, const RenderTextureInitializationParameter& parameter)
+{
+	isRenderTexture_ = true;
+	isDepthTexture_ = false;
+	
+    SafeAssign(owner_, owner);
+
+	if (parameter.Format != TextureFormatType::R8G8B8A8_UNORM) {
+		throw "Not implemented.";
+	}
+	data.resize(parameter.Size.X * parameter.Size.Y * 4);	// TODO: pixel size
+	return impl->Initialize(device, parameter);
 }
 
 bool TextureMetal::Initialize()

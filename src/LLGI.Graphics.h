@@ -17,6 +17,7 @@ struct RenderTextureInitializationParameter
 {
 	Vec2I Size;
 	TextureFormatType Format = TextureFormatType::R8G8B8A8_UNORM;
+	bool IsMultiSampling = false;
 };
 
 struct DepthTextureInitializationParameter
