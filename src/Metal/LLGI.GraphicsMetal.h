@@ -84,6 +84,12 @@ public:
 
 	RenderPass* CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture) override;
 
+	Texture* CreateTexture(const TextureInitializationParameter& parameter) override;
+	
+	Texture* CreateRenderTexture(const RenderTextureInitializationParameter& parameter) override;
+
+	Texture* CreateDepthTexture(const DepthTextureInitializationParameter& parameter) override;
+	
 	Texture* CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer) override;
 
 	Texture* CreateTexture(uint64_t id) override;
