@@ -28,7 +28,7 @@ public:
 	void Reset(id<MTLTexture> nativeTexture);
 	void* Lock() override;
 	void Unlock() override;
-	Vec2I GetSizeAs2D() override;
+	Vec2I GetSizeAs2D() const override;
 	bool IsRenderTexture() const override;
 	bool IsDepthTexture() const override;
 

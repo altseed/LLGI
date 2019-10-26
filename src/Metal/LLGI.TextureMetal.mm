@@ -168,7 +168,7 @@ void* TextureMetal::Lock() { return data.data(); }
 
 void TextureMetal::Unlock() { impl->Write(data.data()); }
 
-Vec2I TextureMetal::GetSizeAs2D() { return impl->size_; }
+Vec2I TextureMetal::GetSizeAs2D() const { return impl->size_; }
 
 bool TextureMetal::IsRenderTexture() const { return isRenderTexture_; }
 
