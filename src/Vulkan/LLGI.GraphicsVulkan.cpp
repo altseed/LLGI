@@ -18,14 +18,18 @@ GraphicsVulkan::GraphicsVulkan(const vk::Device& device,
 							   const vk::PhysicalDevice& pysicalDevice,
 							   const PlatformView& platformView,
 							   std::function<void(vk::CommandBuffer, vk::Fence)> addCommand,
-							   RenderPassPipelineStateCacheVulkan* renderPassPipelineStateCache)
+							   RenderPassPipelineStateCacheVulkan* renderPassPipelineStateCache,
+							   ReferenceObject* owner)
 	: vkDevice(device)
 	, vkQueue(quque)
 	, vkCmdPool(commandPool)
 	, vkPysicalDevice(pysicalDevice)
 	, addCommand_(addCommand)
 	, renderPassPipelineStateCache_(renderPassPipelineStateCache)
+	, owner_(owner)
 {
+	SafeAddRef(owner_);
+
 	swapBufferCount_ = static_cast<int32_t>(platformView.renderPasses.size());
 
 	for (size_t i = 0; i < static_cast<size_t>(swapBufferCount_); i++)
@@ -76,6 +80,8 @@ GraphicsVulkan::~GraphicsVulkan()
 	{
 		vkDevice.destroySampler(defaultSampler_);
 	}
+
+	SafeRelease(owner_);
 }
 
 void GraphicsVulkan::SetWindowSize(const Vec2I& windowSize) { throw "Not inplemented"; }

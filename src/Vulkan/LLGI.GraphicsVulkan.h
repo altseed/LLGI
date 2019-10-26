@@ -41,7 +41,8 @@ private:
 
 	std::function<void(vk::CommandBuffer, vk::Fence)> addCommand_;
 	RenderPassPipelineStateCacheVulkan* renderPassPipelineStateCache_ = nullptr;
-
+	ReferenceObject* owner_ = nullptr;
+	
 public:
 	GraphicsVulkan(const vk::Device& device,
 				   const vk::Queue& quque,
@@ -49,7 +50,8 @@ public:
 				   const vk::PhysicalDevice& pysicalDevice,
 				   const PlatformView& platformView,
 				   std::function<void(vk::CommandBuffer,vk::Fence)> addCommand,
-				   RenderPassPipelineStateCacheVulkan* renderPassPipelineStateCache = nullptr);
+				   RenderPassPipelineStateCacheVulkan* renderPassPipelineStateCache = nullptr,
+				   ReferenceObject* owner = nullptr);
 
 	virtual ~GraphicsVulkan();
 
