@@ -46,8 +46,9 @@ bool RenderPassVulkan::Initialize(const vk::Image& imageColor,
 	hasDepth = true;
 	isPresentMode = true;
 	renderTargetProperties.resize(1);
+	colorBufferCount_ = 1;
 
-	FixedSizeVector<vk::Format, 4> formats;
+	FixedSizeVector<vk::Format, RenderTargetMax> formats;
 	formats.resize(1);
 	formats.at(0) = format;
 	this->renderPassPipelineState = renderPassPipelineStateCache_->Create(isPresentMode, hasDepth, formats);
@@ -86,7 +87,8 @@ bool RenderPassVulkan::Initialize(const TextureVulkan** textures, int32_t textur
 		return false;
 
 	renderTargetProperties.resize(textureCount);
-
+	colorBufferCount_ = textureCount;
+	
 	for (int32_t i = 0; i < textureCount; i++)
 	{
 		auto texture = const_cast<TextureVulkan*>(textures[i]);
@@ -109,21 +111,30 @@ bool RenderPassVulkan::Initialize(const TextureVulkan** textures, int32_t textur
 		renderTargetProperties.at(i).format = textures[i]->GetVulkanFormat();
 	}
 
-	// TODO : make const
-	imageSize_ = ((TextureVulkan*)textures[0])->GetSizeAs2D();
+	if(!getSize(imageSize_, reinterpret_cast<const Texture**>(textures), textureCount))
+	{
+		return false;
+	}
 
 	hasDepth = depthTexture != nullptr;
-	isPresentMode = true;
+	isPresentMode = textures[0]->GetType() == TextureType::Screen;
 
-	assert(depthTexture != nullptr);
+	FixedSizeVector<vk::ImageView, RenderTargetMax + 1> views;
+	FixedSizeVector<vk::Format, RenderTargetMax> formats;
+	views.resize(textureCount + 1);
+	formats.resize(textureCount);
 
-	std::array<vk::ImageView, 2> views;
-	views[0] = textures[0]->GetView();
-	views[1] = depthTexture->GetView();
+	for(int32_t i = 0; i < textureCount; i++)
+	{
+		views.at(i) =  textures[i]->GetView();
+		formats.at(i) = textures[i]->GetVulkanFormat();
+	}
 
-	FixedSizeVector<vk::Format, 4> formats;
-	formats.resize(1);
-	formats.at(0) = textures[0]->GetVulkanFormat();
+	if(hasDepth)
+	{
+		views.at(textureCount) = depthTexture->GetView();
+	}
+
 	this->renderPassPipelineState = renderPassPipelineStateCache_->Create(isPresentMode, hasDepth, formats);
 
 	vk::FramebufferCreateInfo framebufferCreateInfo;
@@ -137,30 +148,6 @@ bool RenderPassVulkan::Initialize(const TextureVulkan** textures, int32_t textur
 	frameBuffer_ = device_.createFramebuffer(framebufferCreateInfo);
 
 	return true;
-	/*
-
-	// TODO : MRT
-	this->renderPassPipelineState = graphics_->CreateRenderPassPipelineState(isPresentMode, hasDepth, format);
-
-	std::array<vk::ImageView, 2> views;
-	views[0] = imageColorView;
-	views[1] = imageDepthView;
-
-	vk::FramebufferCreateInfo framebufferCreateInfo;
-	framebufferCreateInfo.renderPass = renderPassPipelineState->GetRenderPass();
-	framebufferCreateInfo.attachmentCount = static_cast<uint32_t>(views.size());
-	framebufferCreateInfo.pAttachments = views.data();
-	framebufferCreateInfo.width = imageSize.X;
-	framebufferCreateInfo.height = imageSize.Y;
-	framebufferCreateInfo.layers = 1;
-
-	frameBuffer = graphics_->GetDevice().createFramebuffer(framebufferCreateInfo);
-
-	colorBuffers[0] = imageColor;
-	depthBuffer = imageDepth;
-
-	return true;
-	*/
 }
 
 Vec2I RenderPassVulkan::GetImageSize() const { return imageSize_; }

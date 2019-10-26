@@ -29,7 +29,7 @@ TextureVulkan::~TextureVulkan()
 	SafeRelease(owner_);
 }
 
-bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const Vec2I& size, bool isRenderPass, bool isDepthBuffer)
+bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const Vec2I& size, bool isRenderPass)
 {
 	graphics_ = graphics;
 	if (isStrongRef_)
@@ -37,16 +37,11 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const
 		SafeAddRef(graphics_);
 	}
 
-	if (isRenderPass)
-		throw "Not implemented";
+	type_ = TextureType::Color;
 
-	if (isDepthBuffer)
-		throw "Not implemented";
-
-	if (isDepthBuffer)
+	if(isRenderPass)
 	{
-		isDepthBuffer_ = isDepthBuffer;
-		// CreateDepthBuffer(this->image, this->view, this->devMem, graphics_->GetDevice(), ...)
+		type_ = TextureType::Render;
 	}
 
 	cpuBuf = std::unique_ptr<Buffer>(new Buffer(graphics_));
@@ -134,8 +129,15 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const
 	return true;
 }
 
+bool TextureVulkan::InitializeAsRenderTexture(GraphicsVulkan* graphics, bool isStrongRef,const RenderTextureInitializationParameter& parameter)
+{
+	return Initialize(graphics, isStrongRef, parameter.Size, true);
+}
+
 bool TextureVulkan::InitializeAsScreen(const vk::Image& image, const vk::ImageView& imageVew, vk::Format format, const Vec2I& size)
 {
+	type_ = TextureType::Screen;
+
 	this->image_ = image;
 	this->view_ = imageVew;
 	vkTextureFormat_ = format;
@@ -150,6 +152,8 @@ bool TextureVulkan::InitializeAsDepthStencil(vk::Device device,
 											 const Vec2I& size,
 											 ReferenceObject* owner)
 {
+	type_ = TextureType::Depth;
+
 	owner_ = owner;
 	SafeAddRef(owner_);
 	device_ = device;
@@ -293,7 +297,7 @@ void TextureVulkan::Unlock()
 	graphics_->GetDevice().freeCommandBuffers(graphics_->GetCommandPool(), copyCommandBuffer);
 }
 
-Vec2I TextureVulkan::GetSizeAs2D() { return textureSize; }
+Vec2I TextureVulkan::GetSizeAs2D() const { return textureSize; }
 
 bool TextureVulkan::IsRenderTexture() const
 {

@@ -36,7 +36,9 @@ public:
 	TextureVulkan();
 	virtual ~TextureVulkan();
 
-	bool Initialize(GraphicsVulkan* graphics, bool isStrongRef, const Vec2I& size, bool isRenderPass, bool isDepthBuffer);
+	bool Initialize(GraphicsVulkan* graphics, bool isStrongRef, const Vec2I& size, bool isRenderPass);
+
+	bool InitializeAsRenderTexture(GraphicsVulkan* graphics, bool isStrongRef, const RenderTextureInitializationParameter& parameter);
 
 	/**
 		@brief	initialize as screen
@@ -47,7 +49,7 @@ public:
 
 	void* Lock() override;
 	void Unlock() override;
-	Vec2I GetSizeAs2D() override;
+	Vec2I GetSizeAs2D() const override;
 	bool IsRenderTexture() const override;
 	bool IsDepthTexture() const override;
 

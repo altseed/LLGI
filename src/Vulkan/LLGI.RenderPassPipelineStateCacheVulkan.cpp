@@ -16,7 +16,7 @@ RenderPassPipelineStateCacheVulkan::~RenderPassPipelineStateCacheVulkan()
 }
 
 RenderPassPipelineStateVulkan*
-RenderPassPipelineStateCacheVulkan::Create(bool isPresentMode, bool hasDepth, const FixedSizeVector<vk::Format, 4>& formats)
+RenderPassPipelineStateCacheVulkan::Create(bool isPresentMode, bool hasDepth, const FixedSizeVector<vk::Format, RenderTargetMax>& formats)
 {
 	RenderPassPipelineStateVulkanKey key;
 	key.isPresentMode = isPresentMode;
@@ -41,63 +41,86 @@ RenderPassPipelineStateCacheVulkan::Create(bool isPresentMode, bool hasDepth, co
 	}
 
 	// settings
-	std::array<vk::AttachmentDescription, 2> attachmentDescs;
-	std::array<vk::AttachmentReference, 2> attachmentRefs;
+	FixedSizeVector<vk::AttachmentDescription, RenderTargetMax + 1> attachmentDescs;
+	FixedSizeVector<vk::AttachmentReference, RenderTargetMax + 1> attachmentRefs;
+	attachmentDescs.resize(formats.size() + (hasDepth ? 1 : 0));
+	attachmentRefs.resize(formats.size() + (hasDepth ? 1 : 0));
 
 	// color buffer
-	attachmentDescs[0].format = formats.at(0);
-	attachmentDescs[0].samples = vk::SampleCountFlagBits::e1;
+	int colorCount = formats.size();
 
-	// attachmentDescs[0].loadOp = vk::AttachmentLoadOp::eDontCare;
+	for(int i = 0; i < colorCount; i++)
+	{
+		attachmentDescs.at(i).format = formats.at(i);
+		attachmentDescs.at(i).samples = vk::SampleCountFlagBits::e1;
+		// attachmentDescs[i].loadOp = vk::AttachmentLoadOp::eDontCare;
 
-	// TODO : improve it
-	attachmentDescs[0].loadOp = vk::AttachmentLoadOp::eClear;
+		// TODO : improve it
+		attachmentDescs.at(i).loadOp = vk::AttachmentLoadOp::eClear;
 
-	attachmentDescs[0].storeOp = vk::AttachmentStoreOp::eStore;
-	attachmentDescs[0].stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-	attachmentDescs[0].stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-	attachmentDescs[0].initialLayout = vk::ImageLayout::eUndefined;
+		attachmentDescs.at(i).storeOp = vk::AttachmentStoreOp::eStore;
+		attachmentDescs.at(i).stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+		attachmentDescs.at(i).stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+		attachmentDescs.at(i).initialLayout = vk::ImageLayout::eUndefined;
+	}
 
 	if (isPresentMode)
 	{
-		attachmentDescs[0].finalLayout = vk::ImageLayout::ePresentSrcKHR;
+		attachmentDescs.at(0).finalLayout = vk::ImageLayout::ePresentSrcKHR;
 	}
 	else
 	{
-		attachmentDescs[0].finalLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		for(int i = 0; i < colorCount; i++)
+		{
+			attachmentDescs.at(i).finalLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		}
 	}
 
 	// depth buffer
 	if (hasDepth)
 	{
-		attachmentDescs[1].format = vk::Format::eD32SfloatS8Uint;
-		attachmentDescs[1].samples = vk::SampleCountFlagBits::e1;
+		attachmentDescs.at(colorCount).format = vk::Format::eD32SfloatS8Uint;
+		attachmentDescs.at(colorCount).samples = vk::SampleCountFlagBits::e1;
 
-		// attachmentDescs[1].loadOp = vk::AttachmentLoadOp::eDontCare;
+		// attachmentDescs.at(colorCount).loadOp = vk::AttachmentLoadOp::eDontCare;
 		// TODO : improve it
-		attachmentDescs[1].loadOp = vk::AttachmentLoadOp::eClear;
-		attachmentDescs[1].storeOp = vk::AttachmentStoreOp::eStore;
-		attachmentDescs[1].stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-		attachmentDescs[1].stencilStoreOp = vk::AttachmentStoreOp::eStore;
-		attachmentDescs[1].initialLayout = vk::ImageLayout::eUndefined;
-		attachmentDescs[1].finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+		attachmentDescs.at(colorCount).loadOp = vk::AttachmentLoadOp::eClear;
+		attachmentDescs.at(colorCount).storeOp = vk::AttachmentStoreOp::eStore;
+		attachmentDescs.at(colorCount).stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+		attachmentDescs.at(colorCount).stencilStoreOp = vk::AttachmentStoreOp::eStore;
+		attachmentDescs.at(colorCount).initialLayout = vk::ImageLayout::eUndefined;
+		attachmentDescs.at(colorCount).finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 	}
 
-	vk::AttachmentReference& colorReference = attachmentRefs[0];
-	colorReference.attachment = 0;
-	colorReference.layout = vk::ImageLayout::eColorAttachmentOptimal;
+	for(int i = 0; i < colorCount; i++)
+	{
+		vk::AttachmentReference& colorReference = attachmentRefs.at(i);
+		colorReference.attachment = i;
+		colorReference.layout = vk::ImageLayout::eColorAttachmentOptimal;
+	}
 
-	vk::AttachmentReference& depthReference = attachmentRefs[1];
-	depthReference.attachment = 1;
-	depthReference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+	if(hasDepth)
+	{
+		vk::AttachmentReference& depthReference = attachmentRefs.at(colorCount);
+		depthReference.attachment = colorCount;
+		depthReference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+	}
 
 	std::array<vk::SubpassDescription, 1> subpasses;
 	{
 		vk::SubpassDescription& subpass = subpasses[0];
 		subpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
-		subpass.colorAttachmentCount = 1;
-		subpass.pColorAttachments = &attachmentRefs[0];
-		subpass.pDepthStencilAttachment = &attachmentRefs[1];
+		subpass.colorAttachmentCount = colorCount;
+		subpass.pColorAttachments = &attachmentRefs.at(0);
+
+		if(hasDepth)
+		{
+			subpass.pDepthStencilAttachment = &attachmentRefs.at(colorCount);
+		}
+		else
+		{
+			subpass.pDepthStencilAttachment = nullptr;
+		}
 	}
 
 	std::array<vk::SubpassDependency, 1> subpassDepends;

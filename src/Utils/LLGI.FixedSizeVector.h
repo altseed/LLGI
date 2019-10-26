@@ -29,6 +29,11 @@ public:
 		return internal_.at(n);
 	}
 
+	const T* data() const
+	{
+		return internal_.data();
+	}
+
 	void resize(size_t nsize)
 	{
 		assert(nsize <= internal_.size());
@@ -50,24 +55,16 @@ public:
 	}
 
 	size_t size() const { return size_; }
-};
 
-} // namespace LLGI
-
-namespace std
-{
-
-template <typename T, size_t N> struct hash<LLGI::FixedSizeVector<T, N>>
-{
-	size_t operator()(const LLGI::FixedSizeVector<T, N>& _Keyval) const noexcept
+	size_t get_hash() const
 	{
-		auto h = std::hash<size_t>()(_Keyval.size());
-		for (size_t i = 0; i < _Keyval.size(); i++)
+		auto h = std::hash<size_t>()(size());
+		for (size_t i = 0; i < size(); i++)
 		{
-			h += std::hash<T>()(_Keyval.at(i));
+			h += std::hash<T>()(at(i));
 		}
 		return h;
 	}
 };
 
-} // namespace std
+} // namespace LLGI

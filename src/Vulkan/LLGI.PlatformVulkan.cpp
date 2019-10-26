@@ -19,7 +19,7 @@
 namespace LLGI
 {
 
-#ifdef _DEBUG
+#if !defined(NDEBUG)
 VkBool32 PlatformVulkan::DebugMessageCallback(VkDebugReportFlagsEXT flags,
 											  VkDebugReportObjectTypeEXT objType,
 											  uint64_t srcObject,
@@ -358,7 +358,7 @@ PlatformVulkan::~PlatformVulkan()
 		vkDevice_ = nullptr;
 	}
 
-#if defined(_DEBUG)
+#if !defined(NDEBUG)
 	if (vkInstance_)
 	{
 		destroyDebugReportCallback((VkInstance)vkInstance_, debugReportCallback, nullptr);
@@ -392,7 +392,7 @@ bool PlatformVulkan::Initialize(Window* window)
 #else
 		VK_KHR_XCB_SURFACE_EXTENSION_NAME,
 #endif
-#ifdef _DEBUG
+#if !defined(NDEBUG)
 		VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
 		VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 #endif
@@ -423,11 +423,17 @@ bool PlatformVulkan::Initialize(Window* window)
 		instanceCreateInfo.pApplicationInfo = &appInfo;
 		instanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
 		instanceCreateInfo.ppEnabledExtensionNames = extensions.data();
-#if defined(_DEBUG)
+#if !defined(NDEBUG)
+
+		uint32_t layerCount;
+		vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 		const std::vector<const char*> validationLayers = {"VK_LAYER_LUNARG_standard_validation"};
 
-		instanceCreateInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-		instanceCreateInfo.ppEnabledLayerNames = validationLayers.data();
+		if(layerCount > 0)
+		{
+			instanceCreateInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+			instanceCreateInfo.ppEnabledLayerNames = validationLayers.data();
+		}
 #endif
 
 		vkInstance_ = vk::createInstance(instanceCreateInfo);
@@ -492,7 +498,7 @@ bool PlatformVulkan::Initialize(Window* window)
 
 		const std::vector<const char*> enabledExtensions = {
 			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-#if defined(_DEBUG)
+#if !defined(NDEBUG)
 		// VK_EXT_DEBUG_MARKER_EXTENSION_NAME,
 #endif
 		};
@@ -503,15 +509,18 @@ bool PlatformVulkan::Initialize(Window* window)
 		deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(enabledExtensions.size());
 		deviceCreateInfo.ppEnabledExtensionNames = enabledExtensions.data();
 
-#if defined(_DEBUG)
-		deviceCreateInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-		deviceCreateInfo.ppEnabledLayerNames = validationLayers.data();
+#if !defined(NDEBUG)
+		if(layerCount > 0)
+		{
+			deviceCreateInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+			deviceCreateInfo.ppEnabledLayerNames = validationLayers.data();
+		}
 #else
 		deviceCreateInfo.enabledLayerCount = 0;
 #endif
 		vkDevice_ = vkPhysicalDevice.createDevice(deviceCreateInfo);
 
-#if defined(_DEBUG)
+#if !defined(NDEBUG)
 		// get callbacks
 		createDebugReportCallback = (PFN_vkCreateDebugReportCallbackEXT)vkInstance_.getProcAddr("vkCreateDebugReportCallbackEXT");
 		destroyDebugReportCallback = (PFN_vkDestroyDebugReportCallbackEXT)vkInstance_.getProcAddr("vkDestroyDebugReportCallbackEXT");

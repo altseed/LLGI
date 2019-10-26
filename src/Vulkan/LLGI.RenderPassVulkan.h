@@ -23,7 +23,7 @@ private:
 
 	Vec2I imageSize_;
 	std::shared_ptr<TextureVulkan> depthBufferPtr;
-
+	
 public:
 	struct RenderTargetProperty
 	{
@@ -39,7 +39,7 @@ public:
 	bool isPresentMode = false;
 	bool hasDepth = false;
 
-	FixedSizeVector<RenderTargetProperty, 4> renderTargetProperties;
+	FixedSizeVector<RenderTargetProperty, RenderTargetMax> renderTargetProperties;
 
 	vk::Image depthBuffer;
 
@@ -85,7 +85,7 @@ public:
 struct RenderPassPipelineStateVulkanKey
 {
 	bool isPresentMode;
-	FixedSizeVector<vk::Format, 4> formats;
+	FixedSizeVector<vk::Format, RenderTargetMax> formats;
 	bool hasDepth;
 
 	bool operator==(const RenderPassPipelineStateVulkanKey& value) const
@@ -99,8 +99,7 @@ struct RenderPassPipelineStateVulkanKey
 
 		std::size_t operator()(const RenderPassPipelineStateVulkanKey& key) const
 		{
-			return std::hash<FixedSizeVector<vk::Format, 4>>()(key.formats) + std::hash<bool>()(key.isPresentMode) +
-				   std::hash<bool>()(key.hasDepth);
+			return key.formats.get_hash() + std::hash<bool>()(key.isPresentMode) + std::hash<bool>()(key.hasDepth);
 		}
 	};
 };

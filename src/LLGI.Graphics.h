@@ -67,6 +67,11 @@ private:
 
 	Color8 color_;
 
+protected:
+	bool getSize(Vec2I& size, const Texture** textures, int32_t textureCount) const;
+
+	int32_t colorBufferCount_ = 0;
+	
 public:
 	RenderPass() = default;
 	virtual ~RenderPass() = default;
@@ -84,6 +89,8 @@ public:
 	virtual void SetClearColor(const Color8& color);
 
 	virtual Texture* GetColorBuffer(int index);
+
+	int GetColorBufferCount() const { return colorBufferCount_; }
 };
 
 /**

@@ -10,6 +10,7 @@ class Texture : public ReferenceObject
 {
 private:
 protected:
+	TextureType type_ = TextureType::Unknown;
 	TextureFormatType format_ = TextureFormatType::Uknown;
 
 public:
@@ -27,9 +28,11 @@ public:
 
 	[[deprecated("use CommandList::SetImageData2D.")]] virtual void Unlock();
 
-	virtual Vec2I GetSizeAs2D();
+	virtual Vec2I GetSizeAs2D() const;
 	virtual bool IsRenderTexture() const;
 	virtual bool IsDepthTexture() const;
+
+	TextureType GetType() const { return type_; }
 
 	virtual TextureFormatType GetFormat() const;
 };

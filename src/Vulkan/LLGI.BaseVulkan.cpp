@@ -264,6 +264,8 @@ bool CreateDepthBuffer(vk::Image& image,
 		SetImageLayout(
 			*commandBuffer, image, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal, subresourceRange);
 	}
+
+	return true;
 }
 
 } // namespace LLGI

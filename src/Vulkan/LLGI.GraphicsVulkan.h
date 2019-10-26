@@ -42,7 +42,7 @@ private:
 	std::function<void(vk::CommandBuffer, vk::Fence)> addCommand_;
 	RenderPassPipelineStateCacheVulkan* renderPassPipelineStateCache_ = nullptr;
 	ReferenceObject* owner_ = nullptr;
-	
+
 public:
 	GraphicsVulkan(const vk::Device& device,
 				   const vk::Queue& quque,
@@ -71,6 +71,9 @@ public:
 	RenderPass* CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture) override;
 	Texture* CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer) override;
 	Texture* CreateTexture(uint64_t id) override;
+
+	Texture* CreateRenderTexture(const RenderTextureInitializationParameter& parameter) override;
+
 	std::vector<uint8_t> CaptureRenderTarget(Texture* renderTarget) override;
 
 	RenderPassPipelineState* CreateRenderPassPipelineState(RenderPass* renderPass) override;

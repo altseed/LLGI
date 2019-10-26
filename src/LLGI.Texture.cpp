@@ -9,7 +9,7 @@ void* Texture::Lock() { return nullptr; }
 
 void Texture::Unlock() {}
 
-Vec2I Texture::GetSizeAs2D() { return Vec2I(); }
+Vec2I Texture::GetSizeAs2D() const { return Vec2I(); }
 
 bool Texture::IsRenderTexture() const { return false; }
 

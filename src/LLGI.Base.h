@@ -17,6 +17,8 @@
 namespace LLGI
 {
 
+static const int RenderTargetMax = 8;
+
 enum class DeviceType
 {
 	Default,
@@ -185,6 +187,16 @@ enum class TextureFormatType
 	BC3_SRGB = 10,
 
 	Uknown = 255,
+};
+
+enum class TextureType
+{
+	Screen,
+	Color,
+	Depth,
+	Render,
+	Cube,
+	Unknown,
 };
 
 struct DataStructure

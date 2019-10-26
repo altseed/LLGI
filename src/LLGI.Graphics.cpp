@@ -1,5 +1,6 @@
 #include "LLGI.Graphics.h"
 #include "LLGI.ConstantBuffer.h"
+#include "LLGI.Texture.h"
 
 namespace LLGI
 {
@@ -80,6 +81,22 @@ ConstantBuffer* SingleFrameMemoryPool::CreateConstantBuffer(int32_t size)
 	}
 
 	return nullptr;
+}
+
+bool RenderPass::getSize(Vec2I& size, const Texture** textures, int32_t textureCount) const
+{
+	if(textureCount == 0) return false;
+
+	size = textures[0]->GetSizeAs2D();
+
+	for(int i = 0; i < textureCount; i++)
+	{
+		auto temp = textures[i]->GetSizeAs2D();
+		if(size.X != temp.X) return false;
+		if(size.Y != temp.Y) return false;
+	}
+
+	return true;
 }
 
 void RenderPass::SetIsColorCleared(bool isColorCleared) { isColorCleared_ = isColorCleared; }

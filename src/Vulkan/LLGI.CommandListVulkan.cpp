@@ -41,7 +41,7 @@ DescriptorPoolVulkan ::~DescriptorPoolVulkan()
 
 const std::vector<vk::DescriptorSet>& DescriptorPoolVulkan::Get(PipelineStateVulkan* pip)
 {
-	if (cache.size() < static_cast<size_t>(offset))
+	if (cache.size() > static_cast<size_t>(offset))
 	{
 		offset++;
 		return cache[offset - 1];
@@ -391,16 +391,21 @@ void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
 				   depthSubRange);
 	*/
 
-	vk::ClearValue clear_values[2];
-	clear_values[0].color = clearColor;
-	clear_values[1].depthStencil = clearDepth;
+	vk::ClearValue clear_values[RenderTargetMax + 1];
+
+	for(int32_t i = 0; i < renderPass_->GetColorBufferCount(); i++)
+	{
+		clear_values[i].color = clearColor;
+	}	
+
+	clear_values[renderPass_->GetColorBufferCount()].depthStencil = clearDepth;
 
 	// begin renderpass
 	vk::RenderPassBeginInfo renderPassBeginInfo;
 	renderPassBeginInfo.framebuffer = renderPass_->frameBuffer_;
 	renderPassBeginInfo.renderPass = renderPass_->renderPassPipelineState->GetRenderPass();
 	renderPassBeginInfo.renderArea.extent = vk::Extent2D(renderPass_->GetImageSize().X, renderPass_->GetImageSize().Y);
-	renderPassBeginInfo.clearValueCount = 2;
+	renderPassBeginInfo.clearValueCount = renderPass_->GetColorBufferCount() + renderPass_->hasDepth ? 1 : 0;
 	renderPassBeginInfo.pClearValues = clear_values;
 	cmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
 

@@ -17,7 +17,7 @@ namespace LLGI
 class PlatformVulkan : public Platform
 {
 private:
-#ifdef _DEBUG
+#if !defined(NDEBUG)
 	static VkBool32 DebugMessageCallback(VkDebugReportFlagsEXT flags,
 										 VkDebugReportObjectTypeEXT objType,
 										 uint64_t srcObject,
@@ -83,7 +83,7 @@ private:
 
 	Window* window_ = nullptr;
 
-#ifdef _DEBUG
+#if !defined(NDEBUG)
 	PFN_vkCreateDebugReportCallbackEXT createDebugReportCallback = nullptr;
 	PFN_vkDestroyDebugReportCallbackEXT destroyDebugReportCallback = nullptr;
 	PFN_vkDebugReportMessageEXT debugReportMessage = nullptr;

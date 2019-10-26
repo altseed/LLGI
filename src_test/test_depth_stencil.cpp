@@ -53,7 +53,11 @@ void test_depth_stencil(LLGI::DeviceType deviceType, bool is_test_depth, bool is
 	
 	while (count < 1000)
 	{
-		platform->NewFrame();
+		if (!platform->NewFrame())
+		{
+			break;
+		}
+
 		sfMemoryPool->NewFrame();
 
 		LLGI::Color8 color;
@@ -172,9 +176,6 @@ void test_depth_stencil(LLGI::DeviceType deviceType, bool is_test_depth, bool is
 	pips.clear();
 
 	graphics->WaitFinish();
-
-	LLGI::SafeRelease(shader_vs);
-	LLGI::SafeRelease(shader_ps);
 }
 
 void test_depth(LLGI::DeviceType deviceType) { test_depth_stencil(deviceType, true, false); }
