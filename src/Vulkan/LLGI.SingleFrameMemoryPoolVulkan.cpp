@@ -53,12 +53,13 @@ void InternalSingleFrameMemoryPoolVulkan::Dispose()
 	nativeDevice_ = VK_NULL_HANDLE;
 }
 
-bool InternalSingleFrameMemoryPoolVulkan::GetConstantBuffer(int32_t size, VkBuffer* outResource, int32_t* outOffset)
+bool InternalSingleFrameMemoryPoolVulkan::GetConstantBuffer(int32_t size, VkBuffer* outResource, VkDeviceMemory* deviceMemory, int32_t* outOffset)
 {
 	if (constantBufferOffset_ + size > constantBufferSize_)
 		return false;
 
 	*outResource = nativeBuffer_;
+	*deviceMemory = nativeBufferMemory_;
 	*outOffset = constantBufferOffset_;
 	constantBufferOffset_ += size;
 	return true;
@@ -66,9 +67,35 @@ bool InternalSingleFrameMemoryPoolVulkan::GetConstantBuffer(int32_t size, VkBuff
 
 void InternalSingleFrameMemoryPoolVulkan::Reset() { constantBufferOffset_ = 0; }
 
+ConstantBuffer* SingleFrameMemoryPoolVulkan::CreateConstantBufferInternal(int32_t size) 
+{
+	auto obj = new ConstantBufferVulkan();
+	if (!obj->InitializeAsShortTime(graphics_, this, size))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
+
+	return obj;
+}
+
+ConstantBuffer* SingleFrameMemoryPoolVulkan::ReinitializeConstantBuffer(ConstantBuffer* cb, int32_t size) 
+{
+	auto obj = static_cast<ConstantBufferVulkan*>(cb);
+	if (!obj->InitializeAsShortTime(graphics_, this, size))
+	{
+		return nullptr;
+	}
+
+	return obj;
+}
+
+
 SingleFrameMemoryPoolVulkan::SingleFrameMemoryPoolVulkan(
 	GraphicsVulkan* graphics, bool isStrongRef, int32_t swapBufferCount, int32_t constantBufferPoolSize, int32_t drawingCount)
-	: graphics_(graphics), isStrongRef_(isStrongRef), drawingCount_(drawingCount), currentSwap_(-1)
+	: SingleFrameMemoryPool(swapBufferCount),
+	graphics_(graphics), 
+	isStrongRef_(isStrongRef), drawingCount_(drawingCount), currentSwap_(-1)
 {
 	if (isStrongRef)
 	{
@@ -100,10 +127,10 @@ SingleFrameMemoryPoolVulkan ::~SingleFrameMemoryPoolVulkan()
 	}
 }
 
-bool SingleFrameMemoryPoolVulkan::GetConstantBuffer(int32_t size, VkBuffer* outResource, int32_t* outOffset)
+bool SingleFrameMemoryPoolVulkan::GetConstantBuffer(int32_t size, VkBuffer* outResource, VkDeviceMemory* deviceMemory, int32_t* outOffset)
 {
 	assert(currentSwap_ >= 0);
-	return memoryPools[currentSwap_]->GetConstantBuffer(size, outResource, outOffset);
+	return memoryPools[currentSwap_]->GetConstantBuffer(size, outResource, deviceMemory, outOffset);
 }
 
 InternalSingleFrameMemoryPoolVulkan* SingleFrameMemoryPoolVulkan::GetInternal() { return memoryPools[currentSwap_].get(); }
@@ -115,17 +142,7 @@ void SingleFrameMemoryPoolVulkan::NewFrame()
 	currentSwap_++;
 	currentSwap_ %= memoryPools.size();
 	memoryPools[currentSwap_]->Reset();
+	SingleFrameMemoryPool::NewFrame();
 }
 
-ConstantBuffer* SingleFrameMemoryPoolVulkan::CreateConstantBuffer(int32_t size)
-{
-	auto obj = new ConstantBufferVulkan();
-	if (!obj->InitializeAsShortTime(this, size))
-	{
-		SafeRelease(obj);
-		return nullptr;
-	}
-
-	return obj;
-}
 } // namespace LLGI

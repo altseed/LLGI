@@ -8,12 +8,8 @@ ConstantBufferVulkan::ConstantBufferVulkan() {}
 
 ConstantBufferVulkan::~ConstantBufferVulkan() {}
 
-bool ConstantBufferVulkan::Initialize(GraphicsVulkan* graphics, int32_t size, ConstantBufferType type)
+bool ConstantBufferVulkan::Initialize(GraphicsVulkan* graphics, int32_t size)
 {
-	if (type == ConstantBufferType::ShortTime)
-		return false;
-
-	// TODO : shortTime
 	SafeAddRef(graphics);
 	graphics_ = CreateSharedPtr(graphics);
 
@@ -36,18 +32,23 @@ bool ConstantBufferVulkan::Initialize(GraphicsVulkan* graphics, int32_t size, Co
 	return true;
 }
 
-bool ConstantBufferVulkan::InitializeAsShortTime(SingleFrameMemoryPoolVulkan* memoryPool, int32_t size)
+bool ConstantBufferVulkan::InitializeAsShortTime(GraphicsVulkan* graphics, SingleFrameMemoryPoolVulkan* memoryPool, int32_t size)
 {
-	buffer_ = std::unique_ptr<Buffer>(new Buffer(graphics_.get()));
+	if(buffer_ == nullptr)
+	{
+		SafeAddRef(graphics);
+		graphics_ = CreateSharedPtr(graphics);
+		buffer_ = std::unique_ptr<Buffer>(new Buffer(graphics_.get()));
+	}
 
 	auto size_ = (size + 255) & ~255; // buffer size should be multiple of 256
 	VkBuffer buffer;
-	if (memoryPool->GetConstantBuffer(size_, &buffer, &offset_))
+	VkDeviceMemory deviceMemory;
+	if (memoryPool->GetConstantBuffer(size_, &buffer, &deviceMemory, &offset_))
 	{
 		buffer_->buffer_ = vk::Buffer(buffer);
-		// SafeAddRef(constantBuffer_);
+		buffer_->devMem = deviceMemory;
 		memSize_ = size;
-		// actualSize_ = size_;
 		return true;
 	}
 	else

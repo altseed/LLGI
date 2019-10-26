@@ -160,7 +160,7 @@ CommandList* GraphicsVulkan::CreateCommandList(SingleFrameMemoryPool* memoryPool
 ConstantBuffer* GraphicsVulkan::CreateConstantBuffer(int32_t size)
 {
 	auto obj = new ConstantBufferVulkan();
-	if (!obj->Initialize(this, size, ConstantBufferType::LongTime))
+	if (!obj->Initialize(this, size))
 	{
 		SafeRelease(obj);
 		return nullptr;

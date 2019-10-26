@@ -22,7 +22,7 @@ public:
 	virtual ~InternalSingleFrameMemoryPoolVulkan();
 	bool Initialize(GraphicsVulkan* graphics, int32_t constantBufferPoolSize, int32_t drawingCount);
 	void Dispose();
-	bool GetConstantBuffer(int32_t size, VkBuffer* outResource, int32_t* outOffset);
+	bool GetConstantBuffer(int32_t size, VkBuffer* outResource, VkDeviceMemory* deviceMemory, int32_t* outOffset);
 	void Reset();
 };
 
@@ -35,20 +35,23 @@ private:
 	int32_t currentSwap_ = 0;
 	int32_t drawingCount_ = 0;
 
+protected:
+	ConstantBuffer* CreateConstantBufferInternal(int32_t size) override;
+
+	ConstantBuffer* ReinitializeConstantBuffer(ConstantBuffer* cb, int32_t size) override;
+
 public:
 	SingleFrameMemoryPoolVulkan(
 		GraphicsVulkan* graphics, bool isStrongRef, int32_t swapBufferCount, int32_t constantBufferPoolSize, int32_t drawingCount);
 	virtual ~SingleFrameMemoryPoolVulkan();
 
-	bool GetConstantBuffer(int32_t size, VkBuffer* outResource, int32_t* outOffset);
+	bool GetConstantBuffer(int32_t size, VkBuffer* outResource, VkDeviceMemory* deviceMemory, int32_t* outOffset);
 
 	InternalSingleFrameMemoryPoolVulkan* GetInternal();
 
 	int32_t GetDrawingCount() const;
 
 	void NewFrame() override;
-
-	ConstantBuffer* CreateConstantBuffer(int32_t size) override;
 };
 
 } // namespace LLGI

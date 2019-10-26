@@ -22,8 +22,8 @@ public:
 	ConstantBufferVulkan();
 	virtual ~ConstantBufferVulkan();
 
-	bool Initialize(GraphicsVulkan* graphics, int32_t size, ConstantBufferType type);
-	bool InitializeAsShortTime(SingleFrameMemoryPoolVulkan* memoryPool, int32_t size);
+	bool Initialize(GraphicsVulkan* graphics, int32_t size);
+	bool InitializeAsShortTime(GraphicsVulkan* graphics, SingleFrameMemoryPoolVulkan* memoryPool, int32_t size);
 
 	void* Lock() override;
 	void* Lock(int32_t offset, int32_t size) override;
