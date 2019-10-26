@@ -32,6 +32,7 @@ bool RenderPassDX12::Initialize(TextureDX12** textures, int numTextures, Texture
 	isScreen_ = false;
 	renderTargets_.resize(numTextures);
 	numRenderTarget_ = numTextures;
+	colorBufferCount_ = numTextures;
 
 	for (size_t i = 0; i < numTextures; i++)
 	{
@@ -87,6 +88,8 @@ bool RenderPassDX12::CreateScreenRenderTarget(TextureDX12* texture,
 	}
 
 	numRenderTarget_ = 1;
+	colorBufferCount_ = numRenderTarget_;
+
 	handleRTV_.resize(1);
 	renderTargets_.resize(1);
 

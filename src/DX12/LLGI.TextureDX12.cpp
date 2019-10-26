@@ -258,7 +258,7 @@ FAILED_EXIT:
 	SafeRelease(commandList);
 }
 
-Vec2I TextureDX12::GetSizeAs2D() { return textureSize_; }
+Vec2I TextureDX12::GetSizeAs2D() const { return textureSize_; }
 
 bool TextureDX12::IsRenderTexture() const { return isRenderPass_; }
 

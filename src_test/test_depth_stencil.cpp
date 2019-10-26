@@ -73,6 +73,8 @@ void test_depth_stencil(LLGI::DeviceType deviceType, bool is_test_depth, bool is
 		{
 			auto colorBuffer = screenRenderPass->GetColorBuffer(0);
 			auto depthBuffer = graphics->CreateTexture(colorBuffer->GetSizeAs2D(), false, true);
+			assert(depthBuffer->GetType() == LLGI::TextureType::Depth);
+
 			renderPass = graphics->CreateRenderPass((const LLGI::Texture**)&colorBuffer, 1, depthBuffer);
 			depthBuffers[swapIndex] = depthBuffer;
 			renderPasses[swapIndex] = renderPass;

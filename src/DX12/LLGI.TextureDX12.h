@@ -42,7 +42,7 @@ public:
 	
 	void* Lock() override;
 	void Unlock() override;
-	Vec2I GetSizeAs2D() override;
+	Vec2I GetSizeAs2D() const override;
 	ID3D12Resource* Get() const { return texture_; }
 	int32_t GetMemorySize() const { return memorySize_; }
 	TextureFormatType GetFormat() const override { return format_; }

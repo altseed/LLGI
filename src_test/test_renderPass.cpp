@@ -110,8 +110,10 @@ float4 main(PS_INPUT input) : SV_TARGET
 	params.Size = LLGI::Vec2I(256, 256);
 	params.IsMultiSampling = isMSAATest;
 	auto renderTexture = graphics->CreateRenderTexture(params);
+	assert(renderTexture->GetType() == LLGI::TextureType::Render);
 
 	auto renderPass = graphics->CreateRenderPass((const LLGI::Texture**)&renderTexture, 1, nullptr);
+	assert(renderPass->GetColorBufferCount() == 1);
 
 	auto texture = graphics->CreateTexture(LLGI::Vec2I(256, 256), false, false);
 
@@ -458,6 +460,7 @@ PS_OUTPUT main(PS_INPUT input)
 	auto renderTexture2 = graphics->CreateTexture(LLGI::Vec2I(256, 256), true, false);
 	const LLGI::Texture* renderTextures[2] = {(const LLGI::Texture*)renderTexture, (const LLGI::Texture*)renderTexture2};
 	auto renderPass = graphics->CreateRenderPass((const LLGI::Texture**)renderTextures, 2, nullptr);
+	assert(renderPass->GetColorBufferCount() == 2);
 
 	auto texture = graphics->CreateTexture(LLGI::Vec2I(256, 256), false, false);
 

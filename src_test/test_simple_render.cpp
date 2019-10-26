@@ -631,6 +631,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
 
 	auto texture = graphics->CreateTexture(LLGI::Vec2I(256, 256), false, false);
+	assert(texture->GetType() == LLGI::TextureType::Color);
 
 	auto texture_buf = (LLGI::Color8*)texture->Lock();
 	for (int y = 0; y < 256; y++)
