@@ -6,6 +6,7 @@
 #include "thirdparty/stb/stb_image_write.h"
 
 std::string TestHelper::root_;
+bool TestHelper::IsCaptureRequired = false;
 
 std::vector<uint8_t> TestHelper::LoadData(const char* path)
 {

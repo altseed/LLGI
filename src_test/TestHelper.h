@@ -9,7 +9,7 @@ class TestHelper
 {
 private:
 	static std::string root_;
-
+	
 public:
 	static std::vector<uint8_t> LoadData(const char* path);
 
@@ -34,6 +34,8 @@ public:
 							 const char* psBinaryPath,
 							 std::shared_ptr<LLGI::Shader>& vs,
 							 std::shared_ptr<LLGI::Shader>& ps);
+
+	static bool IsCaptureRequired;
 };
 
 class Bitmap2D

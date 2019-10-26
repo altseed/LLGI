@@ -1,7 +1,7 @@
 
-#include <string>
 #include "TestHelper.h"
 #include "test.h"
+#include <string>
 
 #ifdef _WIN32
 #pragma comment(lib, "d3dcompiler.lib")
@@ -65,7 +65,8 @@ void call_test(LLGI::DeviceType device)
 	// test_depth(device);
 	// test_stencil(device);
 
-	LLGI::SetLogger(nullptr);}
+	LLGI::SetLogger(nullptr);
+}
 
 #if defined(__linux__) || defined(__APPLE__) || defined(WIN32)
 int main(int argc, char* argv[])
@@ -77,7 +78,7 @@ int main(int argc, char* argv[])
 #else
 	auto device = LLGI::DeviceType::Vulkan;
 #endif
-	
+
 	// make shaders folder path from __FILE__
 	auto path = std::string(__FILE__);
 #if defined(WIN32)
@@ -100,12 +101,17 @@ int main(int argc, char* argv[])
 		TestHelper::SetRoot((path + "/Shaders/SPIRV/").c_str());
 	}
 
-#if 0
-	::testing::InitGoogleTest(&argc, argv);
-	return RUN_ALL_TESTS();
-#else
-	call_test(device);
+	if (argc > 1)
+	{
+		TestHelper::IsCaptureRequired = true;
+		::testing::InitGoogleTest(&argc, argv);
+		return RUN_ALL_TESTS();
+	}
+	else
+	{
+		call_test(device);
+	}
+
 	return 0;
-#endif
 }
 #endif

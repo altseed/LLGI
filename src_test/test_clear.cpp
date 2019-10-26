@@ -2,16 +2,6 @@
 #include "test.h"
 #include <array>
 
-// #define CAPTURE_TEST 1
-
-#if defined(__linux__) || defined(__APPLE__) || defined(WIN32)
-class ClearTest : public ::testing::Test
-{
-};
-
-TEST_F(ClearTest, Clear1) {}
-#endif
-
 void test_clear_update(LLGI::DeviceType deviceType)
 {
 	int count = 0;
@@ -34,7 +24,7 @@ void test_clear_update(LLGI::DeviceType deviceType)
 		sfMemoryPool->NewFrame();
 
 		LLGI::Color8 color;
-		color.R = count % 255;
+		color.R = (count + 200) % 255;
 		color.G = 0;
 		color.B = 0;
 		color.A = 255;
@@ -51,6 +41,17 @@ void test_clear_update(LLGI::DeviceType deviceType)
 
 		platform->Present();
 		count++;
+
+		if (TestHelper::IsCaptureRequired && count == 5)
+		{
+			commandList->WaitUntilCompleted();
+			auto texture = platform->GetCurrentScreen(color, true)->GetColorBuffer(0);
+			auto data = graphics->CaptureRenderTarget(texture);
+
+			// save
+			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("ClearUpdate.png");
+			break;
+		}
 	}
 
 	graphics->WaitFinish();
@@ -104,22 +105,16 @@ void test_clear(LLGI::DeviceType deviceType)
 		platform->Present();
 		count++;
 
-#if CAPTURE_TEST
-		if (count == 5)
+		if (TestHelper::IsCaptureRequired && count == 5)
 		{
-			// TODO wait to finish commandList
+			commandList->WaitUntilCompleted();
 			auto texture = platform->GetCurrentScreen(color, true)->GetColorBuffer(0);
 			auto data = graphics->CaptureRenderTarget(texture);
 
 			// save
-			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("stbpng.png");
-
-			// test
-			int rate = Bitmap2D::CompareBitmap(
-				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true), Bitmap2D("stbpng.png"), 5);
-			std::cout << rate;
+			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("Clear.png");
+			break;
 		}
-#endif
 	}
 
 	graphics->WaitFinish();
@@ -130,3 +125,11 @@ void test_clear(LLGI::DeviceType deviceType)
 	LLGI::SafeRelease(graphics);
 	LLGI::SafeRelease(platform);
 }
+
+#if defined(__linux__) || defined(__APPLE__) || defined(WIN32)
+
+TEST(Clear, Basic) { test_clear(LLGI::DeviceType::Default); }
+
+TEST(Clear, Update) { test_clear_update(LLGI::DeviceType::Default); }
+
+#endif
