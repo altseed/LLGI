@@ -27,7 +27,8 @@ jobs:
         inputs:
           targetType: 'inline'
           script: |
-            build/src_test/Release/LLGI_Test.exe test
+            Set-Location build/src_test/Release/
+            LLGI_Test.exe test
 
       - task: PublishBuildArtifacts@1
         inputs:
@@ -100,5 +101,5 @@ jobs:
       - task: PublishBuildArtifacts@1
         inputs:
           PathtoPublish: 'build/src_test'
-          ArtifactName: 'MacOS'
+          ArtifactName: 'Linux'
           publishLocation: 'Container'
