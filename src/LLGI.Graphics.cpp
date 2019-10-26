@@ -17,6 +17,11 @@ void Log(LogType logType, const char* message)
 	}
 }
 
+size_t GetAlignedSize(size_t size, size_t alignment)
+{
+	return (size + (alignment - 1)) & ~(alignment - 1);
+}
+
 SingleFrameMemoryPool::SingleFrameMemoryPool(int32_t swapBufferCount) : swapBufferCount_(swapBufferCount) {
 
 	for (int i = 0; i < swapBufferCount_; i++)

@@ -312,6 +312,8 @@ void SetLogger(const std::function<void(LogType, const char*)>& logger);
 
 void Log(LogType logType, const char* message);
 
+size_t GetAlignedSize(size_t size, size_t alignment);
+
 /**
 	@brief	window abstraction class
 */

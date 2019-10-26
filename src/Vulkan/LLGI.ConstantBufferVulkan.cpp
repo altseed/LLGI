@@ -14,10 +14,12 @@ bool ConstantBufferVulkan::Initialize(GraphicsVulkan* graphics, int32_t size)
 	graphics_ = CreateSharedPtr(graphics);
 
 	buffer_ = std::unique_ptr<Buffer>(new Buffer(graphics));
+	auto allocatedSize = GetAlignedSize(size, 256);
+
 	memSize_ = size;
 	{
 		vk::BufferCreateInfo IndexBufferInfo;
-		IndexBufferInfo.size = size;
+		IndexBufferInfo.size = allocatedSize;
 		IndexBufferInfo.usage = vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst;
 		buffer_->buffer_ = graphics_->GetDevice().createBuffer(IndexBufferInfo);
 
@@ -41,7 +43,7 @@ bool ConstantBufferVulkan::InitializeAsShortTime(GraphicsVulkan* graphics, Singl
 		buffer_ = std::unique_ptr<Buffer>(new Buffer(graphics_.get()));
 	}
 
-	auto size_ = (size + 255) & ~255; // buffer size should be multiple of 256
+	auto size_ = GetAlignedSize(size, 256);
 	VkBuffer buffer;
 	VkDeviceMemory deviceMemory;
 	if (memoryPool->GetConstantBuffer(size_, &buffer, &deviceMemory, &offset_))
