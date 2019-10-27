@@ -693,6 +693,11 @@ float4 main(PS_INPUT input) : SV_TARGET
 			compiler->Compile(result_ps, code_dx_ps, LLGI::ShaderStageType::Pixel);
 			assert(result_ps.Message == "");
 		}
+		else
+		{
+			compiler->Compile(result_vs, code_gl_vs, LLGI::ShaderStageType::Vertex);
+			compiler->Compile(result_ps, code_gl_ps, LLGI::ShaderStageType::Pixel);
+		}
 
 		for (auto& b : result_vs.Binary)
 		{
