@@ -138,7 +138,13 @@ RenderPass* GraphicsDX12::CreateRenderPass(const Texture** textures, int32_t tex
 Texture* GraphicsDX12::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer)
 {
 	auto obj = new TextureDX12(this, true);
-	if (!obj->Initialize(size, isRenderPass, isDepthBuffer, TextureFormatType::R8G8B8A8_UNORM))
+	TextureType type = TextureType::Color;
+	if (isRenderPass)
+		type = TextureType::Render;
+	if (isDepthBuffer)
+		type = TextureType::Depth;
+
+	if (!obj->Initialize(size, type, TextureFormatType::R8G8B8A8_UNORM))
 	{
 		SafeRelease(obj);
 		return nullptr;
@@ -152,7 +158,7 @@ Texture* GraphicsDX12::CreateTexture(uint64_t id) { throw "Not implemented"; }
 Texture* GraphicsDX12::CreateTexture(const TextureInitializationParameter& parameter)
 {
 	auto obj = new TextureDX12(this, true);
-	if (!obj->Initialize(parameter.Size, false, false, parameter.Format))
+	if (!obj->Initialize(parameter.Size, TextureType::Color, parameter.Format))
 	{
 		SafeRelease(obj);
 		return nullptr;
@@ -163,7 +169,7 @@ Texture* GraphicsDX12::CreateTexture(const TextureInitializationParameter& param
 Texture* GraphicsDX12::CreateRenderTexture(const RenderTextureInitializationParameter& parameter)
 {
 	auto obj = new TextureDX12(this, true);
-	if (!obj->Initialize(parameter.Size, true, false, parameter.Format))
+	if (!obj->Initialize(parameter.Size, TextureType::Render, parameter.Format))
 	{
 		SafeRelease(obj);
 		return nullptr;
@@ -171,7 +177,15 @@ Texture* GraphicsDX12::CreateRenderTexture(const RenderTextureInitializationPara
 	return obj;
 }
 
-Texture* GraphicsDX12::CreateDepthTexture(const DepthTextureInitializationParameter& parameter) { throw "Not implemented"; }
+Texture* GraphicsDX12::CreateDepthTexture(const DepthTextureInitializationParameter& parameter) {
+	auto obj = new TextureDX12(this, true);
+	if (!obj->Initialize(parameter.Size, TextureType::Depth, TextureFormatType::Uknown))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
+	return obj;
+}
 
 std::shared_ptr<RenderPassPipelineStateDX12> GraphicsDX12::CreateRenderPassPipelineState(bool isPresentMode,
 																						 bool hasDepth,
@@ -210,7 +224,7 @@ RenderPassPipelineState* GraphicsDX12::CreateRenderPassPipelineState(RenderPass*
 {
 	auto renderPass_ = static_cast<RenderPassDX12*>(renderPass);
 
-	std::array<DXGI_FORMAT, 8> renderTargetFormats;
+	std::array<DXGI_FORMAT, RenderTargetMax> renderTargetFormats;
 	renderTargetFormats.fill(DXGI_FORMAT_UNKNOWN);
 	int32_t renderTargetCount = renderTargetFormats.size();
 	;
@@ -225,7 +239,7 @@ RenderPassPipelineState* GraphicsDX12::CreateRenderPassPipelineState(RenderPass*
 		renderTargetFormats[i] = renderPass_->GetRenderTarget(i)->texture_->GetDXGIFormat();
 	}
 
-	auto ret = CreateRenderPassPipelineState(renderPass_->GetIsScreen(), /*TODO*/ false, renderTargetCount, renderTargetFormats);
+	auto ret = CreateRenderPassPipelineState(renderPass_->GetIsScreen(), renderPass->GetHasDepthTexture(), renderTargetCount, renderTargetFormats);
 
 	auto ptr = ret.get();
 	SafeAddRef(ptr);

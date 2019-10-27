@@ -23,6 +23,8 @@ TextureDX12::TextureDX12(GraphicsDX12* graphics, bool hasStrongRef) : graphics_(
 TextureDX12::TextureDX12(ID3D12Resource* textureResource, ID3D12Device* device, ID3D12CommandQueue* commandQueue)
 	: texture_(textureResource), commandQueue_(commandQueue), device_(device)
 {
+	type_ = TextureType::Screen;
+
 	SafeAddRef(texture_);
 	SafeAddRef(device_);
 	SafeAddRef(commandQueue_);
@@ -95,63 +97,69 @@ TextureDX12::~TextureDX12()
 	SafeRelease(commandQueue_);
 }
 
-bool TextureDX12::Initialize(const Vec2I& size, const bool isRenderPass, const bool isDepthBuffer, const TextureFormatType formatType)
+bool TextureDX12::Initialize(const Vec2I& size, TextureType type, const TextureFormatType formatType)
 {
-	isRenderPass_ = isRenderPass;
+	type_ = type;
 
-	if (isDepthBuffer)
-		throw "Not implemented";
-
-	switch (formatType)
+	if (type_ == TextureType::Depth)
 	{
-	case TextureFormatType::R8G8B8A8_UNORM:
-		dxgiFormat_ = DXGI_FORMAT_R8G8B8A8_UNORM;
+		format_ = TextureFormatType::Uknown;
+		dxgiFormat_ = DXGI_FORMAT_R32_TYPELESS;
 		memorySize_ = size.X * size.Y * 4;
-		break;
-	case TextureFormatType::R16G16B16A16_FLOAT:
-		dxgiFormat_ = DXGI_FORMAT_R16G16B16A16_FLOAT;
-		memorySize_ = size.X * size.Y * 8;
-		break;
-	case TextureFormatType::R32G32B32A32_FLOAT:
-		dxgiFormat_ = DXGI_FORMAT_R32G32B32A32_FLOAT;
-		memorySize_ = size.X * size.Y * 16;
-		break;
-	case TextureFormatType::R8G8B8A8_UNORM_SRGB:
-		dxgiFormat_ = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-		memorySize_ = size.X * size.Y * 4;
-		break;
-	case TextureFormatType::R16G16_FLOAT:
-		dxgiFormat_ = DXGI_FORMAT_R16G16_FLOAT;
-		memorySize_ = size.X * size.Y * 4;
-		break;
-	case TextureFormatType::R8_UNORM:
-		dxgiFormat_ = DXGI_FORMAT_R8_UNORM;
-		memorySize_ = size.X * size.Y * 1;
-		break;
-	default:
-		throw "Not implemented";
-		// case TextureFormatType::BC1:
-		//	dxgiFormat_ = DXGI_FORMAT_BC1_UNORM;
-		//	break;
-		// case TextureFormatType::BC2:
-		//	dxgiFormat_ = DXGI_FORMAT_BC2_UNORM;
-		//	break;
-		// case TextureFormatType::BC3:
-		//	dxgiFormat_ = DXGI_FORMAT_BC3_UNORM;
-		//	break;
-		// case TextureFormatType::BC1_SRGB:
-		//	dxgiFormat_ = DXGI_FORMAT_BC1_UNORM_SRGB;
-		//	break;
-		// case TextureFormatType::BC2_SRGB:
-		//	dxgiFormat_ = DXGI_FORMAT_BC1_UNORM_SRGB;
-		//	break;
-		// case TextureFormatType::BC3_SRGB:
-		//	dxgiFormat_ = DXGI_FORMAT_BC1_UNORM_SRGB;
-		//	break;
 	}
-	format_ = formatType;
+	else
+	{
+		switch (formatType)
+		{
+		case TextureFormatType::R8G8B8A8_UNORM:
+			dxgiFormat_ = DXGI_FORMAT_R8G8B8A8_UNORM;
+			memorySize_ = size.X * size.Y * 4;
+			break;
+		case TextureFormatType::R16G16B16A16_FLOAT:
+			dxgiFormat_ = DXGI_FORMAT_R16G16B16A16_FLOAT;
+			memorySize_ = size.X * size.Y * 8;
+			break;
+		case TextureFormatType::R32G32B32A32_FLOAT:
+			dxgiFormat_ = DXGI_FORMAT_R32G32B32A32_FLOAT;
+			memorySize_ = size.X * size.Y * 16;
+			break;
+		case TextureFormatType::R8G8B8A8_UNORM_SRGB:
+			dxgiFormat_ = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+			memorySize_ = size.X * size.Y * 4;
+			break;
+		case TextureFormatType::R16G16_FLOAT:
+			dxgiFormat_ = DXGI_FORMAT_R16G16_FLOAT;
+			memorySize_ = size.X * size.Y * 4;
+			break;
+		case TextureFormatType::R8_UNORM:
+			dxgiFormat_ = DXGI_FORMAT_R8_UNORM;
+			memorySize_ = size.X * size.Y * 1;
+			break;
+		default:
+			throw "Not implemented";
+			// case TextureFormatType::BC1:
+			//	dxgiFormat_ = DXGI_FORMAT_BC1_UNORM;
+			//	break;
+			// case TextureFormatType::BC2:
+			//	dxgiFormat_ = DXGI_FORMAT_BC2_UNORM;
+			//	break;
+			// case TextureFormatType::BC3:
+			//	dxgiFormat_ = DXGI_FORMAT_BC3_UNORM;
+			//	break;
+			// case TextureFormatType::BC1_SRGB:
+			//	dxgiFormat_ = DXGI_FORMAT_BC1_UNORM_SRGB;
+			//	break;
+			// case TextureFormatType::BC2_SRGB:
+			//	dxgiFormat_ = DXGI_FORMAT_BC1_UNORM_SRGB;
+			//	break;
+			// case TextureFormatType::BC3_SRGB:
+			//	dxgiFormat_ = DXGI_FORMAT_BC1_UNORM_SRGB;
+			//	break;
+		}
+		format_ = formatType;
+	}
 
-	if (isRenderPass_)
+	if (type_ == TextureType::Render)
 	{
 		texture_ = CreateResourceBuffer(device_,
 										D3D12_HEAP_TYPE_DEFAULT,
@@ -162,7 +170,18 @@ bool TextureDX12::Initialize(const Vec2I& size, const bool isRenderPass, const b
 										size);
 		state_ = D3D12_RESOURCE_STATE_GENERIC_READ;
 	}
-	else
+	else if (type_ == TextureType::Depth)
+	{
+		texture_ = CreateResourceBuffer(device_,
+										D3D12_HEAP_TYPE_DEFAULT,
+										dxgiFormat_,
+										D3D12_RESOURCE_DIMENSION_TEXTURE2D,
+										D3D12_RESOURCE_STATE_GENERIC_READ,
+										D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
+										size);
+		state_ = D3D12_RESOURCE_STATE_GENERIC_READ;
+	}
+	else if (type_ == TextureType::Color)
 	{
 		texture_ = CreateResourceBuffer(device_,
 										D3D12_HEAP_TYPE_DEFAULT,
@@ -259,14 +278,6 @@ FAILED_EXIT:
 }
 
 Vec2I TextureDX12::GetSizeAs2D() const { return textureSize_; }
-
-bool TextureDX12::IsRenderTexture() const { return isRenderPass_; }
-
-bool TextureDX12::IsDepthTexture() const
-{
-	throw "Not implemented";
-	return isDepthBuffer_;
-}
 
 void TextureDX12::ResourceBarrior(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES state)
 {

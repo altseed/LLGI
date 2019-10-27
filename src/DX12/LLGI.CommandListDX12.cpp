@@ -15,7 +15,7 @@ namespace LLGI
 CommandListDX12::CommandListDX12() {}
 
 CommandListDX12::~CommandListDX12()
-{ /*SafeRelease(graphics_);*/
+{
 	SafeRelease(fence_);
 
 	if (fenceEvent_ != nullptr)
@@ -63,12 +63,12 @@ bool CommandListDX12::Initialize(GraphicsDX12* graphics, int32_t drawingCount)
 	smpDescriptorHeap_ = std::make_shared<DescriptorHeapDX12>(
 		graphics_, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, drawingCount * NumTexture, 2);
 
-		hr = graphics_->GetDevice()->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence_));
-		if (FAILED(hr))
-		{
-			goto FAILED_EXIT;
-		}
-		fenceEvent_ = CreateEvent(NULL, FALSE, FALSE, NULL);
+	hr = graphics_->GetDevice()->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence_));
+	if (FAILED(hr))
+	{
+		goto FAILED_EXIT;
+	}
+	fenceEvent_ = CreateEvent(NULL, FALSE, FALSE, NULL);
 	return true;
 
 FAILED_EXIT:;
@@ -96,15 +96,19 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 
 	if (renderPass != nullptr)
 	{
-		if (!renderPass_->GetIsScreen())
+		// Set render target
+		if (renderPass_->GetColorBuffer(0)->GetType() != TextureType::Screen)
 		{
 			renderPass_->CreateRenderTargetViews(this, rtDescriptorHeap_.get());
 		}
 
-		// Set render target
 		commandList_->OMSetRenderTargets(renderPass_->GetCount(), renderPass_->GetHandleRTV(), FALSE, nullptr);
 
-		// TODO depth...
+		// Set depth target
+		if (renderPass->GetHasDepthTexture())
+		{
+			// TODO
+		}
 
 		// Reset scissor
 		D3D12_RECT rects[D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT];
@@ -128,10 +132,15 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 		commandList_->RSSetScissorRects(renderPass_->GetCount(), rects);
 		commandList_->RSSetViewports(renderPass_->GetCount(), viewports);
 
-		// Clear color
 		if (renderPass_->GetIsColorCleared())
 		{
 			Clear(renderPass_->GetClearColor());
+		}
+
+		if (renderPass_->GetIsDepthCleared())
+		{
+			// TODO
+			//assert(0);
 		}
 	}
 }
@@ -243,7 +252,7 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 					auto minMagFilter = currentTextures[stage_ind][unit_ind].minMagFilter;
 
 					// Make barrior to use a render target
-					if (texture->IsRenderTexture())
+					if (texture->GetType() == TextureType::Render)
 					{
 						if (stage_ind == static_cast<int>(ShaderStageType::Pixel))
 						{
@@ -331,9 +340,7 @@ void CommandListDX12::Clear(const Color8& color)
 
 ID3D12GraphicsCommandList* CommandListDX12::GetCommandList() const { return commandList_.get(); }
 
-ID3D12Fence* CommandListDX12::GetFence() const { 
-	return fence_;
-}
+ID3D12Fence* CommandListDX12::GetFence() const { return fence_; }
 
 UINT64 CommandListDX12::GetAndIncFenceValue()
 {
@@ -342,7 +349,8 @@ UINT64 CommandListDX12::GetAndIncFenceValue()
 	return ret;
 }
 
-void CommandListDX12::WaitUntilCompleted() { 
+void CommandListDX12::WaitUntilCompleted()
+{
 
 	if (fence_->GetCompletedValue() < fenceValue_ - 1)
 	{

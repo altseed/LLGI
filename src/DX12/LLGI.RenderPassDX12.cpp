@@ -29,6 +29,8 @@ bool RenderPassDX12::Initialize(TextureDX12** textures, int numTextures, Texture
 	if (textures[0]->Get() == nullptr)
 		return false;
 
+	assingDepthTexture(depthTexture);
+
 	isScreen_ = false;
 	renderTargets_.resize(numTextures);
 	numRenderTarget_ = numTextures;
@@ -41,9 +43,10 @@ bool RenderPassDX12::Initialize(TextureDX12** textures, int numTextures, Texture
 		SafeAddRef(renderTargets_[i].texture_);
 	}
 
-	auto size = textures[0]->GetSizeAs2D();
-	screenWindowSize_.X = size.X;
-	screenWindowSize_.Y = size.Y;
+	if (!getSize(screenWindowSize_, (const Texture**)textures, numTextures))
+	{
+		return false;
+	}
 
 	return true;
 }
@@ -75,12 +78,12 @@ bool RenderPassDX12::CreateRenderTargetViews(CommandListDX12* commandList, Descr
 	return true;
 }
 
-bool RenderPassDX12::CreateScreenRenderTarget(TextureDX12* texture,
-											  D3D12_CPU_DESCRIPTOR_HANDLE handleRTV,
-											  const Color8& clearColor,
-											  const bool isColorCleared,
-											  const bool isDepthCleared,
-											  const Vec2I windowSize)
+bool RenderPassDX12::InitializeAsScreen(TextureDX12* texture,
+										D3D12_CPU_DESCRIPTOR_HANDLE handleRTV,
+										const Color8& clearColor,
+										const bool isColorCleared,
+										const bool isDepthCleared,
+										const Vec2I windowSize)
 {
 	for (auto& rt : renderTargets_)
 	{

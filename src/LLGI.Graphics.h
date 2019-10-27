@@ -67,14 +67,18 @@ private:
 
 	Color8 color_;
 
+	Texture* depthTexture_ = nullptr;
+
 protected:
+	void assingDepthTexture(Texture* depthTexture);
+
 	bool getSize(Vec2I& size, const Texture** textures, int32_t textureCount) const;
 
 	int32_t colorBufferCount_ = 0;
-	
+
 public:
 	RenderPass() = default;
-	virtual ~RenderPass() = default;
+	virtual ~RenderPass();
 
 	virtual bool GetIsColorCleared() const { return isColorCleared_; }
 
@@ -91,6 +95,10 @@ public:
 	virtual Texture* GetColorBuffer(int index);
 
 	int GetColorBufferCount() const { return colorBufferCount_; }
+
+	Texture* GetDepthTexture() const { return depthTexture_; }
+
+	bool GetHasDepthTexture() const { return GetDepthTexture() != nullptr; }
 };
 
 /**

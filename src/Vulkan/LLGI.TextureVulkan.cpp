@@ -299,16 +299,4 @@ void TextureVulkan::Unlock()
 
 Vec2I TextureVulkan::GetSizeAs2D() const { return textureSize; }
 
-bool TextureVulkan::IsRenderTexture() const
-{
-	throw "Not inplemented";
-	return isRenderPass_;
-}
-
-bool TextureVulkan::IsDepthTexture() const
-{
-	throw "Not inplemented";
-	return isDepthBuffer_;
-}
-
 } // namespace LLGI

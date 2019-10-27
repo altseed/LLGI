@@ -29,8 +29,8 @@ public:
 	[[deprecated("use CommandList::SetImageData2D.")]] virtual void Unlock();
 
 	virtual Vec2I GetSizeAs2D() const;
-	virtual bool IsRenderTexture() const;
-	virtual bool IsDepthTexture() const;
+	[[deprecated("use GetType.")]] virtual bool IsRenderTexture() const;
+	[[deprecated("use GetType.")]] virtual bool IsDepthTexture() const;
 
 	TextureType GetType() const { return type_; }
 

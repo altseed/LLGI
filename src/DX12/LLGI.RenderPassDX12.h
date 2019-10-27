@@ -22,6 +22,7 @@ private:
 	std::vector<RenderTargetDX12> renderTargets_;
 	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> handleRTV_;
 	int32_t numRenderTarget_ = 0;
+
 	std::shared_ptr<RenderPassPipelineStateDX12> renderPassPipelineState_;
 	Vec2I screenWindowSize_;
 
@@ -41,7 +42,7 @@ public:
 	Vec2I GetScreenWindowSize() const { return screenWindowSize_; }
 
 	bool CreateRenderTargetViews(CommandListDX12* commandList, DescriptorHeapDX12* rtDescriptorHeap);
-	bool CreateScreenRenderTarget(TextureDX12* texture,
+	bool InitializeAsScreen(TextureDX12* texture,
 								  D3D12_CPU_DESCRIPTOR_HANDLE handleRTV,
 								  const Color8& clearColor,
 								  const bool isColorCleared,

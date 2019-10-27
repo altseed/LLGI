@@ -61,7 +61,11 @@ PlatformDX12::~PlatformDX12()
 
 	SafeRelease(renderPass_);
 
-	SafeRelease(commandAllocator);
+	for (auto& commandAllocator : commandAllocators)
+	{
+		SafeRelease(commandAllocator);
+	}
+
 	SafeRelease(commandListStart);
 	SafeRelease(commandListPresent);
 	SafeRelease(commandQueue);
@@ -226,21 +230,24 @@ bool PlatformDX12::Initialize(Window* window)
 	SafeRelease(swapChain_);
 
 	// Create Command Allocator
-	hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
-	if (FAILED(hr))
+	for (auto& commandAllocator : commandAllocators)
 	{
-		goto FAILED_EXIT;
+		hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
+		if (FAILED(hr))
+		{
+			goto FAILED_EXIT;
+		}
 	}
-
+	
 	// Create Command List
-	hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator, NULL, IID_PPV_ARGS(&commandListStart));
+	hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocators[0], NULL, IID_PPV_ARGS(&commandListStart));
 	if (FAILED(hr))
 	{
 		goto FAILED_EXIT;
 	}
 	commandListStart->Close();
 
-	hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator, NULL, IID_PPV_ARGS(&commandListPresent));
+	hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocators[0], NULL, IID_PPV_ARGS(&commandListPresent));
 	if (FAILED(hr))
 	{
 		goto FAILED_EXIT;
@@ -297,7 +304,11 @@ FAILED_EXIT:;
 		handleRTV[i] = {};
 	}
 
-	SafeRelease(commandAllocator);
+	for (auto& commandAllocator : commandAllocators)
+	{
+		SafeRelease(commandAllocator);
+	}
+
 	SafeRelease(commandListStart);
 	SafeRelease(commandListPresent);
 	SafeRelease(commandQueue);
@@ -324,7 +335,8 @@ bool PlatformDX12::NewFrame()
 
 	frameIndex = swapChain->GetCurrentBackBufferIndex();
 
-	commandListStart->Reset(commandAllocator, nullptr);
+	commandAllocators.at(0)->Reset();
+	commandListStart->Reset(commandAllocators.at(0), nullptr);
 
 	D3D12_RESOURCE_BARRIER barrier;
 	ZeroMemory(&barrier, sizeof(barrier));
@@ -340,13 +352,12 @@ bool PlatformDX12::NewFrame()
 
 	ID3D12CommandList* commandList[] = {commandListStart};
 	commandQueue->ExecuteCommandLists(1, commandList);
-
 	return true;
 }
 
 void PlatformDX12::Present()
 {
-	commandListPresent->Reset(commandAllocator, nullptr);
+	commandListPresent->Reset(commandAllocators.at(0), nullptr);
 
 	D3D12_RESOURCE_BARRIER barrier;
 	ZeroMemory(&barrier, sizeof(barrier));
@@ -387,11 +398,11 @@ Graphics* PlatformDX12::CreateGraphics()
 
 ID3D12Device* PlatformDX12::GetDevice() { return device; }
 
-RenderPass* PlatformDX12::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) 
-{ 
-	renderPass_->CreateScreenRenderTarget(
+RenderPass* PlatformDX12::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared)
+{
+	renderPass_->InitializeAsScreen(
 		renderTargets[frameIndex], handleRTV[frameIndex], clearColor, isColorCleared, isDepthCleared, windowSize_);
-	return renderPass_; 
+	return renderPass_;
 }
 
 } // namespace LLGI

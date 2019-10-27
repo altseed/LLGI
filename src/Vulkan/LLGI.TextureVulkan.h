@@ -50,8 +50,6 @@ public:
 	void* Lock() override;
 	void Unlock() override;
 	Vec2I GetSizeAs2D() const override;
-	bool IsRenderTexture() const override;
-	bool IsDepthTexture() const override;
 
 	const vk::Image& GetImage() const { return image_; }
 	const vk::ImageView& GetView() const { return view_; }

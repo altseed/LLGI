@@ -5,12 +5,12 @@ namespace LLGI
 {
 
 ID3D12Resource* CreateResourceBuffer(ID3D12Device* device,
-							   D3D12_HEAP_TYPE heapType,
-							   DXGI_FORMAT format,
-							   D3D12_RESOURCE_DIMENSION resourceDimention,
-							   D3D12_RESOURCE_STATES resourceState,
-							   D3D12_RESOURCE_FLAGS flags,
-							   Vec2I size)
+									 D3D12_HEAP_TYPE heapType,
+									 DXGI_FORMAT format,
+									 D3D12_RESOURCE_DIMENSION resourceDimention,
+									 D3D12_RESOURCE_STATES resourceState,
+									 D3D12_RESOURCE_FLAGS flags,
+									 Vec2I size)
 {
 	D3D12_HEAP_PROPERTIES heapProps = {};
 	D3D12_RESOURCE_DESC resDesc = {};
@@ -40,6 +40,14 @@ ID3D12Resource* CreateResourceBuffer(ID3D12Device* device,
 	clearValue.Color[1] = 0.0f;
 	clearValue.Color[2] = 0.0f;
 	clearValue.Color[3] = 0.0f;
+
+	if ((flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) != 0)
+	{
+		clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+		clearValue.DepthStencil.Depth = 1.0f;
+		clearValue.DepthStencil.Stencil = 0;
+	}
+
 	auto setClearValue =
 		resourceDimention != D3D12_RESOURCE_DIMENSION_BUFFER &&
 		(((flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET) != 0) || ((flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) != 0));

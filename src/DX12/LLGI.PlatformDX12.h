@@ -32,7 +32,7 @@ private:
 	ID3D12Resource* renderPass[SwapBufferCount];
 	std::array<TextureDX12*, SwapBufferCount> renderTargets;
 
-	ID3D12CommandAllocator* commandAllocator = nullptr;
+	std::array<ID3D12CommandAllocator*, SwapBufferCount> commandAllocators;
 	ID3D12GraphicsCommandList* commandListStart = nullptr;
 	ID3D12GraphicsCommandList* commandListPresent = nullptr;
 	UINT64 fenceValue = 1;

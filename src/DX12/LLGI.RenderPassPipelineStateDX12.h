@@ -19,15 +19,16 @@ public:
 
 	virtual ~RenderPassPipelineStateDX12() {}
 
-	std::array<DXGI_FORMAT, 8> RenderTargetFormats;
+	std::array<DXGI_FORMAT, RenderTargetMax> RenderTargetFormats;
 	int32_t RenderTargetCount = 0;
+	bool HasDepth = false;
 };
 
 struct RenderPassPipelineStateDX12Key
 {
 	bool isPresentMode;
 	bool hasDepth;
-	std::array<DXGI_FORMAT, 8> RenderTargetFormats;
+	std::array<DXGI_FORMAT, RenderTargetMax> RenderTargetFormats;
 	int32_t RenderTargetCount = 0;
 
 	bool operator==(const RenderPassPipelineStateDX12Key& value) const

@@ -4,8 +4,16 @@ namespace LLGI
 {
 
 #ifdef _WIN32
+
 LRESULT LLGI_WndProc_Win(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{ 
+{
+	switch (msg)
+	{
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		return 0;
+	}
+
 	return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 #endif
@@ -54,7 +62,7 @@ void WindowWin::Terminate()
 #ifdef _WIN32
 	if (hwnd_ != nullptr)
 	{
-		DestroyWindow(hwnd_);
+		//DestroyWindow(hwnd_);		
 		UnregisterClassA(title_.c_str(), GetModuleHandle(NULL));
 	}
 	hwnd_ = nullptr;
@@ -70,7 +78,7 @@ bool WindowWin::OnNewFrame()
 		if (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
-			
+
 			if (msg.message == WM_QUIT)
 				return false;
 

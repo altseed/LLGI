@@ -18,12 +18,10 @@ void Log(LogType logType, const char* message)
 	}
 }
 
-size_t GetAlignedSize(size_t size, size_t alignment)
-{
-	return (size + (alignment - 1)) & ~(alignment - 1);
-}
+size_t GetAlignedSize(size_t size, size_t alignment) { return (size + (alignment - 1)) & ~(alignment - 1); }
 
-SingleFrameMemoryPool::SingleFrameMemoryPool(int32_t swapBufferCount) : swapBufferCount_(swapBufferCount) {
+SingleFrameMemoryPool::SingleFrameMemoryPool(int32_t swapBufferCount) : swapBufferCount_(swapBufferCount)
+{
 
 	for (int i = 0; i < swapBufferCount_; i++)
 	{
@@ -43,10 +41,11 @@ SingleFrameMemoryPool::~SingleFrameMemoryPool()
 	}
 }
 
-void SingleFrameMemoryPool::NewFrame() { 
+void SingleFrameMemoryPool::NewFrame()
+{
 	currentSwapBuffer_++;
 	currentSwapBuffer_ %= swapBufferCount_;
-	offsets_[currentSwapBuffer_] = 0; 
+	offsets_[currentSwapBuffer_] = 0;
 }
 
 ConstantBuffer* SingleFrameMemoryPool::CreateConstantBuffer(int32_t size)
@@ -83,21 +82,33 @@ ConstantBuffer* SingleFrameMemoryPool::CreateConstantBuffer(int32_t size)
 	return nullptr;
 }
 
+void RenderPass::assingDepthTexture(Texture* depthTexture)
+{
+	SafeAddRef(depthTexture);
+	SafeRelease(depthTexture_);
+	depthTexture_ = depthTexture;
+}
+
 bool RenderPass::getSize(Vec2I& size, const Texture** textures, int32_t textureCount) const
 {
-	if(textureCount == 0) return false;
+	if (textureCount == 0)
+		return false;
 
 	size = textures[0]->GetSizeAs2D();
 
-	for(int i = 0; i < textureCount; i++)
+	for (int i = 0; i < textureCount; i++)
 	{
 		auto temp = textures[i]->GetSizeAs2D();
-		if(size.X != temp.X) return false;
-		if(size.Y != temp.Y) return false;
+		if (size.X != temp.X)
+			return false;
+		if (size.Y != temp.Y)
+			return false;
 	}
 
 	return true;
 }
+
+RenderPass::~RenderPass() { SafeRelease(depthTexture_); }
 
 void RenderPass::SetIsColorCleared(bool isColorCleared) { isColorCleared_ = isColorCleared; }
 
