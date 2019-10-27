@@ -97,11 +97,7 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 	if (renderPass != nullptr)
 	{
 		// Set render target
-		if (renderPass_->GetColorBuffer(0)->GetType() != TextureType::Screen)
-		{
-			renderPass_->CreateRenderTargetViews(this, rtDescriptorHeap_.get());
-		}
-
+		renderPass_->CreateRenderTargetViews(this, rtDescriptorHeap_.get());
 		commandList_->OMSetRenderTargets(renderPass_->GetCount(), renderPass_->GetHandleRTV(), FALSE, nullptr);
 
 		// Set depth target
@@ -116,7 +112,7 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 		for (int i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT && i < renderPass_->GetCount(); i++)
 		{
 			auto size = (renderPass_->GetRenderTarget(i)->texture_ != nullptr) ? renderPass_->GetRenderTarget(i)->texture_->GetSizeAs2D()
-																			   : renderPass_->GetScreenWindowSize();
+																			   : renderPass_->GetScreenSize();
 			rects[i].top = 0;
 			rects[i].left = 0;
 			rects[i].right = size.X;
@@ -185,7 +181,7 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 	{
 		D3D12_INDEX_BUFFER_VIEW indexView;
 		indexView.BufferLocation = ib->Get()->GetGPUVirtualAddress() + ib_.offset;
-		indexView.SizeInBytes = ib->GetStride() * ib->GetCount();
+		indexView.SizeInBytes = ib->GetStride() * ib->GetCount() - ib_.offset;
 		indexView.Format = ib->GetStride() == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
 		commandList_->IASetIndexBuffer(&indexView);
 	}

@@ -18,8 +18,6 @@ void Log(LogType logType, const char* message)
 	}
 }
 
-size_t GetAlignedSize(size_t size, size_t alignment) { return (size + (alignment - 1)) & ~(alignment - 1); }
-
 SingleFrameMemoryPool::SingleFrameMemoryPool(int32_t swapBufferCount) : swapBufferCount_(swapBufferCount)
 {
 
@@ -82,14 +80,53 @@ ConstantBuffer* SingleFrameMemoryPool::CreateConstantBuffer(int32_t size)
 	return nullptr;
 }
 
-void RenderPass::assingDepthTexture(Texture* depthTexture)
+bool RenderPass::assignRenderTextures(Texture** textures, int32_t count)
 {
+	for (size_t i = 0; i < count; i++)
+	{
+		if (!(textures[i]->GetType() == TextureType::Render || textures[i]->GetType() == TextureType::Screen))
+		{
+			Log(LogType::Error, "RenderPass : Invalid RenderTexture.");
+			return false;
+		}
+	}
+
+	for (size_t i = 0; i < count; i++)
+	{
+		SafeAddRef(textures[i]);
+	}
+
+	for (size_t i = 0; i < renderTextures_.size(); i++)
+	{
+		renderTextures_.at(i)->Release();
+	}
+
+	renderTextures_.resize(count);
+
+	for (size_t i = 0; i < count; i++)
+	{
+		renderTextures_.at(i) = textures[i];
+	}
+
+	return true;
+}
+
+bool RenderPass::assignDepthTexture(Texture* depthTexture)
+{
+	if (depthTexture != nullptr && depthTexture->GetType() != TextureType::Depth)
+	{
+		Log(LogType::Error, "RenderPass : Invalid DepthTexture.");
+		return false;
+	}
+
 	SafeAddRef(depthTexture);
 	SafeRelease(depthTexture_);
 	depthTexture_ = depthTexture;
+
+	return true;
 }
 
-bool RenderPass::getSize(Vec2I& size, const Texture** textures, int32_t textureCount) const
+bool RenderPass::getSize(Vec2I& size, const Texture** textures, int32_t textureCount, Texture* depthTexture) const
 {
 	if (textureCount == 0)
 		return false;
@@ -105,10 +142,26 @@ bool RenderPass::getSize(Vec2I& size, const Texture** textures, int32_t textureC
 			return false;
 	}
 
+	if (depthTexture != nullptr)
+	{
+		if (size.X != depthTexture->GetSizeAs2D().X)
+			return false;
+		if (size.Y != depthTexture->GetSizeAs2D().Y)
+			return false;
+	}
+
 	return true;
 }
 
-RenderPass::~RenderPass() { SafeRelease(depthTexture_); }
+RenderPass::~RenderPass() 
+{
+	SafeRelease(depthTexture_); 
+
+	for (size_t i = 0; i < renderTextures_.size(); i++)
+	{
+		renderTextures_.at(i)->Release();
+	}
+}
 
 void RenderPass::SetIsColorCleared(bool isColorCleared) { isColorCleared_ = isColorCleared; }
 
@@ -116,11 +169,9 @@ void RenderPass::SetIsDepthCleared(bool isDepthCleared) { isDepthCleared_ = isDe
 
 void RenderPass::SetClearColor(const Color8& color) { color_ = color; }
 
-Texture* RenderPass::GetColorBuffer(int index)
-{
-	Log(LogType::Error, "GetColorBuffer is not implemented.");
-	assert(0);
-	return nullptr;
+bool RenderPass::GetIsSwapchainScreen() const
+{ 
+	return GetRenderTexture(0)->GetType() == TextureType::Screen;
 }
 
 Graphics::~Graphics()
@@ -148,13 +199,6 @@ PipelineState* Graphics::CreatePiplineState() { return nullptr; }
 SingleFrameMemoryPool* Graphics::CreateSingleFrameMemoryPool(int32_t constantBufferPoolSize, int32_t drawingCount) { return nullptr; }
 
 CommandList* Graphics::CreateCommandList(SingleFrameMemoryPool* memoryPool) { return nullptr; }
-
-CommandListPool* Graphics::CreateCommandListPool(int32_t constantBufferPoolSize, int32_t drawingCount, int32_t swapbufferCount)
-{
-	Log(LogType::Error, "GetColorBuffer is not implemented.");
-	assert(0);
-	return nullptr;
-}
 
 ConstantBuffer* Graphics::CreateConstantBuffer(int32_t size) { return nullptr; }
 

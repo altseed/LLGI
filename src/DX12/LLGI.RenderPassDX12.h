@@ -17,37 +17,24 @@ class RenderPassDX12 : public RenderPass
 {
 private:
 	ID3D12Device* device_ = nullptr;
-	bool isScreen_ = true;
-
+	
 	std::vector<RenderTargetDX12> renderTargets_;
 	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> handleRTV_;
 	int32_t numRenderTarget_ = 0;
 
 	std::shared_ptr<RenderPassPipelineStateDX12> renderPassPipelineState_;
-	Vec2I screenWindowSize_;
 
 public:
 	RenderPassDX12(ID3D12Device* device);
 	virtual ~RenderPassDX12();
 
-	bool Initialize();
 	bool Initialize(TextureDX12** textures, int numTextures, TextureDX12* depthTexture);
-
-	Texture* GetColorBuffer(int index) override;
 
 	const D3D12_CPU_DESCRIPTOR_HANDLE* GetHandleRTV() const { return handleRTV_.data(); }
 	const RenderTargetDX12* GetRenderTarget(int idx) const { return &renderTargets_[idx]; }
 	int32_t GetCount() const { return numRenderTarget_; }
-	bool GetIsScreen() const { return isScreen_; }
-	Vec2I GetScreenWindowSize() const { return screenWindowSize_; }
-
+	
 	bool CreateRenderTargetViews(CommandListDX12* commandList, DescriptorHeapDX12* rtDescriptorHeap);
-	bool InitializeAsScreen(TextureDX12* texture,
-								  D3D12_CPU_DESCRIPTOR_HANDLE handleRTV,
-								  const Color8& clearColor,
-								  const bool isColorCleared,
-								  const bool isDepthCleared,
-								  const Vec2I windowSize);
 };
 
 class RenderTargetDX12

@@ -393,19 +393,19 @@ void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
 
 	vk::ClearValue clear_values[RenderTargetMax + 1];
 
-	for(int32_t i = 0; i < renderPass_->GetColorBufferCount(); i++)
+	for(int32_t i = 0; i < renderPass_->GetRenderTextureCount(); i++)
 	{
 		clear_values[i].color = clearColor;
 	}	
 
-	clear_values[renderPass_->GetColorBufferCount()].depthStencil = clearDepth;
+	clear_values[renderPass_->GetRenderTextureCount()].depthStencil = clearDepth;
 
 	// begin renderpass
 	vk::RenderPassBeginInfo renderPassBeginInfo;
 	renderPassBeginInfo.framebuffer = renderPass_->frameBuffer_;
 	renderPassBeginInfo.renderPass = renderPass_->renderPassPipelineState->GetRenderPass();
 	renderPassBeginInfo.renderArea.extent = vk::Extent2D(renderPass_->GetImageSize().X, renderPass_->GetImageSize().Y);
-	renderPassBeginInfo.clearValueCount = renderPass_->GetColorBufferCount() + renderPass_->hasDepth ? 1 : 0;
+	renderPassBeginInfo.clearValueCount = renderPass_->GetRenderTextureCount() + renderPass_->GetHasDepthTexture() ? 1 : 0;
 	renderPassBeginInfo.pClearValues = clear_values;
 	cmdBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
 

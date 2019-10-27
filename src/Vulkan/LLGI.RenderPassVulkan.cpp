@@ -34,61 +34,28 @@ RenderPassVulkan::~RenderPassVulkan()
 	SafeRelease(owner_);
 }
 
-bool RenderPassVulkan::Initialize(const vk::Image& imageColor,
-								  const vk::Image& imageDepth,
-								  const vk::ImageView& imageColorView,
-								  const vk::ImageView& imageDepthView,
-								  Vec2I imageSize,
-								  vk::Format format)
-{
-	imageSize_ = imageSize;
-
-	hasDepth = true;
-	isPresentMode = true;
-	renderTargetProperties.resize(1);
-	colorBufferCount_ = 1;
-
-	FixedSizeVector<vk::Format, RenderTargetMax> formats;
-	formats.resize(1);
-	formats.at(0) = format;
-	this->renderPassPipelineState = renderPassPipelineStateCache_->Create(isPresentMode, hasDepth, formats);
-
-	std::array<vk::ImageView, 2> views;
-	views[0] = imageColorView;
-	views[1] = imageDepthView;
-
-	vk::FramebufferCreateInfo framebufferCreateInfo;
-	framebufferCreateInfo.renderPass = renderPassPipelineState->GetRenderPass();
-	framebufferCreateInfo.attachmentCount = static_cast<uint32_t>(views.size());
-	framebufferCreateInfo.pAttachments = views.data();
-	framebufferCreateInfo.width = imageSize.X;
-	framebufferCreateInfo.height = imageSize.Y;
-	framebufferCreateInfo.layers = 1;
-
-	frameBuffer_ = device_.createFramebuffer(framebufferCreateInfo);
-
-	renderTargetProperties.at(0).colorBuffer = imageColor;
-	depthBuffer = imageDepth;
-	/*
-	auto texture = CreateSharedPtr(new TextureVulkan(graphics_, false));
-	if (!texture->InitializeAsScreen(imageColor, imageColorView, format, imageSize))
-	{
-		return false;
-	}
-	renderTargetProperties.at(0).colorBufferPtr = texture;
-	renderTargetProperties.at(0).format = format;
-	*/
-	return true;
-}
-
 bool RenderPassVulkan::Initialize(const TextureVulkan** textures, int32_t textureCount, TextureVulkan* depthTexture)
 {
 	if (textureCount == 0)
 		return false;
 
+	if (!assignRenderTextures((Texture**)(textures), textureCount))
+	{
+		return false;
+	}
+
+	if (!assignDepthTexture(depthTexture))
+	{
+		return false;
+	}
+
+	if (!getSize(screenSize_, reinterpret_cast<const Texture**>(textures), textureCount, depthTexture))
+	{
+		return false;
+	}
+
 	renderTargetProperties.resize(textureCount);
-	colorBufferCount_ = textureCount;
-	
+
 	for (int32_t i = 0; i < textureCount; i++)
 	{
 		auto texture = const_cast<TextureVulkan*>(textures[i]);
@@ -96,53 +63,35 @@ bool RenderPassVulkan::Initialize(const TextureVulkan** textures, int32_t textur
 		renderTargetProperties.at(i).colorBufferPtr = CreateSharedPtr(texture);
 	}
 
-	if (depthTexture != nullptr)
-	{
-		SafeAddRef(depthTexture);
-		depthBufferPtr = CreateSharedPtr(depthTexture);
-	}
-	else
-	{
-		depthBufferPtr.reset();
-	}
-
 	for (size_t i = 0; i < textureCount; i++)
 	{
 		renderTargetProperties.at(i).format = textures[i]->GetVulkanFormat();
 	}
-
-	if(!getSize(imageSize_, reinterpret_cast<const Texture**>(textures), textureCount))
-	{
-		return false;
-	}
-
-	hasDepth = depthTexture != nullptr;
-	isPresentMode = textures[0]->GetType() == TextureType::Screen;
 
 	FixedSizeVector<vk::ImageView, RenderTargetMax + 1> views;
 	FixedSizeVector<vk::Format, RenderTargetMax> formats;
 	views.resize(textureCount + 1);
 	formats.resize(textureCount);
 
-	for(int32_t i = 0; i < textureCount; i++)
+	for (int32_t i = 0; i < textureCount; i++)
 	{
-		views.at(i) =  textures[i]->GetView();
+		views.at(i) = textures[i]->GetView();
 		formats.at(i) = textures[i]->GetVulkanFormat();
 	}
 
-	if(hasDepth)
+	if (GetHasDepthTexture())
 	{
 		views.at(textureCount) = depthTexture->GetView();
 	}
 
-	this->renderPassPipelineState = renderPassPipelineStateCache_->Create(isPresentMode, hasDepth, formats);
+	this->renderPassPipelineState = renderPassPipelineStateCache_->Create(GetIsSwapchainScreen(), GetHasDepthTexture(), formats);
 
 	vk::FramebufferCreateInfo framebufferCreateInfo;
 	framebufferCreateInfo.renderPass = renderPassPipelineState->GetRenderPass();
 	framebufferCreateInfo.attachmentCount = static_cast<uint32_t>(views.size());
 	framebufferCreateInfo.pAttachments = views.data();
-	framebufferCreateInfo.width = imageSize_.X;
-	framebufferCreateInfo.height = imageSize_.Y;
+	framebufferCreateInfo.width = screenSize_.X;
+	framebufferCreateInfo.height = screenSize_.Y;
 	framebufferCreateInfo.layers = 1;
 
 	frameBuffer_ = device_.createFramebuffer(framebufferCreateInfo);
@@ -150,9 +99,7 @@ bool RenderPassVulkan::Initialize(const TextureVulkan** textures, int32_t textur
 	return true;
 }
 
-Vec2I RenderPassVulkan::GetImageSize() const { return imageSize_; }
-
-Texture* RenderPassVulkan::GetColorBuffer(int index) { return renderTargetProperties.at(index).colorBufferPtr.get(); }
+Vec2I RenderPassVulkan::GetImageSize() const { return screenSize_; }
 
 RenderPassPipelineStateVulkan::RenderPassPipelineStateVulkan(vk::Device device, ReferenceObject* owner)
 {

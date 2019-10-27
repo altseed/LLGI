@@ -21,7 +21,6 @@ private:
 	vk::Device device_;
 	ReferenceObject* owner_ = nullptr;
 
-	Vec2I imageSize_;
 	std::shared_ptr<TextureVulkan> depthBufferPtr;
 	
 public:
@@ -36,9 +35,6 @@ public:
 
 	vk::Framebuffer frameBuffer_;
 
-	bool isPresentMode = false;
-	bool hasDepth = false;
-
 	FixedSizeVector<RenderTargetProperty, RenderTargetMax> renderTargetProperties;
 
 	vk::Image depthBuffer;
@@ -46,24 +42,9 @@ public:
 	RenderPassVulkan(RenderPassPipelineStateCacheVulkan* renderPassPipelineStateCache, vk::Device device, ReferenceObject* owner);
 	virtual ~RenderPassVulkan();
 
-	/**
-		@brief	initialize for screen
-	*/
-	bool Initialize(const vk::Image& imageColor,
-					const vk::Image& imageDepth,
-					const vk::ImageView& imageColorView,
-					const vk::ImageView& imageDepthView,
-					Vec2I imageSize,
-					vk::Format format);
-
-	/**
-		@brief	initialize for offscreen
-	*/
 	bool Initialize(const TextureVulkan** textures, int32_t textureCount, TextureVulkan* depthTexture);
 
 	Vec2I GetImageSize() const;
-
-	virtual Texture* GetColorBuffer(int index) override;
 };
 
 class RenderPassPipelineStateVulkan : public RenderPassPipelineState
@@ -106,14 +87,3 @@ struct RenderPassPipelineStateVulkanKey
 
 } // namespace LLGI
 
-/*
-template <> struct std::hash<size_t>
-{
-	_NODISCARD size_t operator()(const size_t& _Keyval) const noexcept { return std::hash<uint64_t>()(static_cast<uint64_t>(_Keyval)); }
-};
-
-template <> struct std::hash<vk::Format>
-{
-	_NODISCARD size_t operator()(const vk::Format& _Keyval) const noexcept { return std::hash<uint64_t>()(static_cast<uint64_t>(_Keyval)); }
-};
-*/

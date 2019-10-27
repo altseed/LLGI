@@ -66,12 +66,13 @@ void test_depth_stencil(LLGI::DeviceType deviceType, bool is_test_depth, bool is
 		color.B = 0;
 		color.A = 255;
 
+		// TODO : fixed swapchin is not good
 		int swapIndex = count % 3;
 		auto screenRenderPass = platform->GetCurrentScreen(color, true, true);
 		LLGI::RenderPass* renderPass;
 		if (!renderPasses[swapIndex])
 		{
-			auto colorBuffer = screenRenderPass->GetColorBuffer(0);
+			auto colorBuffer = screenRenderPass->GetRenderTexture(0);
 			LLGI::DepthTextureInitializationParameter depthParam;
 			depthParam.Size = colorBuffer->GetSizeAs2D();
 			auto depthBuffer = graphics->CreateDepthTexture(depthParam);

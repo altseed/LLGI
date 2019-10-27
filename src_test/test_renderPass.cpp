@@ -113,7 +113,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 	assert(renderTexture->GetType() == LLGI::TextureType::Render);
 
 	auto renderPass = graphics->CreateRenderPass((const LLGI::Texture**)&renderTexture, 1, nullptr);
-	assert(renderPass->GetColorBufferCount() == 1);
+	assert(renderPass->GetRenderTextureCount() == 1);
 
 	auto texture = graphics->CreateTexture(LLGI::Vec2I(256, 256), false, false);
 
@@ -442,6 +442,9 @@ PS_OUTPUT main(PS_INPUT input)
 }
 )";
 
+	/**
+		TODO : added single target shader
+	*/
 	auto compiler = LLGI::CreateCompiler(deviceType);
 
 	int count = 0;
@@ -460,7 +463,7 @@ PS_OUTPUT main(PS_INPUT input)
 	auto renderTexture2 = graphics->CreateTexture(LLGI::Vec2I(256, 256), true, false);
 	const LLGI::Texture* renderTextures[2] = {(const LLGI::Texture*)renderTexture, (const LLGI::Texture*)renderTexture2};
 	auto renderPass = graphics->CreateRenderPass((const LLGI::Texture**)renderTextures, 2, nullptr);
-	assert(renderPass->GetColorBufferCount() == 2);
+	assert(renderPass->GetRenderTextureCount() == 2);
 
 	auto texture = graphics->CreateTexture(LLGI::Vec2I(256, 256), false, false);
 
@@ -948,8 +951,8 @@ void test_capture(LLGI::DeviceType deviceType)
 
 		if (count == 100)
 		{
-			auto tex0 = renderPass->GetColorBuffer(0);
-			auto tex1 = renderPass->GetColorBuffer(1);
+			auto tex0 = renderPass->GetRenderTexture(0);
+			auto tex1 = renderPass->GetRenderTexture(1);
 			auto data0 = graphics->CaptureRenderTarget(tex0);
 			auto data1 = graphics->CaptureRenderTarget(tex1);
 			Bitmap2D bitmap0(data0, tex0->GetSizeAs2D().X, tex0->GetSizeAs2D().Y, false);

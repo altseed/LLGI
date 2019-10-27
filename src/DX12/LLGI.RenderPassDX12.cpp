@@ -22,19 +22,28 @@ RenderPassDX12 ::~RenderPassDX12()
 	SafeRelease(device_);
 }
 
-bool RenderPassDX12::Initialize() { return false; }
-
 bool RenderPassDX12::Initialize(TextureDX12** textures, int numTextures, TextureDX12* depthTexture)
 {
 	if (textures[0]->Get() == nullptr)
 		return false;
 
-	assingDepthTexture(depthTexture);
+	if (!assignRenderTextures((Texture**)textures, numTextures))
+	{
+		return false;
+	}
 
-	isScreen_ = false;
+	if (!assignDepthTexture(depthTexture))
+	{
+		return false;
+	}
+
+	if (!getSize(screenSize_, (const Texture**)textures, numTextures, depthTexture))
+	{
+		return false;
+	}
+
 	renderTargets_.resize(numTextures);
 	numRenderTarget_ = numTextures;
-	colorBufferCount_ = numTextures;
 
 	for (size_t i = 0; i < numTextures; i++)
 	{
@@ -43,15 +52,8 @@ bool RenderPassDX12::Initialize(TextureDX12** textures, int numTextures, Texture
 		SafeAddRef(renderTargets_[i].texture_);
 	}
 
-	if (!getSize(screenWindowSize_, (const Texture**)textures, numTextures))
-	{
-		return false;
-	}
-
 	return true;
 }
-
-Texture* RenderPassDX12::GetColorBuffer(int index) { return renderTargets_.at(index).texture_; }
 
 bool RenderPassDX12::CreateRenderTargetViews(CommandListDX12* commandList, DescriptorHeapDX12* rtDescriptorHeap)
 {
@@ -72,39 +74,11 @@ bool RenderPassDX12::CreateRenderTargetViews(CommandListDX12* commandList, Descr
 		rtDescriptorHeap->IncrementGpuHandle(1);
 
 		// memory barrior to make a rendertarget
-		renderTargets_[i].texture_->ResourceBarrior(commandList->GetCommandList(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+		if (renderTargets_[i].texture_->GetType() != TextureType::Screen)
+		{
+			renderTargets_[i].texture_->ResourceBarrior(commandList->GetCommandList(), D3D12_RESOURCE_STATE_RENDER_TARGET);		
+		}
 	}
-
-	return true;
-}
-
-bool RenderPassDX12::InitializeAsScreen(TextureDX12* texture,
-										D3D12_CPU_DESCRIPTOR_HANDLE handleRTV,
-										const Color8& clearColor,
-										const bool isColorCleared,
-										const bool isDepthCleared,
-										const Vec2I windowSize)
-{
-	for (auto& rt : renderTargets_)
-	{
-		SafeRelease(rt.texture_);
-	}
-
-	numRenderTarget_ = 1;
-	colorBufferCount_ = numRenderTarget_;
-
-	handleRTV_.resize(1);
-	renderTargets_.resize(1);
-
-	renderTargets_[0].texture_ = texture;
-	renderTargets_[0].renderPass_ = texture->Get();
-	SafeAddRef(renderTargets_[0].texture_);
-
-	handleRTV_[0] = handleRTV;
-	SetClearColor(clearColor);
-	SetIsColorCleared(isColorCleared);
-	SetIsDepthCleared(isDepthCleared);
-	screenWindowSize_ = windowSize;
 
 	return true;
 }

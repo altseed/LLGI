@@ -45,7 +45,7 @@ void test_clear_update(LLGI::DeviceType deviceType)
 		if (TestHelper::IsCaptureRequired && count == 5)
 		{
 			commandList->WaitUntilCompleted();
-			auto texture = platform->GetCurrentScreen(color, true)->GetColorBuffer(0);
+			auto texture = platform->GetCurrentScreen(color, true)->GetRenderTexture(0);
 			auto data = graphics->CaptureRenderTarget(texture);
 
 			// save
@@ -108,7 +108,7 @@ void test_clear(LLGI::DeviceType deviceType)
 		if (TestHelper::IsCaptureRequired && count == 5)
 		{
 			commandList->WaitUntilCompleted();
-			auto texture = platform->GetCurrentScreen(color, true)->GetColorBuffer(0);
+			auto texture = platform->GetCurrentScreen(color, true)->GetRenderTexture(0);
 			auto data = graphics->CaptureRenderTarget(texture);
 
 			// save

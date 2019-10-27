@@ -324,7 +324,10 @@ void SetLogger(const std::function<void(LogType, const char*)>& logger);
 
 void Log(LogType logType, const char* message);
 
-size_t GetAlignedSize(size_t size, size_t alignment);
+inline size_t GetAlignedSize(size_t size, size_t alignment)
+{
+	return (size + (alignment - 1)) & ~(alignment - 1);
+}
 
 /**
 	@brief	window abstraction class

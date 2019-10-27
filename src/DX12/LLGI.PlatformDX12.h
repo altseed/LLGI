@@ -29,9 +29,10 @@ private:
 
 	ID3D12DescriptorHeap* descriptorHeapRTV = nullptr;
 	D3D12_CPU_DESCRIPTOR_HANDLE handleRTV[SwapBufferCount];
-	ID3D12Resource* renderPass[SwapBufferCount];
-	std::array<TextureDX12*, SwapBufferCount> renderTargets;
-
+	ID3D12Resource* renderResources_[SwapBufferCount];
+	std::array<TextureDX12*, SwapBufferCount> renderTargets_;
+	std::array<RenderPassDX12*, SwapBufferCount> renderPasses_;
+	
 	std::array<ID3D12CommandAllocator*, SwapBufferCount> commandAllocators;
 	ID3D12GraphicsCommandList* commandListStart = nullptr;
 	ID3D12GraphicsCommandList* commandListPresent = nullptr;
@@ -39,7 +40,6 @@ private:
 
 	int32_t frameIndex = 0;
 
-	RenderPassDX12* renderPass_ = nullptr;
 
 	void Wait();
 

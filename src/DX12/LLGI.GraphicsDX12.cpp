@@ -226,7 +226,7 @@ RenderPassPipelineState* GraphicsDX12::CreateRenderPassPipelineState(RenderPass*
 
 	std::array<DXGI_FORMAT, RenderTargetMax> renderTargetFormats;
 	renderTargetFormats.fill(DXGI_FORMAT_UNKNOWN);
-	int32_t renderTargetCount = renderTargetFormats.size();
+	int32_t renderTargetCount = renderPass->GetRenderTextureCount();
 	;
 	for (int32_t i = 0; i < renderPass_->GetCount(); i++)
 	{
@@ -239,7 +239,7 @@ RenderPassPipelineState* GraphicsDX12::CreateRenderPassPipelineState(RenderPass*
 		renderTargetFormats[i] = renderPass_->GetRenderTarget(i)->texture_->GetDXGIFormat();
 	}
 
-	auto ret = CreateRenderPassPipelineState(renderPass_->GetIsScreen(), renderPass->GetHasDepthTexture(), renderTargetCount, renderTargetFormats);
+	auto ret = CreateRenderPassPipelineState(renderPass_->GetIsSwapchainScreen(), renderPass->GetHasDepthTexture(), renderTargetCount, renderTargetFormats);
 
 	auto ptr = ret.get();
 	SafeAddRef(ptr);

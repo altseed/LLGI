@@ -2,6 +2,7 @@
 #pragma once
 
 #include "LLGI.Base.h"
+#include "Utils/LLGI.FixedSizeVector.h"
 
 namespace LLGI
 {
@@ -67,14 +68,16 @@ private:
 
 	Color8 color_;
 
+	FixedSizeVector<Texture*, RenderTargetMax> renderTextures_;
 	Texture* depthTexture_ = nullptr;
 
 protected:
-	void assingDepthTexture(Texture* depthTexture);
+	Vec2I screenSize_;
 
-	bool getSize(Vec2I& size, const Texture** textures, int32_t textureCount) const;
-
-	int32_t colorBufferCount_ = 0;
+	bool assignRenderTextures(Texture** textures, int32_t count);
+	bool assignDepthTexture(Texture* depthTexture);
+	
+	bool getSize(Vec2I& size, const Texture** textures, int32_t textureCount, Texture* depthTexture) const;
 
 public:
 	RenderPass() = default;
@@ -92,13 +95,17 @@ public:
 
 	virtual void SetClearColor(const Color8& color);
 
-	virtual Texture* GetColorBuffer(int index);
+	virtual Texture* GetRenderTexture(int index) const { return renderTextures_.at(index); }
 
-	int GetColorBufferCount() const { return colorBufferCount_; }
+	virtual int GetRenderTextureCount() const { return renderTextures_.size(); }
 
 	Texture* GetDepthTexture() const { return depthTexture_; }
 
 	bool GetHasDepthTexture() const { return GetDepthTexture() != nullptr; }
+
+	virtual bool GetIsSwapchainScreen() const;
+	
+	virtual Vec2I GetScreenSize() const { return screenSize_; }
 };
 
 /**
@@ -167,17 +174,13 @@ public:
 	/**
 		@brief create a memory pool
 	*/
-	[[deprecated("use Graphics::CreateCommandListPool.")]] virtual SingleFrameMemoryPool*
-	CreateSingleFrameMemoryPool(int32_t constantBufferPoolSize, int32_t drawingCount);
+	virtual SingleFrameMemoryPool* CreateSingleFrameMemoryPool(int32_t constantBufferPoolSize, int32_t drawingCount);
 
 	/**
 		@brief
 		@param memoryPool if memory pool is null, allocate memory from graphics
 	*/
-	[[deprecated("use Graphics::CreateCommandListPool.")]] virtual CommandList* CreateCommandList(SingleFrameMemoryPool* memoryPool);
-
-	// TODO: see https://github.com/altseed/LLGI/issues/26
-	virtual CommandListPool* CreateCommandListPool(int32_t constantBufferPoolSize, int32_t drawingCount, int32_t swapbufferCount);
+	virtual CommandList* CreateCommandList(SingleFrameMemoryPool* memoryPool);
 
 	/**
 		@brief	create a constant buffer
