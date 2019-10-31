@@ -103,7 +103,20 @@ void CommandList::Begin()
 
 bool CommandList::BeginWithPlatform(void* platformContextPtr)
 {
-	Begin();
+	bindingVertexBuffer.vertexBuffer = nullptr;
+	bindingIndexBuffer.indexBuffer = nullptr;
+	currentPipelineState = nullptr;
+	isVertexBufferDirtied = true;
+	isCurrentIndexBufferDirtied = true;
+	isPipelineDirtied = true;
+
+	swapIndex_ = (swapIndex_ + 1) % swapCount_;
+
+	for (auto& o : swapObjects[swapIndex_].referencedObjects)
+	{
+		o->Release();
+	}
+	swapObjects[swapIndex_].referencedObjects.clear();
 	return true;
 }
 
@@ -203,6 +216,14 @@ void CommandList::SetImageData2D(Texture* texture, int32_t x, int32_t y, int32_t
 void CommandList::WaitUntilCompleted()
 {
 	assert(0); // TODO: Not implemented.
+}
+
+CommandListPool::CommandListPool(int32_t swapCount) {}
+
+CommandList* CommandListPool::Get()
+{
+	assert(0); // TODO: Not implemented.
+	return nullptr;
 }
 
 } // namespace LLGI
