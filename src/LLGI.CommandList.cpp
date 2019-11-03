@@ -122,6 +122,8 @@ bool CommandList::BeginWithPlatform(void* platformContextPtr)
 
 void CommandList::End() {}
 
+void CommandList::EndWithPlatform() {}
+
 void CommandList::SetScissor(int32_t x, int32_t y, int32_t width, int32_t height) {}
 
 void CommandList::Draw(int32_t pritimiveCount)
@@ -216,14 +218,6 @@ void CommandList::SetImageData2D(Texture* texture, int32_t x, int32_t y, int32_t
 void CommandList::WaitUntilCompleted()
 {
 	assert(0); // TODO: Not implemented.
-}
-
-CommandListPool::CommandListPool(int32_t swapCount) {}
-
-CommandList* CommandListPool::Get()
-{
-	assert(0); // TODO: Not implemented.
-	return nullptr;
 }
 
 } // namespace LLGI

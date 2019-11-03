@@ -12,6 +12,11 @@ namespace LLGI
 {
 class DescriptorHeapDX12;
 
+struct PlatformContextDX12
+{
+	ID3D12GraphicsCommandList* commandList = nullptr;
+};
+
 class CommandListDX12 : public CommandList
 {
 private:
@@ -20,12 +25,14 @@ private:
 	std::shared_ptr<DescriptorHeapDX12> smpDescriptorHeap_;
 	std::shared_ptr<ID3D12GraphicsCommandList> commandList_;
 	std::shared_ptr<ID3D12CommandAllocator> commandAllocator_;
-		ID3D12Fence* fence_ = nullptr;
-		HANDLE fenceEvent_ = nullptr;
-		UINT64 fenceValue_ = 1;
+	ID3D12Fence* fence_ = nullptr;
+	HANDLE fenceEvent_ = nullptr;
+	UINT64 fenceValue_ = 1;
 
 	std::shared_ptr<GraphicsDX12> graphics_;
 	std::shared_ptr<RenderPassDX12> renderPass_;
+
+	ID3D12GraphicsCommandList* currentCommandList_ = nullptr;
 
 public:
 	CommandListDX12();
@@ -34,6 +41,9 @@ public:
 
 	void Begin() override;
 	void End() override;
+	bool BeginWithPlatform(void* platformContextPtr) override;
+	void EndWithPlatform() override;
+
 	void BeginRenderPass(RenderPass* renderPass) override;
 	void EndRenderPass() override;
 	void Draw(int32_t pritimiveCount) override;

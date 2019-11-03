@@ -84,13 +84,42 @@ void CommandListDX12::Begin()
 	rtDescriptorHeap_->Reset();
 	smpDescriptorHeap_->Reset();
 
+	currentCommandList_ = commandList_.get();
+
 	CommandList::Begin();
 }
 
-void CommandListDX12::End() { commandList_->Close(); }
+void CommandListDX12::End()
+{
+	assert(currentCommandList_ != nullptr);
+	currentCommandList_->Close();
+	currentCommandList_ = nullptr;
+}
+
+bool CommandListDX12::BeginWithPlatform(void* platformContextPtr)
+{
+	auto ptr = reinterpret_cast<PlatformContextDX12*>(platformContextPtr);
+
+	cbreDescriptorHeap_->Reset();
+	rtDescriptorHeap_->Reset();
+	smpDescriptorHeap_->Reset();
+
+	currentCommandList_ = ptr->commandList;
+
+	return CommandList::BeginWithPlatform(platformContextPtr);
+}
+
+void CommandListDX12::EndWithPlatform()
+{
+	assert(currentCommandList_ != nullptr);
+	currentCommandList_ = nullptr;
+	CommandList::EndWithPlatform();
+}
 
 void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 {
+	assert(currentCommandList_ != nullptr);
+
 	SafeAddRef(renderPass);
 	renderPass_ = CreateSharedPtr((RenderPassDX12*)renderPass);
 
@@ -98,7 +127,7 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 	{
 		// Set render target
 		renderPass_->CreateRenderTargetViews(this, rtDescriptorHeap_.get());
-		commandList_->OMSetRenderTargets(renderPass_->GetCount(), renderPass_->GetHandleRTV(), FALSE, nullptr);
+		currentCommandList_->OMSetRenderTargets(renderPass_->GetCount(), renderPass_->GetHandleRTV(), FALSE, nullptr);
 
 		// Set depth target
 		if (renderPass->GetHasDepthTexture())
@@ -125,8 +154,8 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 			viewports[i].MinDepth = 0.0f;
 			viewports[i].MaxDepth = 1.0f;
 		}
-		commandList_->RSSetScissorRects(renderPass_->GetCount(), rects);
-		commandList_->RSSetViewports(renderPass_->GetCount(), viewports);
+		currentCommandList_->RSSetScissorRects(renderPass_->GetCount(), rects);
+		currentCommandList_->RSSetViewports(renderPass_->GetCount(), viewports);
 
 		if (renderPass_->GetIsColorCleared())
 		{
@@ -136,7 +165,7 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 		if (renderPass_->GetIsDepthCleared())
 		{
 			// TODO
-			//assert(0);
+			// assert(0);
 		}
 	}
 }
@@ -145,6 +174,8 @@ void CommandListDX12::EndRenderPass() { renderPass_.reset(); }
 
 void CommandListDX12::Draw(int32_t pritimiveCount)
 {
+	assert(currentCommandList_ != nullptr);
+
 	BindingVertexBuffer vb_;
 	BindingIndexBuffer ib_;
 	ConstantBuffer* cb = nullptr;
@@ -173,7 +204,7 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 		vertexView.SizeInBytes = vb_.vertexBuffer->GetSize() - vb_.offset;
 		if (vb_.vertexBuffer != nullptr)
 		{
-			commandList_->IASetVertexBuffers(0, 1, &vertexView);
+			currentCommandList_->IASetVertexBuffers(0, 1, &vertexView);
 		}
 	}
 
@@ -183,14 +214,14 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 		indexView.BufferLocation = ib->Get()->GetGPUVirtualAddress() + ib_.offset;
 		indexView.SizeInBytes = ib->GetStride() * ib->GetCount() - ib_.offset;
 		indexView.Format = ib->GetStride() == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
-		commandList_->IASetIndexBuffer(&indexView);
+		currentCommandList_->IASetIndexBuffer(&indexView);
 	}
 
 	if (pip != nullptr)
 	{
-		commandList_->SetGraphicsRootSignature(pip->GetRootSignature());
+		currentCommandList_->SetGraphicsRootSignature(pip->GetRootSignature());
 		auto p = pip->GetPipelineState();
-		commandList_->SetPipelineState(p);
+		currentCommandList_->SetPipelineState(p);
 	}
 
 	{
@@ -199,11 +230,11 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 			cbreDescriptorHeap_->GetHeap(),
 			smpDescriptorHeap_->GetHeap(),
 		};
-		commandList_->SetDescriptorHeaps(2, heaps);
+		currentCommandList_->SetDescriptorHeaps(2, heaps);
 
 		// set descriptor tables
-		commandList_->SetGraphicsRootDescriptorTable(0, cbreDescriptorHeap_->GetGpuHandle());
-		commandList_->SetGraphicsRootDescriptorTable(1, smpDescriptorHeap_->GetGpuHandle());
+		currentCommandList_->SetGraphicsRootDescriptorTable(0, cbreDescriptorHeap_->GetGpuHandle());
+		currentCommandList_->SetGraphicsRootDescriptorTable(1, smpDescriptorHeap_->GetGpuHandle());
 	}
 
 	int increment = NumTexture * static_cast<int>(ShaderStageType::Max);
@@ -252,11 +283,11 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 					{
 						if (stage_ind == static_cast<int>(ShaderStageType::Pixel))
 						{
-							texture->ResourceBarrior(commandList_.get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+							texture->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 						}
 						else
 						{
-							texture->ResourceBarrior(commandList_.get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+							texture->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 						}
 					}
 
@@ -311,16 +342,18 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 	}
 
 	// setup a topology (triangle)
-	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	currentCommandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// draw polygon
-	commandList_->DrawIndexedInstanced(pritimiveCount * 3 /*triangle*/, 1, 0, 0, 0);
+	currentCommandList_->DrawIndexedInstanced(pritimiveCount * 3 /*triangle*/, 1, 0, 0, 0);
 
 	CommandList::Draw(pritimiveCount);
 }
 
 void CommandListDX12::Clear(const Color8& color)
 {
+	assert(currentCommandList_ != nullptr);
+
 	auto rt = renderPass_;
 	if (rt == nullptr)
 		return;
@@ -330,7 +363,7 @@ void CommandListDX12::Clear(const Color8& color)
 	auto handle = rt->GetHandleRTV();
 	for (int i = 0; i < rt->GetCount(); i++)
 	{
-		commandList_->ClearRenderTargetView(handle[i], color_, 0, nullptr);
+		currentCommandList_->ClearRenderTargetView(handle[i], color_, 0, nullptr);
 	}
 }
 
