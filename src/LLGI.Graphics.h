@@ -3,6 +3,8 @@
 
 #include "LLGI.Base.h"
 #include "Utils/LLGI.FixedSizeVector.h"
+#include <functional>
+#include <unordered_map>
 
 namespace LLGI
 {
@@ -76,7 +78,7 @@ protected:
 
 	bool assignRenderTextures(Texture** textures, int32_t count);
 	bool assignDepthTexture(Texture* depthTexture);
-	
+
 	bool getSize(Vec2I& size, const Texture** textures, int32_t textureCount, Texture* depthTexture) const;
 
 public:
@@ -104,8 +106,47 @@ public:
 	bool GetHasDepthTexture() const { return GetDepthTexture() != nullptr; }
 
 	virtual bool GetIsSwapchainScreen() const;
-	
+
 	virtual Vec2I GetScreenSize() const { return screenSize_; }
+};
+
+struct RenderPassPipelineStateKey
+{
+	bool IsPresent = false;
+	bool HasDepth = false;
+	FixedSizeVector<TextureFormatType, RenderTargetMax> RenderTargetFormats;
+
+	bool operator==(const RenderPassPipelineStateKey& value) const
+	{
+		if (RenderTargetFormats.size() != value.RenderTargetFormats.size())
+			return false;
+
+		for (size_t i = 0; i < RenderTargetFormats.size(); i++)
+		{
+			if (RenderTargetFormats.at(i) != value.RenderTargetFormats.at(i))
+				return false;
+		}
+
+		return (IsPresent == value.IsPresent && HasDepth == value.HasDepth);
+	}
+
+	struct Hash
+	{
+		typedef std::size_t result_type;
+
+		std::size_t operator()(const RenderPassPipelineStateKey& key) const
+		{
+			auto ret = std::hash<bool>()(key.IsPresent);
+			ret += std::hash<bool>()(key.HasDepth);
+
+			for (int32_t i = 0; i < key.RenderTargetFormats.size(); i++)
+			{
+				ret += std::hash<uint64_t>()((uint64_t)key.RenderTargetFormats.at(i));
+			}
+
+			return ret;
+		}
+	};
 };
 
 /**
@@ -211,6 +252,14 @@ public:
 		But it is very fast. So it can call it in everyframe.
 	*/
 	virtual RenderPassPipelineState* CreateRenderPassPipelineState(RenderPass* renderPass);
+
+	/**
+		@brief	create a RenderPassPipelineState
+		@note
+		This is a function to create an object.
+		But it is very fast. So it can call it in everyframe.
+	*/
+	virtual RenderPassPipelineState* CreateRenderPassPipelineState(const RenderPassPipelineStateKey& key) { return nullptr; }
 
 	/** For testing. Wait for all commands in queue to complete. Then read data from specified render target. */
 	virtual std::vector<uint8_t> CaptureRenderTarget(Texture* renderTarget);

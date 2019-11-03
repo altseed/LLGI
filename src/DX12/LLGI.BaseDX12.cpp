@@ -64,4 +64,52 @@ ID3D12Resource* CreateResourceBuffer(ID3D12Device* device,
 	return resource;
 }
 
+DXGI_FORMAT ConvertFormat(TextureFormatType format)
+{
+	if (format == TextureFormatType::R8G8B8A8_UNORM)
+		return DXGI_FORMAT_R8G8B8A8_UNORM;
+
+	if (format == TextureFormatType::R16G16B16A16_FLOAT)
+		return DXGI_FORMAT_R16G16B16A16_FLOAT;
+
+	if (format == TextureFormatType::R32G32B32A32_FLOAT)
+		return DXGI_FORMAT_R32G32B32A32_FLOAT;
+
+	if (format == TextureFormatType::R8G8B8A8_UNORM_SRGB)
+		return DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+
+	if (format == TextureFormatType::R16G16_FLOAT)
+		return DXGI_FORMAT_R16G16_FLOAT;
+
+	if (format == TextureFormatType::R8_UNORM)
+		return DXGI_FORMAT_R8_UNORM;
+
+	throw "Not implemented";
+	return DXGI_FORMAT_UNKNOWN;
+}
+
+TextureFormatType ConvertFormat(DXGI_FORMAT format) 
+{
+	if (format == DXGI_FORMAT_R8G8B8A8_UNORM)
+		return TextureFormatType::R8G8B8A8_UNORM;
+
+	if (format == DXGI_FORMAT_R16G16B16A16_FLOAT)
+		return TextureFormatType::R16G16B16A16_FLOAT;
+
+	if (format == DXGI_FORMAT_R32G32B32A32_FLOAT)
+		return TextureFormatType::R32G32B32A32_FLOAT;
+
+	if (format == DXGI_FORMAT_R8G8B8A8_UNORM_SRGB)
+		return TextureFormatType::R8G8B8A8_UNORM_SRGB;
+
+	if (format == DXGI_FORMAT_R16G16_FLOAT)
+		return TextureFormatType::R16G16_FLOAT;
+
+	if (format == DXGI_FORMAT_R8_UNORM)
+		return TextureFormatType::R8_UNORM;
+
+	throw "Not implemented";
+	return TextureFormatType::Uknown;
+}
+
 } // namespace LLGI

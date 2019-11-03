@@ -1,4 +1,5 @@
 #include "LLGI.GraphicsDX12.h"
+#include "LLGI.BaseDX12.h"
 #include "LLGI.BufferDX12.h"
 #include "LLGI.CommandListDX12.h"
 #include "LLGI.ConstantBufferDX12.h"
@@ -9,7 +10,6 @@
 #include "LLGI.SingleFrameMemoryPoolDX12.h"
 #include "LLGI.TextureDX12.h"
 #include "LLGI.VertexBufferDX12.h"
-#include "LLGI.BaseDX12.h"
 
 namespace LLGI
 {
@@ -19,11 +19,7 @@ GraphicsDX12::GraphicsDX12(ID3D12Device* device,
 						   std::function<void()> waitFunc,
 						   ID3D12CommandQueue* commandQueue,
 						   int32_t swapBufferCount)
-	: device_(device)
-	, getScreenFunc_(getScreenFunc)
-	, waitFunc_(waitFunc)
-	, commandQueue_(commandQueue)
-	, swapBufferCount_(swapBufferCount)
+	: device_(device), getScreenFunc_(getScreenFunc), waitFunc_(waitFunc), commandQueue_(commandQueue), swapBufferCount_(swapBufferCount)
 {
 	SafeAddRef(device_);
 	SafeAddRef(commandQueue_);
@@ -177,7 +173,8 @@ Texture* GraphicsDX12::CreateRenderTexture(const RenderTextureInitializationPara
 	return obj;
 }
 
-Texture* GraphicsDX12::CreateDepthTexture(const DepthTextureInitializationParameter& parameter) {
+Texture* GraphicsDX12::CreateDepthTexture(const DepthTextureInitializationParameter& parameter)
+{
 	auto obj = new TextureDX12(this, true);
 	if (!obj->Initialize(parameter.Size, TextureType::Depth, TextureFormatType::Uknown))
 	{
@@ -239,7 +236,26 @@ RenderPassPipelineState* GraphicsDX12::CreateRenderPassPipelineState(RenderPass*
 		renderTargetFormats[i] = renderPass_->GetRenderTarget(i)->texture_->GetDXGIFormat();
 	}
 
-	auto ret = CreateRenderPassPipelineState(renderPass_->GetIsSwapchainScreen(), renderPass->GetHasDepthTexture(), renderTargetCount, renderTargetFormats);
+	auto ret = CreateRenderPassPipelineState(
+		renderPass_->GetIsSwapchainScreen(), renderPass->GetHasDepthTexture(), renderTargetCount, renderTargetFormats);
+
+	auto ptr = ret.get();
+	SafeAddRef(ptr);
+	return ptr;
+}
+
+RenderPassPipelineState* GraphicsDX12::CreateRenderPassPipelineState(const RenderPassPipelineStateKey& key)
+{
+	std::array<DXGI_FORMAT, RenderTargetMax> renderTargetFormats;
+	renderTargetFormats.fill(DXGI_FORMAT_UNKNOWN);
+	int32_t renderTargetCount = key.RenderTargetFormats.size();
+
+	for (int32_t i = 0; i < renderTargetCount; i++)
+	{
+		renderTargetFormats[i] = ConvertFormat(key.RenderTargetFormats.at(i));
+	}
+
+	auto ret = CreateRenderPassPipelineState(key.IsPresent, key.HasDepth, key.RenderTargetFormats.size(), renderTargetFormats);
 
 	auto ptr = ret.get();
 	SafeAddRef(ptr);

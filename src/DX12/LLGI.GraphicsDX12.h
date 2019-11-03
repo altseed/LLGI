@@ -62,6 +62,8 @@ public:
 
 	RenderPassPipelineState* CreateRenderPassPipelineState(RenderPass* renderpass) override;
 
+	RenderPassPipelineState* CreateRenderPassPipelineState(const RenderPassPipelineStateKey& key) override;
+
 	ID3D12Device* GetDevice();
 
 	// int32_t GetCurrentSwapBufferIndex() const;

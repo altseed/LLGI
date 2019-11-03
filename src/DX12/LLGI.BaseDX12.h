@@ -25,4 +25,8 @@ ID3D12Resource* CreateResourceBuffer(ID3D12Device* device,
 							   D3D12_RESOURCE_FLAGS flags,
 							   Vec2I size);
 
+DXGI_FORMAT ConvertFormat(TextureFormatType format);
+
+TextureFormatType ConvertFormat(DXGI_FORMAT format);
+
 } // namespace LLGI
