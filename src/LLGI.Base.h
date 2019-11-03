@@ -18,6 +18,7 @@ namespace LLGI
 {
 
 static const int RenderTargetMax = 8;
+static const int VertexLayoutMax = 16;
 
 enum class DeviceType
 {

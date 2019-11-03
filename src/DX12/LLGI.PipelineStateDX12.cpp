@@ -70,7 +70,7 @@ void PipelineStateDX12::Compile()
 	for (int i = 0; i < VertexLayoutCount; i++)
 	{
 		elementDescs[i].SemanticName = this->VertexLayoutNames[i].c_str();
-		elementDescs[i].SemanticIndex = 0;
+		elementDescs[i].SemanticIndex = this->VertexLayoutSemantics[i];
 		elementDescs[i].AlignedByteOffset = elementOffset;
 		elementDescs[i].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
 

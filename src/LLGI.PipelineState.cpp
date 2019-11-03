@@ -9,6 +9,7 @@ void PipelineState::SetShader(ShaderStageType stage, Shader* shader) {}
 
 void PipelineState::SetRenderPassPipelineState(RenderPassPipelineState* renderPassPipelineState)
 {
+	VertexLayoutSemantics.fill(0);
 
 	SafeAddRef(renderPassPipelineState);
 	renderPassPipelineState_ = CreateSharedPtr(renderPassPipelineState);
