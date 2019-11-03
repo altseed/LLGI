@@ -8,8 +8,7 @@ namespace LLGI
 
     InternalSingleFrameMemoryPoolMetal::InternalSingleFrameMemoryPoolMetal(GraphicsMetal* graphics, int32_t constantBufferPoolSize, int32_t drawingCount)
     {
-		constantBufferSize_ = (constantBufferPoolSize + 255) & ~255; // buffer size should be multiple of 256
-
+        constantBufferSize_ = GetAlignedSize(constantBufferPoolSize, 256);
         buffer_ = new BufferMetal();
         buffer_->Initialize(graphics, constantBufferSize_);
     }
@@ -26,6 +25,9 @@ namespace LLGI
         buffer = buffer_;
         offset = constantBufferOffset_;
         constantBufferOffset_ += size;
+        
+        // shift 256
+        constantBufferOffset_ = GetAlignedSize(constantBufferOffset_, 256);
         return true;
     }
     
@@ -35,7 +37,7 @@ namespace LLGI
     }
     
 SingleFrameMemoryPoolMetal::SingleFrameMemoryPoolMetal(GraphicsMetal* graphics, bool isStrongRef, int32_t constantBufferPoolSize, int32_t drawingCount)
-    : graphics_(graphics), isStrongRef_(isStrongRef), drawingCount_(drawingCount)
+    : SingleFrameMemoryPool(3), graphics_(graphics), isStrongRef_(isStrongRef), drawingCount_(drawingCount)
 {
     if (isStrongRef)
     {
@@ -64,21 +66,14 @@ SingleFrameMemoryPoolMetal::~SingleFrameMemoryPoolMetal()
     }
 }
     
-void SingleFrameMemoryPoolMetal::NewFrame()
-{
-    currentSwap_++;
-    currentSwap_ %= memoryPools.size();
-    memoryPools[currentSwap_]->Reset();
-}
-    
-ConstantBuffer* SingleFrameMemoryPoolMetal::CreateConstantBuffer(int32_t size)
+ConstantBuffer* SingleFrameMemoryPoolMetal::CreateConstantBufferInternal(int32_t size)
 {
     int32_t offset = 0;
     BufferMetal* buffer = nullptr;
     if(memoryPools[currentSwap_]->GetConstantBuffer(size, buffer, offset))
     {
         auto obj = new ConstantBufferMetal();
-        if (!obj->InitializeAsShortTime(buffer, size, offset))
+        if (!obj->InitializeAsShortTime(buffer, offset, size))
         {
             SafeRelease(obj);
             return nullptr;
@@ -88,6 +83,32 @@ ConstantBuffer* SingleFrameMemoryPoolMetal::CreateConstantBuffer(int32_t size)
     }
     
     return nullptr;
+}
+
+ConstantBuffer* SingleFrameMemoryPoolMetal::ReinitializeConstantBuffer(ConstantBuffer* cb, int32_t size)
+{
+    int32_t offset = 0;
+    BufferMetal* buffer = nullptr;
+    if(memoryPools[currentSwap_]->GetConstantBuffer(size, buffer, offset))
+    {
+        auto obj = static_cast<ConstantBufferMetal*>(cb);
+        if (!obj->InitializeAsShortTime(buffer, offset, size))
+        {
+            return nullptr;
+        }
+        
+        return obj;
+    }
+    
+    return nullptr;
+}
+
+void SingleFrameMemoryPoolMetal::NewFrame()
+{
+    currentSwap_++;
+    currentSwap_ %= memoryPools.size();
+    memoryPools[currentSwap_]->Reset();
+    SingleFrameMemoryPool::NewFrame();
 }
     
 }

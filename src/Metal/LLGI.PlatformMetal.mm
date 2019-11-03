@@ -73,7 +73,6 @@ PlatformMetal::PlatformMetal(Window* window)
     {
         ringBuffers_[i].renderPass = CreateSharedPtr(new RenderPassMetal());
         ringBuffers_[i].renderTexture = CreateSharedPtr(new TextureMetal());
-        ringBuffers_[i].renderTexture->Initialize();
     }
 }
 

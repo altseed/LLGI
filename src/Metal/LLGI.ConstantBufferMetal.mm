@@ -28,14 +28,17 @@ bool ConstantBufferMetal::Initialize(Graphics* graphics, int32_t size)
     
 bool ConstantBufferMetal::InitializeAsShortTime(BufferMetal* buffer, int32_t offset, int32_t size)
 {
-    SafeAddRef(buffer);
-    buffer_ = buffer;
+    SafeAssign(buffer_, buffer);
     size_ = size;
     offset_ = offset;
     return true;
 }
 
-void* ConstantBufferMetal::Lock() { return buffer_->GetImpl()->GetBuffer(); }
+void* ConstantBufferMetal::Lock() {
+    auto buffer = static_cast<uint8_t*>(buffer_->GetImpl()->GetBuffer());
+    buffer += offset_;
+    return buffer;
+}
 
 void* ConstantBufferMetal::Lock(int32_t offset, int32_t size)
 {

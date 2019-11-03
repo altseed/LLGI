@@ -20,11 +20,11 @@ Texture_Impl::~Texture_Impl()
 	}
 }
 
-bool Texture_Impl::Initialize(id<MTLDevice> device, const Vec2I& size, bool isRenderTexture, bool isDepthTexture)
+bool Texture_Impl::Initialize(id<MTLDevice> device, const Vec2I& size, TextureType type)
 {
     MTLTextureDescriptor* textureDescriptor = nullptr;
     
-    if(isDepthTexture)
+    if(type == TextureType::Depth)
     {
 		bool supported = device.isDepth24Stencil8PixelFormatSupported;
 		
@@ -45,7 +45,7 @@ bool Texture_Impl::Initialize(id<MTLDevice> device, const Vec2I& size, bool isRe
 																							 mipmapped:NO];
     }
     
-    if(isRenderTexture)
+    if(type == TextureType::Render)
     {
         textureDescriptor.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
         textureDescriptor.textureType = MTLTextureType2D;
@@ -107,7 +107,7 @@ void Texture_Impl::Reset(id<MTLTexture> nativeTexture)
     texture = nativeTexture;
 	size_.X = texture.width;
 	size_.Y = texture.height;
-    
+    // TODO format
     fromExternal_ = true;
 }
 
@@ -126,22 +126,20 @@ TextureMetal::~TextureMetal()
 	SafeRelease(owner_);
 }
 
-bool TextureMetal::Initialize(id<MTLDevice> device, ReferenceObject* owner, Vec2I size, bool isRenderTexture, bool isDepthTexture)
+bool TextureMetal::Initialize(id<MTLDevice> device, ReferenceObject* owner, Vec2I size, TextureType type)
 {
-    isRenderTexture_ = isRenderTexture;
-    isDepthTexture_ = isDepthTexture;
+    type_ = type;
     
     SafeAssign(owner_, owner);
 
 	data.resize(size.X * size.Y * 4);
-	return impl->Initialize(device, size, isRenderTexture_, isDepthTexture_);
+	return impl->Initialize(device, size, type_);
 }
 
 bool TextureMetal::Initialize(GraphicsMetal* owner, const RenderTextureInitializationParameter& parameter)
 {
-	isRenderTexture_ = true;
-	isDepthTexture_ = false;
-	
+    type_ = TextureType::Render;
+    
     SafeAssign(owner_, static_cast<ReferenceObject*>(owner));
 
 	if (parameter.Format != TextureFormatType::R8G8B8A8_UNORM) {
@@ -151,16 +149,9 @@ bool TextureMetal::Initialize(GraphicsMetal* owner, const RenderTextureInitializ
 	return impl->Initialize(owner->GetImpl(), parameter);
 }
 
-bool TextureMetal::Initialize()
-{   
-    isRenderTexture_ = false;
-    isDepthTexture_ = false;
-    return true;
-}
-
 void TextureMetal::Reset(id<MTLTexture> nativeTexture)
 {
-    isRenderTexture_ = true;
+    type_ = TextureType::Screen;
     impl->Reset(nativeTexture);
 }
 
@@ -169,10 +160,6 @@ void* TextureMetal::Lock() { return data.data(); }
 void TextureMetal::Unlock() { impl->Write(data.data()); }
 
 Vec2I TextureMetal::GetSizeAs2D() const { return impl->size_; }
-
-bool TextureMetal::IsRenderTexture() const { return isRenderTexture_; }
-
-bool TextureMetal::IsDepthTexture() const { return isDepthTexture_; }
 
 Texture_Impl* TextureMetal::GetImpl() const { return impl; }
 

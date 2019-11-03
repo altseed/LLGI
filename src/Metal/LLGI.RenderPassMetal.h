@@ -20,22 +20,19 @@ class TextureMetal;
 class RenderPassMetal : public RenderPass
 {
     RenderPass_Impl* impl = nullptr;
-	std::array<std::shared_ptr<TextureMetal>, 8> colorBuffers_ = {};
 
 public:
 	RenderPassMetal();
 
 	virtual ~RenderPassMetal();
     
-    void UpdateRenderTarget(Texture** textures, int32_t textureCount, Texture* depthTexture);
+    bool UpdateRenderTarget(Texture** textures, int32_t textureCount, Texture* depthTexture);
     
 	void SetIsColorCleared(bool isColorCleared) override;
 
 	void SetIsDepthCleared(bool isDepthCleared) override;
 
 	void SetClearColor(const Color8& color) override;
-	
-	Texture* GetColorBuffer(int index) override;
 	
 	RenderPass_Impl* GetImpl() const;
 };

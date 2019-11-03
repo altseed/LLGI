@@ -37,7 +37,7 @@ struct RenderPass_Impl
 	RenderPass_Impl();
 	~RenderPass_Impl();
 	bool Initialize();
-    //void UpdateTarget(Graphics_Impl* graphics);
+
     void UpdateTarget(Texture_Impl** textures, int32_t textureCount, Texture_Impl* depthTexture);
 };
 
@@ -112,7 +112,7 @@ struct Texture_Impl
 	Texture_Impl();
 	virtual ~Texture_Impl();
 
-	bool Initialize(id<MTLDevice> device, const Vec2I& size, bool isRenderTexture, bool isDepthTexture);
+	bool Initialize(id<MTLDevice> device, const Vec2I& size, TextureType type);
 	bool Initialize(Graphics_Impl* graphics, const RenderTextureInitializationParameter& parameter);
 	void Reset(id<MTLTexture> nativeTexture);	// for wrap swapchain backbuffer.
 

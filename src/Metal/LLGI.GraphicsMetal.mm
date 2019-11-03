@@ -214,21 +214,11 @@ RenderPass* GraphicsMetal::CreateRenderPass(const Texture** textures, int32_t te
 {
     auto renderPass = new RenderPassMetal();
 
-    std::array<Texture_Impl*, 16> textures_;
-    Texture_Impl* depth_ = nullptr;
-    textures_.fill(nullptr);
-    
-    for(int i = 0; i < textureCount; i++)
+    if(!renderPass->UpdateRenderTarget((Texture**)textures, textureCount, depthTexture))
     {
-        textures_[i] = static_cast<const TextureMetal*>(textures[i])->GetImpl();
+        SafeRelease(renderPass);
+        return nullptr;
     }
-    
-    if(depthTexture != nullptr)
-    {
-        depth_ = static_cast<const TextureMetal*>(depthTexture)->GetImpl();
-    }
-    
-    renderPass->GetImpl()->UpdateTarget(textures_.data(), textureCount, depth_);
     
     return renderPass;
 }
@@ -236,7 +226,7 @@ RenderPass* GraphicsMetal::CreateRenderPass(const Texture** textures, int32_t te
 Texture* GraphicsMetal::CreateTexture(const TextureInitializationParameter& parameter)
 {
 	auto o = new TextureMetal();
-    if (o->Initialize(this->GetImpl()->device, this, parameter.Size, false, false))
+    if (o->Initialize(this->GetImpl()->device, this, parameter.Size, TextureType::Color))
     {
         return o;
     }
@@ -260,7 +250,7 @@ Texture* GraphicsMetal::CreateRenderTexture(const RenderTextureInitializationPar
 Texture* GraphicsMetal::CreateDepthTexture(const DepthTextureInitializationParameter& parameter)
 {
 	auto o = new TextureMetal();
-    if (o->Initialize(this->GetImpl()->device, this, parameter.Size, false, true))
+    if (o->Initialize(this->GetImpl()->device, this, parameter.Size, TextureType::Depth))
     {
         return o;
     }
