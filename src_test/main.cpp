@@ -5,6 +5,11 @@
 
 #ifdef _WIN32
 #pragma comment(lib, "d3dcompiler.lib")
+
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#include <stdlib.h>
+
 #endif
 
 // Empty
@@ -69,8 +74,14 @@ void call_test(LLGI::DeviceType device)
 }
 
 #if defined(__linux__) || defined(__APPLE__) || defined(WIN32)
+
 int main(int argc, char* argv[])
 {
+
+#if _WIN32
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+	
 #if defined(WIN32) && 1
 	auto device = LLGI::DeviceType::DirectX12;
 #elif defined(__APPLE__)
@@ -78,32 +89,36 @@ int main(int argc, char* argv[])
 #else
 	auto device = LLGI::DeviceType::Vulkan;
 #endif
-
+	
 	// make shaders folder path from __FILE__
-	auto path = std::string(__FILE__);
+	{
+		
+		auto path = std::string(__FILE__);
 #if defined(WIN32)
-	auto pos = path.find_last_of("\\");
+		auto pos = path.find_last_of("\\");
 #else
-	auto pos = path.find_last_of("/");
+		auto pos = path.find_last_of("/");
 #endif
-	path = path.substr(0, pos);
-
-	if (device == LLGI::DeviceType::DirectX12)
-	{
-		TestHelper::SetRoot((path + "/Shaders/HLSL_DX12/").c_str());
+		
+		path = path.substr(0, pos);
+		
+		if (device == LLGI::DeviceType::DirectX12)
+		{
+			TestHelper::SetRoot((path + "/Shaders/HLSL_DX12/").c_str());
+		}
+		else if (device == LLGI::DeviceType::Metal)
+		{
+			TestHelper::SetRoot((path + "/Shaders/Metal/").c_str());
+		}
+		else if (device == LLGI::DeviceType::Vulkan)
+		{
+			TestHelper::SetRoot((path + "/Shaders/SPIRV/").c_str());
+		}	
 	}
-	else if (device == LLGI::DeviceType::Metal)
-	{
-		TestHelper::SetRoot((path + "/Shaders/Metal/").c_str());
-	}
-	else if (device == LLGI::DeviceType::Vulkan)
-	{
-		TestHelper::SetRoot((path + "/Shaders/SPIRV/").c_str());
-	}
-
+	
 	if (argc > 1)
 	{
-		TestHelper::IsCaptureRequired = true;
+		TestHelper::SetIsCaptureRequired(true);
 		::testing::InitGoogleTest(&argc, argv);
 		return RUN_ALL_TESTS();
 	}
@@ -111,6 +126,12 @@ int main(int argc, char* argv[])
 	{
 		call_test(device);
 	}
+
+	TestHelper::AvoidLeak();
+
+#if _WIN32
+	//_CrtDumpMemoryLeaks();
+#endif
 
 	return 0;
 }

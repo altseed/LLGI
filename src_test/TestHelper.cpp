@@ -5,13 +5,18 @@
 #include "thirdparty/stb/stb_image.h"
 #include "thirdparty/stb/stb_image_write.h"
 
-std::string TestHelper::root_;
-bool TestHelper::IsCaptureRequired = false;
+struct InternalTestHelper
+{
+	std::string Root;
+	bool IsCaptureRequired = false;
+};
+
+std::unique_ptr<InternalTestHelper> internalTestHelper = std::unique_ptr<InternalTestHelper>(new InternalTestHelper());
 
 std::vector<uint8_t> TestHelper::LoadData(const char* path)
 {
 	std::vector<uint8_t> ret;
-	auto path_ = root_ + path;
+	auto path_ = internalTestHelper->Root + path;
 	return LoadDataWithoutRoot(path_.c_str());
 }
 
@@ -44,8 +49,7 @@ std::vector<uint8_t> TestHelper::LoadDataWithoutRoot(const char* path)
 	return ret;
 }
 
-
-void TestHelper::SetRoot(const char* root) { root_ = root; }
+void TestHelper::SetRoot(const char* root) { internalTestHelper->Root = root; }
 
 void TestHelper::CreateRectangle(LLGI::Graphics* graphics,
 								 const LLGI::Vec3F& ul,
@@ -102,7 +106,7 @@ void TestHelper::CreateShader(LLGI::Graphics* graphics,
 		auto vsBinaryPath_ = std::string(vsBinaryPath);
 		auto psBinaryPath_ = std::string(psBinaryPath);
 
-		//if (deviceType == LLGI::DeviceType::Vulkan)
+		// if (deviceType == LLGI::DeviceType::Vulkan)
 		{
 			vsBinaryPath_ += ".spv";
 			psBinaryPath_ += ".spv";
@@ -164,6 +168,12 @@ void TestHelper::CreateShader(LLGI::Graphics* graphics,
 		ps = LLGI::CreateSharedPtr(graphics->CreateShader(data_ps.data(), data_ps.size()));
 	}
 }
+
+bool TestHelper::GetIsCaptureRequired() { return internalTestHelper->IsCaptureRequired; }
+
+void TestHelper::SetIsCaptureRequired(bool required) { internalTestHelper->IsCaptureRequired = required; }
+
+void TestHelper::AvoidLeak() { internalTestHelper.reset(); }
 
 Bitmap2D::Bitmap2D(const std::vector<uint8_t>& data, int width, int height, bool bgraFormat) : data_(data), width_(width), height_(height)
 {

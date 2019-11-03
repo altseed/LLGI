@@ -7,9 +7,6 @@
 
 class TestHelper
 {
-private:
-	static std::string root_;
-	
 public:
 	static std::vector<uint8_t> LoadData(const char* path);
 
@@ -35,7 +32,9 @@ public:
 							 std::shared_ptr<LLGI::Shader>& vs,
 							 std::shared_ptr<LLGI::Shader>& ps);
 
-	static bool IsCaptureRequired;
+	static bool GetIsCaptureRequired();
+	static void SetIsCaptureRequired(bool required);
+	static void AvoidLeak();
 };
 
 class Bitmap2D
