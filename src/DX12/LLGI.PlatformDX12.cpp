@@ -339,15 +339,8 @@ bool PlatformDX12::NewFrame()
 	commandAllocators.at(0)->Reset();
 	commandListStart->Reset(commandAllocators.at(0), nullptr);
 
-	D3D12_RESOURCE_BARRIER barrier;
-	ZeroMemory(&barrier, sizeof(barrier));
-	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrier.Transition.pResource = renderResources_[frameIndex];
-	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	commandListStart->ResourceBarrier(1, &barrier);
+	renderTargets_[frameIndex]->ResourceBarrior(commandListStart, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
 	commandListStart->OMSetRenderTargets(1, &(handleRTV[frameIndex]), FALSE, nullptr);
 	commandListStart->Close();
 
@@ -360,16 +353,8 @@ void PlatformDX12::Present()
 {
 	commandListPresent->Reset(commandAllocators.at(0), nullptr);
 
-	D3D12_RESOURCE_BARRIER barrier;
-	ZeroMemory(&barrier, sizeof(barrier));
-	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrier.Transition.pResource = renderResources_[frameIndex];
-	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	renderTargets_[frameIndex]->ResourceBarrior(commandListPresent, D3D12_RESOURCE_STATE_PRESENT);
 
-	commandListPresent->ResourceBarrier(1, &barrier);
 	commandListPresent->Close();
 
 	ID3D12CommandList* commandList[] = {commandListPresent};

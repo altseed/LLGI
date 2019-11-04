@@ -12,7 +12,7 @@ protected:
 	std::shared_ptr<RenderPassPipelineState> renderPassPipelineState_ = nullptr;
 
 public:
-	PipelineState() = default;
+	PipelineState();
 	virtual ~PipelineState() = default;
 
 	CullingMode Culling = CullingMode::Clockwise;

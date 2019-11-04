@@ -19,7 +19,10 @@ bool BufferDX12::Initialize(GraphicsDX12* graphics, const int32_t size)
 
 void* BufferDX12::Lock()
 {
-	auto hr = buffer_->Map(0, nullptr, reinterpret_cast<void**>(&mapped_));
+	D3D12_RANGE range{};
+	range.Begin = 0;
+	range.End = size_;
+	auto hr = buffer_->Map(0, &range, reinterpret_cast<void**>(&mapped_));
 	return SUCCEEDED(hr) ? mapped_ : nullptr;
 }
 
