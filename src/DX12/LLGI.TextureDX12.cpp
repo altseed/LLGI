@@ -33,55 +33,9 @@ TextureDX12::TextureDX12(ID3D12Resource* textureResource, ID3D12Device* device, 
 	auto desc = texture_->GetDesc();
 	dxgiFormat_ = desc.Format;
 
-	switch (desc.Format)
-	{
-	case DXGI_FORMAT_R8G8B8A8_UNORM:
-		format_ = ConvertFormat(desc.Format);
-		memorySize_ = desc.Width * desc.Height * 4;
-		break;
-	case DXGI_FORMAT_R16G16B16A16_FLOAT:
-		format_ = ConvertFormat(desc.Format);
-		memorySize_ = desc.Width * desc.Height * 8;
-		break;
-	case DXGI_FORMAT_R32G32B32A32_FLOAT:
-		format_ = ConvertFormat(desc.Format);
-		memorySize_ = desc.Width * desc.Height * 16;
-		break;
-	case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
-		format_ = ConvertFormat(desc.Format);
-		memorySize_ = desc.Width * desc.Height * 4;
-		break;
-	case DXGI_FORMAT_R16G16_FLOAT:
-		format_ = ConvertFormat(desc.Format);
-		memorySize_ = desc.Width * desc.Height * 4;
-		break;
-	case DXGI_FORMAT_R8_UNORM:
-		format_ = ConvertFormat(desc.Format);
-		memorySize_ = desc.Width * desc.Height * 1;
-		break;
-	default:
-		throw "Not implemented";
-		// case DXGI_FORMAT_BC1:
-		//	format_=TextureFormatType::BC1_UNORM;
-		//	break;
-		// case DXGI_FORMAT_BC2:
-		//	format_=TextureFormatType::BC2_UNORM;
-		//	break;
-		// case DXGI_FORMAT_BC3:
-		//	format_=TextureFormatType::BC3_UNORM;
-		//	break;
-		// case DXGI_FORMAT_BC1_SRGB:
-		//	format_=TextureFormatType::BC1_UNORM_SRGB;
-		//	break;
-		// case DXGI_FORMAT_BC2_SRGB:
-		//	format_=TextureFormatType::BC1_UNORM_SRGB;
-		//	break;
-		// case DXGI_FORMAT_BC3_SRGB:
-		//	format_=TextureFormatType::BC1_UNORM_SRGB;
-		//	break;
-	}
-
+	format_ = ConvertFormat(desc.Format);
 	textureSize_ = Vec2I(desc.Width, desc.Height);
+	memorySize_ = GetTextureMemorySize(format_, textureSize_);
 }
 
 TextureDX12::~TextureDX12()
@@ -109,54 +63,10 @@ bool TextureDX12::Initialize(const Vec2I& size, TextureType type, const TextureF
 	}
 	else
 	{
-		switch (formatType)
-		{
-		case TextureFormatType::R8G8B8A8_UNORM:
-			dxgiFormat_ = DXGI_FORMAT_R8G8B8A8_UNORM;
-			memorySize_ = size.X * size.Y * 4;
-			break;
-		case TextureFormatType::R16G16B16A16_FLOAT:
-			dxgiFormat_ = DXGI_FORMAT_R16G16B16A16_FLOAT;
-			memorySize_ = size.X * size.Y * 8;
-			break;
-		case TextureFormatType::R32G32B32A32_FLOAT:
-			dxgiFormat_ = DXGI_FORMAT_R32G32B32A32_FLOAT;
-			memorySize_ = size.X * size.Y * 16;
-			break;
-		case TextureFormatType::R8G8B8A8_UNORM_SRGB:
-			dxgiFormat_ = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-			memorySize_ = size.X * size.Y * 4;
-			break;
-		case TextureFormatType::R16G16_FLOAT:
-			dxgiFormat_ = DXGI_FORMAT_R16G16_FLOAT;
-			memorySize_ = size.X * size.Y * 4;
-			break;
-		case TextureFormatType::R8_UNORM:
-			dxgiFormat_ = DXGI_FORMAT_R8_UNORM;
-			memorySize_ = size.X * size.Y * 1;
-			break;
-		default:
-			throw "Not implemented";
-			// case TextureFormatType::BC1:
-			//	dxgiFormat_ = DXGI_FORMAT_BC1_UNORM;
-			//	break;
-			// case TextureFormatType::BC2:
-			//	dxgiFormat_ = DXGI_FORMAT_BC2_UNORM;
-			//	break;
-			// case TextureFormatType::BC3:
-			//	dxgiFormat_ = DXGI_FORMAT_BC3_UNORM;
-			//	break;
-			// case TextureFormatType::BC1_SRGB:
-			//	dxgiFormat_ = DXGI_FORMAT_BC1_UNORM_SRGB;
-			//	break;
-			// case TextureFormatType::BC2_SRGB:
-			//	dxgiFormat_ = DXGI_FORMAT_BC1_UNORM_SRGB;
-			//	break;
-			// case TextureFormatType::BC3_SRGB:
-			//	dxgiFormat_ = DXGI_FORMAT_BC1_UNORM_SRGB;
-			//	break;
-		}
 		format_ = formatType;
+		dxgiFormat_ = ConvertFormat(formatType);
+		textureSize_ = Vec2I(size.X, size.Y);
+		memorySize_ = GetTextureMemorySize(format_, textureSize_);
 	}
 
 	if (type_ == TextureType::Render)
@@ -217,18 +127,47 @@ void TextureDX12::CreateBuffer()
 								   D3D12_RESOURCE_FLAG_NONE,
 								   Vec2I(size, 1));
 	assert(buffer_ != nullptr);
+
+	if (footprint_.Footprint.RowPitch != memorySize_ / textureSize_.Y)
+	{
+		lockedBuffer_.resize(memorySize_);
+	}
 }
 
 void* TextureDX12::Lock()
 {
-	void* ptr;
-	buffer_->Map(0, nullptr, &ptr);
-	return ptr;
+	if (lockedBuffer_.size() > 0)
+	{
+		return lockedBuffer_.data();
+	}
+	else
+	{
+		void* ptr;
+		buffer_->Map(0, nullptr, &ptr);
+		return ptr;
+	}
 }
 
 void TextureDX12::Unlock()
 {
-	buffer_->Unmap(0, nullptr);
+	if (lockedBuffer_.size() > 0)
+	{
+		uint8_t* ptr = nullptr;
+		buffer_->Map(0, nullptr, (void**)&ptr);
+
+		for (int32_t i = 0; i < textureSize_.Y; i++)
+		{
+			auto p = ptr + i * footprint_.Footprint.RowPitch;
+			auto rowPitch = memorySize_ / textureSize_.Y;
+			memcpy(p, lockedBuffer_.data() + rowPitch * i, rowPitch);
+		}
+
+		buffer_->Unmap(0, nullptr);
+	}
+	else
+	{
+		buffer_->Unmap(0, nullptr);
+	}
 
 	ID3D12CommandAllocator* commandAllocator = nullptr;
 	ID3D12GraphicsCommandList* commandList = nullptr;
@@ -301,7 +240,7 @@ FAILED_EXIT:
 
 	if (event != nullptr)
 	{
-		CloseHandle(event);	
+		CloseHandle(event);
 	}
 }
 

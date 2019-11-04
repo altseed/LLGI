@@ -8,11 +8,11 @@
 
 #include <array>
 #include <atomic>
+#include <functional>
 #include <memory>
 #include <queue>
 #include <string>
 #include <vector>
-#include <functional>
 
 namespace LLGI
 {
@@ -283,23 +283,21 @@ template <typename T> struct ReferenceDeleter
 
 template <typename T> static std::shared_ptr<T> CreateSharedPtr(T* p) { return std::shared_ptr<T>(p, ReferenceDeleter<T>()); }
 
-template<typename T>
-inline std::unique_ptr<T, ReferenceDeleter<T>> CreateUniqueReference(T* ptr, bool addRef = false)
+template <typename T> inline std::unique_ptr<T, ReferenceDeleter<T>> CreateUniqueReference(T* ptr, bool addRef = false)
 {
-    if (ptr == nullptr)
-        return std::unique_ptr<T, ReferenceDeleter<T>>(nullptr);
-        
-    if (addRef)
-    {
-        ptr->AddRef();
-    }
-        
-    return std::unique_ptr<T, ReferenceDeleter<T>>(ptr);
+	if (ptr == nullptr)
+		return std::unique_ptr<T, ReferenceDeleter<T>>(nullptr);
+
+	if (addRef)
+	{
+		ptr->AddRef();
+	}
+
+	return std::unique_ptr<T, ReferenceDeleter<T>>(ptr);
 }
-    
-template<typename T>
-using unique_ref = std::unique_ptr<T, ReferenceDeleter<T>>;
-    
+
+template <typename T> using unique_ref = std::unique_ptr<T, ReferenceDeleter<T>>;
+
 class VertexBuffer;
 class IndexBuffer;
 class ConstantBuffer;
@@ -325,9 +323,28 @@ void SetLogger(const std::function<void(LogType, const char*)>& logger);
 
 void Log(LogType logType, const char* message);
 
-inline size_t GetAlignedSize(size_t size, size_t alignment)
+inline size_t GetAlignedSize(size_t size, size_t alignment) { return (size + (alignment - 1)) & ~(alignment - 1); }
+
+inline size_t GetTextureMemorySize(TextureFormatType format, Vec2I size)
 {
-	return (size + (alignment - 1)) & ~(alignment - 1);
+	switch (format)
+	{
+	case TextureFormatType::R8G8B8A8_UNORM:
+		return size.X * size.Y * 4;
+	case TextureFormatType::R16G16B16A16_FLOAT:
+		return size.X * size.Y * 8;
+	case TextureFormatType::R32G32B32A32_FLOAT:
+		return size.X * size.Y * 16;
+	case TextureFormatType::R8G8B8A8_UNORM_SRGB:
+		return size.X * size.Y * 4;
+	case TextureFormatType::R16G16_FLOAT:
+		return size.X * size.Y * 4;
+	case TextureFormatType::R8_UNORM:
+		return size.X * size.Y * 1;
+	default:
+		assert(0);
+	}
+	return 0;
 }
 
 /**
@@ -355,6 +372,5 @@ public:
 	*/
 	virtual Vec2I GetWindowSize() const = 0;
 };
-
 
 } // namespace LLGI

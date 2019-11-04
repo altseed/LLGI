@@ -17,11 +17,13 @@ private:
 	ID3D12CommandQueue* commandQueue_ = nullptr;
 	
 	ID3D12Resource* texture_ = nullptr;
-
 	ID3D12Resource* buffer_ = nullptr;
 	D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint_;
 	D3D12_RESOURCE_STATES state_ = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COMMON;
 	DXGI_FORMAT dxgiFormat_;
+
+	//! DX12 doesn't have packed buffer
+	std::vector<uint8_t> lockedBuffer_;
 
 	Vec2I textureSize_;
 	int32_t memorySize_;
