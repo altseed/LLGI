@@ -202,8 +202,6 @@ CommandList* Graphics::CreateCommandList(SingleFrameMemoryPool* memoryPool) { re
 
 ConstantBuffer* Graphics::CreateConstantBuffer(int32_t size) { return nullptr; }
 
-Texture* Graphics::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer) { return nullptr; }
-
 Texture* Graphics::CreateTexture(uint64_t id) { return nullptr; }
 
 RenderPassPipelineState* Graphics::CreateRenderPassPipelineState(RenderPass* renderPass) { return nullptr; }

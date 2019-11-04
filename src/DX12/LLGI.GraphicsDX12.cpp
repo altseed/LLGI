@@ -131,24 +131,6 @@ RenderPass* GraphicsDX12::CreateRenderPass(const Texture** textures, int32_t tex
 	return renderPass;
 }
 
-Texture* GraphicsDX12::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer)
-{
-	auto obj = new TextureDX12(this, true);
-	TextureType type = TextureType::Color;
-	if (isRenderPass)
-		type = TextureType::Render;
-	if (isDepthBuffer)
-		type = TextureType::Depth;
-
-	if (!obj->Initialize(size, type, TextureFormatType::R8G8B8A8_UNORM))
-	{
-		SafeRelease(obj);
-		return nullptr;
-	}
-
-	return obj;
-}
-
 Texture* GraphicsDX12::CreateTexture(uint64_t id) { throw "Not implemented"; }
 
 Texture* GraphicsDX12::CreateTexture(const TextureInitializationParameter& parameter)

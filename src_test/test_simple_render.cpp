@@ -2,11 +2,11 @@
 #include "TestHelper.h"
 #include "test.h"
 
+#include <Utils/LLGI.CommandListPool.h>
 #include <array>
 #include <fstream>
 #include <iostream>
 #include <map>
-#include <Utils/LLGI.CommandListPool.h>
 
 void test_simple_rectangle(LLGI::DeviceType deviceType)
 {
@@ -91,6 +91,15 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 
 		platform->Present();
 		count++;
+
+		if (TestHelper::GetIsCaptureRequired() && count == 5)
+		{
+			commandList->WaitUntilCompleted();
+			auto texture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
+			auto data = graphics->CaptureRenderTarget(texture);
+			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("SimpleRenderBasic.png");
+			break;
+		}
 	}
 
 	pips.clear();
@@ -185,6 +194,15 @@ void test_index_offset(LLGI::DeviceType deviceType)
 
 		platform->Present();
 		count++;
+
+		if (TestHelper::GetIsCaptureRequired() && count == 5)
+		{
+			commandList->WaitUntilCompleted();
+			auto texture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
+			auto data = graphics->CaptureRenderTarget(texture);
+			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("SimpleRenderIndexOffset.png");
+			break;
+		}
 	}
 
 	pips.clear();
@@ -508,6 +526,24 @@ float4 main(PS_INPUT input) : SV_TARGET
 			LLGI::SafeRelease(cb_vs);
 			LLGI::SafeRelease(cb_ps);
 		}
+
+		if (TestHelper::GetIsCaptureRequired() && count == 5)
+		{
+			commandList->WaitUntilCompleted();
+			auto texture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
+			auto data = graphics->CaptureRenderTarget(texture);
+
+			if (type == LLGI::ConstantBufferType::LongTime)
+			{
+				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("SimpleRenderConstantLT.png");
+			}
+			else
+			{
+				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("SimpleRenderConstantST.png");
+			}
+
+			break;
+		}
 	}
 
 	pips.clear();
@@ -630,7 +666,13 @@ float4 main(PS_INPUT input) : SV_TARGET
 	for (int i = 0; i < commandLists.size(); i++)
 		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
 
-	auto texture = graphics->CreateTexture(LLGI::Vec2I(256, 256), false, false);
+	LLGI::TextureInitializationParameter texParam;
+	texParam.Size = LLGI::Vec2I(256, 256);
+
+	LLGI::RenderTextureInitializationParameter renderTexParam;
+	renderTexParam.Size = LLGI::Vec2I(256, 256);
+
+	auto texture = graphics->CreateTexture(texParam);
 	assert(texture->GetType() == LLGI::TextureType::Color);
 
 	auto texture_buf = (LLGI::Color8*)texture->Lock();
@@ -785,6 +827,17 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 		platform->Present();
 		count++;
+
+		if (TestHelper::GetIsCaptureRequired() && count == 5)
+		{
+			commandList->WaitUntilCompleted();
+			auto texture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
+			auto data = graphics->CaptureRenderTarget(texture);
+
+			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("SimpleRenderTex.png");
+
+			break;
+		}
 	}
 
 	pips.clear();
@@ -802,3 +855,17 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 	LLGI::SafeRelease(compiler);
 }
+
+#if defined(__linux__) || defined(__APPLE__) || defined(WIN32)
+
+TEST(SimpleRender, Basic) { test_simple_rectangle(LLGI::DeviceType::Default); }
+
+TEST(SimpleRender, IndexOffset) { test_index_offset(LLGI::DeviceType::Default); }
+
+TEST(SimpleRender, ConstantLT) { test_simple_constant_rectangle(LLGI::ConstantBufferType::LongTime, LLGI::DeviceType::Default); }
+
+TEST(SimpleRender, ConstantST) { test_simple_constant_rectangle(LLGI::ConstantBufferType::ShortTime, LLGI::DeviceType::Default); }
+
+TEST(SimpleRender, ConstantTex) { test_simple_texture_rectangle(LLGI::DeviceType::Default); }
+
+#endif

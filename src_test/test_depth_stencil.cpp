@@ -186,3 +186,11 @@ void test_depth_stencil(LLGI::DeviceType deviceType, bool is_test_depth, bool is
 void test_depth(LLGI::DeviceType deviceType) { test_depth_stencil(deviceType, true, false); }
 
 void test_stencil(LLGI::DeviceType deviceType) { test_depth_stencil(deviceType, false, true); }
+
+#if defined(__linux__) || defined(__APPLE__) || defined(WIN32)
+
+//TEST(DepthStencil, Depth) { test_depth(LLGI::DeviceType::Default); }
+//
+//TEST(DepthStencil, Stencil) { test_stencil(LLGI::DeviceType::Default); }
+
+#endif

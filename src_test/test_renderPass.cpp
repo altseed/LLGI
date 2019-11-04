@@ -115,7 +115,9 @@ float4 main(PS_INPUT input) : SV_TARGET
 	auto renderPass = graphics->CreateRenderPass((const LLGI::Texture**)&renderTexture, 1, nullptr);
 	assert(renderPass->GetRenderTextureCount() == 1);
 
-	auto texture = graphics->CreateTexture(LLGI::Vec2I(256, 256), false, false);
+	LLGI::TextureInitializationParameter texParam;
+	texParam.Size = LLGI::Vec2I(256, 256);
+	auto texture = graphics->CreateTexture(texParam);
 
 	auto texture_buf = (LLGI::Color8*)texture->Lock();
 	for (int y = 0; y < 256; y++)
@@ -317,6 +319,23 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 		platform->Present();
 		count++;
+
+		if (TestHelper::GetIsCaptureRequired() && count == 5)
+		{
+			commandList->WaitUntilCompleted();
+			auto texture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
+			auto data = graphics->CaptureRenderTarget(texture);
+
+			if (isMSAATest)
+			{
+				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("MSAA.png");			
+			}
+			else if (isMSAATest)
+			{
+				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("RenderPass.png");
+			}
+			break;
+		}
 	}
 
 	pips.clear();
@@ -459,13 +478,19 @@ PS_OUTPUT main(PS_INPUT input)
 	for (int i = 0; i < commandLists.size(); i++)
 		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
 
-	auto renderTexture = graphics->CreateTexture(LLGI::Vec2I(256, 256), true, false);
-	auto renderTexture2 = graphics->CreateTexture(LLGI::Vec2I(256, 256), true, false);
+	LLGI::TextureInitializationParameter texParam;
+	texParam.Size = LLGI::Vec2I(256, 256);
+
+	LLGI::RenderTextureInitializationParameter renderTexParam;
+	renderTexParam.Size = LLGI::Vec2I(256, 256);
+
+	auto renderTexture = graphics->CreateRenderTexture(renderTexParam);
+	auto renderTexture2 = graphics->CreateRenderTexture(renderTexParam);
 	const LLGI::Texture* renderTextures[2] = {(const LLGI::Texture*)renderTexture, (const LLGI::Texture*)renderTexture2};
 	auto renderPass = graphics->CreateRenderPass((const LLGI::Texture**)renderTextures, 2, nullptr);
 	assert(renderPass->GetRenderTextureCount() == 2);
 
-	auto texture = graphics->CreateTexture(LLGI::Vec2I(256, 256), false, false);
+	auto texture = graphics->CreateTexture(texParam);
 
 	auto texture_buf = (LLGI::Color8*)texture->Lock();
 	for (int y = 0; y < 256; y++)
@@ -659,6 +684,15 @@ PS_OUTPUT main(PS_INPUT input)
 
 		platform->Present();
 		count++;
+
+		if (TestHelper::GetIsCaptureRequired() && count == 5)
+		{
+			commandList->WaitUntilCompleted();
+			auto texture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
+			auto data = graphics->CaptureRenderTarget(texture);
+			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("MRT.png");
+			break;
+		}
 	}
 
 	pips.clear();
@@ -977,3 +1011,13 @@ void test_capture(LLGI::DeviceType deviceType)
 
 	LLGI::SafeRelease(compiler);
 }
+
+#if defined(__linux__) || defined(__APPLE__) || defined(WIN32)
+
+TEST(RenderPass, Basic) { test_renderPass(LLGI::DeviceType::Default, false); }
+
+TEST(RenderPass, MSAA) { test_renderPass(LLGI::DeviceType::Default, true); }
+
+TEST(RenderPass, MRT) { test_multiRenderPass(LLGI::DeviceType::Default); }
+
+#endif

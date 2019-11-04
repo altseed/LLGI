@@ -237,9 +237,6 @@ public:
 
 	virtual Texture* CreateDepthTexture(const DepthTextureInitializationParameter& parameter) { return nullptr; }
 
-	[[deprecated("please use CreateTexture, CreateRenderTexture and CreateDepthTexture")]] virtual Texture*
-	CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer);
-
 	/**
 		@brief	create texture from pointer or id in current platform
 	*/
