@@ -259,25 +259,6 @@ Texture* GraphicsMetal::CreateDepthTexture(const DepthTextureInitializationParam
     return nullptr;
 }
 
-Texture* GraphicsMetal::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer)
-{
-	if (isRenderPass) {
-		RenderTextureInitializationParameter params;
-		params.Size = size;
-		return CreateRenderTexture(params);
-	}
-	else if (isDepthBuffer) {
-		DepthTextureInitializationParameter params;
-		params.Size = size;
-		return CreateDepthTexture(params);
-	}
-	else {
-		TextureInitializationParameter params;
-		params.Size = size;
-		return CreateTexture(params);
-	}
-}
-
 Texture* GraphicsMetal::CreateTexture(uint64_t id) { throw "Not inplemented"; }
 
 std::shared_ptr<RenderPassPipelineStateMetal> GraphicsMetal::CreateRenderPassPipelineState(MTLPixelFormat format, MTLPixelFormat depthStencilFormat)

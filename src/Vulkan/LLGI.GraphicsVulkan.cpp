@@ -195,6 +195,8 @@ RenderPass* GraphicsVulkan::CreateRenderPass(const Texture** textures, int32_t t
 
 	return renderPass;
 }
+
+/*
 Texture* GraphicsVulkan::CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer)
 {
 	auto obj = new TextureVulkan();
@@ -216,8 +218,22 @@ Texture* GraphicsVulkan::CreateTexture(const Vec2I& size, bool isRenderPass, boo
 
 	return obj;
 }
+*/
 
 Texture* GraphicsVulkan::CreateTexture(uint64_t id) { throw "Not inplemented"; }
+
+Texture* GraphicsVulkan::CreateTexture(const TextureInitializationParameter& parameter) 
+{
+	auto obj = new TextureVulkan();
+	
+	if (!obj->Initialize(this, true, size, false))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
+
+	return obj;
+}
 
 Texture* GraphicsVulkan::CreateRenderTexture(const RenderTextureInitializationParameter& parameter)
 {
@@ -228,6 +244,19 @@ Texture* GraphicsVulkan::CreateRenderTexture(const RenderTextureInitializationPa
 		return nullptr;
 	}
 
+	return obj;
+}
+
+Texture* GraphicsVulkan::CreateDepthTexture(const DepthTextureInitializationParameter& parameter)
+{
+	auto obj = new TextureVulkan();
+
+	if (!obj->InitializeAsDepthStencil( this->vkDevice, this->vkPysicalDevice, size, this))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
+	
 	return obj;
 }
 

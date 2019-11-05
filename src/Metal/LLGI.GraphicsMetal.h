@@ -88,8 +88,6 @@ public:
 
 	Texture* CreateDepthTexture(const DepthTextureInitializationParameter& parameter) override;
 	
-	Texture* CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer) override;
-
 	Texture* CreateTexture(uint64_t id) override;
 
     //! internal function

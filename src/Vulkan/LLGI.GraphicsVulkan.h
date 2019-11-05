@@ -69,10 +69,12 @@ public:
 	CommandList* CreateCommandList(SingleFrameMemoryPool* memoryPool) override;
 	ConstantBuffer* CreateConstantBuffer(int32_t size) override;
 	RenderPass* CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture) override;
-	Texture* CreateTexture(const Vec2I& size, bool isRenderPass, bool isDepthBuffer) override;
-	Texture* CreateTexture(uint64_t id) override;
 
+	Texture* CreateTexture(const TextureInitializationParameter& parameter) override;
 	Texture* CreateRenderTexture(const RenderTextureInitializationParameter& parameter) override;
+	Texture* CreateDepthTexture(const DepthTextureInitializationParameter& parameter) override;
+
+	Texture* CreateTexture(uint64_t id) override;
 
 	std::vector<uint8_t> CaptureRenderTarget(Texture* renderTarget) override;
 

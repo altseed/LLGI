@@ -27,10 +27,26 @@
 #pragma comment(lib, "d3dcompiler.lib")
 #include <DX12/LLGI.CommandListDX12.h>
 #include <DX12/LLGI.GraphicsDX12.h>
+#elif __APPLE__
+#include <Metal/LLGI.CommandListMetal.h>
+#include <Metal/LLGI.GraphicsMetal.h>
+#include <Metal/LLGI.Metal_Impl.h>
+#else
+#include <Vulkan/LLGI.CommandListVulkan.h>
+#include <Vulkan/LLGI.GraphicsVulkan.h>
+#include <Vulkan/LLGI.RenderPassVulkan.h>
 #endif
 
 #include "../thirdparty/imgui/imgui.h"
+
+#ifdef _WIN32
 #include "../thirdparty/imgui/imgui_impl_dx12.h"
+#elif __APPLE__
+#include "../thirdparty/imgui/imgui_impl_metal.h"
+#else
+#include "../thirdparty/imgui/imgui_impl_vulkan.h"
+#endif
+
 #include "../thirdparty/imgui/imgui_impl_glfw.h"
 
 class LLGIWindow : public LLGI::Window
@@ -92,6 +108,7 @@ int main()
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
 	auto commandList = graphics->CreateCommandList(sfMemoryPool);
 
+#ifdef _WIN32
 	ID3D12DescriptorHeap* srvDescHeap = nullptr;
 
 	auto g = static_cast<LLGI::GraphicsDX12*>(graphics);
@@ -104,6 +121,11 @@ int main()
 		if (g->GetDevice()->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&srvDescHeap)) != S_OK)
 			throw "Failed to initialize.";
 	}
+#elif __APPLE__
+	auto g = static_cast<LLGI::GraphicsMetal*>(graphics);
+#else
+	auto g = static_cast<LLGI::GraphicsVulkan*>(graphics);
+#endif
 
 	LLGI::Color8 color;
 	color.R = 50;
@@ -124,11 +146,38 @@ int main()
 
 	// Setup Platform/Renderer bindings
 	ImGui_ImplGlfw_InitForVulkan(window, true);
+
+#ifdef _WIN32
 	ImGui_ImplDX12_Init(g->GetDevice(),
 						g->GetSwapBufferCount(),
 						DXGI_FORMAT_R8G8B8A8_UNORM,
 						srvDescHeap->GetCPUDescriptorHandleForHeapStart(),
 						srvDescHeap->GetGPUDescriptorHandleForHeapStart());
+#elif __APPLE__
+	ImGui_ImplMetal_Init(g->GetImpl()->device);
+#else
+    ImGui_ImplVulkan_InitInfo info {};
+
+	/*
+	struct ImGui_ImplVulkan_InitInfo
+	{
+    VkInstance          Instance;
+    VkPhysicalDevice    PhysicalDevice;
+    VkDevice            Device;
+    uint32_t            QueueFamily;
+    VkQueue             Queue;
+    VkPipelineCache     PipelineCache;
+    VkDescriptorPool    DescriptorPool;
+    uint32_t            MinImageCount;          // >= 2
+    uint32_t            ImageCount;             // >= MinImageCount
+    VkSampleCountFlagBits        MSAASamples;   // >= VK_SAMPLE_COUNT_1_BIT
+    const VkAllocationCallbacks* Allocator;
+    void                (*CheckVkResultFn)(VkResult err);
+	};
+	*/
+
+	// TODO ImGui_ImplVulkan_InitInfo* info, VkRenderPass render_pass are required
+#endif
 
 	while (glfwWindowShouldClose(window) == GL_FALSE)
 	{
@@ -137,7 +186,13 @@ int main()
 
 		sfMemoryPool->NewFrame();
 
+#ifdef _WIN32
 		ImGui_ImplDX12_NewFrame();
+#elif __APPLE__
+		ImGui_ImplMetal_NewFrame();
+#else
+		ImGui_ImplVulkan_NewFrame();
+#endif
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
@@ -154,10 +209,23 @@ int main()
 		commandList->BeginRenderPass(platform->GetCurrentScreen(color, true));
 
 		// imgui
+#ifdef _WIN32
 		auto cl = static_cast<LLGI::CommandListDX12*>(commandList);
 		cl->GetCommandList()->SetDescriptorHeaps(1, &srvDescHeap);
+#elif __APPLE__
+		auto cl = static_cast<LLGI::CommandListMetal*>(commandList);
+#else
+		auto cl = static_cast<LLGI::CommandListVulkan*>(commandList);
+#endif
 		ImGui::Render();
+
+#ifdef _WIN32
 		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), cl->GetCommandList());
+#elif __APPLE__
+	// TODO ImDrawData* draw_data, id<MTLCommandBuffer> commandBuffer, id<MTLRenderCommandEncoder> commandEncoder
+#else
+	// TODO ImDrawData* draw_data, VkCommandBuffer command_buffer
+#endif
 
 		commandList->EndRenderPass();
 		commandList->End();
@@ -172,11 +240,24 @@ int main()
 
 	graphics->WaitFinish();
 
+#ifdef _WIN32
 	ImGui_ImplDX12_Shutdown();
+#elif __APPLE__
+	ImGui_ImplMetal_Shutdown();
+#else
+	ImGui_ImplVulkan_Shutdown();
+#endif
+
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 
+#ifdef _WIN32
 	LLGI::SafeRelease(srvDescHeap);
+#elif __APPLE__
+	// TODO
+#else
+	// TODO
+#endif
 
 	LLGI::SafeRelease(sfMemoryPool);
 	LLGI::SafeRelease(commandList);
