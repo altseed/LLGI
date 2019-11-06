@@ -44,6 +44,7 @@ private:
 		vk::DeviceMemory devMem = nullptr;
 	};
 
+	int32_t swapBufferCountMin_ = 2;
 	int32_t swapBufferCount = 2;
 
 	vk::Instance vkInstance_ = nullptr;
@@ -52,6 +53,7 @@ private:
 	vk::PipelineCache vkPipelineCache_ = nullptr;
 	vk::Queue vkQueue = nullptr;
 	vk::CommandPool vkCmdPool_ = nullptr;
+	int32_t queueFamilyIndex_ = 0;
 
 	Vec2I windowSize_;
 
@@ -125,6 +127,16 @@ public:
 	Graphics* CreateGraphics() override;
 
 	RenderPass* GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) override;
+
+	vk::Instance GetInstance() const { return vkInstance_; }
+
+	vk::PhysicalDevice GetPhysicalDevice() const { return vkPhysicalDevice; }
+
+	vk::PipelineCache GetPipelineCache() const { return vkPipelineCache_; }
+
+	int32_t GetSwapBufferCountMin() const { return swapBufferCountMin_; }
+
+	int32_t GetSwapBufferCount() const { return swapBufferCount; }
 
 	DeviceType GetDeviceType() const override { return DeviceType::Vulkan; }
 };

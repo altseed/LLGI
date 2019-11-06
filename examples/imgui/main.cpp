@@ -125,6 +125,15 @@ int main()
 	auto g = static_cast<LLGI::GraphicsMetal*>(graphics);
 #else
 	auto g = static_cast<LLGI::GraphicsVulkan*>(graphics);
+
+	/*
+		vk::DescriptorPoolCreateInfo poolInfo;
+	poolInfo.poolSizeCount = 2;
+	poolInfo.pPoolSizes = poolSizes.data();
+	poolInfo.maxSets = size * stage;
+
+	descriptorPool_ = graphics_->GetDevice().createDescriptorPool(poolInfo);
+	*/
 #endif
 
 	LLGI::Color8 color;
@@ -222,9 +231,9 @@ int main()
 #ifdef _WIN32
 		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), cl->GetCommandList());
 #elif __APPLE__
-	// TODO ImDrawData* draw_data, id<MTLCommandBuffer> commandBuffer, id<MTLRenderCommandEncoder> commandEncoder
+		ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), cl->GetCommandList(), cl->GetImpl()->commandBuffer, cl->GetImpl()->renderEncoder);
 #else
-	// TODO ImDrawData* draw_data, VkCommandBuffer command_buffer
+		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cl->GetCommandBuffer());
 #endif
 
 		commandList->EndRenderPass();
@@ -254,7 +263,6 @@ int main()
 #ifdef _WIN32
 	LLGI::SafeRelease(srvDescHeap);
 #elif __APPLE__
-	// TODO
 #else
 	// TODO
 #endif

@@ -226,7 +226,7 @@ Texture* GraphicsVulkan::CreateTexture(const TextureInitializationParameter& par
 {
 	auto obj = new TextureVulkan();
 	
-	if (!obj->Initialize(this, true, size, false))
+	if (!obj->Initialize(this, true, parameter.Size, false))
 	{
 		SafeRelease(obj);
 		return nullptr;

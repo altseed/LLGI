@@ -116,6 +116,8 @@ bool PlatformVulkan::CreateSwapChain(Vec2I windowSize, bool isVSyncEnabled)
 	swapchainCreateInfo.clipped = true;
 	swapchainCreateInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
 
+	swapBufferCountMin_ = desiredSwapBufferCount;
+
 	swapchain_ = vkDevice_.createSwapchainKHR(swapchainCreateInfo);
 
 	// remove old swap chain
@@ -495,6 +497,7 @@ bool PlatformVulkan::Initialize(Window* window)
 		queueCreateInfo.queueFamilyIndex = graphicsQueueInd;
 		queueCreateInfo.queueCount = 1;
 		queueCreateInfo.pQueuePriorities = queuePriorities;
+		queueFamilyIndex_ = queueCreateInfo.queueFamilyIndex;
 
 		const std::vector<const char*> enabledExtensions = {
 			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
