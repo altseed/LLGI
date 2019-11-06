@@ -134,9 +134,13 @@ public:
 
 	vk::PipelineCache GetPipelineCache() const { return vkPipelineCache_; }
 
+	vk::Queue GetQueue() const { return vkQueue; }
+
 	int32_t GetSwapBufferCountMin() const { return swapBufferCountMin_; }
 
 	int32_t GetSwapBufferCount() const { return swapBufferCount; }
+
+	int32_t GetQueueFamilyIndex() const { return queueFamilyIndex_; }
 
 	DeviceType GetDeviceType() const override { return DeviceType::Vulkan; }
 };

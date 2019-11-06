@@ -31,10 +31,6 @@
 #include <Metal/LLGI.CommandListMetal.h>
 #include <Metal/LLGI.GraphicsMetal.h>
 #include <Metal/LLGI.Metal_Impl.h>
-#else
-#include <Vulkan/LLGI.CommandListVulkan.h>
-#include <Vulkan/LLGI.GraphicsVulkan.h>
-#include <Vulkan/LLGI.RenderPassVulkan.h>
 #endif
 
 #include "../thirdparty/imgui/imgui.h"
@@ -43,8 +39,14 @@
 #include "../thirdparty/imgui/imgui_impl_dx12.h"
 #elif __APPLE__
 #include "../thirdparty/imgui/imgui_impl_metal.h"
-#else
+#endif
+
+#ifdef ENABLE_VULKAN
 #include "../thirdparty/imgui/imgui_impl_vulkan.h"
+#include <Vulkan/LLGI.CommandListVulkan.h>
+#include <Vulkan/LLGI.GraphicsVulkan.h>
+#include <Vulkan/LLGI.PlatformVulkan.h>
+#include <Vulkan/LLGI.RenderPassVulkan.h>
 #endif
 
 #include "../thirdparty/imgui/imgui_impl_glfw.h"
@@ -108,7 +110,32 @@ int main()
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
 	auto commandList = graphics->CreateCommandList(sfMemoryPool);
 
-#ifdef _WIN32
+#ifdef ENABLE_VULKAN
+	auto g = static_cast<LLGI::GraphicsVulkan*>(graphics);
+	auto pl = static_cast<LLGI::PlatformVulkan*>(platform);
+	VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
+
+	{
+		VkDescriptorPoolSize pool_sizes[] = {{VK_DESCRIPTOR_TYPE_SAMPLER, 1000},
+											 {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000},
+											 {VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000},
+											 {VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000},
+											 {VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000},
+											 {VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000},
+											 {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000},
+											 {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000},
+											 {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000},
+											 {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000},
+											 {VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000}};
+		VkDescriptorPoolCreateInfo pool_info = {};
+		pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+		pool_info.maxSets = 1000 * IM_ARRAYSIZE(pool_sizes);
+		pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
+		pool_info.pPoolSizes = pool_sizes;
+		vkCreateDescriptorPool(g->GetDevice(), &pool_info, nullptr, &descriptorPool);
+	}
+#elif defined(_WIN32)
 	ID3D12DescriptorHeap* srvDescHeap = nullptr;
 
 	auto g = static_cast<LLGI::GraphicsDX12*>(graphics);
@@ -121,19 +148,8 @@ int main()
 		if (g->GetDevice()->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&srvDescHeap)) != S_OK)
 			throw "Failed to initialize.";
 	}
-#elif __APPLE__
+#elif defined(__APPLE__)
 	auto g = static_cast<LLGI::GraphicsMetal*>(graphics);
-#else
-	auto g = static_cast<LLGI::GraphicsVulkan*>(graphics);
-
-	/*
-		vk::DescriptorPoolCreateInfo poolInfo;
-	poolInfo.poolSizeCount = 2;
-	poolInfo.pPoolSizes = poolSizes.data();
-	poolInfo.maxSets = size * stage;
-
-	descriptorPool_ = graphics_->GetDevice().createDescriptorPool(poolInfo);
-	*/
 #endif
 
 	LLGI::Color8 color;
@@ -156,36 +172,27 @@ int main()
 	// Setup Platform/Renderer bindings
 	ImGui_ImplGlfw_InitForVulkan(window, true);
 
-#ifdef _WIN32
+#ifdef ENABLE_VULKAN
+	ImGui_ImplVulkan_InitInfo info;
+	info.Instance = pl->GetInstance();
+	info.PhysicalDevice = pl->GetPhysicalDevice();
+	info.Device = g->GetDevice();
+	info.QueueFamily = pl->GetQueueFamilyIndex();
+	info.Queue = pl->GetQueue();
+	info.PipelineCache = pl->GetPipelineCache();
+	info.DescriptorPool = descriptorPool;
+	info.MinImageCount = pl->GetSwapBufferCountMin();
+	info.ImageCount = pl->GetSwapBufferCount();
+	info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+	// ImGui_ImplVulkan_Init(&info, ); TODO
+#elif defined(_WIN32)
 	ImGui_ImplDX12_Init(g->GetDevice(),
 						g->GetSwapBufferCount(),
 						DXGI_FORMAT_R8G8B8A8_UNORM,
 						srvDescHeap->GetCPUDescriptorHandleForHeapStart(),
 						srvDescHeap->GetGPUDescriptorHandleForHeapStart());
-#elif __APPLE__
+#elif defined(__APPLE__)
 	ImGui_ImplMetal_Init(g->GetImpl()->device);
-#else
-    ImGui_ImplVulkan_InitInfo info {};
-
-	/*
-	struct ImGui_ImplVulkan_InitInfo
-	{
-    VkInstance          Instance;
-    VkPhysicalDevice    PhysicalDevice;
-    VkDevice            Device;
-    uint32_t            QueueFamily;
-    VkQueue             Queue;
-    VkPipelineCache     PipelineCache;
-    VkDescriptorPool    DescriptorPool;
-    uint32_t            MinImageCount;          // >= 2
-    uint32_t            ImageCount;             // >= MinImageCount
-    VkSampleCountFlagBits        MSAASamples;   // >= VK_SAMPLE_COUNT_1_BIT
-    const VkAllocationCallbacks* Allocator;
-    void                (*CheckVkResultFn)(VkResult err);
-	};
-	*/
-
-	// TODO ImGui_ImplVulkan_InitInfo* info, VkRenderPass render_pass are required
 #endif
 
 	while (glfwWindowShouldClose(window) == GL_FALSE)
@@ -195,12 +202,12 @@ int main()
 
 		sfMemoryPool->NewFrame();
 
-#ifdef _WIN32
-		ImGui_ImplDX12_NewFrame();
-#elif __APPLE__
-		ImGui_ImplMetal_NewFrame();
-#else
+#ifdef ENABLE_VULKAN
 		ImGui_ImplVulkan_NewFrame();
+#elif defined(_WIN32)
+		ImGui_ImplDX12_NewFrame();
+#elif defined(__APPLE__)
+		ImGui_ImplMetal_NewFrame();
 #endif
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
@@ -218,22 +225,23 @@ int main()
 		commandList->BeginRenderPass(platform->GetCurrentScreen(color, true));
 
 		// imgui
-#ifdef _WIN32
+#ifdef ENABLE_VULKAN
+		auto cl = static_cast<LLGI::CommandListVulkan*>(commandList);
+#elif defined(_WIN32)
 		auto cl = static_cast<LLGI::CommandListDX12*>(commandList);
 		cl->GetCommandList()->SetDescriptorHeaps(1, &srvDescHeap);
-#elif __APPLE__
+#elif defined(__APPLE__)
 		auto cl = static_cast<LLGI::CommandListMetal*>(commandList);
-#else
-		auto cl = static_cast<LLGI::CommandListVulkan*>(commandList);
 #endif
 		ImGui::Render();
 
-#ifdef _WIN32
-		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), cl->GetCommandList());
-#elif __APPLE__
-		ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), cl->GetCommandList(), cl->GetImpl()->commandBuffer, cl->GetImpl()->renderEncoder);
-#else
+#ifdef ENABLE_VULKAN
 		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cl->GetCommandBuffer());
+#elif defined(_WIN32)
+		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), cl->GetCommandList());
+#elif defined(__APPLE__)
+		ImGui_ImplMetal_RenderDrawData(
+			ImGui::GetDrawData(), cl->GetCommandList(), cl->GetImpl()->commandBuffer, cl->GetImpl()->renderEncoder);
 #endif
 
 		commandList->EndRenderPass();
@@ -249,22 +257,22 @@ int main()
 
 	graphics->WaitFinish();
 
-#ifdef _WIN32
-	ImGui_ImplDX12_Shutdown();
-#elif __APPLE__
-	ImGui_ImplMetal_Shutdown();
-#else
+#ifdef ENABLE_VULKAN
 	ImGui_ImplVulkan_Shutdown();
+#elif defined(_WIN32)
+	ImGui_ImplDX12_Shutdown();
+#elif defined(__APPLE__)
+	ImGui_ImplMetal_Shutdown();
 #endif
 
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 
-#ifdef _WIN32
+#ifdef ENABLE_VULKAN
+	vkDestroyDescriptorPool(g->GetDevice(), descriptorPool, nullptr);
+#elif defined(_WIN32)
 	LLGI::SafeRelease(srvDescHeap);
-#elif __APPLE__
-#else
-	// TODO
+#elif defined(__APPLE__)
 #endif
 
 	LLGI::SafeRelease(sfMemoryPool);
