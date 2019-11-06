@@ -251,12 +251,12 @@ Texture* GraphicsVulkan::CreateDepthTexture(const DepthTextureInitializationPara
 {
 	auto obj = new TextureVulkan();
 
-	if (!obj->InitializeAsDepthStencil( this->vkDevice, this->vkPysicalDevice, size, this))
+	if (!obj->InitializeAsDepthStencil( this->vkDevice, this->vkPysicalDevice, parameter.Size, this))
 	{
 		SafeRelease(obj);
 		return nullptr;
 	}
-	
+
 	return obj;
 }
 
