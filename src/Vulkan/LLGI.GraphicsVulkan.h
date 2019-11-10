@@ -48,7 +48,7 @@ public:
 				   const vk::Queue& quque,
 				   const vk::CommandPool& commandPool,
 				   const vk::PhysicalDevice& pysicalDevice,
-				   const PlatformView& platformView,
+				   int32_t swapBufferCount,
 				   std::function<void(vk::CommandBuffer,vk::Fence)> addCommand,
 				   RenderPassPipelineStateCacheVulkan* renderPassPipelineStateCache = nullptr,
 				   ReferenceObject* owner = nullptr);

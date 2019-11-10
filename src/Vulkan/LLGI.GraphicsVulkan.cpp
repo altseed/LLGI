@@ -16,7 +16,7 @@ GraphicsVulkan::GraphicsVulkan(const vk::Device& device,
 							   const vk::Queue& quque,
 							   const vk::CommandPool& commandPool,
 							   const vk::PhysicalDevice& pysicalDevice,
-							   const PlatformView& platformView,
+							   int32_t swapBufferCount,
 							   std::function<void(vk::CommandBuffer, vk::Fence)> addCommand,
 							   RenderPassPipelineStateCacheVulkan* renderPassPipelineStateCache,
 							   ReferenceObject* owner)
@@ -30,21 +30,7 @@ GraphicsVulkan::GraphicsVulkan(const vk::Device& device,
 {
 	SafeAddRef(owner_);
 
-	swapBufferCount_ = static_cast<int32_t>(platformView.renderPasses.size());
-
-	for (size_t i = 0; i < static_cast<size_t>(swapBufferCount_); i++)
-	{
-		/*
-		auto renderPass = CreateSharedPtr(new RenderPassVulkan(renderPassPipelineStateCache, GetDevice(), nullptr));
-		renderPass->Initialize(platformView.colors[i],
-							   platformView.depths[i],
-							   platformView.colorViews[i],
-							   platformView.depthViews[i],
-							   platformView.imageSize,
-							   platformView.format);
-		renderPasses.push_back(renderPass);
-		*/
-	}
+	swapBufferCount_ = swapBufferCount;
 
 	vk::SamplerCreateInfo samplerInfo;
 	samplerInfo.magFilter = vk::Filter::eLinear;

@@ -808,7 +808,7 @@ Graphics* PlatformVulkan::CreateGraphics()
 	};
 
 	auto graphics = new GraphicsVulkan(
-		vkDevice_, vkQueue, vkCmdPool_, vkPhysicalDevice, platformView, addCommand, renderPassPipelineStateCache_, this);
+		vkDevice_, vkQueue, vkCmdPool_, vkPhysicalDevice, platformView.renderPasses.size(), addCommand, renderPassPipelineStateCache_, this);
 
 	return graphics;
 }
