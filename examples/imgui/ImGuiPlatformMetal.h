@@ -14,7 +14,7 @@ public:
 
 	virtual ~ImguiPlatformMetal();
 
-	void NewFrame() override;
+	void NewFrame(LLGI::RenderPass* renderPass) override;
 
 	void RenderDrawData(ImDrawData* draw_data, LLGI::CommandList* commandList) override;
 };

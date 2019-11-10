@@ -103,11 +103,11 @@ struct Buffer_Impl
 
 struct Texture_Impl
 {
-	id<MTLTexture> texture;
+	id<MTLTexture> texture = nullptr;
 	Vec2I size_;
     bool fromExternal_ = false;
 	bool multiSampled_ = false;
-	id<MTLTexture> msaaTexture_;
+	id<MTLTexture> msaaTexture_ = nullptr;
     
 	Texture_Impl();
 	virtual ~Texture_Impl();

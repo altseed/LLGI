@@ -60,7 +60,7 @@ public:
 		ImGui_ImplVulkan_Shutdown();
 	}
 
-	void NewFrame() override { ImGui_ImplVulkan_NewFrame(); }
+	void NewFrame(LLGI::RenderPass* renderPass) override { ImGui_ImplVulkan_NewFrame(); }
 
 	void RenderDrawData(ImDrawData* draw_data, LLGI::CommandList* commandList) override
 	{

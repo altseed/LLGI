@@ -135,7 +135,9 @@ int main()
 
 		sfMemoryPool->NewFrame();
 
-		imguiPlatform->NewFrame();
+        auto renderPass = platform->GetCurrentScreen(color, true);
+        
+		imguiPlatform->NewFrame(renderPass);
 
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
@@ -150,12 +152,17 @@ int main()
 		// It need to create a command buffer between NewFrame and Present.
 		// Because get current screen returns other values by every frame.
 		commandList->Begin();
-		commandList->BeginRenderPass(platform->GetCurrentScreen(color, true));
+		commandList->BeginRenderPass(renderPass);
 
 		// imgui
 	
 		ImGui::Render();
 
+#if defined(__APPLE__)
+        // HACK for retina
+        ImGui::GetDrawData()->FramebufferScale = ImVec2(1,1);
+#endif
+        
 		imguiPlatform->RenderDrawData(ImGui::GetDrawData(), commandList);
 
 		commandList->EndRenderPass();

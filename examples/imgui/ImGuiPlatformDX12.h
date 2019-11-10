@@ -35,7 +35,7 @@ public:
 		ImGui_ImplDX12_Shutdown();
 	}
 
-	void NewFrame() override { ImGui_ImplDX12_NewFrame(); }
+	void NewFrame(LLGI::RenderPass* renderPass) override { ImGui_ImplDX12_NewFrame(); }
 
 	void RenderDrawData(ImDrawData* draw_data, LLGI::CommandList* commandList) override
 	{
