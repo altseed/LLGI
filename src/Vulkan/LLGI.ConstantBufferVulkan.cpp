@@ -49,7 +49,7 @@ bool ConstantBufferVulkan::InitializeAsShortTime(GraphicsVulkan* graphics, Singl
 	if (memoryPool->GetConstantBuffer(size_, &buffer, &deviceMemory, &offset_))
 	{
 		buffer_->buffer_ = vk::Buffer(buffer);
-		buffer_->devMem = deviceMemory;
+		buffer_->devMem = vk::DeviceMemory(deviceMemory);
 		memSize_ = size;
 		return true;
 	}
