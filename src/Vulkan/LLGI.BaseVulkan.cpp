@@ -46,6 +46,35 @@ const char* VulkanHelper::getResultName(VkResult result)
 	return "<Unkonwn VkResult>";
 }
 
+struct FormatConversionItem
+{
+    TextureFormatType format;
+    VkFormat vulkanFormat;
+};
+
+static FormatConversionItem s_formatConversionTable[] =
+{
+    { TextureFormatType::R8G8B8A8_UNORM, VK_FORMAT_R8G8B8A8_UNORM },
+    { TextureFormatType::R32G32B32A32_FLOAT, VK_FORMAT_R32G32B32A32_SFLOAT },
+    { TextureFormatType::R8G8B8A8_UNORM_SRGB, VK_FORMAT_R8G8B8A8_SRGB },
+    { TextureFormatType::R16G16_FLOAT, VK_FORMAT_R16G16_SFLOAT },
+    { TextureFormatType::R8_UNORM, VK_FORMAT_R8_UNORM },
+    { TextureFormatType::BC1, VK_FORMAT_BC1_RGBA_UNORM_BLOCK },
+    { TextureFormatType::BC2, VK_FORMAT_BC2_UNORM_BLOCK },
+    { TextureFormatType::BC3, VK_FORMAT_BC3_UNORM_BLOCK },
+    { TextureFormatType::BC1_SRGB, VK_FORMAT_BC1_RGBA_SRGB_BLOCK },
+    { TextureFormatType::BC2_SRGB, VK_FORMAT_BC2_SRGB_BLOCK },
+    { TextureFormatType::BC3_SRGB, VK_FORMAT_BC3_SRGB_BLOCK },
+    { TextureFormatType::R16G16B16A16_FLOAT, VK_FORMAT_R16G16B16A16_SFLOAT },
+};
+
+VkFormat VulkanHelper::TextureFormatToVkFormat(TextureFormatType format)
+{
+    if (format == TextureFormatType::Uknown) return VK_FORMAT_UNDEFINED;
+    assert(s_formatConversionTable[(int)format].format == format);
+    return s_formatConversionTable[(int)format].vulkanFormat;
+}
+
 Buffer::Buffer(GraphicsVulkan* graphics)
 {
 	SafeAddRef(graphics);

@@ -50,6 +50,7 @@ class VulkanHelper
 {
 public:
 	static const char* getResultName(VkResult result);
+    static VkFormat TextureFormatToVkFormat(TextureFormatType format);
 };
 
 class Buffer
