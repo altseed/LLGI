@@ -209,6 +209,7 @@ void PipelineStateVulkan::Compile()
 	rasterizationState.depthBiasConstantFactor = 0.0f;
 	rasterizationState.depthBiasClamp = 0.0f;
 	rasterizationState.depthBiasSlopeFactor = 0.0f;
+    rasterizationState.lineWidth = 1.0f;    // disable lineWidth. (Must not be zero)
 
 	graphicsPipelineInfo.pRasterizationState = &rasterizationState;
 
