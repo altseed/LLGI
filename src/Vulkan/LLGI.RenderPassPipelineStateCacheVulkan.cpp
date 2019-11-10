@@ -16,7 +16,7 @@ RenderPassPipelineStateCacheVulkan::~RenderPassPipelineStateCacheVulkan()
 }
 
 RenderPassPipelineStateVulkan*
-RenderPassPipelineStateCacheVulkan::Create(bool isPresentMode, bool hasDepth, const FixedSizeVector<vk::Format, RenderTargetMax>& formats)
+RenderPassPipelineStateCacheVulkan::Create(bool isPresentMode, bool hasDepth, const FixedSizeVector<vk::Format, RenderTargetMax>& formats, bool isColorCleared, bool isDepthCleared)
 {
 	RenderPassPipelineStateVulkanKey key;
 	key.isPresentMode = isPresentMode;
@@ -53,10 +53,11 @@ RenderPassPipelineStateCacheVulkan::Create(bool isPresentMode, bool hasDepth, co
 	{
 		attachmentDescs.at(i).format = formats.at(i);
 		attachmentDescs.at(i).samples = vk::SampleCountFlagBits::e1;
-		// attachmentDescs[i].loadOp = vk::AttachmentLoadOp::eDontCare;
 
-		// TODO : improve it
-		attachmentDescs.at(i).loadOp = vk::AttachmentLoadOp::eClear;
+        if (isColorCleared)
+    		attachmentDescs.at(i).loadOp = vk::AttachmentLoadOp::eClear;
+        else
+            attachmentDescs.at(i).loadOp = vk::AttachmentLoadOp::eDontCare;
 
 		attachmentDescs.at(i).storeOp = vk::AttachmentStoreOp::eStore;
 		attachmentDescs.at(i).stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
@@ -83,9 +84,11 @@ RenderPassPipelineStateCacheVulkan::Create(bool isPresentMode, bool hasDepth, co
 		attachmentDescs.at(colorCount).format = vk::Format::eD32SfloatS8Uint;
 		attachmentDescs.at(colorCount).samples = vk::SampleCountFlagBits::e1;
 
-		// attachmentDescs.at(colorCount).loadOp = vk::AttachmentLoadOp::eDontCare;
-		// TODO : improve it
-		attachmentDescs.at(colorCount).loadOp = vk::AttachmentLoadOp::eClear;
+        if (isColorCleared)
+		    attachmentDescs.at(colorCount).loadOp = vk::AttachmentLoadOp::eClear;
+        else
+            attachmentDescs.at(colorCount).loadOp = vk::AttachmentLoadOp::eDontCare;
+
 		attachmentDescs.at(colorCount).storeOp = vk::AttachmentStoreOp::eStore;
 		attachmentDescs.at(colorCount).stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
 		attachmentDescs.at(colorCount).stencilStoreOp = vk::AttachmentStoreOp::eStore;
