@@ -214,6 +214,7 @@ public:
 
 	/**
 		@brief create a memory pool
+        @param  drawingCount    Maximum draw calls in one frame.
 	*/
 	virtual SingleFrameMemoryPool* CreateSingleFrameMemoryPool(int32_t constantBufferPoolSize, int32_t drawingCount);
 
