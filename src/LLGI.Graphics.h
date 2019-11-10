@@ -99,7 +99,7 @@ public:
 
 	virtual Texture* GetRenderTexture(int index) const { return renderTextures_.at(index); }
 
-	virtual int GetRenderTextureCount() const { return renderTextures_.size(); }
+	virtual int GetRenderTextureCount() const { return static_cast<int32_t>(renderTextures_.size()); }
 
 	Texture* GetDepthTexture() const { return depthTexture_; }
 

@@ -1,5 +1,6 @@
 
 set(srcs
+    main.cpp
     ../thirdparty/imgui/imgui.cpp
     ../thirdparty/imgui/imgui.h
     ../thirdparty/imgui/imgui_draw.cpp
@@ -10,18 +11,13 @@ set(srcs
 if(WIN32)
     list(APPEND
         srcs
-        main.cpp
         ../thirdparty/imgui/imgui_impl_dx12.cpp)
 
 elseif(APPLE)
     list(APPEND
         srcs
-        main.mm
+        ImGuiPlatformMetal.mm
         ../thirdparty/imgui/imgui_impl_metal.mm)
-else()
-    list(APPEND
-        srcs
-        main.cpp)
 endif()
 
 if(BUILD_VULKAN)
