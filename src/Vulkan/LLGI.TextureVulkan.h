@@ -47,6 +47,8 @@ public:
 
 	bool InitializeAsDepthStencil(vk::Device device, vk::PhysicalDevice physicalDevice, const Vec2I& size, ReferenceObject* owner);
 
+    bool InitializeFromExternal(TextureType type, VkImage image, VkImageView imageView, VkFormat format, const Vec2I& size);
+
 	void* Lock() override;
 	void Unlock() override;
 	Vec2I GetSizeAs2D() const override;

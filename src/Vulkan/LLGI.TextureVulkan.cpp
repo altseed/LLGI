@@ -229,6 +229,17 @@ bool TextureVulkan::InitializeAsDepthStencil(vk::Device device,
 	*/
 }
 
+bool TextureVulkan::InitializeFromExternal(TextureType type, VkImage image, VkImageView imageView, VkFormat format, const Vec2I& size)
+{
+    type_ = type;
+    image_ = vk::Image( image);
+    view_ = vk::ImageView(imageView);
+    vkTextureFormat_ = vk::Format(format);
+    textureSize = size;
+    isExternalResource_ = true;
+    return true;
+}
+
 void* TextureVulkan::Lock()
 {
 	if (graphics_ == nullptr)
