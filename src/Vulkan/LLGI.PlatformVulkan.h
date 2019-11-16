@@ -134,6 +134,8 @@ public:
 
 	vk::PipelineCache GetPipelineCache() const { return vkPipelineCache_; }
 
+	vk::CommandPool GetCommandPool() const { return vkCmdPool_; }
+
 	vk::Queue GetQueue() const { return vkQueue; }
 
 	int32_t GetSwapBufferCountMin() const { return swapBufferCountMin_; }

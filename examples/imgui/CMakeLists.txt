@@ -23,6 +23,7 @@ endif()
 if(BUILD_VULKAN)
     list(APPEND
         srcs
+        ImGuiPlatformVulkan.cpp
         ../thirdparty/imgui/imgui_impl_vulkan.cpp)
 endif()
 

@@ -153,7 +153,8 @@ bool TextureVulkan::InitializeAsDepthStencil(vk::Device device,
 											 ReferenceObject* owner)
 {
 	type_ = TextureType::Depth;
-
+	textureSize = size;
+	
 	owner_ = owner;
 	SafeAddRef(owner_);
 	device_ = device;

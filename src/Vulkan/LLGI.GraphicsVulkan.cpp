@@ -379,6 +379,19 @@ RenderPassPipelineState* GraphicsVulkan::CreateRenderPassPipelineState(RenderPas
 	return ret;
 }
 
+RenderPassPipelineState* GraphicsVulkan::CreateRenderPassPipelineState(const RenderPassPipelineStateKey& key)
+{
+	FixedSizeVector<vk::Format, RenderTargetMax> renderTargets;
+
+	renderTargets.resize(key.RenderTargetFormats.size());
+	for(size_t i = 0; i < renderTargets.size(); i++)
+	{
+		renderTargets.at(i) = (vk::Format)VulkanHelper::TextureFormatToVkFormat(key.RenderTargetFormats.at(i));
+	}
+
+	return renderPassPipelineStateCache_->Create(key.IsPresent, key.HasDepth, renderTargets);
+}
+
 int32_t GraphicsVulkan::GetSwapBufferCount() const { return swapBufferCount_; }
 
 uint32_t GraphicsVulkan::GetMemoryTypeIndex(uint32_t bits, const vk::MemoryPropertyFlags& properties)

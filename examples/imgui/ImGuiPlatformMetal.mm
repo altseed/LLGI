@@ -1,5 +1,6 @@
 #include "ImGuiPlatformMetal.h"
 
+#include "../thirdparty/imgui/imgui.h"
 #include "../thirdparty/imgui/imgui_impl_metal.h"
 #include <Metal/LLGI.CommandListMetal.h>
 #include <Metal/LLGI.GraphicsMetal.h>
