@@ -14,19 +14,6 @@ class RenderPassVulkan;
 class RenderPassPipelineStateVulkan;
 class TextureVulkan;
 
-class PlatformView
-{
-public:
-	std::vector<vk::Image> colors;
-	std::vector<vk::Image> depths;
-	std::vector<vk::ImageView> colorViews;
-	std::vector<vk::ImageView> depthViews;
-	Vec2I imageSize;
-	vk::Format format;
-
-	std::vector<std::shared_ptr<RenderPassVulkan>> renderPasses;
-};
-
 class GraphicsVulkan : public Graphics
 {
 private:

@@ -785,19 +785,6 @@ void PlatformVulkan::Present()
 
 Graphics* PlatformVulkan::CreateGraphics()
 {
-	PlatformView platformView;
-
-	for (size_t i = 0; i < swapBuffers.size(); i++)
-	{
-		// platformView.colors.push_back(swapBuffers[i].image);
-		// platformView.colorViews.push_back(swapBuffers[i].view);
-		// platformView.depths.push_back(depthStencilBuffer.image);
-		// platformView.depthViews.push_back(depthStencilBuffer.view);
-	}
-	platformView.renderPasses = renderPasses;
-	platformView.imageSize = windowSize_;
-	platformView.format = surfaceFormat;
-
 	auto addCommand = [this](vk::CommandBuffer commandBuffer, vk::Fence fence) -> void {
 		std::array<vk::SubmitInfo, 1> copySubmitInfos;
 		copySubmitInfos[0].commandBufferCount = 1;
@@ -808,7 +795,7 @@ Graphics* PlatformVulkan::CreateGraphics()
 	};
 
 	auto graphics = new GraphicsVulkan(
-		vkDevice_, vkQueue, vkCmdPool_, vkPhysicalDevice, platformView.renderPasses.size(), addCommand, renderPassPipelineStateCache_, this);
+		vkDevice_, vkQueue, vkCmdPool_, vkPhysicalDevice, swapBuffers.size(), addCommand, renderPassPipelineStateCache_, this);
 
 	return graphics;
 }
