@@ -22,6 +22,8 @@ RenderPassPipelineStateCacheVulkan::Create(bool isPresentMode, bool hasDepth, co
 	key.isPresentMode = isPresentMode;
 	key.hasDepth = hasDepth;
 	key.formats = formats;
+	key.isColorCleared = isColorCleared;
+	key.isDepthCleared = isDepthCleared;
 
 	// already?
 	{

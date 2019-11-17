@@ -375,7 +375,7 @@ RenderPassPipelineState* GraphicsVulkan::CreateRenderPassPipelineState(const Ren
 		renderTargets.at(i) = (vk::Format)VulkanHelper::TextureFormatToVkFormat(key.RenderTargetFormats.at(i));
 	}
 
-	return renderPassPipelineStateCache_->Create(key.IsPresent, key.HasDepth, renderTargets);
+	return renderPassPipelineStateCache_->Create(key.IsPresent, key.HasDepth, renderTargets, key.IsColorCleared, key.IsDepthCleared);
 }
 
 int32_t GraphicsVulkan::GetSwapBufferCount() const { return swapBufferCount_; }
