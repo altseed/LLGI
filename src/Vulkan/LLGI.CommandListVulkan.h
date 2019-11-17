@@ -5,6 +5,11 @@
 
 namespace LLGI
 {
+enum class CommandListPreCondition
+{
+	Standalone,
+	External,
+};
 
 class DescriptorPoolVulkan
 {
@@ -36,10 +41,13 @@ public:
 	CommandListVulkan();
 	virtual ~CommandListVulkan();
 
-	bool Initialize(GraphicsVulkan* graphics, int32_t drawingCount);
+	bool Initialize(GraphicsVulkan* graphics, int32_t drawingCount, CommandListPreCondition precondition = CommandListPreCondition::Standalone);
 
 	void Begin() override;
 	void End() override;
+
+	void BeginExternal(VkCommandBuffer nativeCommandBuffer);
+	void EndExternal();
 
 	void SetScissor(int32_t x, int32_t y, int32_t width, int32_t height) override;
 	void Draw(int32_t pritimiveCount) override;
