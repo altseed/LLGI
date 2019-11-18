@@ -56,13 +56,16 @@ public:
 class Buffer
 {
 	std::shared_ptr<GraphicsVulkan> graphics_;
+	vk::Buffer buffer_;
+	vk::DeviceMemory devMem_;
+	bool isExternalResource_ = false;
 
 public:
-	vk::Buffer buffer_;
-	vk::DeviceMemory devMem;
-
 	Buffer(GraphicsVulkan* graphics);
 	virtual ~Buffer();
+	void Attach(vk::Buffer buffer, vk::DeviceMemory devMem, bool isExternalResource = false);
+	vk::Buffer buffer() const { return buffer_; }
+	vk::DeviceMemory devMem() const { return devMem_; }
 };
 
 class VulkanBuffer
