@@ -39,7 +39,7 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const
 
 	type_ = TextureType::Color;
 
-	if(isRenderPass)
+	if (isRenderPass)
 	{
 		type_ = TextureType::Render;
 	}
@@ -88,14 +88,16 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const
 		vk::BufferCreateInfo bufferInfo;
 		bufferInfo.size = memorySize;
 		bufferInfo.usage = vk::BufferUsageFlagBits::eTransferSrc;
-		cpuBuf->buffer_ = graphics_->GetDevice().createBuffer(bufferInfo);
+		vk::Buffer buffer = graphics_->GetDevice().createBuffer(bufferInfo);
 
-		vk::MemoryRequirements memReqs = graphics_->GetDevice().getBufferMemoryRequirements(cpuBuf->buffer_);
+		vk::MemoryRequirements memReqs = graphics_->GetDevice().getBufferMemoryRequirements(buffer);
 		vk::MemoryAllocateInfo memAlloc;
 		memAlloc.allocationSize = memReqs.size;
 		memAlloc.memoryTypeIndex = graphics_->GetMemoryTypeIndex(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible);
-		cpuBuf->devMem = graphics_->GetDevice().allocateMemory(memAlloc);
-		graphics_->GetDevice().bindBufferMemory(cpuBuf->buffer_, cpuBuf->devMem, 0);
+		vk::DeviceMemory devMem = graphics_->GetDevice().allocateMemory(memAlloc);
+		graphics_->GetDevice().bindBufferMemory(buffer, devMem, 0);
+
+		cpuBuf->Attach(buffer, devMem);
 	}
 
 	// create a buffer on gpu
@@ -129,7 +131,9 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const
 	return true;
 }
 
-bool TextureVulkan::InitializeAsRenderTexture(GraphicsVulkan* graphics, bool isStrongRef,const RenderTextureInitializationParameter& parameter)
+bool TextureVulkan::InitializeAsRenderTexture(GraphicsVulkan* graphics,
+											  bool isStrongRef,
+											  const RenderTextureInitializationParameter& parameter)
 {
 	return Initialize(graphics, isStrongRef, parameter.Size, true);
 }
@@ -154,7 +158,7 @@ bool TextureVulkan::InitializeAsDepthStencil(vk::Device device,
 {
 	type_ = TextureType::Depth;
 	textureSize = size;
-	
+
 	owner_ = owner;
 	SafeAddRef(owner_);
 	device_ = device;
@@ -232,13 +236,13 @@ bool TextureVulkan::InitializeAsDepthStencil(vk::Device device,
 
 bool TextureVulkan::InitializeFromExternal(TextureType type, VkImage image, VkImageView imageView, VkFormat format, const Vec2I& size)
 {
-    type_ = type;
-    image_ = vk::Image( image);
-    view_ = vk::ImageView(imageView);
-    vkTextureFormat_ = vk::Format(format);
-    textureSize = size;
-    isExternalResource_ = true;
-    return true;
+	type_ = type;
+	image_ = vk::Image(image);
+	view_ = vk::ImageView(imageView);
+	vkTextureFormat_ = vk::Format(format);
+	textureSize = size;
+	isExternalResource_ = true;
+	return true;
 }
 
 void* TextureVulkan::Lock()
@@ -246,7 +250,7 @@ void* TextureVulkan::Lock()
 	if (graphics_ == nullptr)
 		return nullptr;
 
-	data = graphics_->GetDevice().mapMemory(cpuBuf->devMem, 0, memorySize, vk::MemoryMapFlags());
+	data = graphics_->GetDevice().mapMemory(cpuBuf->devMem(), 0, memorySize, vk::MemoryMapFlags());
 	return data;
 }
 
@@ -257,7 +261,7 @@ void TextureVulkan::Unlock()
 		return;
 	}
 
-	graphics_->GetDevice().unmapMemory(cpuBuf->devMem);
+	graphics_->GetDevice().unmapMemory(cpuBuf->devMem());
 
 	// copy buffer
 	vk::CommandBufferAllocateInfo cmdBufInfo;
@@ -282,7 +286,7 @@ void TextureVulkan::Unlock()
 	imageBufferCopy.imageSubresource.baseArrayLayer = 0;
 	imageBufferCopy.imageSubresource.layerCount = 1;
 
-	imageBufferCopy.imageOffset = vk::Offset3D(0,0,0);
+	imageBufferCopy.imageOffset = vk::Offset3D(0, 0, 0);
 	imageBufferCopy.imageExtent = vk::Extent3D(static_cast<uint32_t>(GetSizeAs2D().X), static_cast<uint32_t>(GetSizeAs2D().Y), 1);
 
 	vk::ImageSubresourceRange colorSubRange;
@@ -292,7 +296,7 @@ void TextureVulkan::Unlock()
 
 	SetImageLayout(copyCommandBuffer, image_, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, colorSubRange);
 
-	copyCommandBuffer.copyBufferToImage(cpuBuf->buffer_, image_, imageLayout, imageBufferCopy);
+	copyCommandBuffer.copyBufferToImage(cpuBuf->buffer(), image_, imageLayout, imageBufferCopy);
 
 	SetImageLayout(copyCommandBuffer, image_, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal, colorSubRange);
 

@@ -17,14 +17,16 @@ bool VertexBufferVulkan::Initialize(GraphicsVulkan* graphics, int32_t size)
 		vk::BufferCreateInfo vertexBufferInfo;
 		vertexBufferInfo.size = size;
 		vertexBufferInfo.usage = vk::BufferUsageFlagBits::eTransferSrc;
-		cpuBuf->buffer_ = graphics_->GetDevice().createBuffer(vertexBufferInfo);
+		vk::Buffer buffer = graphics_->GetDevice().createBuffer(vertexBufferInfo);
 
-		vk::MemoryRequirements memReqs = graphics_->GetDevice().getBufferMemoryRequirements(cpuBuf->buffer_);
+		vk::MemoryRequirements memReqs = graphics_->GetDevice().getBufferMemoryRequirements(buffer);
 		vk::MemoryAllocateInfo memAlloc;
 		memAlloc.allocationSize = memReqs.size;
 		memAlloc.memoryTypeIndex = graphics_->GetMemoryTypeIndex(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible);
-		cpuBuf->devMem = graphics_->GetDevice().allocateMemory(memAlloc);
-		graphics_->GetDevice().bindBufferMemory(cpuBuf->buffer_, cpuBuf->devMem, 0);
+		vk::DeviceMemory devMem = graphics_->GetDevice().allocateMemory(memAlloc);
+		graphics_->GetDevice().bindBufferMemory(buffer, devMem, 0);
+
+		cpuBuf->Attach(buffer, devMem);
 	}
 
 	// create a buffer on gpu
@@ -32,14 +34,16 @@ bool VertexBufferVulkan::Initialize(GraphicsVulkan* graphics, int32_t size)
 		vk::BufferCreateInfo vertexBufferInfo;
 		vertexBufferInfo.size = size;
 		vertexBufferInfo.usage = vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst;
-		gpuBuf->buffer_ = graphics_->GetDevice().createBuffer(vertexBufferInfo);
+		vk::Buffer buffer = graphics_->GetDevice().createBuffer(vertexBufferInfo);
 
-		vk::MemoryRequirements memReqs = graphics_->GetDevice().getBufferMemoryRequirements(gpuBuf->buffer_);
+		vk::MemoryRequirements memReqs = graphics_->GetDevice().getBufferMemoryRequirements(buffer);
 		vk::MemoryAllocateInfo memAlloc;
 		memAlloc.allocationSize = memReqs.size;
 		memAlloc.memoryTypeIndex = graphics_->GetMemoryTypeIndex(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
-		gpuBuf->devMem = graphics_->GetDevice().allocateMemory(memAlloc);
-		graphics_->GetDevice().bindBufferMemory(gpuBuf->buffer_, gpuBuf->devMem, 0);
+		vk::DeviceMemory devMem = graphics_->GetDevice().allocateMemory(memAlloc);
+		graphics_->GetDevice().bindBufferMemory(buffer, devMem, 0);
+
+		gpuBuf->Attach(buffer, devMem);
 	}
 
 	memSize = size;
@@ -49,8 +53,8 @@ bool VertexBufferVulkan::Initialize(GraphicsVulkan* graphics, int32_t size)
 
 bool VertexBufferVulkan::InitializeAsShortTime(SingleFrameMemoryPoolVulkan* memoryPool, int32_t size)
 {
-    throw "Not implemented.";
-    return true;
+	throw "Not implemented.";
+	return true;
 }
 
 VertexBufferVulkan::VertexBufferVulkan() {}
@@ -59,19 +63,20 @@ VertexBufferVulkan ::~VertexBufferVulkan() {}
 
 void* VertexBufferVulkan::Lock()
 {
-	data = graphics_->GetDevice().mapMemory(cpuBuf->devMem, 0, memSize, vk::MemoryMapFlags());
+	data = graphics_->GetDevice().mapMemory(cpuBuf->devMem(), 0, memSize, vk::MemoryMapFlags());
 	return data;
 }
 
 void* VertexBufferVulkan::Lock(int32_t offset, int32_t size)
 {
-	data = graphics_->GetDevice().mapMemory(cpuBuf->devMem, offset, size, vk::MemoryMapFlags());
+	data = graphics_->GetDevice().mapMemory(cpuBuf->devMem(), offset, size, vk::MemoryMapFlags());
 	return data;
 }
 
-void VertexBufferVulkan::Unlock() { 
-	
-	graphics_->GetDevice().unmapMemory(cpuBuf->devMem); 
+void VertexBufferVulkan::Unlock()
+{
+
+	graphics_->GetDevice().unmapMemory(cpuBuf->devMem());
 
 	// copy buffer
 	vk::CommandBufferAllocateInfo cmdBufInfo;
@@ -86,18 +91,18 @@ void VertexBufferVulkan::Unlock() {
 
 	vk::BufferCopy copyRegion;
 	copyRegion.size = memSize;
-	copyCommandBuffer.copyBuffer(cpuBuf->buffer_, gpuBuf->buffer_, copyRegion);
-	
+	copyCommandBuffer.copyBuffer(cpuBuf->buffer(), gpuBuf->buffer(), copyRegion);
+
 	copyCommandBuffer.end();
 
 	// submit and wait to execute command
-	std::array<vk::SubmitInfo,1> copySubmitInfos;
+	std::array<vk::SubmitInfo, 1> copySubmitInfos;
 	copySubmitInfos[0].commandBufferCount = 1;
 	copySubmitInfos[0].pCommandBuffers = &copyCommandBuffer;
 
 	graphics_->GetQueue().submit(static_cast<uint32_t>(copySubmitInfos.size()), copySubmitInfos.data(), vk::Fence());
 	graphics_->GetQueue().waitIdle();
-	
+
 	graphics_->GetDevice().freeCommandBuffers(graphics_->GetCommandPool(), copyCommandBuffer);
 }
 

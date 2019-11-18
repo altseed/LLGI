@@ -85,10 +85,20 @@ Buffer::~Buffer()
 {
 	if (buffer_)
 	{
-		graphics_->GetDevice().destroyBuffer(buffer_);
-		graphics_->GetDevice().freeMemory(devMem);
+		if (!isExternalResource_)
+		{
+			graphics_->GetDevice().destroyBuffer(buffer_);
+			graphics_->GetDevice().freeMemory(devMem_);
+		}
 		buffer_ = nullptr;
 	}
+}
+
+void Buffer::Attach(vk::Buffer buffer, vk::DeviceMemory devMem, bool isExternalResource)
+{
+	buffer_ = buffer;
+	devMem_ = devMem;
+	isExternalResource_ = isExternalResource;
 }
 
 VulkanBuffer::VulkanBuffer() : graphics_(nullptr), nativeBuffer_(VK_NULL_HANDLE), nativeBufferMemory_(VK_NULL_HANDLE), size_(0) {}

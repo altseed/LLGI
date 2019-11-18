@@ -30,7 +30,7 @@ public:
 	void Unlock() override;
 	int32_t GetSize() override;
 
-	vk::Buffer GetBuffer() { return gpuBuf->buffer_; }
+	vk::Buffer GetBuffer() { return gpuBuf->buffer(); }
 };
 
 } // namespace LLGI

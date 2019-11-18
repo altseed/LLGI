@@ -21,14 +21,16 @@ bool ConstantBufferVulkan::Initialize(GraphicsVulkan* graphics, int32_t size)
 		vk::BufferCreateInfo IndexBufferInfo;
 		IndexBufferInfo.size = allocatedSize;
 		IndexBufferInfo.usage = vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst;
-		buffer_->buffer_ = graphics_->GetDevice().createBuffer(IndexBufferInfo);
+		vk::Buffer buffer = graphics_->GetDevice().createBuffer(IndexBufferInfo);
 
-		vk::MemoryRequirements memReqs = graphics_->GetDevice().getBufferMemoryRequirements(buffer_->buffer_);
+		vk::MemoryRequirements memReqs = graphics_->GetDevice().getBufferMemoryRequirements(buffer);
 		vk::MemoryAllocateInfo memAlloc;
 		memAlloc.allocationSize = memReqs.size;
 		memAlloc.memoryTypeIndex = graphics_->GetMemoryTypeIndex(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible);
-		buffer_->devMem = graphics_->GetDevice().allocateMemory(memAlloc);
-		graphics_->GetDevice().bindBufferMemory(buffer_->buffer_, buffer_->devMem, 0);
+		vk::DeviceMemory devMem = graphics_->GetDevice().allocateMemory(memAlloc);
+		graphics_->GetDevice().bindBufferMemory(buffer, devMem, 0);
+
+		buffer_->Attach(buffer, devMem);
 	}
 
 	return true;
@@ -36,7 +38,7 @@ bool ConstantBufferVulkan::Initialize(GraphicsVulkan* graphics, int32_t size)
 
 bool ConstantBufferVulkan::InitializeAsShortTime(GraphicsVulkan* graphics, SingleFrameMemoryPoolVulkan* memoryPool, int32_t size)
 {
-	if(buffer_ == nullptr)
+	if (buffer_ == nullptr)
 	{
 		SafeAddRef(graphics);
 		graphics_ = CreateSharedPtr(graphics);
@@ -48,8 +50,7 @@ bool ConstantBufferVulkan::InitializeAsShortTime(GraphicsVulkan* graphics, Singl
 	VkDeviceMemory deviceMemory;
 	if (memoryPool->GetConstantBuffer(size_, &buffer, &deviceMemory, &offset_))
 	{
-		buffer_->buffer_ = vk::Buffer(buffer);
-		buffer_->devMem = vk::DeviceMemory(deviceMemory);
+		buffer_->Attach(vk::Buffer(buffer), vk::DeviceMemory(deviceMemory), true);
 		memSize_ = size;
 		return true;
 	}
@@ -61,17 +62,17 @@ bool ConstantBufferVulkan::InitializeAsShortTime(GraphicsVulkan* graphics, Singl
 
 void* ConstantBufferVulkan::Lock()
 {
-	data = graphics_->GetDevice().mapMemory(buffer_->devMem, offset_, memSize_, vk::MemoryMapFlags());
+	data = graphics_->GetDevice().mapMemory(buffer_->devMem(), offset_, memSize_, vk::MemoryMapFlags());
 	return data;
 }
 
 void* ConstantBufferVulkan::Lock(int32_t offset, int32_t size)
 {
-	data = graphics_->GetDevice().mapMemory(buffer_->devMem, offset_ + offset, size, vk::MemoryMapFlags());
+	data = graphics_->GetDevice().mapMemory(buffer_->devMem(), offset_ + offset, size, vk::MemoryMapFlags());
 	return data;
 }
 
-void ConstantBufferVulkan::Unlock() { graphics_->GetDevice().unmapMemory(buffer_->devMem); }
+void ConstantBufferVulkan::Unlock() { graphics_->GetDevice().unmapMemory(buffer_->devMem()); }
 
 int32_t ConstantBufferVulkan::GetSize() { return memSize_; }
 
