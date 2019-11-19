@@ -61,18 +61,19 @@ RenderPassPipelineStateCacheVulkan::Create(bool isPresentMode, bool hasDepth, co
 		attachmentDescs.at(i).storeOp = vk::AttachmentStoreOp::eStore;
 		attachmentDescs.at(i).stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
 		attachmentDescs.at(i).stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-		attachmentDescs.at(i).initialLayout = vk::ImageLayout::eUndefined;
 	}
 
 	if (isPresentMode)
 	{
+		attachmentDescs.at(0).initialLayout = vk::ImageLayout::ePresentSrcKHR;
 		attachmentDescs.at(0).finalLayout = vk::ImageLayout::ePresentSrcKHR;
 	}
 	else
 	{
 		for(int i = 0; i < colorCount; i++)
 		{
-			attachmentDescs.at(i).finalLayout = vk::ImageLayout::eColorAttachmentOptimal;
+			attachmentDescs.at(i).initialLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+			attachmentDescs.at(i).finalLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 		}
 	}
 
@@ -88,7 +89,7 @@ RenderPassPipelineStateCacheVulkan::Create(bool isPresentMode, bool hasDepth, co
 		attachmentDescs.at(colorCount).storeOp = vk::AttachmentStoreOp::eStore;
 		attachmentDescs.at(colorCount).stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
 		attachmentDescs.at(colorCount).stencilStoreOp = vk::AttachmentStoreOp::eStore;
-		attachmentDescs.at(colorCount).initialLayout = vk::ImageLayout::eUndefined;
+		attachmentDescs.at(colorCount).initialLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 		attachmentDescs.at(colorCount).finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 	}
 
