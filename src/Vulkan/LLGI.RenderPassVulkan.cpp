@@ -16,7 +16,7 @@ namespace LLGI
 RenderPassVulkan::RenderPassVulkan(RenderPassPipelineStateCacheVulkan* renderPassPipelineStateCache,
 								   vk::Device device,
 								   ReferenceObject* owner)
-	: renderPassPipelineStateCache_(renderPassPipelineStateCache), device_(device), owner_(owner)
+	: renderPassPipelineStateCache_(renderPassPipelineStateCache), device_(device), owner_(owner), renderPassPipelineState(nullptr)
 {
 	SafeAddRef(renderPassPipelineStateCache_);
 	SafeAddRef(owner_);
@@ -69,14 +69,11 @@ bool RenderPassVulkan::Initialize(const TextureVulkan** textures, int32_t textur
 	}
 
 	FixedSizeVector<vk::ImageView, RenderTargetMax + 1> views;
-	FixedSizeVector<vk::Format, RenderTargetMax> formats;
 	views.resize(textureCount + 1);
-	formats.resize(textureCount);
 
 	for (int32_t i = 0; i < textureCount; i++)
 	{
 		views.at(i) = textures[i]->GetView();
-		formats.at(i) = textures[i]->GetVulkanFormat();
 	}
 
 	if (GetHasDepthTexture())
@@ -84,7 +81,7 @@ bool RenderPassVulkan::Initialize(const TextureVulkan** textures, int32_t textur
 		views.at(textureCount) = depthTexture->GetView();
 	}
 
-	this->renderPassPipelineState = renderPassPipelineStateCache_->Create(GetIsSwapchainScreen(), GetHasDepthTexture(), formats);
+	ResetRenderPassPipelineState();
 
 	vk::FramebufferCreateInfo framebufferCreateInfo;
 	framebufferCreateInfo.renderPass = renderPassPipelineState->GetRenderPass();
@@ -100,6 +97,33 @@ bool RenderPassVulkan::Initialize(const TextureVulkan** textures, int32_t textur
 }
 
 Vec2I RenderPassVulkan::GetImageSize() const { return screenSize_; }
+
+void RenderPassVulkan::SetIsColorCleared(bool isColorCleared)
+{
+	RenderPass::SetIsColorCleared(isColorCleared);
+	ResetRenderPassPipelineState();
+}
+
+void RenderPassVulkan::SetIsDepthCleared(bool isDepthCleared)
+{
+	RenderPass::SetIsDepthCleared(isDepthCleared);
+	ResetRenderPassPipelineState();
+}
+
+void RenderPassVulkan::ResetRenderPassPipelineState()
+{
+	SafeRelease(renderPassPipelineState);
+
+	FixedSizeVector<vk::Format, RenderTargetMax> formats;
+	formats.resize(renderTargetProperties.size());
+	for (int32_t i = 0; i < renderTargetProperties.size(); i++)
+	{
+		formats.at(i) = renderTargetProperties.at(i).colorBufferPtr->GetVulkanFormat();
+	}
+
+	this->renderPassPipelineState = renderPassPipelineStateCache_->Create(
+		GetIsSwapchainScreen(), GetHasDepthTexture(), formats, GetIsColorCleared(), GetIsDepthCleared());
+}
 
 RenderPassPipelineStateVulkan::RenderPassPipelineStateVulkan(vk::Device device, ReferenceObject* owner)
 {

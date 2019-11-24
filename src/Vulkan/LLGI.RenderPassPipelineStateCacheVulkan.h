@@ -25,7 +25,7 @@ public:
 	RenderPassPipelineStateCacheVulkan(vk::Device device, ReferenceObject* owner);
 	virtual ~RenderPassPipelineStateCacheVulkan();
 
-	RenderPassPipelineStateVulkan* Create(bool isPresentMode, bool hasDepth, const FixedSizeVector<vk::Format, RenderTargetMax>& formats);
+	RenderPassPipelineStateVulkan* Create(bool isPresentMode, bool hasDepth, const FixedSizeVector<vk::Format, RenderTargetMax>& formats, bool isColorCleared, bool isDepthCleared);
 };
 
 } // namespace LLGI

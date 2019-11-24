@@ -22,7 +22,7 @@ private:
 	ReferenceObject* owner_ = nullptr;
 
 	std::shared_ptr<TextureVulkan> depthBufferPtr;
-	
+
 public:
 	struct RenderTargetProperty
 	{
@@ -45,6 +45,13 @@ public:
 	bool Initialize(const TextureVulkan** textures, int32_t textureCount, TextureVulkan* depthTexture);
 
 	Vec2I GetImageSize() const;
+
+	virtual void SetIsColorCleared(bool isColorCleared) override;
+
+	virtual void SetIsDepthCleared(bool isDepthCleared) override;
+
+private:
+	void ResetRenderPassPipelineState();
 };
 
 class RenderPassPipelineStateVulkan : public RenderPassPipelineState
@@ -68,10 +75,13 @@ struct RenderPassPipelineStateVulkanKey
 	bool isPresentMode;
 	FixedSizeVector<vk::Format, RenderTargetMax> formats;
 	bool hasDepth;
+	bool isColorCleared;
+	bool isDepthCleared;
 
 	bool operator==(const RenderPassPipelineStateVulkanKey& value) const
 	{
-		return (isPresentMode == value.isPresentMode && hasDepth == value.hasDepth && formats == value.formats);
+		return (isPresentMode == value.isPresentMode && hasDepth == value.hasDepth && formats == value.formats &&
+				isColorCleared == value.isColorCleared && isDepthCleared == value.isDepthCleared);
 	}
 
 	struct Hash
@@ -80,10 +90,10 @@ struct RenderPassPipelineStateVulkanKey
 
 		std::size_t operator()(const RenderPassPipelineStateVulkanKey& key) const
 		{
-			return key.formats.get_hash() + std::hash<bool>()(key.isPresentMode) + std::hash<bool>()(key.hasDepth);
+			return key.formats.get_hash() + std::hash<bool>()(key.isPresentMode) + std::hash<bool>()(key.hasDepth) +
+				   std::hash<bool>()(key.isColorCleared) + std::hash<bool>()(key.isDepthCleared);
 		}
 	};
 };
 
 } // namespace LLGI
-
