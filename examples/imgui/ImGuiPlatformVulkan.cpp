@@ -22,6 +22,7 @@ ImguiPlatformVulkan::ImguiPlatformVulkan(LLGI::Graphics* g, LLGI::Platform* p)
 		pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
 		pool_info.pPoolSizes = pool_sizes;
 		vkCreateDescriptorPool(g_->GetDevice(), &pool_info, nullptr, &descriptorPool_);
+		assert(descriptorPool_ != nullptr);
 	}
 
 	LLGI::RenderPassPipelineStateKey psk;

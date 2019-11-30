@@ -95,7 +95,12 @@ int main()
 
 	auto llgiwindow = new LLGIWindow(window);
 
-	auto platform = LLGI::CreatePlatform(LLGI::DeviceType::Default, llgiwindow);
+	LLGI::DeviceType deviceType = LLGI::DeviceType::Default;
+#ifdef ENABLE_VULKAN
+	deviceType = LLGI::DeviceType::Vulkan;
+#endif
+
+	auto platform = LLGI::CreatePlatform(deviceType, llgiwindow);
 	auto graphics = platform->CreateGraphics();
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
 	auto commandList = graphics->CreateCommandList(sfMemoryPool);

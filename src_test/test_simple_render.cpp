@@ -675,16 +675,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 	assert(texture->GetType() == LLGI::TextureType::Color);
 
 	auto texture_buf = (LLGI::Color8*)texture->Lock();
-	for (int y = 0; y < 256; y++)
-	{
-		for (int x = 0; x < 256; x++)
-		{
-			texture_buf[x + y * 256].R = x;
-			texture_buf[x + y * 256].G = y;
-			texture_buf[x + y * 256].B = 255;
-			texture_buf[x + y * 256].A = 255;
-		}
-	}
+	TestHelper::WriteDummyTexture(texture_buf, texture->GetSizeAs2D());
 	texture->Unlock();
 
 	LLGI::Shader* shader_vs = nullptr;

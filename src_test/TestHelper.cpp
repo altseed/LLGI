@@ -13,6 +13,20 @@ struct InternalTestHelper
 
 std::unique_ptr<InternalTestHelper> internalTestHelper = std::unique_ptr<InternalTestHelper>(new InternalTestHelper());
 
+void TestHelper::WriteDummyTexture(LLGI::Color8* data, LLGI::Vec2I size)
+{
+	for (int y = 0; y < size.Y; y++)
+	{
+		for (int x = 0; x < size.X; x++)
+		{
+			data[x + y * 256].R = x;
+			data[x + y * 256].G = y;
+			data[x + y * 256].B = (x % 16 > 8 || y % 16 > 8) ? 128 : 0;
+			data[x + y * 256].A = 255;
+		}
+	}
+}
+
 std::vector<uint8_t> TestHelper::LoadData(const char* path)
 {
 	std::vector<uint8_t> ret;
