@@ -50,42 +50,42 @@ void PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 		if (self_->VertexLayouts[i] == VertexLayoutFormat::R32G32B32_FLOAT)
 		{
 			vertexDescriptor.attributes[i].format = MTLVertexFormatFloat3;
-			vertexDescriptor.attributes[i].bufferIndex = 0;
+			vertexDescriptor.attributes[i].bufferIndex = VertexBufferIndex;
 			vertexOffset += sizeof(float) * 3;
 		}
 
         if (self_->VertexLayouts[i] == VertexLayoutFormat::R32G32B32A32_FLOAT)
         {
             vertexDescriptor.attributes[i].format = MTLVertexFormatFloat4;
-            vertexDescriptor.attributes[i].bufferIndex = 0;
+            vertexDescriptor.attributes[i].bufferIndex = VertexBufferIndex;
             vertexOffset += sizeof(float) * 4;
         }
 
 		if (self_->VertexLayouts[i] == VertexLayoutFormat::R32G32_FLOAT)
 		{
 			vertexDescriptor.attributes[i].format = MTLVertexFormatFloat2;
-			vertexDescriptor.attributes[i].bufferIndex = 0;
+			vertexDescriptor.attributes[i].bufferIndex = VertexBufferIndex;
 			vertexOffset += sizeof(float) * 2;
 		}
 
 		if (self_->VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UINT)
 		{
 			vertexDescriptor.attributes[i].format = MTLVertexFormatUChar4;
-			vertexDescriptor.attributes[i].bufferIndex = 0;
+			vertexDescriptor.attributes[i].bufferIndex = VertexBufferIndex;
 			vertexOffset += sizeof(float);
 		}
 
 		if (self_->VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UNORM)
 		{
 			vertexDescriptor.attributes[i].format = MTLVertexFormatUChar4Normalized;
-			vertexDescriptor.attributes[i].bufferIndex = 0;
+			vertexDescriptor.attributes[i].bufferIndex = VertexBufferIndex;
 			vertexOffset += sizeof(float);
 		}
 	}
 
-	vertexDescriptor.layouts[0].stepRate = 1;
-	vertexDescriptor.layouts[0].stepFunction = MTLVertexStepFunctionPerVertex;
-	vertexDescriptor.layouts[0].stride = vertexOffset;
+	vertexDescriptor.layouts[VertexBufferIndex].stepRate = 1;
+	vertexDescriptor.layouts[VertexBufferIndex].stepFunction = MTLVertexStepFunctionPerVertex;
+	vertexDescriptor.layouts[VertexBufferIndex].stride = vertexOffset;
 
 	pipelineStateDescriptor.vertexDescriptor = vertexDescriptor;
 

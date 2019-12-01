@@ -110,7 +110,7 @@ void CommandList_Impl::SetScissor(int32_t x, int32_t y, int32_t width, int32_t h
 
 void CommandList_Impl::SetVertexBuffer(Buffer_Impl* vertexBuffer, int32_t stride, int32_t offset)
 {
-	[renderEncoder setVertexBuffer:vertexBuffer->buffer offset:offset atIndex:0];
+	[renderEncoder setVertexBuffer:vertexBuffer->buffer offset:offset atIndex:VertexBufferIndex];
 }
 
 CommandListMetal::CommandListMetal() {
@@ -216,7 +216,7 @@ void CommandListMetal::Draw(int32_t pritimiveCount)
 	if (vcb != nullptr)
 	{
 		auto vcb_ = static_cast<ConstantBufferMetal*>(vcb);
-		[impl->renderEncoder setVertexBuffer:vcb_->GetImpl()->buffer offset:vcb_->GetOffset() atIndex:1];
+		[impl->renderEncoder setVertexBuffer:vcb_->GetImpl()->buffer offset:vcb_->GetOffset() atIndex:0];
 	}
 
 	ConstantBuffer* pcb = nullptr;
@@ -224,7 +224,7 @@ void CommandListMetal::Draw(int32_t pritimiveCount)
 	if (pcb != nullptr)
 	{
 		auto pcb_ = static_cast<ConstantBufferMetal*>(pcb);
-		[impl->renderEncoder setFragmentBuffer:pcb_->GetImpl()->buffer offset:pcb_->GetOffset() atIndex:1];
+		[impl->renderEncoder setFragmentBuffer:pcb_->GetImpl()->buffer offset:pcb_->GetOffset() atIndex:0];
 	}
 
 	// Assign textures

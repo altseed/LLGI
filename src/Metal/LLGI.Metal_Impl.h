@@ -8,6 +8,9 @@
 namespace LLGI
 {
 
+//! which buffer is used as vertex buffer
+const int VertexBufferIndex = 2;
+
 struct CommandList_Impl;
 struct Buffer_Impl;
 struct Texture_Impl;

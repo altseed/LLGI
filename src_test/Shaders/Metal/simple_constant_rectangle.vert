@@ -22,7 +22,7 @@ struct main0_in
     float4 a_color [[attribute(2)]];
 };
 
-vertex main0_out main0(main0_in in [[stage_in]], constant Block& _39 [[buffer(1)]])
+vertex main0_out main0(main0_in in [[stage_in]], constant Block& _39 [[buffer(0)]])
 {
     main0_out out = {};
     out.gl_Position.x = in.a_position.x;
