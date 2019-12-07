@@ -122,7 +122,7 @@ void PipelineStateDX12::Compile()
 	if (Culling == CullingMode::DoubleSide)
 		rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
 
-	rasterizerDesc.FrontCounterClockwise = TRUE;
+	rasterizerDesc.FrontCounterClockwise = FALSE;
 	rasterizerDesc.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
 	rasterizerDesc.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
 	rasterizerDesc.SlopeScaledDepthBias = D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
