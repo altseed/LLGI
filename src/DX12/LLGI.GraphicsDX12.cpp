@@ -195,6 +195,7 @@ std::shared_ptr<RenderPassPipelineStateDX12> GraphicsDX12::CreateRenderPassPipel
 
 	ret->RenderTargetCount = renderTargetCount;
 	ret->RenderTargetFormats = renderTargetFormats;
+	ret->HasDepth = hasDepth;
 
 	return ret;
 }
