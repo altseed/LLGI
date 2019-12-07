@@ -58,7 +58,7 @@ bool TextureDX12::Initialize(const Vec2I& size, TextureType type, const TextureF
 	if (type_ == TextureType::Depth)
 	{
 		format_ = TextureFormatType::Uknown;
-		dxgiFormat_ = DXGI_FORMAT_R32_TYPELESS;
+		dxgiFormat_ = DXGI_FORMAT_D32_FLOAT;
 		memorySize_ = size.X * size.Y * 4;
 	}
 	else
@@ -86,10 +86,10 @@ bool TextureDX12::Initialize(const Vec2I& size, TextureType type, const TextureF
 										D3D12_HEAP_TYPE_DEFAULT,
 										dxgiFormat_,
 										D3D12_RESOURCE_DIMENSION_TEXTURE2D,
-										D3D12_RESOURCE_STATE_GENERIC_READ,
+										D3D12_RESOURCE_STATE_DEPTH_READ,
 										D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
 										size);
-		state_ = D3D12_RESOURCE_STATE_GENERIC_READ;
+		state_ = D3D12_RESOURCE_STATE_DEPTH_READ;
 	}
 	else if (type_ == TextureType::Color)
 	{

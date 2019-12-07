@@ -212,11 +212,16 @@ void PipelineStateDX12::Compile()
 
 		D3D12_DEPTH_STENCIL_DESC depthStencilDesc = {};
 		depthStencilDesc.DepthFunc = depthCompareOps[static_cast<int>(DepthFunc)];
-		depthStencilDesc.DepthEnable = IsDepthTestEnabled;
-		depthStencilDesc.StencilEnable = IsDepthTestEnabled;
+		depthStencilDesc.DepthWriteMask = IsDepthWriteEnabled ? D3D12_DEPTH_WRITE_MASK_ALL : D3D12_DEPTH_WRITE_MASK_ZERO;
+		depthStencilDesc.DepthEnable = IsDepthTestEnabled | IsDepthWriteEnabled;
+		if (!IsDepthTestEnabled)
+		{
+			depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_NEVER;
+		}
+		depthStencilDesc.StencilEnable = false;
 
 		pipelineStateDesc.DepthStencilState = depthStencilDesc;
-		pipelineStateDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;	
+		pipelineStateDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 	}
 
 	pipelineStateDesc.SampleDesc.Count = 1;

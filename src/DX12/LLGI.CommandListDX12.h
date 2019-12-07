@@ -22,6 +22,7 @@ class CommandListDX12 : public CommandList
 private:
 	std::shared_ptr<DescriptorHeapDX12> cbreDescriptorHeap_;
 	std::shared_ptr<DescriptorHeapDX12> rtDescriptorHeap_;
+	std::shared_ptr<DescriptorHeapDX12> dtDescriptorHeap_;
 	std::shared_ptr<DescriptorHeapDX12> smpDescriptorHeap_;
 	std::shared_ptr<ID3D12GraphicsCommandList> commandList_;
 	std::shared_ptr<ID3D12CommandAllocator> commandAllocator_;
@@ -49,6 +50,8 @@ public:
 	void Draw(int32_t pritimiveCount) override;
 
 	void Clear(const Color8& color);
+
+	void ClearDepth();
 
 	ID3D12GraphicsCommandList* GetCommandList() const;
 

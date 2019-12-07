@@ -17,9 +17,11 @@ class RenderPassDX12 : public RenderPass
 {
 private:
 	ID3D12Device* device_ = nullptr;
-	
+
 	std::vector<RenderTargetDX12> renderTargets_;
 	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> handleRTV_;
+	D3D12_CPU_DESCRIPTOR_HANDLE handleDSV_;
+
 	int32_t numRenderTarget_ = 0;
 
 	std::shared_ptr<RenderPassPipelineStateDX12> renderPassPipelineState_;
@@ -33,8 +35,19 @@ public:
 	const D3D12_CPU_DESCRIPTOR_HANDLE* GetHandleRTV() const { return handleRTV_.data(); }
 	const RenderTargetDX12* GetRenderTarget(int idx) const { return &renderTargets_[idx]; }
 	int32_t GetCount() const { return numRenderTarget_; }
-	
-	bool CreateRenderTargetViews(CommandListDX12* commandList, DescriptorHeapDX12* rtDescriptorHeap);
+
+	bool
+	ReinitializeRenderTargetViews(CommandListDX12* commandList, DescriptorHeapDX12* rtDescriptorHeap, DescriptorHeapDX12* dtDescriptorHeap);
+
+	const D3D12_CPU_DESCRIPTOR_HANDLE* GetHandleDSV() const
+	{
+		if (GetHasDepthTexture())
+		{
+			return &handleDSV_;	
+		}
+
+		return nullptr;
+	}
 };
 
 class RenderTargetDX12

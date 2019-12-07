@@ -55,7 +55,9 @@ bool RenderPassDX12::Initialize(TextureDX12** textures, int numTextures, Texture
 	return true;
 }
 
-bool RenderPassDX12::CreateRenderTargetViews(CommandListDX12* commandList, DescriptorHeapDX12* rtDescriptorHeap)
+bool RenderPassDX12::ReinitializeRenderTargetViews(CommandListDX12* commandList,
+												   DescriptorHeapDX12* rtDescriptorHeap,
+												   DescriptorHeapDX12* dtDescriptorHeap)
 {
 	if (numRenderTarget_ == 0)
 		return false;
@@ -76,8 +78,25 @@ bool RenderPassDX12::CreateRenderTargetViews(CommandListDX12* commandList, Descr
 		// memory barrior to make a rendertarget
 		if (renderTargets_[i].texture_->GetType() != TextureType::Screen)
 		{
-			renderTargets_[i].texture_->ResourceBarrior(commandList->GetCommandList(), D3D12_RESOURCE_STATE_RENDER_TARGET);		
+			renderTargets_[i].texture_->ResourceBarrior(commandList->GetCommandList(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 		}
+	}
+
+	if (GetHasDepthTexture())
+	{
+		auto depthTexture = static_cast<TextureDX12*>(GetDepthTexture());
+		
+		D3D12_DEPTH_STENCIL_VIEW_DESC desc = {};
+		desc.Format = DXGI_FORMAT_D32_FLOAT;
+		desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+
+		auto cpuHandle = dtDescriptorHeap->GetCpuHandle();
+		device_->CreateDepthStencilView(depthTexture->Get(), &desc, cpuHandle);
+		handleDSV_ = cpuHandle;
+		dtDescriptorHeap->IncrementCpuHandle(1);
+		dtDescriptorHeap->IncrementGpuHandle(1);
+
+		depthTexture->ResourceBarrior(commandList->GetCommandList(), D3D12_RESOURCE_STATE_DEPTH_WRITE);
 	}
 
 	return true;

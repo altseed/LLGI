@@ -62,6 +62,8 @@ bool CommandListDX12::Initialize(GraphicsDX12* graphics, int32_t drawingCount)
 		std::make_shared<DescriptorHeapDX12>(graphics_, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_RTV, drawingCount / 2, 2);
 	smpDescriptorHeap_ = std::make_shared<DescriptorHeapDX12>(
 		graphics_, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, drawingCount * NumTexture, 2);
+	dtDescriptorHeap_ =
+		std::make_shared<DescriptorHeapDX12>(graphics_, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_DSV, drawingCount / 2, 2);
 
 	hr = graphics_->GetDevice()->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence_));
 	if (FAILED(hr))
@@ -82,6 +84,7 @@ void CommandListDX12::Begin()
 
 	cbreDescriptorHeap_->Reset();
 	rtDescriptorHeap_->Reset();
+	dtDescriptorHeap_->Reset();
 	smpDescriptorHeap_->Reset();
 
 	currentCommandList_ = commandList_.get();
@@ -102,6 +105,7 @@ bool CommandListDX12::BeginWithPlatform(void* platformContextPtr)
 
 	cbreDescriptorHeap_->Reset();
 	rtDescriptorHeap_->Reset();
+	dtDescriptorHeap_->Reset();
 	smpDescriptorHeap_->Reset();
 
 	currentCommandList_ = ptr->commandList;
@@ -126,14 +130,8 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 	if (renderPass != nullptr)
 	{
 		// Set render target
-		renderPass_->CreateRenderTargetViews(this, rtDescriptorHeap_.get());
-		currentCommandList_->OMSetRenderTargets(renderPass_->GetCount(), renderPass_->GetHandleRTV(), FALSE, nullptr);
-
-		// Set depth target
-		if (renderPass->GetHasDepthTexture())
-		{
-			// TODO
-		}
+		renderPass_->ReinitializeRenderTargetViews(this, rtDescriptorHeap_.get(), dtDescriptorHeap_.get());
+		currentCommandList_->OMSetRenderTargets(renderPass_->GetCount(), renderPass_->GetHandleRTV(), FALSE, renderPass_->GetHandleDSV());
 
 		// Reset scissor
 		D3D12_RECT rects[D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT];
@@ -164,8 +162,7 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 
 		if (renderPass_->GetIsDepthCleared())
 		{
-			// TODO
-			// assert(0);
+			ClearDepth();
 		}
 	}
 }
@@ -364,6 +361,21 @@ void CommandListDX12::Clear(const Color8& color)
 	for (int i = 0; i < rt->GetCount(); i++)
 	{
 		currentCommandList_->ClearRenderTargetView(handle[i], color_, 0, nullptr);
+	}
+}
+
+void CommandListDX12::ClearDepth()
+{
+	assert(currentCommandList_ != nullptr);
+
+	auto rt = renderPass_;
+	if (rt == nullptr)
+		return;
+
+	auto handle = rt->GetHandleDSV();
+	for (int i = 0; i < rt->GetCount(); i++)
+	{
+		currentCommandList_->ClearDepthStencilView(handle[i], D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	}
 }
 
