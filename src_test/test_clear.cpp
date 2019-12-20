@@ -33,7 +33,7 @@ void test_clear_update(LLGI::DeviceType deviceType)
 		commandList->WaitUntilCompleted();
 
 		commandList->Begin();
-		commandList->BeginRenderPass(platform->GetCurrentScreen(color, true));
+		commandList->BeginRenderPass(platform->GetCurrentScreen(color, true, true));
 		commandList->EndRenderPass();
 		commandList->End();
 
@@ -96,7 +96,7 @@ void test_clear(LLGI::DeviceType deviceType)
 		commandList->WaitUntilCompleted();
 
 		commandList->Begin();
-		commandList->BeginRenderPass(platform->GetCurrentScreen(color, true));
+		commandList->BeginRenderPass(platform->GetCurrentScreen(color, true, true));
 		commandList->EndRenderPass();
 		commandList->End();
 
