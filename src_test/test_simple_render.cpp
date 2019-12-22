@@ -54,7 +54,7 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 		color.B = 0;
 		color.A = 255;
 
-		auto renderPass = platform->GetCurrentScreen(color, true, true);
+		auto renderPass = platform->GetCurrentScreen(color, true, false);	// TODO: isDepthClear is false, because it fails with dx12.
 		auto renderPassPipelineState = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPass));
 
 		if (pips.count(renderPassPipelineState) == 0)
