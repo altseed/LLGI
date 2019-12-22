@@ -54,7 +54,7 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 		color.B = 0;
 		color.A = 255;
 
-		auto renderPass = platform->GetCurrentScreen(color, true);
+		auto renderPass = platform->GetCurrentScreen(color, true, false);	// TODO: isDepthClear is false, because it fails with dx12.
 		auto renderPassPipelineState = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPass));
 
 		if (pips.count(renderPassPipelineState) == 0)
@@ -157,7 +157,7 @@ void test_index_offset(LLGI::DeviceType deviceType)
 		color.B = 0;
 		color.A = 255;
 
-		auto renderPass = platform->GetCurrentScreen(color, true);
+		auto renderPass = platform->GetCurrentScreen(color, true, false);	// TODO: isDepthClear is false, because it fails with dx12.
 		auto renderPassPipelineState = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPass));
 
 		if (pips.count(renderPassPipelineState) == 0)
@@ -480,7 +480,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 		color.B = 0;
 		color.A = 255;
 
-		auto renderPass = platform->GetCurrentScreen(color, true);
+		auto renderPass = platform->GetCurrentScreen(color, true, false);	// TODO: isDepthClear is false, because it fails with dx12.
 		auto renderPassPipelineState = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPass));
 
 		if (pips.count(renderPassPipelineState) == 0)
@@ -778,7 +778,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 		color.B = 0;
 		color.A = 255;
 
-		auto renderPass = platform->GetCurrentScreen(color, true);
+		auto renderPass = platform->GetCurrentScreen(color, true, false);	// TODO: isDepthClear is false, because it fails with dx12.
 		auto renderPassPipelineState = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPass));
 
 		if (pips.count(renderPassPipelineState) == 0)

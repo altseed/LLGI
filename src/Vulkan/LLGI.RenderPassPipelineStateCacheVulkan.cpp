@@ -71,14 +71,16 @@ RenderPassPipelineStateVulkan* RenderPassPipelineStateCacheVulkan::Create(bool i
 
 	if (isPresentMode)
 	{
-		attachmentDescs.at(0).initialLayout = vk::ImageLayout::ePresentSrcKHR;
+		// When clearing, the initialLayout does not matter.
+		attachmentDescs.at(0).initialLayout = (isColorCleared) ? vk::ImageLayout::eUndefined : vk::ImageLayout::ePresentSrcKHR;
 		attachmentDescs.at(0).finalLayout = vk::ImageLayout::ePresentSrcKHR;
 	}
 	else
 	{
 		for (int i = 0; i < colorCount; i++)
 		{
-			attachmentDescs.at(i).initialLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+			// When clearing, the initialLayout does not matter.
+			attachmentDescs.at(i).initialLayout = (isColorCleared) ? vk::ImageLayout::eUndefined : vk::ImageLayout::eShaderReadOnlyOptimal;
 			attachmentDescs.at(i).finalLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 		}
 	}
@@ -89,7 +91,7 @@ RenderPassPipelineStateVulkan* RenderPassPipelineStateCacheVulkan::Create(bool i
 		attachmentDescs.at(colorCount).format = vk::Format::eD32SfloatS8Uint;
 		attachmentDescs.at(colorCount).samples = vk::SampleCountFlagBits::e1;
 
-		if (isColorCleared)
+		if (isDepthCleared)
 			attachmentDescs.at(colorCount).loadOp = vk::AttachmentLoadOp::eClear;
 		else
 			attachmentDescs.at(colorCount).loadOp = vk::AttachmentLoadOp::eDontCare;
@@ -97,7 +99,9 @@ RenderPassPipelineStateVulkan* RenderPassPipelineStateCacheVulkan::Create(bool i
 		attachmentDescs.at(colorCount).storeOp = vk::AttachmentStoreOp::eStore;
 		attachmentDescs.at(colorCount).stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
 		attachmentDescs.at(colorCount).stencilStoreOp = vk::AttachmentStoreOp::eStore;
-		attachmentDescs.at(colorCount).initialLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+
+		// When clearing, the initialLayout does not matter.
+		attachmentDescs.at(colorCount).initialLayout = (isDepthCleared) ? vk::ImageLayout::eUndefined : vk::ImageLayout::eDepthStencilAttachmentOptimal;
 		attachmentDescs.at(colorCount).finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 	}
 
