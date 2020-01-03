@@ -11,13 +11,26 @@ struct CompileShaderResultDX12
 	std::string error;
 };
 
-static CompileShaderResultDX12
-CompileShader(const char* text, const char* fileName, const char* target, const std::vector<D3D_SHADER_MACRO>& macro)
+static CompileShaderResultDX12 CompileShader(const CompilerDX12Option& option,
+											 const char* text,
+											 const char* fileName,
+											 const char* target,
+											 const std::vector<D3D_SHADER_MACRO>& macro)
 {
 	ID3DBlob* shader = nullptr;
 	ID3DBlob* error = nullptr;
 
-	UINT flag = D3DCOMPILE_PACK_MATRIX_ROW_MAJOR;
+	UINT flag = 0;
+
+	if ((static_cast<int32_t>(option) & static_cast<int32_t>(CompilerDX12Option::ColumnMajor)) != 0)
+	{
+		flag |= D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR;
+	}
+	else
+	{
+		flag |= D3DCOMPILE_PACK_MATRIX_ROW_MAJOR;
+	}
+
 #if !_DEBUG
 	flag = flag | D3DCOMPILE_OPTIMIZATION_LEVEL3;
 #endif
@@ -62,6 +75,8 @@ CompileShader(const char* text, const char* fileName, const char* target, const 
 	return result;
 }
 
+CompilerDX12::CompilerDX12(const CompilerDX12Option& option) : option_(option) {}
+
 void CompilerDX12::Initialize() {}
 
 void CompilerDX12::Compile(CompilerResult& result, const char* code, ShaderStageType shaderStage)
@@ -80,7 +95,7 @@ void CompilerDX12::Compile(CompilerResult& result, const char* code, ShaderStage
 	}
 
 	std::vector<D3D_SHADER_MACRO> macro;
-	auto compileResult = CompileShader(code, "dx12_code", target, macro);
+	auto compileResult = CompileShader(option_, code, "dx12_code", target, macro);
 
 	result.Message = compileResult.error;
 

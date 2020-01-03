@@ -7,12 +7,20 @@
 namespace LLGI
 {
 
+enum class CompilerDX12Option : int32_t
+{
+	None = 0,
+	RowMajor = (1 << 0),
+	ColumnMajor = (2 << 0),
+};
+
 class CompilerDX12 : public Compiler
 {
-
 private:
+	CompilerDX12Option option_;
+
 public:
-	CompilerDX12() = default;
+	CompilerDX12(const CompilerDX12Option& option = CompilerDX12Option::None);
 	virtual ~CompilerDX12() = default;
 
 	void Initialize() override;
