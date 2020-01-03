@@ -76,15 +76,22 @@ CommandListVulkan::~CommandListVulkan()
 	fences_.clear();
 }
 
-bool CommandListVulkan::Initialize(GraphicsVulkan* graphics, int32_t drawingCount)
+bool CommandListVulkan::Initialize(GraphicsVulkan* graphics, int32_t drawingCount, CommandListPreCondition precondition)
 {
 	SafeAddRef(graphics);
 	graphics_ = CreateSharedPtr(graphics);
 
-	vk::CommandBufferAllocateInfo allocInfo;
-	allocInfo.commandPool = graphics->GetCommandPool();
-	allocInfo.commandBufferCount = graphics->GetSwapBufferCount();
-	commandBuffers = graphics->GetDevice().allocateCommandBuffers(allocInfo);
+	if (precondition == CommandListPreCondition::Standalone)
+	{
+		vk::CommandBufferAllocateInfo allocInfo;
+		allocInfo.commandPool = graphics->GetCommandPool();
+		allocInfo.commandBufferCount = graphics->GetSwapBufferCount();
+		commandBuffers = graphics->GetDevice().allocateCommandBuffers(allocInfo);
+	}
+	else
+	{
+		commandBuffers.resize(graphics_->GetSwapBufferCount());
+	}
 
 	for (size_t i = 0; i < static_cast<size_t>(graphics_->GetSwapBufferCount()); i++)
 	{
@@ -96,6 +103,24 @@ bool CommandListVulkan::Initialize(GraphicsVulkan* graphics, int32_t drawingCoun
 
 	currentSwapBufferIndex_ = -1;
 	return true;
+}
+
+void CommandListVulkan::BeginExternal(VkCommandBuffer nativeCommandBuffer)
+{
+	currentSwapBufferIndex_++;
+	currentSwapBufferIndex_ %= commandBuffers.size();
+
+	commandBuffers[currentSwapBufferIndex_] = vk::CommandBuffer(nativeCommandBuffer);
+
+	auto& dp = descriptorPools[currentSwapBufferIndex_];
+	dp->Reset();
+
+	CommandList::Begin();
+}
+
+void CommandListVulkan::EndExternal()
+{
+	commandBuffers[currentSwapBufferIndex_] = vk::CommandBuffer();
 }
 
 void CommandListVulkan::Begin()
