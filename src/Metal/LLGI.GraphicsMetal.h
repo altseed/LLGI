@@ -98,6 +98,8 @@ public:
 	std::vector<uint8_t> CaptureRenderTarget(Texture* renderTarget) override;
 
 	Graphics_Impl* GetImpl() const;
+
+    RenderPassMetal* GetRenderPass() const { return renderPass_.get(); }
 };
 
 } // namespace LLGI

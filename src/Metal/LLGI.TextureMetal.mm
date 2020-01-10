@@ -26,9 +26,13 @@ bool Texture_Impl::Initialize(id<MTLDevice> device, const Vec2I& size, TextureTy
     
     if(type == TextureType::Depth)
     {
+#if TARGET_OS_IOS
+        auto format = MTLPixelFormatDepth32Float_Stencil8;
+#elif TARGET_OS_MAC
 		bool supported = device.isDepth24Stencil8PixelFormatSupported;
 		
 		auto format = (supported) ? MTLPixelFormatDepth24Unorm_Stencil8 : MTLPixelFormatDepth32Float_Stencil8;
+#endif
         textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:format
 																			   width:size.X
 																			  height:size.Y
