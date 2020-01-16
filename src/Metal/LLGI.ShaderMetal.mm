@@ -4,6 +4,8 @@
 #import <MetalKit/MetalKit.h>
 #include <iostream>
 
+#define SUPPRESS_COMPILE_WARNINGS
+
 namespace LLGI
 {
 
@@ -43,7 +45,11 @@ bool Shader_Impl::Initialize(Graphics_Impl* graphics, const void* data, int size
 
 		NSError* libraryError = nil;
 		id<MTLLibrary> lib = [device newLibraryWithSource:code_ options:NULL error:&libraryError];
-		if (libraryError)
+		if (libraryError
+#ifdef SUPPRESS_COMPILE_WARNINGS
+            && [libraryError.localizedDescription rangeOfString:@"succeeded"].location == NSNotFound
+#endif
+            )
 		{
 			std::cout << libraryError.localizedDescription.UTF8String << std::endl;
 			return false;
@@ -56,7 +62,11 @@ bool Shader_Impl::Initialize(Graphics_Impl* graphics, const void* data, int size
 		NSError* libraryError = nil;
 		id<MTLLibrary> lib = [device newLibraryWithData:(dispatch_data_t)data error:&libraryError];
 
-		if (libraryError)
+		if (libraryError
+#ifdef SUPPRESS_COMPILE_WARNINGS
+            && [libraryError.localizedDescription rangeOfString:@"succeeded"].location == NSNotFound
+#endif
+            )
 		{
 			std::cout << libraryError.localizedDescription.UTF8String << std::endl;
 			return false;
