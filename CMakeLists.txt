@@ -43,6 +43,7 @@ endif()
 
 if(BUILD_VULKAN)
   add_definitions(-DENABLE_VULKAN)
+  add_subdirectory("thirdparty/glslang")
 endif()
 
 if(APPLE)

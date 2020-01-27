@@ -71,7 +71,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${LOCAL_HEADERS}
 if(BUILD_VULKAN)
   find_package(Vulkan REQUIRED)
   target_include_directories(LLGI PRIVATE ${Vulkan_INCLUDE_DIRS})
-  target_link_libraries(LLGI PRIVATE ${Vulkan_LIBRARIES})
+  target_link_libraries(LLGI PRIVATE ${Vulkan_LIBRARIES} glslang SPIRV)
 endif()
 
 if(WIN32)
