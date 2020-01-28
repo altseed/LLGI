@@ -115,13 +115,24 @@ const TBuiltInResource DefaultTBuiltInResource = {
         /* .generalConstantMatrixVectorIndexing = */ 1,
     }};
 
+
+
+CompilerVulkan::CompilerVulkan()
+{
+    glslang::InitializeProcess();
+}
+
+CompilerVulkan::~CompilerVulkan()
+{
+    glslang::FinalizeProcess();
+}
+
 void CompilerVulkan::Initialize()
 {
 }
 
 void CompilerVulkan::Compile(CompilerResult& result, const char* code, ShaderStageType shaderStage)
 {
-    glslang::InitializeProcess();
 
     const int defaultVersion = 110;
 
@@ -141,7 +152,6 @@ void CompilerVulkan::Compile(CompilerResult& result, const char* code, ShaderSta
 
 
     auto shader = std::make_unique<glslang::TShader>(stage);
-    auto m_program = std::make_unique<glslang::TProgram>();
 
     int ClientInputSemanticsVersion = 100; // #define VULKAN 100
     glslang::EShTargetClientVersion VulkanClientVersion = glslang::EShTargetVulkan_1_0;
@@ -162,6 +172,7 @@ void CompilerVulkan::Compile(CompilerResult& result, const char* code, ShaderSta
     Resources = DefaultTBuiltInResource;
     EShMessages messages = (EShMessages)(EShMsgSpvRules | EShMsgVulkanRules);
 
+    // compile
     if (!shader->parse(&Resources, 100, false, messages))
     {
         result.Message += "GLSL Parsing Failed:";
@@ -170,7 +181,28 @@ void CompilerVulkan::Compile(CompilerResult& result, const char* code, ShaderSta
         return;
     }
 
-    glslang::FinalizeProcess();
+
+    // link
+    auto program = std::make_unique<glslang::TProgram>();
+    program->addShader(shader.get());
+    if (!program->link(messages)) {
+        result.Message += shader->getInfoLog();
+        result.Message += shader->getInfoDebugLog();
+        return;
+    }
+    else if (shader->getInfoLog()) {
+        result.Message += shader->getInfoLog();
+        result.Message += shader->getInfoDebugLog();
+    }
+
+    std::vector<unsigned int> spirvCode;
+    spv::SpvBuildLogger logger;
+    glslang::SpvOptions spvOptions;
+    glslang::GlslangToSpv(*program->getIntermediate(stage), spirvCode, &logger, &spvOptions);
+
+    result.Binary.resize(1);
+    result.Binary[0].resize(spirvCode.size() * sizeof(unsigned int));
+    memcpy(result.Binary[0].data(), spirvCode.data(), result.Binary[0].size());
 }
 
 } // namespace LLGI
