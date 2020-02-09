@@ -20,10 +20,20 @@ struct PlatformContextDX12
 class CommandListDX12 : public CommandList
 {
 private:
-	std::shared_ptr<DescriptorHeapDX12> cbreDescriptorHeap_;
-	std::shared_ptr<DescriptorHeapDX12> rtDescriptorHeap_;
-	std::shared_ptr<DescriptorHeapDX12> dtDescriptorHeap_;
-	std::shared_ptr<DescriptorHeapDX12> smpDescriptorHeap_;
+	static const int MaximumRenderTargetChange = 32;
+
+	int32_t samplerDescriptorHeapsOffset_ = 0;
+	std::vector<std::shared_ptr<DescriptorHeapDX12>> samplerDescriptorHeaps_;
+
+	int32_t cbDescriptorHeapsOffset_ = 0;
+	std::vector<std::shared_ptr<DescriptorHeapDX12>> cbDescriptorHeaps_;
+
+	int32_t rtDescriptorHeapsOffset_ = 0;
+	std::vector<std::shared_ptr<DescriptorHeapDX12>> rtDescriptorHeaps_;
+
+	int32_t dtDescriptorHeapsOffset_ = 0;
+	std::vector<std::shared_ptr<DescriptorHeapDX12>> dtDescriptorHeaps_;
+
 	std::shared_ptr<ID3D12GraphicsCommandList> commandList_;
 	std::shared_ptr<ID3D12CommandAllocator> commandAllocator_;
 	ID3D12Fence* fence_ = nullptr;
@@ -34,6 +44,8 @@ private:
 	std::shared_ptr<RenderPassDX12> renderPass_;
 
 	ID3D12GraphicsCommandList* currentCommandList_ = nullptr;
+
+	void BeginInternal();
 
 public:
 	CommandListDX12();
