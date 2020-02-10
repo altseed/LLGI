@@ -108,7 +108,7 @@ SingleFrameMemoryPool* GraphicsDX12::CreateSingleFrameMemoryPool(int32_t constan
 	if (drawingCount > 512)
 	{
 		Log(LogType::Warning, "drawingCount is too large. It must be lower than 512");
-		drawingCount = 512;
+		//drawingCount = 512;
 	}
 
 	return new SingleFrameMemoryPoolDX12(this, true, swapBufferCount_, constantBufferPoolSize, drawingCount);
