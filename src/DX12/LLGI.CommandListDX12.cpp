@@ -246,7 +246,7 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 		}
 	}
 
-	requiredCBDescriptorCount += requiredCBDescriptorCount;
+	requiredCBDescriptorCount += requiredSamplerDescriptorCount;
 
 	ID3D12DescriptorHeap* heapSampler = nullptr;
 	ID3D12DescriptorHeap* heapConstant = nullptr;
