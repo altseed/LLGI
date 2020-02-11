@@ -151,7 +151,7 @@ void CompilerVulkan::Compile(CompilerResult& result, const char* code, ShaderSta
     }
 
 
-    auto shader = std::make_unique<glslang::TShader>(stage);
+    auto shader = std::make_shared<glslang::TShader>(stage);
 
     int ClientInputSemanticsVersion = 100; // #define VULKAN 100
     glslang::EShTargetClientVersion VulkanClientVersion = glslang::EShTargetVulkan_1_0;
@@ -183,7 +183,7 @@ void CompilerVulkan::Compile(CompilerResult& result, const char* code, ShaderSta
 
 
     // link
-    auto program = std::make_unique<glslang::TProgram>();
+    auto program = std::make_shared<glslang::TProgram>();
     program->addShader(shader.get());
     if (!program->link(messages)) {
         result.Message += shader->getInfoLog();
