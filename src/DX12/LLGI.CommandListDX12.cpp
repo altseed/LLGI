@@ -420,6 +420,11 @@ void CommandListDX12::ClearDepth()
 	if (rt == nullptr)
 		return;
 
+	if (!rt->GetHasDepthTexture())
+	{
+		return;
+	}
+
 	auto handle = rt->GetHandleDSV();
 	for (int i = 0; i < rt->GetCount(); i++)
 	{
