@@ -31,7 +31,7 @@ void test_simple_texture_rectangle(LLGI::DeviceType deviceType = LLGI::DeviceTyp
 void test_compile(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 
 // About renderPass
-void test_renderPass(LLGI::DeviceType deviceType = LLGI::DeviceType::Default, bool isMSAATest = true);
+void test_renderPass(LLGI::DeviceType deviceType = LLGI::DeviceType::Default, RenderPassTestMode mode = RenderPassTestMode::None);
 void test_multiRenderPass(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 void test_capture(LLGI::DeviceType deviceType = LLGI::DeviceType::Default);
 
@@ -48,7 +48,7 @@ void call_test(LLGI::DeviceType device)
 	// test_empty(device);
 
 	// About clear
-	test_clear(device);
+	// test_clear(device);
 	// test_clear_update(device);
 
 	// About compile
@@ -58,10 +58,10 @@ void call_test(LLGI::DeviceType device)
 	// test_simple_rectangle(device);
 	// test_index_offset(device);
 	// test_simple_constant_rectangle(LLGI::ConstantBufferType::LongTime, device);
-	// test_simple_texture_rectangle(device);
+	test_simple_texture_rectangle(device);
 
 	// About renderPass
-	// test_renderPass(device, true);
+	// test_renderPass(device, RenderPassTestMode::CopyTexture);
 	// test_multiRenderPass(device);
 
 	// test_capture(device);

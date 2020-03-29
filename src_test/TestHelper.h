@@ -5,6 +5,13 @@
 #include <string>
 #include <vector>
 
+enum class RenderPassTestMode
+{
+	None,
+	MSAA,
+	CopyTexture,
+};
+
 class TestHelper
 {
 public:

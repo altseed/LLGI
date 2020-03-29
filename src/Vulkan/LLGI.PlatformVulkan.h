@@ -108,11 +108,11 @@ private:
 	*/
 	vk::Result Present(vk::Semaphore semaphore);
 
-	void SetImageBarrior(vk::CommandBuffer cmdbuffer,
-						vk::Image image,
-						vk::ImageLayout oldImageLayout,
-						vk::ImageLayout newImageLayout,
-						vk::ImageSubresourceRange subresourceRange);
+	//void SetImageBarrior(vk::CommandBuffer cmdbuffer,
+	//					vk::Image image,
+	//					vk::ImageLayout oldImageLayout,
+	//					vk::ImageLayout newImageLayout,
+	//					vk::ImageSubresourceRange subresourceRange);
 
 	void Reset();
 

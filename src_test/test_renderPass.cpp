@@ -3,7 +3,7 @@
 #include <array>
 #include <map>
 
-void test_renderPass(LLGI::DeviceType deviceType, bool isMSAATest)
+void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 {
 	auto code_gl_vs = R"(
 #version 440 core
@@ -108,9 +108,11 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 	LLGI::RenderTextureInitializationParameter params;
 	params.Size = LLGI::Vec2I(256, 256);
-	params.IsMultiSampling = isMSAATest;
+	params.IsMultiSampling = mode == RenderPassTestMode::MSAA;
 	auto renderTexture = graphics->CreateRenderTexture(params);
 	assert(renderTexture->GetType() == LLGI::TextureType::Render);
+
+	auto renderTextureDst = graphics->CreateRenderTexture(params);
 
 	auto renderPass = graphics->CreateRenderPass((const LLGI::Texture**)&renderTexture, 1, nullptr);
 	assert(renderPass->GetRenderTextureCount() == 1);
@@ -124,9 +126,9 @@ float4 main(PS_INPUT input) : SV_TARGET
 	{
 		for (int x = 0; x < 256; x++)
 		{
-			texture_buf[x + y * 256].R = 255;
-			texture_buf[x + y * 256].G = 255;
-			texture_buf[x + y * 256].B = 255;
+			texture_buf[x + y * 256].R = 128;
+			texture_buf[x + y * 256].G = 128;
+			texture_buf[x + y * 256].B = 128;
 			texture_buf[x + y * 256].A = 255;
 		}
 	}
@@ -269,7 +271,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs);
 			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps);
 			pip->SetRenderPassPipelineState(renderPassPipelineState.get());
-			pip->IsMSAA = isMSAATest;
+			pip->IsMSAA = mode == RenderPassTestMode::MSAA;
 			pip->Compile();
 
 			pips[renderPassPipelineState] = LLGI::CreateSharedPtr(pip);
@@ -280,7 +282,13 @@ float4 main(PS_INPUT input) : SV_TARGET
 		commandList->SetTexture(
 			texture, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
+
 		commandList->EndRenderPass();
+
+		if (mode == RenderPassTestMode::CopyTexture)
+		{
+			commandList->CopyTexture(renderTexture, renderTextureDst);
+		}
 
 		commandList->BeginRenderPass(platform->GetCurrentScreen(color2, true));
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
@@ -308,8 +316,18 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 		// Render to backbuffer
 		commandList->SetPipelineState(pips[renderPassPipelineStateSc].get());
-		commandList->SetTexture(
-			renderTexture, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+
+		if (mode == RenderPassTestMode::CopyTexture)
+		{
+			commandList->SetTexture(
+				renderTextureDst, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+		}
+		else
+		{
+			commandList->SetTexture(
+				renderTexture, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+		}
+
 		commandList->Draw(2);
 		commandList->EndRenderPass();
 
@@ -326,11 +344,11 @@ float4 main(PS_INPUT input) : SV_TARGET
 			auto texture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
 			auto data = graphics->CaptureRenderTarget(texture);
 
-			if (isMSAATest)
+			if (mode == RenderPassTestMode::MSAA)
 			{
-				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("MSAA.png");			
+				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("MSAA.png");
 			}
-			else if (isMSAATest)
+			else
 			{
 				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("RenderPass.png");
 			}
@@ -344,6 +362,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 	LLGI::SafeRelease(sfMemoryPool);
 	LLGI::SafeRelease(renderTexture);
+	LLGI::SafeRelease(renderTextureDst);
 	LLGI::SafeRelease(renderPass);
 	LLGI::SafeRelease(texture);
 	LLGI::SafeRelease(shader_vs);
@@ -945,7 +964,7 @@ void test_capture(LLGI::DeviceType deviceType)
 		color.B = 0;
 		color.A = 255;
 
-		auto renderPass = platform->GetCurrentScreen(color, true, false);	// TODO: isDepthClear is false, because it fails with dx12.
+		auto renderPass = platform->GetCurrentScreen(color, true, false); // TODO: isDepthClear is false, because it fails with dx12.
 		auto renderPassPipelineState = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPass));
 
 		if (pips.count(renderPassPipelineState) == 0)
@@ -1014,9 +1033,11 @@ void test_capture(LLGI::DeviceType deviceType)
 
 #if defined(__linux__) || defined(__APPLE__) || defined(WIN32)
 
-TEST(RenderPass, Basic) { test_renderPass(LLGI::DeviceType::Default, false); }
+TEST(RenderPass, Basic) { test_renderPass(LLGI::DeviceType::Default, RenderPassTestMode::None); }
 
-TEST(RenderPass, MSAA) { test_renderPass(LLGI::DeviceType::Default, true); }
+TEST(RenderPass, MSAA) { test_renderPass(LLGI::DeviceType::Default, RenderPassTestMode::MSAA); }
+
+TEST(RenderPass, CopyTexture) { test_renderPass(LLGI::DeviceType::Default, RenderPassTestMode::CopyTexture); }
 
 TEST(RenderPass, MRT) { test_multiRenderPass(LLGI::DeviceType::Default); }
 

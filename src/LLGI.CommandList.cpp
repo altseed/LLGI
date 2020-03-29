@@ -185,6 +185,7 @@ void CommandList::BeginRenderPass(RenderPass* renderPass)
 	isVertexBufferDirtied = true;
 	isCurrentIndexBufferDirtied = true;
 	isPipelineDirtied = true;
+	isInRenderPass_ = true;
 }
 
 bool CommandList::BeginRenderPassWithPlatformPtr(void* platformPtr)
@@ -192,6 +193,7 @@ bool CommandList::BeginRenderPassWithPlatformPtr(void* platformPtr)
 	isVertexBufferDirtied = true;
 	isCurrentIndexBufferDirtied = true;
 	isPipelineDirtied = true;
+	isInRenderPass_ = true;
 	return true;
 }
 

@@ -200,6 +200,7 @@ vk::Result PlatformVulkan::Present(vk::Semaphore semaphore)
 	return vkQueue.presentKHR(presentInfo);
 }
 
+/*
 void PlatformVulkan::SetImageBarrior(vk::CommandBuffer cmdbuffer,
 									 vk::Image image,
 									 vk::ImageLayout oldImageLayout,
@@ -251,6 +252,7 @@ void PlatformVulkan::SetImageBarrior(vk::CommandBuffer cmdbuffer,
 							  nullptr,
 							  imageMemoryBarrier);
 }
+*/
 
 void PlatformVulkan::Reset()
 {
@@ -736,7 +738,7 @@ void PlatformVulkan::Present()
 		depthSubRange.layerCount = 1;
 
 		// to make screen clear
-		SetImageBarrior(
+		SetImageLayout(
 			cmdBuffer, swapBuffers[frameIndex].image, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal, colorSubRange);
 		// SetImageLayout(cmdBuffer,
 		//			   depthStencilBuffer.image,
@@ -748,7 +750,7 @@ void PlatformVulkan::Present()
 		// cmdBuffer.clearDepthStencilImage(depthStencilBuffer.image, vk::ImageLayout::eDepthStencilAttachmentOptimal, clearDepth,
 		// depthSubRange);
 
-		SetImageBarrior(cmdBuffer,
+		SetImageLayout(cmdBuffer,
 						swapBuffers[frameIndex].image,
 						vk::ImageLayout::eColorAttachmentOptimal,
 						vk::ImageLayout::ePresentSrcKHR,
