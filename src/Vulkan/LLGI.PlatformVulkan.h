@@ -93,7 +93,7 @@ private:
 #endif
 	uint32_t frameIndex = 0;
 
-	bool CreateSwapChain(Vec2I windowSize, bool isVSyncEnabled);
+	bool CreateSwapChain(Vec2I windowSize, bool waitVSync);
 
 	/*!
 		@brief	get swap buffer index
@@ -120,7 +120,7 @@ public:
 	PlatformVulkan();
 	virtual ~PlatformVulkan();
 
-	bool Initialize(Window* window);
+	bool Initialize(Window* window, bool waitVSync);
 
 	bool NewFrame() override;
 	void Present() override;

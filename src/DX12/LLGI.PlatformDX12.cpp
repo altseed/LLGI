@@ -80,11 +80,12 @@ PlatformDX12::~PlatformDX12()
 	}
 }
 
-bool PlatformDX12::Initialize(Window* window)
+bool PlatformDX12::Initialize(Window* window, bool waitVSync)
 {
 	// Windows
 	window_ = window;
 	windowSize_ = window->GetWindowSize();
+	waitVSync_ = waitVSync;
 
 	// DirectX12
 	HRESULT hr;
