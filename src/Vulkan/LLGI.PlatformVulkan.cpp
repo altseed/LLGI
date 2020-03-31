@@ -51,7 +51,7 @@ VkBool32 PlatformVulkan::DebugMessageCallback(VkDebugReportFlagsEXT flags,
 }
 #endif
 
-bool PlatformVulkan::CreateSwapChain(Vec2I windowSize, bool isVSyncEnabled)
+bool PlatformVulkan::CreateSwapChain(Vec2I windowSize, bool waitVSync)
 {
 	auto oldSwapChain = swapchain_;
 
@@ -66,7 +66,7 @@ bool PlatformVulkan::CreateSwapChain(Vec2I windowSize, bool isVSyncEnabled)
 
 	// select sync or vsync
 	vk::PresentModeKHR swapchainPresentMode = vk::PresentModeKHR::eFifo;
-	if (!isVSyncEnabled)
+	if (!waitVSync)
 	{
 		for (auto mode : vkPhysicalDevice.getSurfacePresentModesKHR(surface_))
 
@@ -375,9 +375,10 @@ PlatformVulkan::~PlatformVulkan()
 	}
 }
 
-bool PlatformVulkan::Initialize(Window* window)
+bool PlatformVulkan::Initialize(Window* window, bool waitVSync)
 {
 	window_ = window;
+	waitVSync_ = waitVSync;
 
 	// initialize Vulkan context
 
@@ -433,7 +434,7 @@ bool PlatformVulkan::Initialize(Window* window)
 		vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 		const std::vector<const char*> validationLayers = {"VK_LAYER_LUNARG_standard_validation"};
 
-		if(layerCount > 0)
+		if (layerCount > 0)
 		{
 			instanceCreateInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
 			instanceCreateInfo.ppEnabledLayerNames = validationLayers.data();
@@ -515,7 +516,7 @@ bool PlatformVulkan::Initialize(Window* window)
 		deviceCreateInfo.ppEnabledExtensionNames = enabledExtensions.data();
 
 #if !defined(NDEBUG)
-		if(layerCount > 0)
+		if (layerCount > 0)
 		{
 			deviceCreateInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
 			deviceCreateInfo.ppEnabledLayerNames = validationLayers.data();
@@ -569,10 +570,9 @@ bool PlatformVulkan::Initialize(Window* window)
 		// create swapchain
 		if (!vkPhysicalDevice.getSurfaceSupportKHR(graphicsQueueInd, surface_))
 		{
-			
 		}
 
-		if (!CreateSwapChain(window->GetWindowSize(), true))
+		if (!CreateSwapChain(window->GetWindowSize(), waitVSync))
 		{
 			Log(LogType::Error, "Swapchain is not supported.");
 			exitWithError();
@@ -751,10 +751,10 @@ void PlatformVulkan::Present()
 		// depthSubRange);
 
 		SetImageLayout(cmdBuffer,
-						swapBuffers[frameIndex].image,
-						vk::ImageLayout::eColorAttachmentOptimal,
-						vk::ImageLayout::ePresentSrcKHR,
-						colorSubRange);
+					   swapBuffers[frameIndex].image,
+					   vk::ImageLayout::eColorAttachmentOptimal,
+					   vk::ImageLayout::ePresentSrcKHR,
+					   colorSubRange);
 	}
 
 	cmdBuffer.end();
