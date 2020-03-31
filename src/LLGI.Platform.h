@@ -17,6 +17,9 @@ Platform* CreatePlatform(DeviceType platformDeviceType, Window* window);
 class Platform : public ReferenceObject
 {
 private:
+protected:
+	bool waitVSync_ = false;
+
 public:
 	Platform() = default;
 	virtual ~Platform() = default;
@@ -27,6 +30,9 @@ public:
 	virtual DeviceType GetDeviceType() const { return DeviceType::Default; }
 
 	virtual void SetWindowSize(const Vec2I& windowSize);
+
+	bool GetWaitVSync() const { return waitVSync_; }
+	bool SetWaitVSync(bool waitVSync) { waitVSync_ = waitVSync; }
 
 	/**
 		@brief get render pass of screen to show on a display.

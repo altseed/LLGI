@@ -237,7 +237,7 @@ bool PlatformDX12::Initialize(Window* window)
 			goto FAILED_EXIT;
 		}
 	}
-	
+
 	// Create Command List
 	hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocators[0], NULL, IID_PPV_ARGS(&commandListStart));
 	if (FAILED(hr))
@@ -290,8 +290,6 @@ bool PlatformDX12::Initialize(Window* window)
 		renderPasses_[i] = new RenderPassDX12(device);
 		renderPasses_[i]->Initialize(&renderTargets_[i], 1, nullptr);
 	}
-
-	
 
 	return true;
 
@@ -360,7 +358,7 @@ void PlatformDX12::Present()
 	ID3D12CommandList* commandList[] = {commandListPresent};
 	commandQueue->ExecuteCommandLists(1, commandList);
 
-	swapChain->Present(1, 0);
+	swapChain->Present(waitVSync_ ? 1 : 0, 0);
 	Wait();
 }
 
