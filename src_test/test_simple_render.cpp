@@ -12,8 +12,11 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 {
 	int count = 0;
 
+	LLGI::PlatformParameter pp;
+	pp.Device = deviceType;
+	pp.WaitVSync = true;
 	auto window = std::unique_ptr<LLGI::Window>(LLGI::CreateWindow("SimpleRectangle", LLGI::Vec2I(1280, 720)));
-	auto platform = LLGI::CreatePlatform(deviceType, window.get());
+	auto platform = LLGI::CreatePlatform(pp, window.get());
 
 	LLGI::SafeAddRef(platform);
 
@@ -54,7 +57,7 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 		color.B = 0;
 		color.A = 255;
 
-		auto renderPass = platform->GetCurrentScreen(color, true, false);	// TODO: isDepthClear is false, because it fails with dx12.
+		auto renderPass = platform->GetCurrentScreen(color, true, false); // TODO: isDepthClear is false, because it fails with dx12.
 		auto renderPassPipelineState = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPass));
 
 		if (pips.count(renderPassPipelineState) == 0)
@@ -114,8 +117,11 @@ void test_index_offset(LLGI::DeviceType deviceType)
 {
 	int count = 0;
 
+	LLGI::PlatformParameter pp;
+	pp.Device = deviceType;
+	pp.WaitVSync = true;
 	auto window = std::unique_ptr<LLGI::Window>(LLGI::CreateWindow("IndexOffset", LLGI::Vec2I(1280, 720)));
-	auto platform = LLGI::CreatePlatform(deviceType, window.get());
+	auto platform = LLGI::CreatePlatform(pp, window.get());
 	LLGI::SafeAddRef(platform);
 
 	auto graphics = platform->CreateGraphics();
@@ -157,7 +163,7 @@ void test_index_offset(LLGI::DeviceType deviceType)
 		color.B = 0;
 		color.A = 255;
 
-		auto renderPass = platform->GetCurrentScreen(color, true, false);	// TODO: isDepthClear is false, because it fails with dx12.
+		auto renderPass = platform->GetCurrentScreen(color, true, false); // TODO: isDepthClear is false, because it fails with dx12.
 		auto renderPassPipelineState = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPass));
 
 		if (pips.count(renderPassPipelineState) == 0)
@@ -327,8 +333,11 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 	int count = 0;
 
+	LLGI::PlatformParameter pp;
+	pp.Device = deviceType;
+	pp.WaitVSync = true;
 	auto window = std::unique_ptr<LLGI::Window>(LLGI::CreateWindow("ConstantRectangle", LLGI::Vec2I(1280, 720)));
-	auto platform = LLGI::CreatePlatform(deviceType, window.get());
+	auto platform = LLGI::CreatePlatform(pp, window.get());
 
 	auto graphics = platform->CreateGraphics();
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
@@ -480,7 +489,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 		color.B = 0;
 		color.A = 255;
 
-		auto renderPass = platform->GetCurrentScreen(color, true, false);	// TODO: isDepthClear is false, because it fails with dx12.
+		auto renderPass = platform->GetCurrentScreen(color, true, false); // TODO: isDepthClear is false, because it fails with dx12.
 		auto renderPassPipelineState = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPass));
 
 		if (pips.count(renderPassPipelineState) == 0)
@@ -655,8 +664,11 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 	int count = 0;
 
+	LLGI::PlatformParameter pp;
+	pp.Device = deviceType;
+	pp.WaitVSync = true;
 	auto window = std::unique_ptr<LLGI::Window>(LLGI::CreateWindow("TextureRectangle", LLGI::Vec2I(1280, 720)));
-	auto platform = LLGI::CreatePlatform(deviceType, window.get());
+	auto platform = LLGI::CreatePlatform(pp, window.get());
 
 	auto graphics = platform->CreateGraphics();
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
@@ -778,7 +790,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 		color.B = 0;
 		color.A = 255;
 
-		auto renderPass = platform->GetCurrentScreen(color, true, false);	// TODO: isDepthClear is false, because it fails with dx12.
+		auto renderPass = platform->GetCurrentScreen(color, true, false); // TODO: isDepthClear is false, because it fails with dx12.
 		auto renderPassPipelineState = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPass));
 
 		if (pips.count(renderPassPipelineState) == 0)

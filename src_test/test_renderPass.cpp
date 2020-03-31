@@ -96,8 +96,11 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 	int count = 0;
 
+	LLGI::PlatformParameter pp;
+	pp.Device = deviceType;
+	pp.WaitVSync = true;
 	auto window = std::unique_ptr<LLGI::Window>(LLGI::CreateWindow("RenderPass", LLGI::Vec2I(1280, 720)));
-	auto platform = LLGI::CreatePlatform(deviceType, window.get());
+	auto platform = LLGI::CreatePlatform(pp, window.get());
 
 	auto graphics = platform->CreateGraphics();
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
@@ -487,8 +490,11 @@ PS_OUTPUT main(PS_INPUT input)
 
 	int count = 0;
 
+	LLGI::PlatformParameter pp;
+	pp.Device = deviceType;
+	pp.WaitVSync = true;
 	auto window = std::unique_ptr<LLGI::Window>(LLGI::CreateWindow("MRT", LLGI::Vec2I(1280, 720)));
-	auto platform = LLGI::CreatePlatform(deviceType, window.get());
+	auto platform = LLGI::CreatePlatform(pp, window.get());
 
 	auto graphics = platform->CreateGraphics();
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
@@ -853,8 +859,11 @@ void test_capture(LLGI::DeviceType deviceType)
 
 	int count = 0;
 
+	LLGI::PlatformParameter pp;
+	pp.Device = deviceType;
+	pp.WaitVSync = true;
 	auto window = std::unique_ptr<LLGI::Window>(LLGI::CreateWindow("Capture", LLGI::Vec2I(1280, 720)));
-	auto platform = LLGI::CreatePlatform(deviceType, window.get());
+	auto platform = LLGI::CreatePlatform(pp, window.get());
 
 	auto graphics = platform->CreateGraphics();
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);

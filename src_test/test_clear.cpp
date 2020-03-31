@@ -6,8 +6,11 @@ void test_clear_update(LLGI::DeviceType deviceType)
 {
 	int count = 0;
 
+	LLGI::PlatformParameter pp;
+	pp.Device = deviceType;
+	pp.WaitVSync = true;
 	auto window = std::unique_ptr<LLGI::Window>(LLGI::CreateWindow("ClearUpdate", LLGI::Vec2I(1280, 720)));
-	auto platform = LLGI::CreatePlatform(deviceType, window.get());
+	auto platform = LLGI::CreatePlatform(pp, window.get());
 
 	auto graphics = platform->CreateGraphics();
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
@@ -33,7 +36,8 @@ void test_clear_update(LLGI::DeviceType deviceType)
 		commandList->WaitUntilCompleted();
 
 		commandList->Begin();
-		commandList->BeginRenderPass(platform->GetCurrentScreen(color, true, false));	// TODO: isDepthClear is false, because it fails with dx12.
+		commandList->BeginRenderPass(
+			platform->GetCurrentScreen(color, true, false)); // TODO: isDepthClear is false, because it fails with dx12.
 		commandList->EndRenderPass();
 		commandList->End();
 
@@ -67,8 +71,11 @@ void test_clear(LLGI::DeviceType deviceType)
 {
 	int count = 0;
 
+	LLGI::PlatformParameter pp;
+	pp.Device = deviceType;
+	pp.WaitVSync = true;
 	auto window = std::unique_ptr<LLGI::Window>(LLGI::CreateWindow("Clear", LLGI::Vec2I(1280, 720)));
-	auto platform = LLGI::CreatePlatform(deviceType, window.get());
+	auto platform = LLGI::CreatePlatform(pp, window.get());
 
 	auto graphics = platform->CreateGraphics();
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
@@ -96,7 +103,8 @@ void test_clear(LLGI::DeviceType deviceType)
 		commandList->WaitUntilCompleted();
 
 		commandList->Begin();
-		commandList->BeginRenderPass(platform->GetCurrentScreen(color, true, false));	// TODO: isDepthClear is false, because it fails with dx12.
+		commandList->BeginRenderPass(
+			platform->GetCurrentScreen(color, true, false)); // TODO: isDepthClear is false, because it fails with dx12.
 		commandList->EndRenderPass();
 		commandList->End();
 

@@ -572,7 +572,7 @@ bool PlatformVulkan::Initialize(Window* window, bool waitVSync)
 		{
 		}
 
-		if (!CreateSwapChain(window->GetWindowSize(), _waitVSync))
+		if (!CreateSwapChain(window->GetWindowSize(), waitVSync))
 		{
 			Log(LogType::Error, "Swapchain is not supported.");
 			exitWithError();

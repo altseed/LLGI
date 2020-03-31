@@ -11,8 +11,11 @@ void test_depth_stencil(LLGI::DeviceType deviceType, bool is_test_depth, bool is
 
 	int count = 0;
 
+	LLGI::PlatformParameter pp;
+	pp.Device = deviceType;
+	pp.WaitVSync = true;
 	auto window = std::unique_ptr<LLGI::Window>(LLGI::CreateWindow("DepthStencil", LLGI::Vec2I(1280, 720)));
-	auto platform = LLGI::CreatePlatform(deviceType, window.get());
+	auto platform = LLGI::CreatePlatform(pp, window.get());
 
 	auto graphics = LLGI::CreateSharedPtr(platform->CreateGraphics());
 	auto sfMemoryPool = LLGI::CreateSharedPtr(graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128));
@@ -37,20 +40,18 @@ void test_depth_stencil(LLGI::DeviceType deviceType, bool is_test_depth, bool is
 
 	struct PipelineStateSet
 	{
-		std::shared_ptr<LLGI::PipelineState> writeState;	// write depth or stencil
-		std::shared_ptr<LLGI::PipelineState> testState;	    // depth-test or stencil-test
+		std::shared_ptr<LLGI::PipelineState> writeState; // write depth or stencil
+		std::shared_ptr<LLGI::PipelineState> testState;	 // depth-test or stencil-test
 	};
 	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, PipelineStateSet> pips;
-	
-	
-	//auto screenRenderPass = graphics->GetCurrentScreen(color, true, true);
-	//auto depthBuffer = graphics->CreateTexture(LLGI::Vec2I(256, 256), false, true);
-	
+
+	// auto screenRenderPass = graphics->GetCurrentScreen(color, true, true);
+	// auto depthBuffer = graphics->CreateTexture(LLGI::Vec2I(256, 256), false, true);
+
 	// <SwapChainRenderPass, BackbufferDepthBuffer>
 	std::array<LLGI::Texture*, 3> depthBuffers = {};
 	std::array<LLGI::RenderPass*, 3> renderPasses = {};
 
-	
 	while (count < 1000)
 	{
 		if (!platform->NewFrame())
@@ -89,8 +90,7 @@ void test_depth_stencil(LLGI::DeviceType deviceType, bool is_test_depth, bool is
 		renderPass->SetIsColorCleared(true);
 		renderPass->SetClearColor(color);
 		renderPass->SetIsDepthCleared(true);
-		
-		
+
 		auto renderPassPipelineState = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPass));
 
 		if (pips.count(renderPassPipelineState) == 0)
@@ -105,9 +105,9 @@ void test_depth_stencil(LLGI::DeviceType deviceType, bool is_test_depth, bool is
 			writepip->VertexLayoutCount = 3;
 
 			writepip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan
-			
+
 			writepip->IsBlendEnabled = false;
-			
+
 			if (is_test_depth)
 			{
 				writepip->IsDepthWriteEnabled = true;
@@ -117,9 +117,7 @@ void test_depth_stencil(LLGI::DeviceType deviceType, bool is_test_depth, bool is
 			writepip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps.get());
 			writepip->SetRenderPassPipelineState(renderPassPipelineState.get());
 			writepip->Compile();
-			
-			
-			
+
 			auto testpip = graphics->CreatePiplineState();
 			testpip->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
 			testpip->VertexLayouts[1] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
@@ -130,7 +128,7 @@ void test_depth_stencil(LLGI::DeviceType deviceType, bool is_test_depth, bool is
 			testpip->VertexLayoutCount = 3;
 
 			testpip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan
-			
+
 			testpip->IsBlendEnabled = false;
 
 			if (is_test_depth)
@@ -176,8 +174,10 @@ void test_depth_stencil(LLGI::DeviceType deviceType, bool is_test_depth, bool is
 		count++;
 	}
 
-	for (auto& ptr : depthBuffers) LLGI::SafeRelease(ptr);
-	for (auto& ptr : renderPasses) LLGI::SafeRelease(ptr);
+	for (auto& ptr : depthBuffers)
+		LLGI::SafeRelease(ptr);
+	for (auto& ptr : renderPasses)
+		LLGI::SafeRelease(ptr);
 	pips.clear();
 
 	graphics->WaitFinish();
@@ -189,8 +189,8 @@ void test_stencil(LLGI::DeviceType deviceType) { test_depth_stencil(deviceType, 
 
 #if defined(__linux__) || defined(__APPLE__) || defined(WIN32)
 
-//TEST(DepthStencil, Depth) { test_depth(LLGI::DeviceType::Default); }
+// TEST(DepthStencil, Depth) { test_depth(LLGI::DeviceType::Default); }
 //
-//TEST(DepthStencil, Stencil) { test_stencil(LLGI::DeviceType::Default); }
+// TEST(DepthStencil, Stencil) { test_stencil(LLGI::DeviceType::Default); }
 
 #endif

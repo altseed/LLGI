@@ -63,9 +63,9 @@ Platform* CreatePlatform(const PlatformParameter& parameter, Window* window)
 
 #ifdef ENABLE_VULKAN
 #if defined(__linux__)
-	if (parameter.PlatformDeviceType == DeviceType::Vulkan || parameter.PlatformDeviceType == DeviceType::Default)
+	if (parameter.Device == DeviceType::Vulkan || parameter.Device == DeviceType::Default)
 #else
-	if (parameter.PlatformDeviceType == DeviceType::Vulkan)
+	if (parameter.Device == DeviceType::Vulkan)
 #endif
 	{
 		auto platform = new PlatformVulkan();
@@ -80,7 +80,7 @@ Platform* CreatePlatform(const PlatformParameter& parameter, Window* window)
 
 #ifdef _WIN32
 
-	if (parameter.PlatformDeviceType == DeviceType::Default || parameter.PlatformDeviceType == DeviceType::DirectX12)
+	if (parameter.Device == DeviceType::Default || parameter.Device == DeviceType::DirectX12)
 	{
 		auto platform = new PlatformDX12();
 		if (!platform->Initialize(window, parameter.WaitVSync))

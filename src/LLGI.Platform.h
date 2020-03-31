@@ -12,7 +12,7 @@ namespace LLGI
 
 struct PlatformParameter
 {
-	DeviceType PlatformDeviceType;
+	DeviceType Device;
 	bool WaitVSync;
 };
 
