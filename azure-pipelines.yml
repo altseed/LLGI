@@ -100,7 +100,7 @@ jobs:
             
       - task: CMake@1
         inputs:
-          cmakeArgs: '.. -DBUILD_TEST=ON'
+          cmakeArgs: '.. -DBUILD_TEST=ON -DBUILD_VULKAN_COMPILER=ON'
 
       - task: CMake@1
         inputs:
