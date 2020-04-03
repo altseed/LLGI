@@ -216,6 +216,14 @@ bool TextureVulkan::InitializeFromExternal(TextureType type, VkImage image, VkIm
 	vkTextureFormat_ = vk::Format(format);
 	textureSize = size;
 	isExternalResource_ = true;
+
+	if (type_ == TextureType::Depth)
+	{
+		subresourceRange_.aspectMask = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
+		subresourceRange_.levelCount = 1;
+		subresourceRange_.layerCount = 1;
+	}
+
 	return true;
 }
 
