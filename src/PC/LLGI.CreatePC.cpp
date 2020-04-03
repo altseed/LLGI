@@ -18,6 +18,10 @@
 #include "../Metal/LLGI.PlatformMetal.h"
 #endif
 
+#if defined(ENABLE_VULKAN)
+#include "../Vulkan/LLGI.CompilerVulkan.h"
+#endif
+
 #ifdef __linux__
 #include "../Linux/LLGI.WindowLinux.h"
 #endif
@@ -114,7 +118,12 @@ Compiler* CreateCompiler(DeviceType device)
 #ifdef ENABLE_VULKAN
 	if (device == DeviceType::Vulkan)
 	{
+#if defined(ENABLE_VULKAN_COMPILER)
+		auto obj = new CompilerVulkan();
+		return obj;
+#else
 		return nullptr;
+#endif
 	}
 #endif
 

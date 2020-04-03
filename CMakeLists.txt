@@ -12,6 +12,7 @@ if(UNIX AND NOT APPLE)
 endif()
 
 option(BUILD_VULKAN "build vulkan" OFF)
+option(BUILD_VULKAN_COMPILER "build vulkan compiler" OFF)
 option(BUILD_TEST "build test" OFF)
 option(BUILD_EXAMPLE "build examples" OFF)
 
@@ -43,7 +44,10 @@ endif()
 
 if(BUILD_VULKAN)
   add_definitions(-DENABLE_VULKAN)
-  add_subdirectory("thirdparty/glslang")
+  if(BUILD_VULKAN_COMPILER)
+    add_definitions(-DENABLE_VULKAN_COMPILER)
+    add_subdirectory("thirdparty/glslang")
+  endif()
 endif()
 
 if(APPLE)
