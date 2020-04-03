@@ -75,6 +75,17 @@ VkFormat VulkanHelper::TextureFormatToVkFormat(TextureFormatType format)
 	return s_formatConversionTable[(int)format].vulkanFormat;
 }
 
+TextureFormatType VulkanHelper::VkFormatToTextureFormat(VkFormat format)
+{
+	for (size_t i = 0; i < sizeof(s_formatConversionTable); i++)
+	{
+		if (s_formatConversionTable[i].vulkanFormat == format)
+			return s_formatConversionTable[i].format;
+	}
+
+	return TextureFormatType::Uknown;
+}
+
 Buffer::Buffer(GraphicsVulkan* graphics)
 {
 	SafeAddRef(graphics);
@@ -221,11 +232,8 @@ void SetImageLayout(vk::CommandBuffer cmdbuffer,
 		imageMemoryBarrier.dstAccessMask == vk::AccessFlagBits::eTransferRead ||
 		imageMemoryBarrier.dstAccessMask == vk::AccessFlagBits::eShaderRead)
 	{
-		cmdbuffer.pipelineBarrier(GetStageFlag(oldImageLayout), GetStageFlag(newImageLayout),
-								  vk::DependencyFlags(),
-								  nullptr,
-								  nullptr,
-								  imageMemoryBarrier);
+		cmdbuffer.pipelineBarrier(
+			GetStageFlag(oldImageLayout), GetStageFlag(newImageLayout), vk::DependencyFlags(), nullptr, nullptr, imageMemoryBarrier);
 	}
 	else if (imageMemoryBarrier.dstAccessMask == vk::AccessFlagBits::eDepthStencilAttachmentWrite)
 	{
