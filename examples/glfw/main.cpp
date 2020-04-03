@@ -79,7 +79,10 @@ int main()
 
 	auto llgiwindow = new LLGIWindow(window);
 
-	auto platform = LLGI::CreatePlatform(LLGI::DeviceType::Default, llgiwindow);
+	LLGI::PlatformParameter platformParam;
+	platformParam.Device = LLGI::DeviceType::Default;
+
+	auto platform = LLGI::CreatePlatform(platformParam, llgiwindow);
 	auto graphics = platform->CreateGraphics();
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
 	auto commandList = graphics->CreateCommandList(sfMemoryPool);
