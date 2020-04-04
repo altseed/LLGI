@@ -72,6 +72,9 @@ VkFormat VulkanHelper::TextureFormatToVkFormat(TextureFormatType format)
 {
 	if (format == TextureFormatType::Uknown)
 		return VK_FORMAT_UNDEFINED;
+	if (format == TextureFormatType::B8G8R8A8_UNORM)
+		return VK_FORMAT_B8G8R8A8_UNORM;
+
 	assert(s_formatConversionTable[(int)format].format == format);
 	return s_formatConversionTable[(int)format].vulkanFormat;
 }
