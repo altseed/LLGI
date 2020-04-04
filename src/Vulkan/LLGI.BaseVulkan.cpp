@@ -65,6 +65,7 @@ static FormatConversionItem s_formatConversionTable[] = {
 	{TextureFormatType::BC2_SRGB, VK_FORMAT_BC2_SRGB_BLOCK},
 	{TextureFormatType::BC3_SRGB, VK_FORMAT_BC3_SRGB_BLOCK},
 	{TextureFormatType::R16G16B16A16_FLOAT, VK_FORMAT_R16G16B16A16_SFLOAT},
+	{TextureFormatType::B8G8R8A8_UNORM, VK_FORMAT_B8G8R8A8_UNORM},
 };
 
 VkFormat VulkanHelper::TextureFormatToVkFormat(TextureFormatType format)
