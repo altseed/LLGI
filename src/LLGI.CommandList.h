@@ -62,6 +62,7 @@ private:
 	bool isVertexBufferDirtied = true;
 	bool isCurrentIndexBufferDirtied = true;
 	bool isPipelineDirtied = true;
+	bool doesBeginWithPlatform_ = false;
 
 	std::array<ConstantBuffer*, static_cast<int>(ShaderStageType::Max)> constantBuffers;
 
