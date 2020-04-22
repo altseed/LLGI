@@ -124,6 +124,8 @@ struct Vec2I
 	Vec2I() : X(0), Y(0) {}
 
 	Vec2I(int32_t x, int32_t y) : X(x), Y(y) {}
+
+	bool operator==(const Vec2I& o) const { return X == o.X && Y == o.Y; }
 };
 
 struct Vec2F
@@ -373,15 +375,11 @@ public:
 		@brief	return current window size
 	*/
 	virtual Vec2I GetWindowSize() const = 0;
-    
-    /**
-        @brief  return current frame buffer  size
-    */
-    virtual Vec2I GetFrameBufferSize() const
-    {
-        return GetWindowSize();
-    }
-    
+
+	/**
+		@brief  return current frame buffer  size
+	*/
+	virtual Vec2I GetFrameBufferSize() const { return GetWindowSize(); }
 };
 
 } // namespace LLGI

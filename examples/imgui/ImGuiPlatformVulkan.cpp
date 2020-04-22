@@ -27,9 +27,9 @@ ImguiPlatformVulkan::ImguiPlatformVulkan(LLGI::Graphics* g, LLGI::Platform* p)
 
 	LLGI::RenderPassPipelineStateKey psk;
 	psk.IsPresent = true;
-	psk.HasDepth = false;
+	psk.HasDepth = true;
 	psk.RenderTargetFormats.resize(1);
-	psk.RenderTargetFormats.at(0) = LLGI::TextureFormatType::R8G8B8A8_UNORM;
+	psk.RenderTargetFormats.at(0) = LLGI::TextureFormatType::B8G8R8A8_UNORM;
 
 	ps_ = static_cast<LLGI::RenderPassPipelineStateVulkan*>(g_->CreateRenderPassPipelineState(psk));
 

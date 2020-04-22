@@ -160,6 +160,34 @@ bool PlatformVulkan::CreateSwapChain(Vec2I windowSize, bool waitVSync)
 	return true;
 }
 
+bool PlatformVulkan::CreateDepthBuffer(Vec2I windowSize)
+{
+	SafeRelease(depthStencilTexture_);
+
+	depthStencilTexture_ = new TextureVulkan();
+	if (!depthStencilTexture_->InitializeAsDepthStencil(vkDevice_, vkPhysicalDevice, windowSize, nullptr))
+	{
+		return false;
+	}
+	return true;
+}
+
+void PlatformVulkan::CreateRenderPass()
+{
+	renderPasses.clear();
+	for (size_t i = 0; i < swapBuffers.size(); i++)
+	{
+		auto renderPass = new RenderPassVulkan(renderPassPipelineStateCache_, vkDevice_, nullptr);
+
+		std::array<TextureVulkan*, 1> textures;
+		textures[0] = swapBuffers[i].texture;
+
+		renderPass->Initialize(const_cast<const TextureVulkan**>(textures.data()), 1, depthStencilTexture_);
+
+		renderPasses.emplace_back(CreateSharedPtr(renderPass));
+	}
+}
+
 uint32_t PlatformVulkan::AcquireNextImage(vk::Semaphore& semaphore)
 {
 	auto resultValue = vkDevice_.acquireNextImageKHR(swapchain_, UINT64_MAX, semaphore, vk::Fence());
@@ -593,8 +621,7 @@ bool PlatformVulkan::Initialize(Window* window, bool waitVSync)
 		vkCmdBuffers = vkDevice_.allocateCommandBuffers(allocInfo);
 
 		// create depth buffer
-		depthStencilTexture_ = new TextureVulkan();
-		if (!depthStencilTexture_->InitializeAsDepthStencil(vkDevice_, vkPhysicalDevice, window->GetWindowSize(), nullptr))
+		if (!CreateDepthBuffer(window->GetWindowSize()))
 		{
 			exitWithError();
 			return false;
@@ -673,20 +700,10 @@ bool PlatformVulkan::Initialize(Window* window, bool waitVSync)
 		*/
 
 		windowSize_ = window->GetWindowSize();
-		renderPassPipelineStateCache_ = new RenderPassPipelineStateCacheVulkan(vkDevice_, renderPassPipelineStateCache_);
+		renderPassPipelineStateCache_ = new RenderPassPipelineStateCacheVulkan(vkDevice_, nullptr);
 
 		// create renderpasses
-		for (size_t i = 0; i < swapBuffers.size(); i++)
-		{
-			auto renderPass = new RenderPassVulkan(renderPassPipelineStateCache_, vkDevice_, nullptr);
-
-			std::array<TextureVulkan*, 1> textures;
-			textures[0] = swapBuffers[i].texture;
-
-			renderPass->Initialize(const_cast<const TextureVulkan**>(textures.data()), 1, depthStencilTexture_);
-
-			renderPasses.emplace_back(CreateSharedPtr(renderPass));
-		}
+		CreateRenderPass();
 
 		return true;
 	}
@@ -783,6 +800,22 @@ void PlatformVulkan::Present()
 	}
 
 	Present(vkRenderComplete_);
+}
+
+void PlatformVulkan::SetWindowSize(const Vec2I& windowSize)
+{
+	if (windowSize_ == windowSize)
+	{
+		return;
+	}
+
+	vkDevice_.waitIdle();
+	CreateSwapChain(windowSize, waitVSync_);
+
+	CreateDepthBuffer(windowSize);
+
+	CreateRenderPass();
+	windowSize_ = windowSize;
 }
 
 Graphics* PlatformVulkan::CreateGraphics()

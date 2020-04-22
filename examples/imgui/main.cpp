@@ -147,6 +147,8 @@ int main()
 		if (!platform->NewFrame())
 			break;
 
+		platform->SetWindowSize(llgiwindow->GetWindowSize());
+
 		sfMemoryPool->NewFrame();
 
         auto renderPass = platform->GetCurrentScreen(color, true);

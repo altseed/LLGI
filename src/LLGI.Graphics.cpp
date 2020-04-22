@@ -129,7 +129,10 @@ bool RenderPass::assignDepthTexture(Texture* depthTexture)
 bool RenderPass::getSize(Vec2I& size, const Texture** textures, int32_t textureCount, Texture* depthTexture) const
 {
 	if (textureCount == 0)
+	{
+		Log(LogType::Error, "RenderPass : Invalid Count.");
 		return false;
+	}
 
 	size = textures[0]->GetSizeAs2D();
 
@@ -137,25 +140,29 @@ bool RenderPass::getSize(Vec2I& size, const Texture** textures, int32_t textureC
 	{
 		auto temp = textures[i]->GetSizeAs2D();
 		if (size.X != temp.X)
-			return false;
+			goto FAIL;
 		if (size.Y != temp.Y)
-			return false;
+			goto FAIL;
 	}
 
 	if (depthTexture != nullptr)
 	{
 		if (size.X != depthTexture->GetSizeAs2D().X)
-			return false;
+			goto FAIL;
 		if (size.Y != depthTexture->GetSizeAs2D().Y)
-			return false;
+			goto FAIL;
 	}
 
 	return true;
+
+FAIL:;
+	Log(LogType::Error, "RenderPass : Invalid Size.");
+	return false;
 }
 
-RenderPass::~RenderPass() 
+RenderPass::~RenderPass()
 {
-	SafeRelease(depthTexture_); 
+	SafeRelease(depthTexture_);
 
 	for (size_t i = 0; i < renderTextures_.size(); i++)
 	{
@@ -169,10 +176,7 @@ void RenderPass::SetIsDepthCleared(bool isDepthCleared) { isDepthCleared_ = isDe
 
 void RenderPass::SetClearColor(const Color8& color) { color_ = color; }
 
-bool RenderPass::GetIsSwapchainScreen() const
-{ 
-	return GetRenderTexture(0)->GetType() == TextureType::Screen;
-}
+bool RenderPass::GetIsSwapchainScreen() const { return GetRenderTexture(0)->GetType() == TextureType::Screen; }
 
 Graphics::~Graphics()
 {
