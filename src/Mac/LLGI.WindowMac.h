@@ -32,6 +32,8 @@ public:
     void* GetNativePtr(int32_t index) override;
     
     Vec2I GetWindowSize() const override;
+    
+    Vec2I GetFrameBufferSize() const override;
 };
 
 } // namespace LLGI

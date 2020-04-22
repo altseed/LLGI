@@ -176,6 +176,16 @@ Vec2I WindowMac::GetWindowSize() const
 {
     return windowSize_;
 }
+
+Vec2I WindowMac::GetFrameBufferSize() const
+{
+    @autoreleasepool
+    {
+        NSRect contentRect = [impl->window.contentView frame];
+        NSRect rect = [impl->window.contentView convertRectToBacking:contentRect];
+        return Vec2I(rect.size.width, rect.size.height);
+    }
+}
     
 } // namespace LLGI
 

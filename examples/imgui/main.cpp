@@ -82,6 +82,13 @@ public:
 		glfwGetWindowSize(window_, &w, &h);
 		return LLGI::Vec2I(w, h);
 	}
+    
+    LLGI::Vec2I GetFrameBufferSize() const override
+    {
+        int w, h;
+        glfwGetFramebufferSize(window_, &w, &h);
+        return LLGI::Vec2I(w, h);
+    }
 };
 
 static void glfw_error_callback(int error, const char* description) { fprintf(stderr, "Glfw Error %d: %s\n", error, description); }
@@ -164,11 +171,6 @@ int main()
 		// imgui
 	
 		ImGui::Render();
-
-#if defined(__APPLE__)
-        // HACK for retina
-        ImGui::GetDrawData()->FramebufferScale = ImVec2(1,1);
-#endif
         
 		imguiPlatform->RenderDrawData(ImGui::GetDrawData(), commandList);
 

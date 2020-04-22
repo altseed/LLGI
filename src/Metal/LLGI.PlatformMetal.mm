@@ -30,7 +30,7 @@ struct PlatformMetal_Impl
 	{
         window_ = window;
         NSWindow* nswindow = (NSWindow*)window_->GetNativePtr(0);
-        auto windowSize = window_->GetWindowSize();
+        auto frameBufferSize = window_->GetFrameBufferSize();
         
 		device = MTLCreateSystemDefaultDevice();
 		layer = [CAMetalLayer layer];
@@ -39,7 +39,7 @@ struct PlatformMetal_Impl
 		layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
 		nswindow.contentView.layer = layer;
 		nswindow.contentView.wantsLayer = YES;
-		layer.drawableSize = CGSizeMake(windowSize.X, windowSize.Y);
+		layer.drawableSize = CGSizeMake(frameBufferSize.X, frameBufferSize.Y);
 		layer.framebufferOnly = false;	// Enable capture (getBytes)
 
 		commandQueue = [device newCommandQueue];

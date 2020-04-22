@@ -373,6 +373,15 @@ public:
 		@brief	return current window size
 	*/
 	virtual Vec2I GetWindowSize() const = 0;
+    
+    /**
+        @brief  return current frame buffer  size
+    */
+    virtual Vec2I GetFrameBufferSize() const
+    {
+        return GetWindowSize();
+    }
+    
 };
 
 } // namespace LLGI
