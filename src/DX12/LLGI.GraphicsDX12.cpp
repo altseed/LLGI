@@ -108,7 +108,7 @@ SingleFrameMemoryPool* GraphicsDX12::CreateSingleFrameMemoryPool(int32_t constan
 	if (drawingCount > 512)
 	{
 		Log(LogType::Warning, "drawingCount is too large. It must be lower than 512");
-		//drawingCount = 512;
+		// drawingCount = 512;
 	}
 
 	return new SingleFrameMemoryPoolDX12(this, true, swapBufferCount_, constantBufferPoolSize, drawingCount);
@@ -247,14 +247,15 @@ RenderPassPipelineState* GraphicsDX12::CreateRenderPassPipelineState(const Rende
 {
 	std::array<DXGI_FORMAT, RenderTargetMax> renderTargetFormats;
 	renderTargetFormats.fill(DXGI_FORMAT_UNKNOWN);
-	int32_t renderTargetCount = key.RenderTargetFormats.size();
+	int32_t renderTargetCount = static_cast<int32_t>(key.RenderTargetFormats.size());
 
 	for (int32_t i = 0; i < renderTargetCount; i++)
 	{
 		renderTargetFormats[i] = ConvertFormat(key.RenderTargetFormats.at(i));
 	}
 
-	auto ret = CreateRenderPassPipelineState(key.IsPresent, key.HasDepth, key.RenderTargetFormats.size(), renderTargetFormats);
+	auto ret = CreateRenderPassPipelineState(
+		key.IsPresent, key.HasDepth, static_cast<int32_t>(key.RenderTargetFormats.size()), renderTargetFormats);
 
 	auto ptr = ret.get();
 	SafeAddRef(ptr);
@@ -287,9 +288,10 @@ std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
 	std::vector<uint8_t> result;
 	auto texture = static_cast<TextureDX12*>(renderTarget);
 	auto size = texture->GetSizeAs2D();
+	D3D12_TEXTURE_COPY_LOCATION src = {}, dst = {};
 
 	BufferDX12 dstBuffer;
-	if (!dstBuffer.Initialize(this, texture->GetMemorySize()))
+	if (!dstBuffer.Initialize(this, texture->GetFootprint().Footprint.RowPitch * texture->GetFootprint().Footprint.Height))
 		goto FAILED_EXIT;
 
 	ID3D12CommandAllocator* commandAllocator = nullptr;
@@ -307,7 +309,6 @@ std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
 	}
 
 	D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
-	D3D12_TEXTURE_COPY_LOCATION src = {}, dst = {};
 	UINT64 totalSize;
 	auto textureDesc = texture->Get()->GetDesc();
 	device->GetCopyableFootprints(&textureDesc, 0, 1, 0, &footprint, nullptr, nullptr, &totalSize);

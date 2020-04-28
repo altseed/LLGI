@@ -192,7 +192,7 @@ void PipelineStateDX12::Compile()
 	auto renderPassPipelineState = static_cast<RenderPassPipelineStateDX12*>(renderPassPipelineState_.get());
 	pipelineStateDesc.NumRenderTargets = renderPassPipelineState->RenderTargetCount;
 
-	for (int i = 0; i < pipelineStateDesc.NumRenderTargets; i++)
+	for (uint32_t i = 0; i < pipelineStateDesc.NumRenderTargets; i++)
 	{
 		pipelineStateDesc.RTVFormats[i] = renderPassPipelineState->RenderTargetFormats[i];
 	}

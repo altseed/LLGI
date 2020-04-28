@@ -26,7 +26,7 @@ private:
 	std::vector<uint8_t> lockedBuffer_;
 
 	Vec2I textureSize_;
-	int32_t memorySize_;
+	int32_t cpuMemorySize_;
 
 	void CreateBuffer();
 
@@ -47,7 +47,7 @@ public:
 	void Unlock() override;
 	Vec2I GetSizeAs2D() const override;
 	ID3D12Resource* Get() const { return texture_; }
-	int32_t GetMemorySize() const { return memorySize_; }
+
 	TextureFormatType GetFormat() const override { return format_; }
 	DXGI_FORMAT GetDXGIFormat() const { return dxgiFormat_; }
 
