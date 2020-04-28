@@ -36,6 +36,9 @@ TextureDX12::TextureDX12(ID3D12Resource* textureResource, ID3D12Device* device, 
 	format_ = ConvertFormat(desc.Format);
 	textureSize_ = Vec2I(desc.Width, desc.Height);
 	cpuMemorySize_ = GetTextureMemorySize(format_, textureSize_);
+
+	UINT64 size = 0;
+	device_->GetCopyableFootprints(&desc, 0, 1, 0, &footprint_, nullptr, nullptr, &size);
 }
 
 TextureDX12::~TextureDX12()
@@ -51,7 +54,8 @@ TextureDX12::~TextureDX12()
 	SafeRelease(commandQueue_);
 }
 
-bool TextureDX12::Initialize(ID3D12Resource* textureResource) {
+bool TextureDX12::Initialize(ID3D12Resource* textureResource)
+{
 	type_ = TextureType::Color;
 	texture_ = textureResource;
 
@@ -63,6 +67,9 @@ bool TextureDX12::Initialize(ID3D12Resource* textureResource) {
 	format_ = ConvertFormat(desc.Format);
 	textureSize_ = Vec2I(desc.Width, desc.Height);
 	cpuMemorySize_ = GetTextureMemorySize(format_, textureSize_);
+
+	UINT64 size = 0;
+	device_->GetCopyableFootprints(&desc, 0, 1, 0, &footprint_, nullptr, nullptr, &size);
 
 	return true;
 }
