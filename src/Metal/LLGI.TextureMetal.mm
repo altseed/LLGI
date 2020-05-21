@@ -79,7 +79,7 @@ bool Texture_Impl::Initialize(Graphics_Impl* graphics, const RenderTextureInitia
 	textureDescriptor.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
 	textureDescriptor.textureType = MTLTextureType2D;
 	textureDescriptor.depth = 1;
-	textureDescriptor.storageMode =MTLStorageModePrivate;
+	textureDescriptor.storageMode =MTLResourceStorageModeShared;
 	
 	if (parameter.IsMultiSampling)
 	{
