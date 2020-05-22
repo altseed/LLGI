@@ -242,6 +242,8 @@ void TextureDX12::Unlock()
 	dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
 	dst.SubresourceIndex = 0;
 
+	ResourceBarrior(commandList, D3D12_RESOURCE_STATE_COPY_DEST);
+
 	commandList->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
 
 	ResourceBarrior(commandList, D3D12_RESOURCE_STATE_GENERIC_READ);
