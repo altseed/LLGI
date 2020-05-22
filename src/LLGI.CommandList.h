@@ -158,6 +158,8 @@ public:
 		@brief wait until this command is completed.
 	*/
 	virtual void WaitUntilCompleted();
+
+	bool GetIsInRenderPass() const;
 };
 
 } // namespace LLGI

@@ -39,6 +39,12 @@ GraphicsDX12::~GraphicsDX12()
 
 void GraphicsDX12::Execute(CommandList* commandList)
 {
+	if (commandList->GetIsInRenderPass())
+	{
+		Log(LogType::Error, "Please call Execute outside of RenderPass");
+		return;
+	}
+
 	auto cl = (CommandListDX12*)commandList;
 	auto cl_internal = cl->GetCommandList();
 	commandQueue_->ExecuteCommandLists(1, (ID3D12CommandList**)(&cl_internal));

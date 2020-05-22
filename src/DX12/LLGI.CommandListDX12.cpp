@@ -106,6 +106,8 @@ void CommandListDX12::End()
 	assert(currentCommandList_ != nullptr);
 	currentCommandList_->Close();
 	currentCommandList_ = nullptr;
+
+	CommandList::End();
 }
 
 bool CommandListDX12::BeginWithPlatform(void* platformContextPtr)

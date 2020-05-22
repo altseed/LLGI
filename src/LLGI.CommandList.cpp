@@ -121,7 +121,12 @@ bool CommandList::BeginWithPlatform(void* platformContextPtr)
 	return true;
 }
 
-void CommandList::End() {
+void CommandList::End()
+{
+	if (GetIsInRenderPass())
+	{
+		Log(LogType::Error, "Please call End outside of RenderPass");
+	}
 
 	if (doesBeginWithPlatform_)
 	{
@@ -129,7 +134,8 @@ void CommandList::End() {
 	}
 }
 
-void CommandList::EndWithPlatform() {
+void CommandList::EndWithPlatform()
+{
 
 	if (!doesBeginWithPlatform_)
 	{
@@ -235,5 +241,7 @@ void CommandList::WaitUntilCompleted()
 {
 	assert(0); // TODO: Not implemented.
 }
+
+bool CommandList::GetIsInRenderPass() const { return isInRenderPass_; }
 
 } // namespace LLGI
