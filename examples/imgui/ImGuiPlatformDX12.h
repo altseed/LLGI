@@ -17,7 +17,7 @@ class ImguiPlatformDX12 : public ImguiPlatform
 	int32_t handleOffset_ = 0;
 	int32_t handleSize_ = 0;
 
-	std::unordered_map<LLGI::Texture*, ImTextureID> textures_;
+	std::unordered_map<std::shared_ptr<LLGI::Texture>, ImTextureID> textures_;
 
 public:
 	ImguiPlatformDX12(LLGI::Graphics* g) : g_(static_cast<LLGI::GraphicsDX12*>(g))
@@ -51,16 +51,16 @@ public:
 		ImGui_ImplDX12_NewFrame();
 		textures_.clear();
 		handleOffset_ = 1;
+
 	}
 
 	ImTextureID GetTextureIDToRender(LLGI::Texture* texture, LLGI::CommandList* commandList) override {
-		auto t = static_cast<LLGI::TextureDX12*>(texture);
-
+		auto t = LLGI::CreateSharedPtr(static_cast<LLGI::TextureDX12*>(texture), true);
+		
 		if (textures_.count(t))
 		{
 			return textures_[t];
 		}
-
 
 		auto cpuDescriptorHandle = srvDescHeap_->GetCPUDescriptorHandleForHeapStart();
 		auto gpuDescriptorHandle = srvDescHeap_->GetGPUDescriptorHandleForHeapStart();
