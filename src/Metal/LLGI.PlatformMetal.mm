@@ -19,7 +19,8 @@ namespace LLGI
 struct PlatformMetal_Impl
 {
     Window* window_ = nullptr;
-
+    bool waitVSync_ = false;
+    
 	id<MTLDevice> device;
 	id<MTLCommandQueue> commandQueue;
 	id<MTLCommandBuffer> commandBuffer;
@@ -28,25 +29,22 @@ struct PlatformMetal_Impl
 
 	PlatformMetal_Impl(Window* window, bool waitVSync)
 	{
+        device = MTLCreateSystemDefaultDevice();
         window_ = window;
-        NSWindow* nswindow = (NSWindow*)window_->GetNativePtr(0);
-        auto frameBufferSize = window_->GetFrameBufferSize();
+        waitVSync_ = waitVSync;
         
-		device = MTLCreateSystemDefaultDevice();
-		layer = [CAMetalLayer layer];
-		layer.device = device;
-		layer.displaySyncEnabled = waitVSync;
-		layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
-		nswindow.contentView.layer = layer;
-		nswindow.contentView.wantsLayer = YES;
-		layer.drawableSize = CGSizeMake(frameBufferSize.X, frameBufferSize.Y);
-		layer.framebufferOnly = false;	// Enable capture (getBytes)
+        generateLayer();
 
 		commandQueue = [device newCommandQueue];
 	}
 
 	~PlatformMetal_Impl()
 	{
+        if(layer != nullptr)
+        {
+            [layer release];
+            layer = nullptr;
+        }
 	}
 
 	bool newFrame()
@@ -67,6 +65,30 @@ struct PlatformMetal_Impl
 		[commandBuffer presentDrawable:drawable];
 		[commandBuffer commit];
 	}
+    
+    void resetLayer()
+    {
+        if(layer != nullptr)
+        {
+            [layer release];
+            layer = nullptr;
+        }
+    }
+    
+    void generateLayer()
+    {
+        NSWindow* nswindow = (NSWindow*)window_->GetNativePtr(0);
+        auto frameBufferSize = window_->GetFrameBufferSize();
+        
+        layer = [CAMetalLayer layer];
+        layer.device = device;
+        layer.displaySyncEnabled = waitVSync_;
+        layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
+        nswindow.contentView.layer = layer;
+        nswindow.contentView.wantsLayer = YES;
+        layer.drawableSize = CGSizeMake(frameBufferSize.X, frameBufferSize.Y);
+        layer.framebufferOnly = false;    // Enable capture (getBytes)
+    }
 };
 
 PlatformMetal::PlatformMetal(Window* window, bool waitVSync)
@@ -79,6 +101,8 @@ PlatformMetal::PlatformMetal(Window* window, bool waitVSync)
         ringBuffers_[i].renderPass = CreateSharedPtr(new RenderPassMetal());
         ringBuffers_[i].renderTexture = CreateSharedPtr(new TextureMetal());
     }
+    
+    windowSize_ = window->GetWindowSize();
 }
 
 PlatformMetal::~PlatformMetal()
@@ -122,6 +146,17 @@ RenderPass* PlatformMetal::GetCurrentScreen(const Color8& clearColor, bool isCol
     return ringBuffers_[ringIndex_].renderPass.get();
 }
 
+void PlatformMetal::SetWindowSize(const Vec2I& windowSize)
+{
+    if(windowSize_ == windowSize)
+    {
+        return;
+    }
+    
+    windowSize_ = windowSize;
+    
+    impl->generateLayer();
+}
 
 }
 

@@ -9,7 +9,7 @@
 #include <DX12/LLGI.GraphicsDX12.h>
 #include <DX12/LLGI.TextureDX12.h>
 
-class ImguiPlatformDX12 : ImguiPlatform
+class ImguiPlatformDX12 : public ImguiPlatform
 {
 	const int32_t DescriptorMax = 512;
 	LLGI::GraphicsDX12* g_ = nullptr;

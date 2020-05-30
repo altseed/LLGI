@@ -22,6 +22,7 @@
 #include <LLGI.CommandList.h>
 #include <LLGI.Graphics.h>
 #include <LLGI.Platform.h>
+#include <LLGI.Texture.h>
 
 #ifdef _WIN32
 #pragma comment(lib, "d3dcompiler.lib")
@@ -189,7 +190,7 @@ int main()
 			auto texturePtr = imguiPlatform->GetTextureIDToRender(texture.get(), commandList);
 			if (texturePtr != nullptr)
 			{
-				ImGui::Image(imguiPlatform->GetTextureIDToRender(texture.get(), commandList), ImVec2(256, 256));
+				ImGui::Image(texturePtr, ImVec2(256, 256));
 			}
 
 			ImGui::End();

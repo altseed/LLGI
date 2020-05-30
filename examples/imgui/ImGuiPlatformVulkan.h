@@ -10,7 +10,7 @@
 #include "ImGuiPlatform.h"
 
 
-class ImguiPlatformVulkan : ImguiPlatform
+class ImguiPlatformVulkan : public ImguiPlatform
 {
 	LLGI::GraphicsVulkan* g_ = nullptr;
 	LLGI::PlatformVulkan* p_ = nullptr;
