@@ -40,8 +40,12 @@ private:
 
 	int32_t frameIndex = 0;
 
+	bool inFrame_ = false;
 
 	void Wait();
+
+	void ResetSwapBuffer();
+	bool GenerateSwapBuffer();
 
 public:
 	PlatformDX12();
@@ -54,6 +58,8 @@ public:
 	Graphics* CreateGraphics() override;
 
 	ID3D12Device* GetDevice();
+
+	void SetWindowSize(const Vec2I& windowSize) override;
 
 	RenderPass* GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) override;
 

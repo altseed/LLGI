@@ -32,6 +32,7 @@
 
 #ifdef _WIN32
 #include "ImGuiPlatformDX12.h"
+
 #elif __APPLE__
 #include "ImGuiPlatformMetal.h"
 #endif
@@ -82,13 +83,13 @@ public:
 		glfwGetWindowSize(window_, &w, &h);
 		return LLGI::Vec2I(w, h);
 	}
-    
-    LLGI::Vec2I GetFrameBufferSize() const override
-    {
-        int w, h;
-        glfwGetFramebufferSize(window_, &w, &h);
-        return LLGI::Vec2I(w, h);
-    }
+
+	LLGI::Vec2I GetFrameBufferSize() const override
+	{
+		int w, h;
+		glfwGetFramebufferSize(window_, &w, &h);
+		return LLGI::Vec2I(w, h);
+	}
 };
 
 static void glfw_error_callback(int error, const char* description) { fprintf(stderr, "Glfw Error %d: %s\n", error, description); }
@@ -98,7 +99,7 @@ int main()
 	glfwInit();
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-	auto window = glfwCreateWindow(1280, 720, "Example imgui", nullptr, nullptr);
+	auto window = glfwCreateWindow(1580, 880, "Example imgui", nullptr, nullptr);
 
 	auto llgiwindow = new LLGIWindow(window);
 
@@ -119,6 +120,28 @@ int main()
 	color.G = 50;
 	color.B = 50;
 	color.A = 255;
+
+	// Create simple texture
+
+	LLGI::TextureInitializationParameter textureParam;
+	textureParam.Size = LLGI::Vec2I(256, 256);
+	auto texture = LLGI::CreateSharedPtr(graphics->CreateTexture(textureParam));
+
+	{
+		auto ptr = static_cast<LLGI::Color8*>(texture->Lock());
+		for (size_t y = 0; y < 256; y++)
+		{
+			for (size_t x = 0; x < 256; x++)
+			{
+				ptr[x + y * 256].R = x;
+				ptr[x + y * 256].G = y;
+				ptr[x + y * 256].B = 0;
+				ptr[x + y * 256].A = 255;
+			}
+		}
+
+		texture->Unlock();
+	}
 
 	// Setup Dear ImGui context
 	ImGui::CreateContext();
@@ -144,15 +167,15 @@ int main()
 
 	while (glfwWindowShouldClose(window) == GL_FALSE)
 	{
+		platform->SetWindowSize(llgiwindow->GetWindowSize());
+
 		if (!platform->NewFrame())
 			break;
 
-		platform->SetWindowSize(llgiwindow->GetWindowSize());
-
 		sfMemoryPool->NewFrame();
 
-        auto renderPass = platform->GetCurrentScreen(color, true);
-        
+		auto renderPass = platform->GetCurrentScreen(color, true);
+
 		imguiPlatform->NewFrame(renderPass);
 
 		ImGui_ImplGlfw_NewFrame();
@@ -163,6 +186,12 @@ int main()
 
 			ImGui::Text("Hello, Altseed");
 
+			auto texturePtr = imguiPlatform->GetTextureIDToRender(texture.get(), commandList);
+			if (texturePtr != nullptr)
+			{
+				ImGui::Image(imguiPlatform->GetTextureIDToRender(texture.get(), commandList), ImVec2(256, 256));
+			}
+
 			ImGui::End();
 		}
 		// It need to create a command buffer between NewFrame and Present.
@@ -171,9 +200,9 @@ int main()
 		commandList->BeginRenderPass(renderPass);
 
 		// imgui
-	
+
 		ImGui::Render();
-        
+
 		imguiPlatform->RenderDrawData(ImGui::GetDrawData(), commandList);
 
 		commandList->EndRenderPass();
