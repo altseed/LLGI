@@ -289,6 +289,12 @@ std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
 		return std::vector<uint8_t>();
 	}
 
+	if (renderTarget->GetFormat() != TextureFormatType::R8G8B8A8_UNORM && renderTarget->GetFormat() != TextureFormatType::R8G8B8A8_UNORM_SRGB)
+	{
+		Log(LogType::Error, "Unimplemented.");
+		return std::vector<uint8_t>();
+	}
+
 	auto device = GetDevice();
 
 	std::vector<uint8_t> result;
@@ -296,8 +302,10 @@ std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
 	auto size = texture->GetSizeAs2D();
 	D3D12_TEXTURE_COPY_LOCATION src = {}, dst = {};
 
+	auto dstFootprint = texture->GetFootprint().Footprint;
+
 	BufferDX12 dstBuffer;
-	if (!dstBuffer.Initialize(this, texture->GetFootprint().Footprint.RowPitch * texture->GetFootprint().Footprint.Height))
+	if (!dstBuffer.Initialize(this, dstFootprint.RowPitch * dstFootprint.Height))
 		goto FAILED_EXIT;
 
 	ID3D12CommandAllocator* commandAllocator = nullptr;
@@ -340,10 +348,26 @@ std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
 	SafeRelease(commandList);
 	SafeRelease(commandAllocator);
 
-	result.resize(dstBuffer.GetSize());
-	auto raw = dstBuffer.Lock();
-	memcpy(result.data(), raw, result.size());
-	dstBuffer.Unlock();
+	if (renderTarget->GetSizeAs2D().X * renderTarget->GetSizeAs2D().Y * 4 != dstBuffer.GetSize())
+	{
+		result.resize(renderTarget->GetSizeAs2D().X * renderTarget->GetSizeAs2D().Y * 4);
+		auto raw = static_cast<uint8_t*>(dstBuffer.Lock());
+
+		for (int32_t y = 0; y < renderTarget->GetSizeAs2D().Y; y++)
+		{
+			auto pitch = renderTarget->GetSizeAs2D().X * 4;
+			memcpy(result.data() + pitch * y, raw + dstFootprint.RowPitch * y, pitch);
+		}
+
+		dstBuffer.Unlock();
+	}
+	else
+	{
+		result.resize(dstBuffer.GetSize());
+		auto raw = dstBuffer.Lock();
+		memcpy(result.data(), raw, result.size());
+		dstBuffer.Unlock();
+	}
 
 	return result;
 
