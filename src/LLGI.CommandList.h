@@ -121,6 +121,12 @@ public:
 	*/
 	virtual void
 	SetTexture(Texture* texture, TextureWrapMode wrapMode, TextureMinMagFilter minmagFilter, int32_t unit, ShaderStageType shaderStage);
+
+	/**
+		@brief	reset textures and set null.
+	*/
+	virtual void ResetTextures();
+
 	virtual void BeginRenderPass(RenderPass* renderPass);
 
 	/**
