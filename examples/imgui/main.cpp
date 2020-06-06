@@ -124,15 +124,9 @@ int main()
 
 	// Create simple texture
 
-#if 0
 	LLGI::TextureInitializationParameter textureParam;
 	textureParam.Size = LLGI::Vec2I(256, 256);
 	auto texture = LLGI::CreateSharedPtr(graphics->CreateTexture(textureParam));
-#else
-	LLGI::RenderTextureInitializationParameter textureParam;
-	textureParam.Size = LLGI::Vec2I(256, 256);
-	auto texture = LLGI::CreateSharedPtr(graphics->CreateRenderTexture(textureParam));
-#endif
 
 	{
 		auto ptr = static_cast<LLGI::Color8*>(texture->Lock());
@@ -150,6 +144,29 @@ int main()
 			}
 
 			texture->Unlock();
+		}
+	}
+
+	LLGI::RenderTextureInitializationParameter textureParam2;
+	textureParam2.Size = LLGI::Vec2I(256, 256);
+	auto texture2 = LLGI::CreateSharedPtr(graphics->CreateRenderTexture(textureParam2));
+
+	{
+		auto ptr = static_cast<LLGI::Color8*>(texture2->Lock());
+		if (ptr != nullptr)
+		{
+			for (size_t y = 0; y < 256; y++)
+			{
+				for (size_t x = 0; x < 256; x++)
+				{
+					ptr[x + y * 256].R = x;
+					ptr[x + y * 256].G = y;
+					ptr[x + y * 256].B = 0;
+					ptr[x + y * 256].A = 255;
+				}
+			}
+
+			texture2->Unlock();
 		}
 	}
 
@@ -196,10 +213,20 @@ int main()
 
 			ImGui::Text("Hello, Altseed");
 
-			auto texturePtr = imguiPlatform->GetTextureIDToRender(texture.get(), commandList);
-			if (texturePtr != nullptr)
 			{
-				ImGui::Image(texturePtr, ImVec2(256, 256));
+				auto texturePtr = imguiPlatform->GetTextureIDToRender(texture.get(), commandList);
+				if (texturePtr != nullptr)
+				{
+					ImGui::Image(texturePtr, ImVec2(256, 256));
+				}
+			}
+
+			{
+				auto texturePtr = imguiPlatform->GetTextureIDToRender(texture2.get(), commandList);
+				if (texturePtr != nullptr)
+				{
+					ImGui::Image(texturePtr, ImVec2(256, 256));
+				}
 			}
 
 			ImGui::End();

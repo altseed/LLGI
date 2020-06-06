@@ -51,12 +51,12 @@ public:
 		ImGui_ImplDX12_NewFrame();
 		textures_.clear();
 		handleOffset_ = 1;
-
 	}
 
-	ImTextureID GetTextureIDToRender(LLGI::Texture* texture, LLGI::CommandList* commandList) override {
+	ImTextureID GetTextureIDToRender(LLGI::Texture* texture, LLGI::CommandList* commandList) override
+	{
 		auto t = LLGI::CreateSharedPtr(static_cast<LLGI::TextureDX12*>(texture), true);
-		
+
 		if (textures_.count(t))
 		{
 			return textures_[t];
@@ -80,9 +80,10 @@ public:
 		auto textureID = reinterpret_cast<ImTextureID>(gpuDescriptorHandle.ptr);
 		textures_[t] = textureID;
 
+		handleOffset_ += 1;
+
 		return textureID;
 	}
-
 
 	void RenderDrawData(ImDrawData* draw_data, LLGI::CommandList* commandList) override
 	{
