@@ -100,7 +100,7 @@ int main()
 	glfwInit();
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-	auto window = glfwCreateWindow(1580, 880, "Example imgui", nullptr, nullptr);
+	auto window = glfwCreateWindow(1280, 720, "Example imgui", nullptr, nullptr);
 
 	auto llgiwindow = new LLGIWindow(window);
 
@@ -124,24 +124,33 @@ int main()
 
 	// Create simple texture
 
+#if 0
 	LLGI::TextureInitializationParameter textureParam;
 	textureParam.Size = LLGI::Vec2I(256, 256);
 	auto texture = LLGI::CreateSharedPtr(graphics->CreateTexture(textureParam));
+#else
+	LLGI::RenderTextureInitializationParameter textureParam;
+	textureParam.Size = LLGI::Vec2I(256, 256);
+	auto texture = LLGI::CreateSharedPtr(graphics->CreateRenderTexture(textureParam));
+#endif
 
 	{
 		auto ptr = static_cast<LLGI::Color8*>(texture->Lock());
-		for (size_t y = 0; y < 256; y++)
+		if (ptr != nullptr)
 		{
-			for (size_t x = 0; x < 256; x++)
+			for (size_t y = 0; y < 256; y++)
 			{
-				ptr[x + y * 256].R = x;
-				ptr[x + y * 256].G = y;
-				ptr[x + y * 256].B = 0;
-				ptr[x + y * 256].A = 255;
+				for (size_t x = 0; x < 256; x++)
+				{
+					ptr[x + y * 256].R = x;
+					ptr[x + y * 256].G = y;
+					ptr[x + y * 256].B = 0;
+					ptr[x + y * 256].A = 255;
+				}
 			}
-		}
 
-		texture->Unlock();
+			texture->Unlock();
+		}
 	}
 
 	// Setup Dear ImGui context

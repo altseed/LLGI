@@ -26,6 +26,7 @@ private:
 	const D3D12_COMMAND_LIST_TYPE commandListType_ = D3D12_COMMAND_LIST_TYPE_DIRECT;
 	ID3D12CommandQueue* commandQueue_ = nullptr;
 	ID3D12CommandAllocator* commandAllocator_ = nullptr;
+	ReferenceObject* owner_ = nullptr;
 
 	std::unordered_map<RenderPassPipelineStateDX12Key, std::shared_ptr<RenderPassPipelineStateDX12>, RenderPassPipelineStateDX12Key::Hash>
 		renderPassPipelineStates;
@@ -35,7 +36,8 @@ public:
 				 std::function<std::tuple<D3D12_CPU_DESCRIPTOR_HANDLE, Texture*>()> getScreenFunc,
 				 std::function<void()> waitFunc,
 				 ID3D12CommandQueue* commandQueue,
-				 int32_t swapBufferCount);
+				 int32_t swapBufferCount,
+				 ReferenceObject* owner = nullptr);
 	virtual ~GraphicsDX12();
 
 	void Execute(CommandList* commandList) override;

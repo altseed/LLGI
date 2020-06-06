@@ -106,6 +106,8 @@ bool PlatformDX12::GenerateSwapBuffer() {
 	DXGI_SWAP_CHAIN_DESC DXGISwapChainDesc;
 	ZeroMemory(&DXGISwapChainDesc, sizeof(DXGISwapChainDesc));
 
+	D3D12_DESCRIPTOR_HEAP_DESC renderPassHeapDesc = {};
+
 	DXGISwapChainDesc.BufferDesc.Width = windowSize_.X;
 	DXGISwapChainDesc.BufferDesc.Height = windowSize_.Y;
 	DXGISwapChainDesc.OutputWindow = (HWND)window_->GetNativePtr(0);
@@ -138,14 +140,13 @@ bool PlatformDX12::GenerateSwapBuffer() {
 	SafeRelease(swapChain_);
 
 	// Render target
-	D3D12_DESCRIPTOR_HEAP_DESC RenderPassHeapDesc = {};
-
+	
 	// Render target DescriptorHeap
-	RenderPassHeapDesc.NumDescriptors = SwapBufferCount;
-	RenderPassHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-	RenderPassHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	RenderPassHeapDesc.NodeMask = 0;
-	hr = device->CreateDescriptorHeap(&RenderPassHeapDesc, IID_PPV_ARGS(&descriptorHeapRTV));
+	renderPassHeapDesc.NumDescriptors = SwapBufferCount;
+	renderPassHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+	renderPassHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	renderPassHeapDesc.NodeMask = 0;
+	hr = device->CreateDescriptorHeap(&renderPassHeapDesc, IID_PPV_ARGS(&descriptorHeapRTV));
 	if (FAILED(hr))
 	{
 		goto FAILED_EXIT;
@@ -416,7 +417,7 @@ Graphics* PlatformDX12::CreateGraphics()
 
 	std::function<void()> waitFunc = [this]() -> void { this->Wait(); };
 
-	auto graphics = new GraphicsDX12(device, getScreenFunc, waitFunc, commandQueue, SwapBufferCount);
+	auto graphics = new GraphicsDX12(device, getScreenFunc, waitFunc, commandQueue, SwapBufferCount, this);
 
 	graphics->SetWindowSize(windowSize_);
 

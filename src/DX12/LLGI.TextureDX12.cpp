@@ -148,7 +148,7 @@ void TextureDX12::CreateBuffer()
 								   D3D12_RESOURCE_DIMENSION_BUFFER,
 								   D3D12_RESOURCE_STATE_GENERIC_READ,
 								   D3D12_RESOURCE_FLAG_NONE,
-								   Vec2I(size, 1));
+								   Vec2I(static_cast<int32_t>(size), 1));
 	assert(buffer_ != nullptr);
 
 	if (footprint_.Footprint.RowPitch != cpuMemorySize_ / textureSize_.Y)

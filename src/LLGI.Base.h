@@ -337,7 +337,7 @@ void Log(LogType logType, const char* message);
 
 inline size_t GetAlignedSize(size_t size, size_t alignment) { return (size + (alignment - 1)) & ~(alignment - 1); }
 
-inline size_t GetTextureMemorySize(TextureFormatType format, Vec2I size)
+inline int32_t GetTextureMemorySize(TextureFormatType format, Vec2I size)
 {
 	switch (format)
 	{

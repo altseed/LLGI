@@ -18,11 +18,18 @@ GraphicsDX12::GraphicsDX12(ID3D12Device* device,
 						   std::function<std::tuple<D3D12_CPU_DESCRIPTOR_HANDLE, Texture*>()> getScreenFunc,
 						   std::function<void()> waitFunc,
 						   ID3D12CommandQueue* commandQueue,
-						   int32_t swapBufferCount)
-	: device_(device), getScreenFunc_(getScreenFunc), waitFunc_(waitFunc), commandQueue_(commandQueue), swapBufferCount_(swapBufferCount)
+						   int32_t swapBufferCount,
+						   ReferenceObject* owner)
+	: device_(device)
+	, getScreenFunc_(getScreenFunc)
+	, waitFunc_(waitFunc)
+	, commandQueue_(commandQueue)
+	, swapBufferCount_(swapBufferCount)
+	, owner_(owner)
 {
 	SafeAddRef(device_);
 	SafeAddRef(commandQueue_);
+	SafeAddRef(owner_);
 
 	HRESULT hr;
 	// Create Command Allocator
@@ -32,9 +39,12 @@ GraphicsDX12::GraphicsDX12(ID3D12Device* device,
 
 GraphicsDX12::~GraphicsDX12()
 {
+	WaitFinish();
+
 	SafeRelease(device_);
 	SafeRelease(commandQueue_);
 	SafeRelease(commandAllocator_);
+	SafeRelease(owner_);
 }
 
 void GraphicsDX12::Execute(CommandList* commandList)
@@ -289,7 +299,8 @@ std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
 		return std::vector<uint8_t>();
 	}
 
-	if (renderTarget->GetFormat() != TextureFormatType::R8G8B8A8_UNORM && renderTarget->GetFormat() != TextureFormatType::R8G8B8A8_UNORM_SRGB)
+	if (renderTarget->GetFormat() != TextureFormatType::R8G8B8A8_UNORM &&
+		renderTarget->GetFormat() != TextureFormatType::R8G8B8A8_UNORM_SRGB)
 	{
 		Log(LogType::Error, "Unimplemented.");
 		return std::vector<uint8_t>();
