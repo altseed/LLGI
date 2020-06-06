@@ -119,6 +119,16 @@ CommandListMetal::CommandListMetal() {
 
 CommandListMetal::~CommandListMetal()
 {
+    if (isInRenderPass_)
+    {
+        EndRenderPass();
+    }
+    
+    if(isInBegin_)
+    {
+        End();
+    }
+    
     WaitUntilCompleted();
     
 	for (int w = 0; w < 2; w++)
@@ -176,8 +186,8 @@ void CommandListMetal::Begin()
 	CommandList::Begin();
 }
 
-void CommandListMetal::End() { impl->End();
-    
+void CommandListMetal::End() {
+    impl->End();
     CommandList::End();
 }
 

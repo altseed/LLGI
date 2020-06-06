@@ -99,6 +99,8 @@ void CommandList::Begin()
 		o->Release();
 	}
 	swapObjects[swapIndex_].referencedObjects.clear();
+    
+    isInBegin_ = true;
 }
 
 bool CommandList::BeginWithPlatform(void* platformContextPtr)
@@ -118,11 +120,15 @@ bool CommandList::BeginWithPlatform(void* platformContextPtr)
 	}
 	swapObjects[swapIndex_].referencedObjects.clear();
 	doesBeginWithPlatform_ = true;
+    
+    isInBegin_ = true;
 	return true;
 }
 
 void CommandList::End()
 {
+    isInBegin_ = false;
+    
 	if (GetIsInRenderPass())
 	{
 		Log(LogType::Error, "Please call End outside of RenderPass");
@@ -136,6 +142,7 @@ void CommandList::End()
 
 void CommandList::EndWithPlatform()
 {
+    isInBegin_ = false;
 
 	if (!doesBeginWithPlatform_)
 	{
