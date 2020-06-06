@@ -95,6 +95,7 @@ void test_capture(LLGI::DeviceType deviceType, LLGI::Vec2I windowSize)
 			// save
 			std::string path = "Capture_" + std::to_string(windowSize.X) + "_" + std::to_string(windowSize.Y) + ".png";
 			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save(path.c_str());
+            
 			break;
 		}
 	}

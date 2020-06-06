@@ -110,6 +110,7 @@ struct WindowMac_Impl
 	{
 		if (window != nullptr)
 		{
+            [window close];
 			[window release];
 			window = nullptr;
 		}

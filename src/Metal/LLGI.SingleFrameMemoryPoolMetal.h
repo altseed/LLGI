@@ -39,7 +39,6 @@ private:
     bool isStrongRef_ = false;
     std::vector<std::shared_ptr<InternalSingleFrameMemoryPoolMetal>> memoryPools;
     int32_t currentSwap_ = 0;
-    int32_t drawingCount_ = 0;
     
     ConstantBuffer* CreateConstantBufferInternal(int32_t size) override;
     

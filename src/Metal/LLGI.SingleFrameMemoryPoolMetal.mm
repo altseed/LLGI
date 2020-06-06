@@ -37,7 +37,7 @@ namespace LLGI
     }
     
 SingleFrameMemoryPoolMetal::SingleFrameMemoryPoolMetal(GraphicsMetal* graphics, bool isStrongRef, int32_t constantBufferPoolSize, int32_t drawingCount)
-    : SingleFrameMemoryPool(3), graphics_(graphics), isStrongRef_(isStrongRef), drawingCount_(drawingCount)
+    : SingleFrameMemoryPool(3), graphics_(graphics), isStrongRef_(isStrongRef)
 {
     if (isStrongRef)
     {
