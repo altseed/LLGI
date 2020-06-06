@@ -355,7 +355,16 @@ void CommandListMetal::EndRenderPass() { impl->EndRenderPass(); CommandList::End
 
 void CommandListMetal::WaitUntilCompleted()
 {
-    [impl->commandBuffer waitUntilCompleted];
+    if(impl->commandBuffer != nullptr)
+    {
+        auto status = [impl->commandBuffer status];
+        if(status == MTLCommandBufferStatusNotEnqueued)
+        {
+            return;
+        }
+        
+        [impl->commandBuffer waitUntilCompleted];
+    }
 }
 
 CommandList_Impl* CommandListMetal::GetImpl() { return impl; }
