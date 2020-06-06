@@ -77,13 +77,6 @@ public:
 
 		g_->GetDevice()->CreateShaderResourceView(t->Get(), &srvDesc, cpuDescriptorHandle);
 
-		auto cl = static_cast<LLGI::CommandListDX12*>(commandList);
-
-		if (t->GetType() == LLGI::TextureType::Render)
-		{
-			t->ResourceBarrior(cl->GetCommandList(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-		}
-
 		auto textureID = reinterpret_cast<ImTextureID>(gpuDescriptorHandle.ptr);
 		textures_[t] = textureID;
 
@@ -94,6 +87,17 @@ public:
 	void RenderDrawData(ImDrawData* draw_data, LLGI::CommandList* commandList) override
 	{
 		auto cl = static_cast<LLGI::CommandListDX12*>(commandList);
+
+		for (auto tex : textures_)
+		{
+			auto t = LLGI::CreateSharedPtr(static_cast<LLGI::TextureDX12*>(tex.first.get()), true);
+
+			if (t->GetType() == LLGI::TextureType::Render)
+			{
+				t->ResourceBarrior(cl->GetCommandList(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+			}
+		}
+
 		cl->GetCommandList()->SetDescriptorHeaps(1, &srvDescHeap_);
 		ImGui_ImplDX12_RenderDrawData(draw_data, cl->GetCommandList());
 	}
