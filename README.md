@@ -6,9 +6,10 @@ How to build
 ### macOS
 
 ```
-mkdir build
-cd build
-cmake .. -G "Xcode" -DBUILD_METAL=ON -DBUILD_TEST=ON
-cmake --build .
+$ git clone https://github.com/altseed/LLGI.git
+$ cd LLGI
+$ git submodule update --init
+$ cmake -S . -B build -G "Xcode" -DBUILD_TEST=ON
+$ cmake --build build
 ```
 
