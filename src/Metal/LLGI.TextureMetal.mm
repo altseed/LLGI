@@ -22,72 +22,68 @@ Texture_Impl::~Texture_Impl()
 
 bool Texture_Impl::Initialize(id<MTLDevice> device, const Vec2I& size, TextureFormatType format, TextureType type)
 {
-    MTLTextureDescriptor* textureDescriptor = nullptr;
-    
-    if(type == TextureType::Depth)
-    {
+	MTLTextureDescriptor* textureDescriptor = nullptr;
+
+	if (type == TextureType::Depth)
+	{
 #if TARGET_OS_IOS
-        auto format = MTLPixelFormatDepth32Float_Stencil8;
+		auto format = MTLPixelFormatDepth32Float_Stencil8;
 #elif TARGET_OS_MAC
 		bool supported = device.isDepth24Stencil8PixelFormatSupported;
-		
+
 		auto format = (supported) ? MTLPixelFormatDepth24Unorm_Stencil8 : MTLPixelFormatDepth32Float_Stencil8;
 #endif
-        textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:format
-																			   width:size.X
-																			  height:size.Y
-																		   mipmapped:NO];
+		textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:format width:size.X height:size.Y mipmapped:NO];
 		textureDescriptor.usage = MTLTextureUsageRenderTarget;
 		textureDescriptor.textureType = MTLTextureType2D;
 		textureDescriptor.storageMode = MTLStorageModePrivate;
-    }
-    else
-    {
-        textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:ConvertFormat(format)
-																								 width:size.X
-																								height:size.Y
-																							 mipmapped:NO];
-    }
-    
-    if(type == TextureType::Render)
-    {
-        textureDescriptor.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
-        textureDescriptor.textureType = MTLTextureType2D;
-        textureDescriptor.depth = 1;
-        textureDescriptor.storageMode =MTLStorageModePrivate;
-    }
-    
-	
+	}
+	else
+	{
+		textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:ConvertFormat(format)
+																			   width:size.X
+																			  height:size.Y
+																		   mipmapped:NO];
+	}
+
+	if (type == TextureType::Render)
+	{
+		textureDescriptor.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
+		textureDescriptor.textureType = MTLTextureType2D;
+		textureDescriptor.depth = 1;
+		textureDescriptor.storageMode = MTLStorageModePrivate;
+	}
+
 	texture = [device newTextureWithDescriptor:textureDescriptor];
 
 	size_ = size;
 
-    fromExternal_ = false;
-    
+	fromExternal_ = false;
+
 	return true;
 }
 
 bool Texture_Impl::Initialize(Graphics_Impl* graphics, const RenderTextureInitializationParameter& parameter)
 {
 	id<MTLDevice> device = graphics->device;
-    MTLTextureDescriptor* textureDescriptor = nullptr;
+	MTLTextureDescriptor* textureDescriptor = nullptr;
 
 	textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:ConvertFormat(parameter.Format)
-																							 width:parameter.Size.X
-																							height:parameter.Size.Y
-																						 mipmapped:NO];
+																		   width:parameter.Size.X
+																		  height:parameter.Size.Y
+																	   mipmapped:NO];
 	textureDescriptor.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
 	textureDescriptor.textureType = MTLTextureType2D;
 	textureDescriptor.depth = 1;
-    
-    // Make copy enabled in GetBuffer
-    // TODO : Optimize
-    textureDescriptor.storageMode = MTLStorageModeManaged;
-	
+
+	// Make copy enabled in GetBuffer
+	// TODO : Optimize
+	textureDescriptor.storageMode = MTLStorageModeManaged;
+
 	if (parameter.IsMultiSampling)
 	{
 		multiSampled_ = true;
-		
+
 		MTLTextureDescriptor* desc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:ConvertFormat(parameter.Format)
 																						width:parameter.Size.X
 																					   height:parameter.Size.Y
@@ -99,22 +95,22 @@ bool Texture_Impl::Initialize(Graphics_Impl* graphics, const RenderTextureInitia
 
 		msaaTexture_ = [device newTextureWithDescriptor:desc];
 	}
-	
+
 	texture = [device newTextureWithDescriptor:textureDescriptor];
 
 	size_ = parameter.Size;
 
-    fromExternal_ = false;
-    
+	fromExternal_ = false;
+
 	return true;
 }
 
 void Texture_Impl::Reset(id<MTLTexture> nativeTexture)
 {
-    texture = nativeTexture;
+	texture = nativeTexture;
 	size_.X = texture.width;
 	size_.Y = texture.height;
-    fromExternal_ = true;
+	fromExternal_ = true;
 }
 
 void Texture_Impl::Write(const uint8_t* data)
@@ -134,62 +130,62 @@ TextureMetal::~TextureMetal()
 
 bool TextureMetal::Initialize(id<MTLDevice> device, ReferenceObject* owner, Vec2I size, TextureType type)
 {
-    type_ = type;
-    
-    SafeAssign(owner_, owner);
+	type_ = type;
 
-	if(!impl->Initialize(device, size, TextureFormatType::R8G8B8A8_UNORM, type_))
-    {
-        return false;
-    }
+	SafeAssign(owner_, owner);
 
-    // Depth
-    // format_ = ConvertFormat(impl->texture.pixelFormat);
-    // data.resize(GetTextureMemorySize(format_, impl->size_));
-    
-    return true;
+	if (!impl->Initialize(device, size, TextureFormatType::R8G8B8A8_UNORM, type_))
+	{
+		return false;
+	}
+
+	// Depth
+	// format_ = ConvertFormat(impl->texture.pixelFormat);
+	// data.resize(GetTextureMemorySize(format_, impl->size_));
+
+	return true;
 }
 
 bool TextureMetal::Initialize(GraphicsMetal* owner, const TextureInitializationParameter& parameter)
 {
-    type_ = TextureType::Color;
-    
-    SafeAssign(owner_, static_cast<ReferenceObject*>(owner));
+	type_ = TextureType::Color;
 
-    if(!impl->Initialize(owner->GetImpl()->device,parameter.Size, parameter.Format, type_))
-    {
-        return false;
-    }
+	SafeAssign(owner_, static_cast<ReferenceObject*>(owner));
 
-    format_ = ConvertFormat(impl->texture.pixelFormat);
-    data.resize(GetTextureMemorySize(format_, impl->size_));
-    
-    return true;
+	if (!impl->Initialize(owner->GetImpl()->device, parameter.Size, parameter.Format, type_))
+	{
+		return false;
+	}
+
+	format_ = ConvertFormat(impl->texture.pixelFormat);
+	data.resize(GetTextureMemorySize(format_, impl->size_));
+
+	return true;
 }
 
 bool TextureMetal::Initialize(GraphicsMetal* owner, const RenderTextureInitializationParameter& parameter)
 {
-    type_ = TextureType::Render;
-    
-    SafeAssign(owner_, static_cast<ReferenceObject*>(owner));
+	type_ = TextureType::Render;
 
-    if(!impl->Initialize(owner->GetImpl(), parameter))
-    {
-        return false;
-    }
-    
-    format_ = ConvertFormat(impl->texture.pixelFormat);
-    data.resize(GetTextureMemorySize(format_, impl->size_));
-    
-    return true;
+	SafeAssign(owner_, static_cast<ReferenceObject*>(owner));
+
+	if (!impl->Initialize(owner->GetImpl(), parameter))
+	{
+		return false;
+	}
+
+	format_ = ConvertFormat(impl->texture.pixelFormat);
+	data.resize(GetTextureMemorySize(format_, impl->size_));
+
+	return true;
 }
 
 void TextureMetal::Reset(id<MTLTexture> nativeTexture)
 {
-    type_ = TextureType::Screen;
-    impl->Reset(nativeTexture);
-    
-    format_ = ConvertFormat(impl->texture.pixelFormat);
+	type_ = TextureType::Screen;
+	impl->Reset(nativeTexture);
+
+	format_ = ConvertFormat(impl->texture.pixelFormat);
 }
 
 void* TextureMetal::Lock() { return data.data(); }

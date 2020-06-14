@@ -12,7 +12,7 @@ struct Texture_Impl;
 class TextureMetal : public Texture
 {
 private:
-    ReferenceObject* owner_ = nullptr;
+	ReferenceObject* owner_ = nullptr;
 	Texture_Impl* impl = nullptr;
 	std::vector<uint8_t> data;
 
@@ -21,7 +21,7 @@ public:
 	virtual ~TextureMetal();
 
 	bool Initialize(id<MTLDevice> device, ReferenceObject* owner, Vec2I size, TextureType type);
-    bool Initialize(GraphicsMetal* owner, const TextureInitializationParameter& parameter);
+	bool Initialize(GraphicsMetal* owner, const TextureInitializationParameter& parameter);
 	bool Initialize(GraphicsMetal* owner, const RenderTextureInitializationParameter& parameter);
 	void Reset(id<MTLTexture> nativeTexture);
 	void* Lock() override;

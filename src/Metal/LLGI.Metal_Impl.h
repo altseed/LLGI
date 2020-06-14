@@ -18,7 +18,7 @@ struct Texture_Impl;
 MTLPixelFormat ConvertFormat(TextureFormatType format);
 
 TextureFormatType ConvertFormat(MTLPixelFormat format);
-    
+
 struct Graphics_Impl
 {
 	id<MTLDevice> device = nullptr;
@@ -45,7 +45,7 @@ struct RenderPass_Impl
 	~RenderPass_Impl();
 	bool Initialize();
 
-    void UpdateTarget(Texture_Impl** textures, int32_t textureCount, Texture_Impl* depthTexture);
+	void UpdateTarget(Texture_Impl** textures, int32_t textureCount, Texture_Impl* depthTexture);
 };
 
 struct RenderPassPipelineState_Impl
@@ -59,8 +59,8 @@ struct CommandList_Impl
 	Graphics_Impl* graphics_ = nullptr;
 	id<MTLCommandBuffer> commandBuffer = nullptr;
 	id<MTLRenderCommandEncoder> renderEncoder = nullptr;
-    bool isCompleted = true;
-    
+	bool isCompleted = true;
+
 	CommandList_Impl();
 	~CommandList_Impl();
 
@@ -112,16 +112,16 @@ struct Texture_Impl
 {
 	id<MTLTexture> texture = nullptr;
 	Vec2I size_;
-    bool fromExternal_ = false;
+	bool fromExternal_ = false;
 	bool multiSampled_ = false;
 	id<MTLTexture> msaaTexture_ = nullptr;
-    
+
 	Texture_Impl();
 	virtual ~Texture_Impl();
 
 	bool Initialize(id<MTLDevice> device, const Vec2I& size, TextureFormatType format, TextureType type);
 	bool Initialize(Graphics_Impl* graphics, const RenderTextureInitializationParameter& parameter);
-	void Reset(id<MTLTexture> nativeTexture);	// for wrap swapchain backbuffer.
+	void Reset(id<MTLTexture> nativeTexture); // for wrap swapchain backbuffer.
 
 	void Write(const uint8_t* data);
 };

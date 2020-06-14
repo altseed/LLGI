@@ -1,8 +1,8 @@
 #include "LLGI.PipelineStateMetal.h"
 #include "LLGI.GraphicsMetal.h"
 #include "LLGI.Metal_Impl.h"
-#include "LLGI.ShaderMetal.h"
 #include "LLGI.RenderPassMetal.h"
+#include "LLGI.ShaderMetal.h"
 
 #import <MetalKit/MetalKit.h>
 
@@ -53,24 +53,24 @@ bool PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 			vertexDescriptor.attributes[i].bufferIndex = VertexBufferIndex;
 			vertexOffset += sizeof(float) * 3;
 		}
-        else if (self_->VertexLayouts[i] == VertexLayoutFormat::R32G32B32A32_FLOAT)
-        {
-            vertexDescriptor.attributes[i].format = MTLVertexFormatFloat4;
-            vertexDescriptor.attributes[i].bufferIndex = VertexBufferIndex;
-            vertexOffset += sizeof(float) * 4;
-        }
+		else if (self_->VertexLayouts[i] == VertexLayoutFormat::R32G32B32A32_FLOAT)
+		{
+			vertexDescriptor.attributes[i].format = MTLVertexFormatFloat4;
+			vertexDescriptor.attributes[i].bufferIndex = VertexBufferIndex;
+			vertexOffset += sizeof(float) * 4;
+		}
 		else if (self_->VertexLayouts[i] == VertexLayoutFormat::R32G32_FLOAT)
 		{
 			vertexDescriptor.attributes[i].format = MTLVertexFormatFloat2;
 			vertexDescriptor.attributes[i].bufferIndex = VertexBufferIndex;
 			vertexOffset += sizeof(float) * 2;
 		}
-        else if (self_->VertexLayouts[i] == VertexLayoutFormat::R32_FLOAT)
-        {
-            vertexDescriptor.attributes[i].format = MTLVertexFormatFloat;
-            vertexDescriptor.attributes[i].bufferIndex = VertexBufferIndex;
-            vertexOffset += sizeof(float) * 1;
-        }
+		else if (self_->VertexLayouts[i] == VertexLayoutFormat::R32_FLOAT)
+		{
+			vertexDescriptor.attributes[i].format = MTLVertexFormatFloat;
+			vertexDescriptor.attributes[i].bufferIndex = VertexBufferIndex;
+			vertexOffset += sizeof(float) * 1;
+		}
 		else if (self_->VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UINT)
 		{
 			vertexDescriptor.attributes[i].format = MTLVertexFormatUChar4;
@@ -126,8 +126,7 @@ bool PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 	{
 		depthStencilDescriptor.depthCompareFunction = MTLCompareFunctionAlways;
 	}
-	
-	
+
 	if (renderPassPipelineStateMetal_->GetImpl()->depthStencilFormat != MTLPixelFormatInvalid)
 	{
 		if (self_->IsStencilTestEnabled)
@@ -191,11 +190,11 @@ bool PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 		blendFuncs[static_cast<int>(BlendFuncType::SrcColor)] = MTLBlendFactorSourceColor;
 		blendFuncs[static_cast<int>(BlendFuncType::OneMinusSrcColor)] = MTLBlendFactorOneMinusSourceColor;
 		blendFuncs[static_cast<int>(BlendFuncType::SrcAlpha)] = MTLBlendFactorSourceAlpha;
-        blendFuncs[static_cast<int>(BlendFuncType::OneMinusSrcAlpha)] = MTLBlendFactorOneMinusSourceAlpha;
+		blendFuncs[static_cast<int>(BlendFuncType::OneMinusSrcAlpha)] = MTLBlendFactorOneMinusSourceAlpha;
 		blendFuncs[static_cast<int>(BlendFuncType::DstColor)] = MTLBlendFactorDestinationColor;
 		blendFuncs[static_cast<int>(BlendFuncType::OneMinusDstColor)] = MTLBlendFactorOneMinusDestinationColor;
 		blendFuncs[static_cast<int>(BlendFuncType::DstAlpha)] = MTLBlendFactorDestinationAlpha;
-        blendFuncs[static_cast<int>(BlendFuncType::OneMinusDstAlpha)] = MTLBlendFactorOneMinusDestinationAlpha;
+		blendFuncs[static_cast<int>(BlendFuncType::OneMinusDstAlpha)] = MTLBlendFactorOneMinusDestinationAlpha;
 
 		colorAttachment.sourceRGBBlendFactor = blendFuncs[static_cast<int>(self_->BlendSrcFunc)];
 		colorAttachment.destinationRGBBlendFactor = blendFuncs[static_cast<int>(self_->BlendDstFunc)];
@@ -213,10 +212,10 @@ bool PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 		renderPassPipelineStateMetal_->GetImpl()->pixelFormat;
 	if (renderPassPipelineStateMetal_->GetImpl()->depthStencilFormat != MTLPixelFormatInvalid)
 	{
-		pipelineStateDescriptor.depthAttachmentPixelFormat = renderPassPipelineStateMetal_->GetImpl()->depthStencilFormat ;
-		pipelineStateDescriptor.stencilAttachmentPixelFormat = renderPassPipelineStateMetal_->GetImpl()->depthStencilFormat ;
+		pipelineStateDescriptor.depthAttachmentPixelFormat = renderPassPipelineStateMetal_->GetImpl()->depthStencilFormat;
+		pipelineStateDescriptor.stencilAttachmentPixelFormat = renderPassPipelineStateMetal_->GetImpl()->depthStencilFormat;
 	}
-	
+
 	if (self_->IsMSAA)
 	{
 		pipelineStateDescriptor.sampleCount = graphics->maxMultiSamplingCount;

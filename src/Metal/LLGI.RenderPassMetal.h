@@ -19,21 +19,21 @@ class TextureMetal;
 
 class RenderPassMetal : public RenderPass
 {
-    RenderPass_Impl* impl = nullptr;
+	RenderPass_Impl* impl = nullptr;
 
 public:
 	RenderPassMetal();
 
 	virtual ~RenderPassMetal();
-    
-    bool UpdateRenderTarget(Texture** textures, int32_t textureCount, Texture* depthTexture);
-    
+
+	bool UpdateRenderTarget(Texture** textures, int32_t textureCount, Texture* depthTexture);
+
 	void SetIsColorCleared(bool isColorCleared) override;
 
 	void SetIsDepthCleared(bool isDepthCleared) override;
 
 	void SetClearColor(const Color8& color) override;
-	
+
 	RenderPass_Impl* GetImpl() const;
 };
 

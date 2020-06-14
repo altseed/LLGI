@@ -16,8 +16,8 @@ class PlatformMetal : public Platform
 {
 	PlatformMetal_Impl* impl = nullptr;
 
-    Vec2I windowSize_;
-    
+	Vec2I windowSize_;
+
 	struct RingBuffer
 	{
 		std::shared_ptr<TextureMetal> renderTexture = nullptr;
@@ -34,8 +34,8 @@ public:
 	void Present() override;
 	Graphics* CreateGraphics() override;
 
-    void SetWindowSize(const Vec2I& windowSize) override;
-    
+	void SetWindowSize(const Vec2I& windowSize) override;
+
 	RenderPass* GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) override;
 
 	DeviceType GetDeviceType() const override { return DeviceType::Metal; }
