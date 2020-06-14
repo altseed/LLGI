@@ -234,7 +234,9 @@ void SetImageLayout(vk::CommandBuffer cmdbuffer,
 
 	if (imageMemoryBarrier.dstAccessMask == vk::AccessFlagBits::eTransferWrite ||
 		imageMemoryBarrier.dstAccessMask == vk::AccessFlagBits::eTransferRead ||
-		imageMemoryBarrier.dstAccessMask == vk::AccessFlagBits::eShaderRead)
+		imageMemoryBarrier.dstAccessMask == vk::AccessFlagBits::eColorAttachmentWrite ||
+		imageMemoryBarrier.dstAccessMask == vk::AccessFlagBits::eShaderRead ||
+		imageMemoryBarrier.srcAccessMask == vk::AccessFlagBits::eColorAttachmentWrite)
 	{
 		cmdbuffer.pipelineBarrier(
 			GetStageFlag(oldImageLayout), GetStageFlag(newImageLayout), vk::DependencyFlags(), nullptr, nullptr, imageMemoryBarrier);
