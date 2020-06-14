@@ -6,6 +6,11 @@ void test_compile(LLGI::DeviceType deviceType)
 {
 	auto compiler = LLGI::CreateCompiler(deviceType);
 
+	if (compiler == nullptr)
+	{
+		return;
+	}
+
 	LLGI::CompilerResult result_vs;
 	LLGI::CompilerResult result_ps;
 
