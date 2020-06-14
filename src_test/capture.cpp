@@ -35,7 +35,7 @@ void test_capture(LLGI::DeviceType deviceType, LLGI::Vec2I windowSize)
 
 	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pips;
 
-	while (count < 1000)
+	while (count < 60)
 	{
 		if (!platform->NewFrame())
 			break;
@@ -86,17 +86,15 @@ void test_capture(LLGI::DeviceType deviceType, LLGI::Vec2I windowSize)
 		platform->Present();
 		count++;
 
-		if (TestHelper::GetIsCaptureRequired() && count == 5)
+		if (TestHelper::GetIsCaptureRequired() && count == 30)
 		{
 			commandList->WaitUntilCompleted();
 			auto texture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
 			auto data = graphics->CaptureRenderTarget(texture);
 
 			// save
-			std::string path = "Capture_" + std::to_string(windowSize.X) + "_" + std::to_string(windowSize.Y) + ".png";
+			std::string path = "Capture.Size" + std::to_string(windowSize.X) + ".png";
 			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save(path.c_str());
-            
-			break;
 		}
 	}
 
@@ -105,10 +103,10 @@ void test_capture(LLGI::DeviceType deviceType, LLGI::Vec2I windowSize)
 
 #if defined(__linux__) || defined(__APPLE__) || defined(WIN32)
 
-TEST(Capture, Size1279) { test_capture(LLGI::DeviceType::Default, LLGI::Vec2I(1279, 719)); }
+TestRegister Capture_Size1279("Capture.Size1279", [](LLGI::DeviceType device) -> void { test_capture(device, LLGI::Vec2I(1279, 719)); });
 
-TEST(Capture, Size800) { test_capture(LLGI::DeviceType::Default, LLGI::Vec2I(800, 600)); }
+TestRegister Capture_Size800("Capture.Size800", [](LLGI::DeviceType device) -> void { test_capture(device, LLGI::Vec2I(800, 600)); });
 
-TEST(Capture, Size1280) { test_capture(LLGI::DeviceType::Default, LLGI::Vec2I(1280, 720)); }
+TestRegister Capture_Size1280("Capture.Size1280", [](LLGI::DeviceType device) -> void { test_capture(device, LLGI::Vec2I(1280, 720)); });
 
 #endif

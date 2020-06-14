@@ -1,20 +1,29 @@
 
 #pragma once
 #include "test.h"
+#include <functional>
+#include <map>
+#include <memory>
 #include <stdint.h>
 #include <string>
 #include <vector>
 
-enum class RenderPassTestMode
+struct InternalTestHelper;
+
+struct ParsedArgs
 {
-	None,
-	MSAA,
-	CopyTexture,
+	LLGI::DeviceType Device = LLGI::DeviceType::Default;
+	std::string Filter;
 };
 
 class TestHelper
 {
+private:
+	static std::shared_ptr<InternalTestHelper> Get();
+
 public:
+	static ParsedArgs ParseArg(int argc, char* argv[]);
+
 	static void WriteDummyTexture(LLGI::Color8* data, LLGI::Vec2I size);
 
 	static std::vector<uint8_t> LoadData(const char* path);
@@ -41,9 +50,18 @@ public:
 							 std::shared_ptr<LLGI::Shader>& vs,
 							 std::shared_ptr<LLGI::Shader>& ps);
 
+	static void Run(const ParsedArgs& args);
+
+	static void RegisterTest(const char* name, std::function<void(LLGI::DeviceType)> func);
+
 	static bool GetIsCaptureRequired();
 	static void SetIsCaptureRequired(bool required);
-	static void AvoidLeak();
+	static void Dispose();
+};
+
+struct TestRegister
+{
+	TestRegister(const char* name, std::function<void(LLGI::DeviceType)> func) { TestHelper::RegisterTest(name, func); }
 };
 
 class Bitmap2D

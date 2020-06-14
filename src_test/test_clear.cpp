@@ -19,7 +19,7 @@ void test_clear_update(LLGI::DeviceType deviceType)
 	for (int i = 0; i < commandLists.size(); i++)
 		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
 
-	while (count < 1000)
+	while (count < 60)
 	{
 		if (!platform->NewFrame())
 			break;
@@ -46,15 +46,14 @@ void test_clear_update(LLGI::DeviceType deviceType)
 		platform->Present();
 		count++;
 
-		if (TestHelper::GetIsCaptureRequired() && count == 5)
+		if (TestHelper::GetIsCaptureRequired() && count == 30)
 		{
 			commandList->WaitUntilCompleted();
 			auto texture = platform->GetCurrentScreen(color, true)->GetRenderTexture(0);
 			auto data = graphics->CaptureRenderTarget(texture);
 
 			// save
-			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("ClearUpdate.png");
-			break;
+			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("Clear.Update.png");
 		}
 	}
 
@@ -90,7 +89,7 @@ void test_clear(LLGI::DeviceType deviceType)
 	color.B = 0;
 	color.A = 255;
 
-	while (count < 1000)
+	while (count < 60)
 	{
 		if (!platform->NewFrame())
 			break;
@@ -113,15 +112,14 @@ void test_clear(LLGI::DeviceType deviceType)
 		platform->Present();
 		count++;
 
-		if (TestHelper::GetIsCaptureRequired() && count == 5)
+		if (TestHelper::GetIsCaptureRequired() && count == 30)
 		{
 			commandList->WaitUntilCompleted();
 			auto texture = platform->GetCurrentScreen(color, true)->GetRenderTexture(0);
 			auto data = graphics->CaptureRenderTarget(texture);
 
 			// save
-			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("Clear.png");
-			break;
+			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("Clear.Basic.png");
 		}
 	}
 
@@ -134,10 +132,6 @@ void test_clear(LLGI::DeviceType deviceType)
 	LLGI::SafeRelease(platform);
 }
 
-#if defined(__linux__) || defined(__APPLE__) || defined(WIN32)
+TestRegister Clear_Basic("Clear.Basic", [](LLGI::DeviceType device) -> void { test_clear(device); });
 
-TEST(Clear, Basic) { test_clear(LLGI::DeviceType::Default); }
-
-TEST(Clear, Update) { test_clear_update(LLGI::DeviceType::Default); }
-
-#endif
+TestRegister Clear_Update("Clear.Update", [](LLGI::DeviceType device) -> void { test_clear_update(device); });

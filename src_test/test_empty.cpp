@@ -1,3 +1,4 @@
+#include "TestHelper.h"
 #include "test.h"
 
 void test_empty(LLGI::DeviceType deviceType)
@@ -12,7 +13,7 @@ void test_empty(LLGI::DeviceType deviceType)
 
 	auto graphics = platform->CreateGraphics();
 
-	while (count < 1000)
+	while (count < 60)
 	{
 		if (!platform->NewFrame())
 			break;
@@ -24,3 +25,5 @@ void test_empty(LLGI::DeviceType deviceType)
 	LLGI::SafeRelease(graphics);
 	LLGI::SafeRelease(platform);
 }
+
+TestRegister Empty_Basic("Empty.Basic", [](LLGI::DeviceType device) -> void { test_empty(device); });

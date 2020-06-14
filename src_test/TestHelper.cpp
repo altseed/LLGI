@@ -4,14 +4,67 @@
 #include "TestHelper.h"
 #include "thirdparty/stb/stb_image.h"
 #include "thirdparty/stb/stb_image_write.h"
+#include <functional>
+#include <map>
+#include <regex>
+#include <string>
 
 struct InternalTestHelper
 {
 	std::string Root;
 	bool IsCaptureRequired = false;
+	std::map<std::string, std::function<void(LLGI::DeviceType)>> tests;
 };
 
-std::unique_ptr<InternalTestHelper> internalTestHelper = std::unique_ptr<InternalTestHelper>(new InternalTestHelper());
+std::shared_ptr<InternalTestHelper> internalTestHelper = std::shared_ptr<InternalTestHelper>(new InternalTestHelper());
+
+std::shared_ptr<InternalTestHelper> TestHelper::Get()
+{
+
+	if (internalTestHelper == nullptr)
+	{
+		internalTestHelper = std::shared_ptr<InternalTestHelper>(new InternalTestHelper());
+	}
+
+	return internalTestHelper;
+}
+
+ParsedArgs TestHelper::ParseArg(int argc, char* argv[])
+{
+	ParsedArgs args;
+
+	bool isVulkanMode = false;
+	std::string filter;
+
+	for (int i = 0; i < argc; i++)
+	{
+		auto v = std::string(argv[i]);
+
+		if (v == "--vulkan")
+		{
+			isVulkanMode = true;
+		}
+		else if (v.find("--filter=") == 0)
+		{
+			args.Filter = v.substr(strlen("--filter="));
+		}
+	}
+
+#if defined(WIN32) && 1
+	args.Device = LLGI::DeviceType::DirectX12;
+#elif defined(__APPLE__)
+	args.Device = LLGI::DeviceType::Metal;
+#else
+	args.Device = LLGI::DeviceType::Vulkan;
+#endif
+
+	if (isVulkanMode)
+	{
+		args.Device = LLGI::DeviceType::Vulkan;
+	}
+
+	return args;
+}
 
 void TestHelper::WriteDummyTexture(LLGI::Color8* data, LLGI::Vec2I size)
 {
@@ -30,7 +83,7 @@ void TestHelper::WriteDummyTexture(LLGI::Color8* data, LLGI::Vec2I size)
 std::vector<uint8_t> TestHelper::LoadData(const char* path)
 {
 	std::vector<uint8_t> ret;
-	auto path_ = internalTestHelper->Root + path;
+	auto path_ = Get()->Root + path;
 	return LoadDataWithoutRoot(path_.c_str());
 }
 
@@ -63,7 +116,7 @@ std::vector<uint8_t> TestHelper::LoadDataWithoutRoot(const char* path)
 	return ret;
 }
 
-void TestHelper::SetRoot(const char* root) { internalTestHelper->Root = root; }
+void TestHelper::SetRoot(const char* root) { Get()->Root = root; }
 
 void TestHelper::CreateRectangle(LLGI::Graphics* graphics,
 								 const LLGI::Vec3F& ul,
@@ -183,11 +236,37 @@ void TestHelper::CreateShader(LLGI::Graphics* graphics,
 	}
 }
 
-bool TestHelper::GetIsCaptureRequired() { return internalTestHelper->IsCaptureRequired; }
+void TestHelper::Run(const ParsedArgs& args)
+{
+	if (args.Filter == "")
+	{
+		for (auto& f : Get()->tests)
+		{
+			f.second(args.Device);
+		}
+	}
+	else
+	{
+		std::basic_regex<char> re(args.Filter);
 
-void TestHelper::SetIsCaptureRequired(bool required) { internalTestHelper->IsCaptureRequired = required; }
+		for (auto& f : Get()->tests)
+		{
+			if (!std::regex_match(f.first,re))
+				continue;
 
-void TestHelper::AvoidLeak() { internalTestHelper.reset(); }
+			std::cout << "Start : " << f.first << std::endl;
+			f.second(args.Device);
+		}
+	}
+}
+
+void TestHelper::RegisterTest(const char* name, std::function<void(LLGI::DeviceType)> func) { Get()->tests[name] = func; }
+
+bool TestHelper::GetIsCaptureRequired() { return Get()->IsCaptureRequired; }
+
+void TestHelper::SetIsCaptureRequired(bool required) { Get()->IsCaptureRequired = required; }
+
+void TestHelper::Dispose() { internalTestHelper.reset(); }
 
 Bitmap2D::Bitmap2D(const std::vector<uint8_t>& data, int width, int height, bool bgraFormat) : data_(data), width_(width), height_(height)
 {

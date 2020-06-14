@@ -1,4 +1,5 @@
 
+#include "TestHelper.h"
 #include "test.h"
 
 void test_compile(LLGI::DeviceType deviceType)
@@ -152,3 +153,5 @@ void main()
 
 	LLGI::SafeRelease(compiler);
 }
+
+TestRegister Compile_Basic("Compile.Basic", [](LLGI::DeviceType device) -> void { test_compile(device); });

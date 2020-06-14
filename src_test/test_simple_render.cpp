@@ -44,7 +44,7 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 
 	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pips;
 
-	while (count < 1000)
+	while (count < 60)
 	{
 		if (!platform->NewFrame())
 			break;
@@ -95,12 +95,12 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 		platform->Present();
 		count++;
 
-		if (TestHelper::GetIsCaptureRequired() && count == 5)
+		if (TestHelper::GetIsCaptureRequired() && count == 30)
 		{
 			commandList->WaitUntilCompleted();
 			auto texture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
 			auto data = graphics->CaptureRenderTarget(texture);
-			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("SimpleRenderBasic.png");
+			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("SimpleRender.Basic.png");
 			break;
 		}
 	}
@@ -150,7 +150,7 @@ void test_index_offset(LLGI::DeviceType deviceType)
 
 	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pips;
 
-	while (count < 100)
+	while (count < 60)
 	{
 		if (!platform->NewFrame())
 			break;
@@ -201,12 +201,12 @@ void test_index_offset(LLGI::DeviceType deviceType)
 		platform->Present();
 		count++;
 
-		if (TestHelper::GetIsCaptureRequired() && count == 5)
+		if (TestHelper::GetIsCaptureRequired() && count == 30)
 		{
 			commandList->WaitUntilCompleted();
 			auto texture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
 			auto data = graphics->CaptureRenderTarget(texture);
-			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("SimpleRenderIndexOffset.png");
+			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("SimpleRender.IndexOffset.png");
 			break;
 		}
 	}
@@ -536,7 +536,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 			LLGI::SafeRelease(cb_ps);
 		}
 
-		if (TestHelper::GetIsCaptureRequired() && count == 5)
+		if (TestHelper::GetIsCaptureRequired() && count == 30)
 		{
 			commandList->WaitUntilCompleted();
 			auto texture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
@@ -544,11 +544,11 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 			if (type == LLGI::ConstantBufferType::LongTime)
 			{
-				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("SimpleRenderConstantLT.png");
+				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("SimpleRender.ConstantLT.png");
 			}
 			else
 			{
-				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("SimpleRenderConstantST.png");
+				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("SimpleRender.ConstantST.png");
 			}
 
 			break;
@@ -705,9 +705,9 @@ float4 main(PS_INPUT input) : SV_TARGET
 		LLGI::DataStructure d_ps;
 
 		d_vs.Data = binary_vs.data();
-		d_vs.Size = binary_vs.size();
+		d_vs.Size = static_cast<int32_t>(binary_vs.size());
 		d_ps.Data = binary_ps.data();
-		d_ps.Size = binary_ps.size();
+		d_ps.Size = static_cast<int32_t>(binary_ps.size());
 
 		data_vs.push_back(d_vs);
 		data_ps.push_back(d_ps);
@@ -775,7 +775,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pips;
 
-	while (count < 1000)
+	while (count < 60)
 	{
 		if (!platform->NewFrame())
 		{
@@ -830,13 +830,13 @@ float4 main(PS_INPUT input) : SV_TARGET
 		platform->Present();
 		count++;
 
-		if (TestHelper::GetIsCaptureRequired() && count == 5)
+		if (TestHelper::GetIsCaptureRequired() && count == 30)
 		{
 			commandList->WaitUntilCompleted();
 			auto texture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
 			auto data = graphics->CaptureRenderTarget(texture);
 
-			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("SimpleRenderTex.png");
+			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("SimpleRender.ConstantTex.png");
 
 			break;
 		}
@@ -858,16 +858,17 @@ float4 main(PS_INPUT input) : SV_TARGET
 	LLGI::SafeRelease(compiler);
 }
 
-#if defined(__linux__) || defined(__APPLE__) || defined(WIN32)
+TestRegister SimpleRender_Basic("SimpleRender.Basic", [](LLGI::DeviceType device) -> void { test_simple_rectangle(device); });
 
-TEST(SimpleRender, Basic) { test_simple_rectangle(LLGI::DeviceType::Default); }
+TestRegister SimpleRender_IndexOffset("SimpleRender.IndexOffset", [](LLGI::DeviceType device) -> void { test_index_offset(device); });
 
-TEST(SimpleRender, IndexOffset) { test_index_offset(LLGI::DeviceType::Default); }
+TestRegister SimpleRender_ConstantLT("SimpleRender.ConstantLT", [](LLGI::DeviceType device) -> void {
+	test_simple_constant_rectangle(LLGI::ConstantBufferType::LongTime, device);
+});
 
-TEST(SimpleRender, ConstantLT) { test_simple_constant_rectangle(LLGI::ConstantBufferType::LongTime, LLGI::DeviceType::Default); }
+TestRegister SimpleRender_ConstantST("SimpleRender.ConstantST", [](LLGI::DeviceType device) -> void {
+	test_simple_constant_rectangle(LLGI::ConstantBufferType::ShortTime, device);
+});
 
-TEST(SimpleRender, ConstantST) { test_simple_constant_rectangle(LLGI::ConstantBufferType::ShortTime, LLGI::DeviceType::Default); }
-
-TEST(SimpleRender, ConstantTex) { test_simple_texture_rectangle(LLGI::DeviceType::Default); }
-
-#endif
+TestRegister SimpleRender_ConstantTex("SimpleRender.ConstantTex",
+									  [](LLGI::DeviceType device) -> void { test_simple_texture_rectangle(device); });

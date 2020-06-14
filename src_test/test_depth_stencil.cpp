@@ -5,7 +5,13 @@
 #include <iostream>
 #include <map>
 
-void test_depth_stencil(LLGI::DeviceType deviceType, bool is_test_depth, bool is_test_stencil)
+enum class DepthStencilTestMode
+{
+	Depth,
+	Stentil,
+};
+
+void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 {
 	auto compiler = LLGI::CreateSharedPtr(LLGI::CreateCompiler(LLGI::DeviceType::Default));
 
@@ -29,14 +35,24 @@ void test_depth_stencil(LLGI::DeviceType deviceType, bool is_test_depth, bool is
 	// Green: near
 	std::shared_ptr<LLGI::VertexBuffer> vb1;
 	std::shared_ptr<LLGI::IndexBuffer> ib1;
-	TestHelper::CreateRectangle(
-		graphics.get(), LLGI::Vec3F(-0.5, 0.5, 0.5), LLGI::Vec3F(0.5, -0.5, 0.5), LLGI::Color8(0, 255, 0, 255), LLGI::Color8(), vb1, ib1);
+	TestHelper::CreateRectangle(graphics.get(),
+								LLGI::Vec3F(-0.5f, 0.5f, 0.5f),
+								LLGI::Vec3F(0.5f, -0.5f, 0.5f),
+								LLGI::Color8(0, 255, 0, 255),
+								LLGI::Color8(),
+								vb1,
+								ib1);
 
 	// Blue: far
 	std::shared_ptr<LLGI::VertexBuffer> vb2;
 	std::shared_ptr<LLGI::IndexBuffer> ib2;
-	TestHelper::CreateRectangle(
-		graphics.get(), LLGI::Vec3F(-0.2, 0.2, 0.8), LLGI::Vec3F(0.7, -0.7, 0.8), LLGI::Color8(0, 0, 255, 255), LLGI::Color8(), vb2, ib2);
+	TestHelper::CreateRectangle(graphics.get(),
+								LLGI::Vec3F(-0.2f, 0.2f, 0.8f),
+								LLGI::Vec3F(0.7f, -0.7f, 0.8f),
+								LLGI::Color8(0, 0, 255, 255),
+								LLGI::Color8(),
+								vb2,
+								ib2);
 
 	struct PipelineStateSet
 	{
@@ -52,7 +68,7 @@ void test_depth_stencil(LLGI::DeviceType deviceType, bool is_test_depth, bool is
 	std::array<LLGI::Texture*, 3> depthBuffers = {};
 	std::array<LLGI::RenderPass*, 3> renderPasses = {};
 
-	while (count < 1000)
+	while (count < 60)
 	{
 		if (!platform->NewFrame())
 		{
@@ -108,7 +124,7 @@ void test_depth_stencil(LLGI::DeviceType deviceType, bool is_test_depth, bool is
 
 			writepip->IsBlendEnabled = false;
 
-			if (is_test_depth)
+			if (mode == DepthStencilTestMode::Depth)
 			{
 				writepip->IsDepthWriteEnabled = true;
 			}
@@ -131,12 +147,12 @@ void test_depth_stencil(LLGI::DeviceType deviceType, bool is_test_depth, bool is
 
 			testpip->IsBlendEnabled = false;
 
-			if (is_test_depth)
+			if (mode == DepthStencilTestMode::Depth)
 			{
 				testpip->IsDepthTestEnabled = true;
 			}
 
-			if (is_test_stencil)
+			if (mode == DepthStencilTestMode::Stentil)
 			{
 				testpip->IsStencilTestEnabled = true;
 			}
@@ -148,6 +164,23 @@ void test_depth_stencil(LLGI::DeviceType deviceType, bool is_test_depth, bool is
 
 			pips[renderPassPipelineState].writeState = LLGI::CreateSharedPtr(writepip);
 			pips[renderPassPipelineState].testState = LLGI::CreateSharedPtr(testpip);
+
+			if (TestHelper::GetIsCaptureRequired() && count == 30)
+			{
+				commandList->WaitUntilCompleted();
+				auto texture = platform->GetCurrentScreen(color, true)->GetRenderTexture(0);
+				auto data = graphics->CaptureRenderTarget(texture);
+
+				// save
+				if (mode == DepthStencilTestMode::Depth)
+				{
+					Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("DepthStentil.Depth.png");
+				}
+				else if (mode == DepthStencilTestMode::Stentil)
+				{
+					Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("DepthStentil.Stentil.png");
+				}
+			}
 		}
 
 		commandList->Begin();
@@ -183,14 +216,8 @@ void test_depth_stencil(LLGI::DeviceType deviceType, bool is_test_depth, bool is
 	graphics->WaitFinish();
 }
 
-void test_depth(LLGI::DeviceType deviceType) { test_depth_stencil(deviceType, true, false); }
+TestRegister DepthStentil_Depth("DepthStentil.Depth",
+								[](LLGI::DeviceType device) -> void { test_depth_stencil(device, DepthStencilTestMode::Depth); });
 
-void test_stencil(LLGI::DeviceType deviceType) { test_depth_stencil(deviceType, false, true); }
-
-#if defined(__linux__) || defined(__APPLE__) || defined(WIN32)
-
-// TEST(DepthStencil, Depth) { test_depth(LLGI::DeviceType::Default); }
-//
-// TEST(DepthStencil, Stencil) { test_stencil(LLGI::DeviceType::Default); }
-
-#endif
+TestRegister DepthStentil_Stencil("DepthStentil.Stencil",
+								  [](LLGI::DeviceType device) -> void { test_depth_stencil(device, DepthStencilTestMode::Stentil); });
