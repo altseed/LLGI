@@ -100,7 +100,7 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 			commandList->WaitUntilCompleted();
 			auto texture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
 			auto data = graphics->CaptureRenderTarget(texture);
-			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("SimpleRender.Basic.png");
+			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save("SimpleRender.Basic.png");
 			break;
 		}
 	}
@@ -206,7 +206,7 @@ void test_index_offset(LLGI::DeviceType deviceType)
 			commandList->WaitUntilCompleted();
 			auto texture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
 			auto data = graphics->CaptureRenderTarget(texture);
-			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("SimpleRender.IndexOffset.png");
+			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save("SimpleRender.IndexOffset.png");
 			break;
 		}
 	}
@@ -406,7 +406,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 		{
 			LLGI::DataStructure d;
 			d.Data = b.data();
-			d.Size = b.size();
+			d.Size = static_cast<int32_t>(b.size());
 			data_vs.push_back(d);
 		}
 
@@ -544,11 +544,13 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 			if (type == LLGI::ConstantBufferType::LongTime)
 			{
-				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("SimpleRender.ConstantLT.png");
+				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat())
+					.Save("SimpleRender.ConstantLT.png");
 			}
 			else
 			{
-				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("SimpleRender.ConstantST.png");
+				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat())
+					.Save("SimpleRender.ConstantST.png");
 			}
 
 			break;
@@ -712,8 +714,8 @@ float4 main(PS_INPUT input) : SV_TARGET
 		data_vs.push_back(d_vs);
 		data_ps.push_back(d_ps);
 
-		shader_vs = graphics->CreateShader(data_vs.data(), data_vs.size());
-		shader_ps = graphics->CreateShader(data_ps.data(), data_ps.size());
+		shader_vs = graphics->CreateShader(data_vs.data(), static_cast<int32_t>(data_vs.size()));
+		shader_ps = graphics->CreateShader(data_ps.data(), static_cast<int32_t>(data_ps.size()));
 	}
 	else
 	{
@@ -747,7 +749,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 		{
 			LLGI::DataStructure d;
 			d.Data = b.data();
-			d.Size = b.size();
+			d.Size = static_cast<int32_t>(b.size());
 			data_vs.push_back(d);
 		}
 
@@ -755,12 +757,12 @@ float4 main(PS_INPUT input) : SV_TARGET
 		{
 			LLGI::DataStructure d;
 			d.Data = b.data();
-			d.Size = b.size();
+			d.Size = static_cast<int32_t>(b.size());
 			data_ps.push_back(d);
 		}
 
-		shader_vs = graphics->CreateShader(data_vs.data(), data_vs.size());
-		shader_ps = graphics->CreateShader(data_ps.data(), data_ps.size());
+		shader_vs = graphics->CreateShader(data_vs.data(), static_cast<int32_t>(data_vs.size()));
+		shader_ps = graphics->CreateShader(data_ps.data(), static_cast<int32_t>(data_ps.size()));
 	}
 
 	std::shared_ptr<LLGI::VertexBuffer> vb;
@@ -836,7 +838,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 			auto texture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
 			auto data = graphics->CaptureRenderTarget(texture);
 
-			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("SimpleRender.ConstantTex.png");
+			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save("SimpleRender.ConstantTex.png");
 
 			break;
 		}

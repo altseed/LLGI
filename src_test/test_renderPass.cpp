@@ -10,7 +10,6 @@ enum class RenderPassTestMode
 	CopyTexture,
 };
 
-
 void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 {
 	auto code_gl_vs = R"(
@@ -160,15 +159,15 @@ float4 main(PS_INPUT input) : SV_TARGET
 		LLGI::DataStructure d_ps;
 
 		d_vs.Data = binary_vs.data();
-		d_vs.Size = binary_vs.size();
+		d_vs.Size = static_cast<int32_t>(binary_vs.size());
 		d_ps.Data = binary_ps.data();
-		d_ps.Size = binary_ps.size();
+		d_ps.Size = static_cast<int32_t>(binary_ps.size());
 
 		data_vs.push_back(d_vs);
 		data_ps.push_back(d_ps);
 
-		shader_vs = graphics->CreateShader(data_vs.data(), data_vs.size());
-		shader_ps = graphics->CreateShader(data_ps.data(), data_ps.size());
+		shader_vs = graphics->CreateShader(data_vs.data(), static_cast<int32_t>(data_vs.size()));
+		shader_ps = graphics->CreateShader(data_ps.data(), static_cast<int32_t>(data_ps.size()));
 	}
 	else
 	{
@@ -217,8 +216,8 @@ float4 main(PS_INPUT input) : SV_TARGET
 			data_ps.push_back(d);
 		}
 
-		shader_vs = graphics->CreateShader(data_vs.data(), data_vs.size());
-		shader_ps = graphics->CreateShader(data_ps.data(), data_ps.size());
+		shader_vs = graphics->CreateShader(data_vs.data(), static_cast<int32_t>(data_vs.size()));
+		shader_ps = graphics->CreateShader(data_ps.data(), static_cast<int32_t>(data_ps.size()));
 	}
 
 	std::shared_ptr<LLGI::VertexBuffer> vb;
@@ -357,15 +356,15 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 			if (mode == RenderPassTestMode::MSAA)
 			{
-				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("RenderPass.MSAA.png");
+				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save("RenderPass.MSAA.png");
 			}
 			else if (mode == RenderPassTestMode::None)
 			{
-				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("RenderPass.Basic.png");
+				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save("RenderPass.Basic.png");
 			}
 			else
 			{
-				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("RenderPass.RenderPass.png");
+				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save("RenderPass.RenderPass.png");
 			}
 		}
 	}
@@ -578,7 +577,7 @@ PS_OUTPUT main(PS_INPUT input)
 		{
 			LLGI::DataStructure d;
 			d.Data = b.data();
-			d.Size = b.size();
+			d.Size = static_cast<int32_t>(b.size());
 			data_vs.push_back(d);
 		}
 
@@ -586,7 +585,7 @@ PS_OUTPUT main(PS_INPUT input)
 		{
 			LLGI::DataStructure d;
 			d.Data = b.data();
-			d.Size = b.size();
+			d.Size = static_cast<int32_t>(b.size());
 			data_ps.push_back(d);
 		}
 
@@ -726,7 +725,7 @@ PS_OUTPUT main(PS_INPUT input)
 			commandList->WaitUntilCompleted();
 			auto texture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
 			auto data = graphics->CaptureRenderTarget(texture);
-			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("RenderPass.MRT.png");
+			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save("RenderPass.MRT.png");
 		}
 	}
 

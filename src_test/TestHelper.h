@@ -72,21 +72,12 @@ public:
 		uint8_t r, g, b, a;
 	};
 
-	Bitmap2D(const std::vector<uint8_t>& data, int width, int height, bool bgraFormat);
-	Bitmap2D(const char* filePath);
+	Bitmap2D(const std::vector<uint8_t>& data, int width, int height, LLGI::TextureFormatType format);
 
 	Color GetPixel(int x, int y) const;
 	void Save(const char* filePath);
 
-	/**
-	 * @param[in]   colorThreshold : Tolerance threshold for each color element. (Absolute value)
-	 * @return      Match rate (%)
-	 */
-	static int CompareBitmap(const Bitmap2D& bmp1, const Bitmap2D& bmp2, int colorThreshold);
-
 private:
-	Color mixPixels(int x, int y) const;
-
 	std::vector<uint8_t> data_; // RGBA
 	int width_;
 	int height_;

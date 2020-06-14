@@ -21,7 +21,7 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 	pp.Device = deviceType;
 	pp.WaitVSync = true;
 	auto window = std::unique_ptr<LLGI::Window>(LLGI::CreateWindow("DepthStencil", LLGI::Vec2I(1280, 720)));
-	auto platform = LLGI::CreatePlatform(pp, window.get());
+	auto platform = LLGI::CreateSharedPtr(LLGI::CreatePlatform(pp, window.get()));
 
 	auto graphics = LLGI::CreateSharedPtr(platform->CreateGraphics());
 	auto sfMemoryPool = LLGI::CreateSharedPtr(graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128));
@@ -31,6 +31,12 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 	std::shared_ptr<LLGI::Shader> shader_ps = nullptr;
 
 	TestHelper::CreateShader(graphics.get(), deviceType, "simple_rectangle.vert", "simple_rectangle.frag", shader_vs, shader_ps);
+
+	std::shared_ptr<LLGI::Shader> shader_screen_vs = nullptr;
+	std::shared_ptr<LLGI::Shader> shader_screen_ps = nullptr;
+
+	TestHelper::CreateShader(
+		graphics.get(), deviceType, "simple_texture_rectangle.vert", "simple_texture_rectangle.frag", shader_screen_vs, shader_screen_ps);
 
 	// Green: near
 	std::shared_ptr<LLGI::VertexBuffer> vb1;
@@ -54,6 +60,18 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 								vb2,
 								ib2);
 
+	// Screen
+	// Blue: far
+	std::shared_ptr<LLGI::VertexBuffer> vb3;
+	std::shared_ptr<LLGI::IndexBuffer> ib3;
+	TestHelper::CreateRectangle(graphics.get(),
+								LLGI::Vec3F(-1.0f, 1.0f, 0.5f),
+								LLGI::Vec3F(1.0f, -1.0f, 0.5f),
+								LLGI::Color8(255, 255, 255, 255),
+								LLGI::Color8(255, 255, 255, 255),
+								vb3,
+								ib3);
+
 	struct PipelineStateSet
 	{
 		std::shared_ptr<LLGI::PipelineState> writeState; // write depth or stencil
@@ -61,12 +79,14 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 	};
 	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, PipelineStateSet> pips;
 
+	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> screenPips;
+
 	// auto screenRenderPass = graphics->GetCurrentScreen(color, true, true);
 	// auto depthBuffer = graphics->CreateTexture(LLGI::Vec2I(256, 256), false, true);
 
-	// <SwapChainRenderPass, BackbufferDepthBuffer>
-	std::array<LLGI::Texture*, 3> depthBuffers = {};
-	std::array<LLGI::RenderPass*, 3> renderPasses = {};
+	std::shared_ptr<LLGI::Texture> colorBuffer;
+	std::shared_ptr<LLGI::Texture> depthBuffer;
+	std::shared_ptr<LLGI::RenderPass> renderPass;
 
 	while (count < 60)
 	{
@@ -83,31 +103,30 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 		color.B = 0;
 		color.A = 255;
 
-		// TODO : fixed swapchin is not good
-		int swapIndex = count % 3;
 		auto screenRenderPass = platform->GetCurrentScreen(color, true, true);
-		LLGI::RenderPass* renderPass;
-		if (!renderPasses[swapIndex])
-		{
-			auto colorBuffer = screenRenderPass->GetRenderTexture(0);
-			LLGI::DepthTextureInitializationParameter depthParam;
-			depthParam.Size = colorBuffer->GetSizeAs2D();
-			auto depthBuffer = graphics->CreateDepthTexture(depthParam);
-			assert(depthBuffer != nullptr && depthBuffer->GetType() == LLGI::TextureType::Depth);
 
-			renderPass = graphics->CreateRenderPass((const LLGI::Texture**)&colorBuffer, 1, depthBuffer);
-			depthBuffers[swapIndex] = depthBuffer;
-			renderPasses[swapIndex] = renderPass;
-		}
-		else
+		if (colorBuffer == nullptr)
 		{
-			renderPass = renderPasses[swapIndex];
+			LLGI::RenderTextureInitializationParameter param;
+			param.Size = screenRenderPass->GetRenderTexture(0)->GetSizeAs2D();
+			colorBuffer = LLGI::CreateSharedPtr(graphics->CreateRenderTexture(param));
+
+			LLGI::DepthTextureInitializationParameter depthParam;
+			depthParam.Size = screenRenderPass->GetRenderTexture(0)->GetSizeAs2D();
+			depthBuffer = LLGI::CreateSharedPtr(graphics->CreateDepthTexture(depthParam));
+
+			std::array<LLGI::Texture*, 1> colorBuffers;
+			colorBuffers[0] = colorBuffer.get();
+
+			renderPass = LLGI::CreateSharedPtr(graphics->CreateRenderPass(
+				const_cast<const LLGI::Texture**>(colorBuffers.data()), static_cast<int32_t>(colorBuffers.size()), depthBuffer.get()));
 		}
+
 		renderPass->SetIsColorCleared(true);
 		renderPass->SetClearColor(color);
 		renderPass->SetIsDepthCleared(true);
 
-		auto renderPassPipelineState = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPass));
+		auto renderPassPipelineState = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPass.get()));
 
 		if (pips.count(renderPassPipelineState) == 0)
 		{
@@ -164,27 +183,30 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 
 			pips[renderPassPipelineState].writeState = LLGI::CreateSharedPtr(writepip);
 			pips[renderPassPipelineState].testState = LLGI::CreateSharedPtr(testpip);
+		}
 
-			if (TestHelper::GetIsCaptureRequired() && count == 30)
-			{
-				commandList->WaitUntilCompleted();
-				auto texture = platform->GetCurrentScreen(color, true)->GetRenderTexture(0);
-				auto data = graphics->CaptureRenderTarget(texture);
-
-				// save
-				if (mode == DepthStencilTestMode::Depth)
-				{
-					Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("DepthStentil.Depth.png");
-				}
-				else if (mode == DepthStencilTestMode::Stentil)
-				{
-					Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("DepthStentil.Stentil.png");
-				}
-			}
+		auto screenRenderPassPipelineState = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(screenRenderPass));
+		if (screenPips.count(screenRenderPassPipelineState) == 0)
+		{
+			auto screenpip = graphics->CreatePiplineState();
+			screenpip->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
+			screenpip->VertexLayouts[1] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
+			screenpip->VertexLayouts[2] = LLGI::VertexLayoutFormat::R8G8B8A8_UNORM;
+			screenpip->VertexLayoutNames[0] = "POSITION";
+			screenpip->VertexLayoutNames[1] = "UV";
+			screenpip->VertexLayoutNames[2] = "COLOR";
+			screenpip->VertexLayoutCount = 3;
+			screenpip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan
+			screenpip->IsBlendEnabled = false;
+			screenpip->SetShader(LLGI::ShaderStageType::Vertex, shader_screen_vs.get());
+			screenpip->SetShader(LLGI::ShaderStageType::Pixel, shader_screen_ps.get());
+			screenpip->SetRenderPassPipelineState(screenRenderPassPipelineState.get());
+			screenpip->Compile();
+			screenPips[screenRenderPassPipelineState] = LLGI::CreateSharedPtr(screenpip);
 		}
 
 		commandList->Begin();
-		commandList->BeginRenderPass(renderPass);
+		commandList->BeginRenderPass(renderPass.get());
 
 		// First, green rectangle.
 		commandList->SetVertexBuffer(vb1.get(), sizeof(SimpleVertex), 0);
@@ -199,19 +221,43 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 		commandList->Draw(2);
 
 		commandList->EndRenderPass();
+
+		// Screen
+		commandList->BeginRenderPass(screenRenderPass);
+		commandList->SetVertexBuffer(vb3.get(), sizeof(SimpleVertex), 0);
+		commandList->SetIndexBuffer(ib3.get());
+		commandList->SetTexture(colorBuffer.get(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Linear, 0, LLGI::ShaderStageType::Pixel);
+		commandList->SetPipelineState(screenPips[screenRenderPassPipelineState].get());
+		commandList->Draw(2);
+		commandList->EndRenderPass();
+
 		commandList->End();
 
 		graphics->Execute(commandList.get());
 
 		platform->Present();
 		count++;
+
+		if (TestHelper::GetIsCaptureRequired() && count == 30)
+		{
+			commandList->WaitUntilCompleted();
+			auto texture = platform->GetCurrentScreen(color, true)->GetRenderTexture(0);
+			auto data = graphics->CaptureRenderTarget(texture);
+
+			// save
+			if (mode == DepthStencilTestMode::Depth)
+			{
+				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save("DepthStentil.Depth.png");
+			}
+			else if (mode == DepthStencilTestMode::Stentil)
+			{
+				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save("DepthStentil.Stentil.png");
+			}
+		}
 	}
 
-	for (auto& ptr : depthBuffers)
-		LLGI::SafeRelease(ptr);
-	for (auto& ptr : renderPasses)
-		LLGI::SafeRelease(ptr);
 	pips.clear();
+	screenPips.clear();
 
 	graphics->WaitFinish();
 }

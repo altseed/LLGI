@@ -53,7 +53,7 @@ void test_clear_update(LLGI::DeviceType deviceType)
 			auto data = graphics->CaptureRenderTarget(texture);
 
 			// save
-			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("Clear.Update.png");
+			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save("Clear.Update.png");
 		}
 	}
 
@@ -119,7 +119,7 @@ void test_clear(LLGI::DeviceType deviceType)
 			auto data = graphics->CaptureRenderTarget(texture);
 
 			// save
-			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, true).Save("Clear.Basic.png");
+			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save("Clear.Basic.png");
 		}
 	}
 
