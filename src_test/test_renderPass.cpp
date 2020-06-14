@@ -608,10 +608,10 @@ PS_OUTPUT main(PS_INPUT input)
 			d.Size = static_cast<int32_t>(b.size());
 			data_ps.push_back(d);
 		}
-	}
 
-	shader_vs = graphics->CreateShader(data_vs.data(), static_cast<int32_t>(data_vs.size()));
-	shader_ps = graphics->CreateShader(data_ps.data(), static_cast<int32_t>(data_ps.size()));
+		shader_vs = graphics->CreateShader(data_vs.data(), static_cast<int32_t>(data_vs.size()));
+		shader_ps = graphics->CreateShader(data_ps.data(), static_cast<int32_t>(data_ps.size()));
+	}
 
 	std::shared_ptr<LLGI::VertexBuffer> vb;
 	std::shared_ptr<LLGI::IndexBuffer> ib;

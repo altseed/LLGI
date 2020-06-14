@@ -74,10 +74,10 @@ bool PipelineStateDX12::Compile()
 		elementDescs[i].AlignedByteOffset = elementOffset;
 		elementDescs[i].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
 
-		if (VertexLayouts[i] == VertexLayoutFormat::R32G32_FLOAT)
+		if (VertexLayouts[i] == VertexLayoutFormat::R32_FLOAT)
 		{
-			elementDescs[i].Format = DXGI_FORMAT_R32G32_FLOAT;
-			elementOffset += sizeof(float) * 2;
+			elementDescs[i].Format = DXGI_FORMAT_R32_FLOAT;
+			elementOffset += sizeof(float) * 1;
 		}
 		else if (VertexLayouts[i] == VertexLayoutFormat::R32G32_FLOAT)
 		{
