@@ -226,7 +226,7 @@ RenderPass* GraphicsMetal::CreateRenderPass(const Texture** textures, int32_t te
 Texture* GraphicsMetal::CreateTexture(const TextureInitializationParameter& parameter)
 {
 	auto o = new TextureMetal();
-    if (o->Initialize(this->GetImpl()->device, this, parameter.Size, TextureType::Color))
+    if (o->Initialize(this, parameter))
     {
         return o;
     }
@@ -261,7 +261,7 @@ Texture* GraphicsMetal::CreateDepthTexture(const DepthTextureInitializationParam
 
 Texture* GraphicsMetal::CreateTexture(uint64_t id) { throw "Not inplemented"; }
 
-std::shared_ptr<RenderPassPipelineStateMetal> GraphicsMetal::CreateRenderPassPipelineState(MTLPixelFormat format, MTLPixelFormat depthStencilFormat)
+std::shared_ptr<RenderPassPipelineStateMetal> GraphicsMetal::CreateRenderPassPipelineStateInternal(MTLPixelFormat format, MTLPixelFormat depthStencilFormat)
 {
 	RenderPassPipelineStateMetalKey key;
 	key.format = format;
@@ -293,7 +293,7 @@ RenderPassPipelineState* GraphicsMetal::CreateRenderPassPipelineState(RenderPass
 {
     auto renderPass_ = static_cast<RenderPassMetal*>(renderPass);
     
-    auto renderPassPipelineState = CreateRenderPassPipelineState(
+    auto renderPassPipelineState = CreateRenderPassPipelineStateInternal(
 		renderPass_->GetImpl()->pixelFormat, renderPass_->GetImpl()->depthStencilFormat);
 
     auto ret = renderPassPipelineState.get();

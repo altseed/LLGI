@@ -204,7 +204,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 		{
 			LLGI::DataStructure d;
 			d.Data = b.data();
-			d.Size = b.size();
+			d.Size = static_cast<int32_t>(b.size());
 			data_vs.push_back(d);
 		}
 
@@ -212,7 +212,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 		{
 			LLGI::DataStructure d;
 			d.Data = b.data();
-			d.Size = b.size();
+			d.Size = static_cast<int32_t>(b.size());
 			data_ps.push_back(d);
 		}
 
@@ -543,6 +543,29 @@ PS_OUTPUT main(PS_INPUT input)
 	LLGI::Shader* shader_vs = nullptr;
 	LLGI::Shader* shader_ps = nullptr;
 
+	std::vector<LLGI::DataStructure> data_vs;
+	std::vector<LLGI::DataStructure> data_ps;
+
+	if (compiler == nullptr)
+	{
+		auto binary_vs = TestHelper::LoadData("simple_texture_rectangle.vert.spv");
+		auto binary_ps = TestHelper::LoadData("simple_texture_rectangle.frag.spv");
+
+		LLGI::DataStructure d_vs;
+		LLGI::DataStructure d_ps;
+
+		d_vs.Data = binary_vs.data();
+		d_vs.Size = static_cast<int32_t>(binary_vs.size());
+		d_ps.Data = binary_ps.data();
+		d_ps.Size = static_cast<int32_t>(binary_ps.size());
+
+		data_vs.push_back(d_vs);
+		data_ps.push_back(d_ps);
+
+		shader_vs = graphics->CreateShader(data_vs.data(), static_cast<int32_t>(data_vs.size()));
+		shader_ps = graphics->CreateShader(data_ps.data(), static_cast<int32_t>(data_ps.size()));
+	}
+	else
 	{
 		LLGI::CompilerResult result_vs;
 		LLGI::CompilerResult result_ps;
@@ -570,9 +593,6 @@ PS_OUTPUT main(PS_INPUT input)
 			compiler->Compile(result_ps, code_gl_ps, LLGI::ShaderStageType::Pixel);
 		}
 
-		std::vector<LLGI::DataStructure> data_vs;
-		std::vector<LLGI::DataStructure> data_ps;
-
 		for (auto& b : result_vs.Binary)
 		{
 			LLGI::DataStructure d;
@@ -589,8 +609,8 @@ PS_OUTPUT main(PS_INPUT input)
 			data_ps.push_back(d);
 		}
 
-		shader_vs = graphics->CreateShader(data_vs.data(), data_vs.size());
-		shader_ps = graphics->CreateShader(data_ps.data(), data_ps.size());
+		shader_vs = graphics->CreateShader(data_vs.data(), static_cast<int32_t>(data_vs.size()));
+		shader_ps = graphics->CreateShader(data_ps.data(), static_cast<int32_t>(data_ps.size()));
 	}
 
 	std::shared_ptr<LLGI::VertexBuffer> vb;

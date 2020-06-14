@@ -32,7 +32,7 @@ PipelineState_Impl::~PipelineState_Impl()
 	}
 }
 
-void PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
+bool PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 {
 	auto self_ = static_cast<PipelineStateMetal*>(self);
 	auto renderPassPipelineStateMetal_ = static_cast<RenderPassPipelineStateMetal*>(self_->GetRenderPassPipelineState());
@@ -53,33 +53,40 @@ void PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 			vertexDescriptor.attributes[i].bufferIndex = VertexBufferIndex;
 			vertexOffset += sizeof(float) * 3;
 		}
-
-        if (self_->VertexLayouts[i] == VertexLayoutFormat::R32G32B32A32_FLOAT)
+        else if (self_->VertexLayouts[i] == VertexLayoutFormat::R32G32B32A32_FLOAT)
         {
             vertexDescriptor.attributes[i].format = MTLVertexFormatFloat4;
             vertexDescriptor.attributes[i].bufferIndex = VertexBufferIndex;
             vertexOffset += sizeof(float) * 4;
         }
-
-		if (self_->VertexLayouts[i] == VertexLayoutFormat::R32G32_FLOAT)
+		else if (self_->VertexLayouts[i] == VertexLayoutFormat::R32G32_FLOAT)
 		{
 			vertexDescriptor.attributes[i].format = MTLVertexFormatFloat2;
 			vertexDescriptor.attributes[i].bufferIndex = VertexBufferIndex;
 			vertexOffset += sizeof(float) * 2;
 		}
-
-		if (self_->VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UINT)
+        else if (self_->VertexLayouts[i] == VertexLayoutFormat::R32_FLOAT)
+        {
+            vertexDescriptor.attributes[i].format = MTLVertexFormatFloat;
+            vertexDescriptor.attributes[i].bufferIndex = VertexBufferIndex;
+            vertexOffset += sizeof(float) * 1;
+        }
+		else if (self_->VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UINT)
 		{
 			vertexDescriptor.attributes[i].format = MTLVertexFormatUChar4;
 			vertexDescriptor.attributes[i].bufferIndex = VertexBufferIndex;
 			vertexOffset += sizeof(float);
 		}
-
-		if (self_->VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UNORM)
+		else if (self_->VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UNORM)
 		{
 			vertexDescriptor.attributes[i].format = MTLVertexFormatUChar4Normalized;
 			vertexDescriptor.attributes[i].bufferIndex = VertexBufferIndex;
 			vertexOffset += sizeof(float);
+		}
+		else
+		{
+			Log(LogType::Error, "Unimplemented VertexLoayoutFormat");
+			return false;
 		}
 	}
 
@@ -217,6 +224,8 @@ void PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 
 	NSError* pipelineError = nil;
 	pipelineState = [graphics->device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor error:&pipelineError];
+
+	return true;
 }
 
 PipelineStateMetal::PipelineStateMetal()
@@ -253,6 +262,6 @@ void PipelineStateMetal::SetShader(ShaderStageType stage, Shader* shader)
 	shaders[static_cast<int>(stage)] = shader;
 }
 
-void PipelineStateMetal::Compile() { impl->Compile(this, graphics_->GetImpl()); }
+bool PipelineStateMetal::Compile() { return impl->Compile(this, graphics_->GetImpl()); }
 
 }

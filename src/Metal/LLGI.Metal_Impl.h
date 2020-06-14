@@ -14,6 +14,10 @@ const int VertexBufferIndex = 2;
 struct CommandList_Impl;
 struct Buffer_Impl;
 struct Texture_Impl;
+
+MTLPixelFormat ConvertFormat(TextureFormatType format);
+
+TextureFormatType ConvertFormat(MTLPixelFormat format);
     
 struct Graphics_Impl
 {
@@ -88,7 +92,7 @@ struct PipelineState_Impl
 	PipelineState_Impl();
 	~PipelineState_Impl();
 
-	void Compile(PipelineState* self, Graphics_Impl* graphics);
+	bool Compile(PipelineState* self, Graphics_Impl* graphics);
 };
 
 struct Buffer_Impl
@@ -115,7 +119,7 @@ struct Texture_Impl
 	Texture_Impl();
 	virtual ~Texture_Impl();
 
-	bool Initialize(id<MTLDevice> device, const Vec2I& size, TextureType type);
+	bool Initialize(id<MTLDevice> device, const Vec2I& size, TextureFormatType format, TextureType type);
 	bool Initialize(Graphics_Impl* graphics, const RenderTextureInitializationParameter& parameter);
 	void Reset(id<MTLTexture> nativeTexture);	// for wrap swapchain backbuffer.
 

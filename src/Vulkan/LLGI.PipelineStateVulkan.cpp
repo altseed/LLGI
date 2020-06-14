@@ -60,7 +60,7 @@ void PipelineStateVulkan::SetShader(ShaderStageType stage, Shader* shader)
 	shaders[static_cast<int>(stage)] = shader;
 }
 
-void PipelineStateVulkan::Compile()
+bool PipelineStateVulkan::Compile()
 {
 	vk::GraphicsPipelineCreateInfo graphicsPipelineInfo;
 
@@ -107,23 +107,30 @@ void PipelineStateVulkan::Compile()
 			attribDesc.format = vk::Format::eR32G32B32Sfloat;
 			vertexOffset += sizeof(float) * 3;
 		}
-
-		if (VertexLayouts[i] == VertexLayoutFormat::R32G32_FLOAT)
+		else if (VertexLayouts[i] == VertexLayoutFormat::R32_FLOAT)
+		{
+			attribDesc.format = vk::Format::eR32Sfloat;
+			vertexOffset += sizeof(float) * 1;
+		}
+		else if (VertexLayouts[i] == VertexLayoutFormat::R32G32_FLOAT)
 		{
 			attribDesc.format = vk::Format::eR32G32Sfloat;
 			vertexOffset += sizeof(float) * 2;
 		}
-
-		if (VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UINT)
+		else if (VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UINT)
 		{
 			attribDesc.format = vk::Format::eR8G8B8A8Uint;
 			vertexOffset += sizeof(float);
 		}
-
-		if (VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UNORM)
+		else if (VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UNORM)
 		{
 			attribDesc.format = vk::Format::eR8G8B8A8Unorm;
 			vertexOffset += sizeof(float);
+		}
+		else
+		{
+			Log(LogType::Error, "Unimplemented VertexLoayoutFormat");
+			return false;
 		}
 
 		attribDescs.push_back(attribDesc);
@@ -155,6 +162,7 @@ void PipelineStateVulkan::Compile()
 	else
 	{
 		assert(0);
+		return false;
 	}
 	inputAssemblyStateInfo.primitiveRestartEnable = false;
 
@@ -348,6 +356,8 @@ void PipelineStateVulkan::Compile()
 
 	// setup a pipeline
 	pipeline_ = graphics_->GetDevice().createGraphicsPipeline(nullptr, graphicsPipelineInfo);
+
+	return true;
 }
 
 } // namespace LLGI

@@ -149,7 +149,8 @@ bool TextureVulkan::InitializeAsScreen(const vk::Image& image, const vk::ImageVi
 	this->view_ = imageVew;
 	vkTextureFormat_ = format;
 	textureSize = size;
-	memorySize = size.X * size.Y * 4; // TODO: format
+	format_ = VulkanHelper::VkFormatToTextureFormat(static_cast<VkFormat>(vkTextureFormat_));
+	memorySize = GetTextureMemorySize(format_, size);
 	isExternalResource_ = true;
 	return true;
 }
@@ -286,7 +287,7 @@ void TextureVulkan::Unlock()
 	copySubmitInfos[0].commandBufferCount = 1;
 	copySubmitInfos[0].pCommandBuffers = &copyCommandBuffer;
 
-	graphics_->GetQueue().submit(copySubmitInfos.size(), copySubmitInfos.data(), vk::Fence());
+	graphics_->GetQueue().submit(static_cast<uint32_t>(copySubmitInfos.size()), copySubmitInfos.data(), vk::Fence());
 	graphics_->GetQueue().waitIdle();
 
 	graphics_->GetDevice().freeCommandBuffers(graphics_->GetCommandPool(), copyCommandBuffer);
