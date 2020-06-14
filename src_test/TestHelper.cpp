@@ -242,6 +242,7 @@ void TestHelper::Run(const ParsedArgs& args)
 	{
 		for (auto& f : Get()->tests)
 		{
+			std::cout << "Start : " << f.first << std::endl;
 			f.second(args.Device);
 		}
 	}

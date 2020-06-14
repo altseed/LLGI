@@ -22,6 +22,8 @@ endif()
 
 option(USE_MSVC_RUNTIME_LIBRARY_DLL "compile as multithreaded DLL" ON)
 
+include(cmake/ClangFormat.cmake)
+
 # MSVC Flag
 if (MSVC)
   if (NOT USE_MSVC_RUNTIME_LIBRARY_DLL)

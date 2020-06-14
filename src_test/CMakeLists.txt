@@ -53,3 +53,5 @@ endif()
 add_dependencies(LLGI_Test ExternalProject_googletest)
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)
+
+clang_format(LLGI_Test)

@@ -154,3 +154,5 @@ install(
     FILE ${PROJECT_NAME}-config.cmake
     DESTINATION lib/cmake
     EXPORT_LINK_INTERFACE_LIBRARIES)
+
+clang_format(LLGI)
