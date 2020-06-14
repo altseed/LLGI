@@ -20,7 +20,7 @@ Texture_Impl::~Texture_Impl()
 	}
 }
 
-bool Texture_Impl::Initialize(id<MTLDevice> device, const Vec2I& size, TextureType type)
+bool Texture_Impl::Initialize(id<MTLDevice> device, const Vec2I& size, TextureFormatType format, TextureType type)
 {
     MTLTextureDescriptor* textureDescriptor = nullptr;
     
@@ -43,7 +43,7 @@ bool Texture_Impl::Initialize(id<MTLDevice> device, const Vec2I& size, TextureTy
     }
     else
     {
-        textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
+        textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:ConvertFormat(format)
 																								 width:size.X
 																								height:size.Y
 																							 mipmapped:NO];
@@ -72,7 +72,7 @@ bool Texture_Impl::Initialize(Graphics_Impl* graphics, const RenderTextureInitia
 	id<MTLDevice> device = graphics->device;
     MTLTextureDescriptor* textureDescriptor = nullptr;
 
-	textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
+	textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:ConvertFormat(parameter.Format)
 																							 width:parameter.Size.X
 																							height:parameter.Size.Y
 																						 mipmapped:NO];
@@ -88,7 +88,7 @@ bool Texture_Impl::Initialize(Graphics_Impl* graphics, const RenderTextureInitia
 	{
 		multiSampled_ = true;
 		
-		MTLTextureDescriptor* desc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
+		MTLTextureDescriptor* desc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:ConvertFormat(parameter.Format)
 																						width:parameter.Size.X
 																					   height:parameter.Size.Y
 																					mipmapped:NO];
@@ -114,7 +114,6 @@ void Texture_Impl::Reset(id<MTLTexture> nativeTexture)
     texture = nativeTexture;
 	size_.X = texture.width;
 	size_.Y = texture.height;
-    // TODO format
     fromExternal_ = true;
 }
 
@@ -139,8 +138,33 @@ bool TextureMetal::Initialize(id<MTLDevice> device, ReferenceObject* owner, Vec2
     
     SafeAssign(owner_, owner);
 
-	data.resize(size.X * size.Y * 4);
-	return impl->Initialize(device, size, type_);
+	if(!impl->Initialize(device, size, TextureFormatType::R8G8B8A8_UNORM, type_))
+    {
+        return false;
+    }
+
+    // Depth
+    // format_ = ConvertFormat(impl->texture.pixelFormat);
+    // data.resize(GetTextureMemorySize(format_, impl->size_));
+    
+    return true;
+}
+
+bool TextureMetal::Initialize(GraphicsMetal* owner, const TextureInitializationParameter& parameter)
+{
+    type_ = TextureType::Color;
+    
+    SafeAssign(owner_, static_cast<ReferenceObject*>(owner));
+
+    if(!impl->Initialize(owner->GetImpl()->device,parameter.Size, parameter.Format, type_))
+    {
+        return false;
+    }
+
+    format_ = ConvertFormat(impl->texture.pixelFormat);
+    data.resize(GetTextureMemorySize(format_, impl->size_));
+    
+    return true;
 }
 
 bool TextureMetal::Initialize(GraphicsMetal* owner, const RenderTextureInitializationParameter& parameter)
@@ -149,17 +173,23 @@ bool TextureMetal::Initialize(GraphicsMetal* owner, const RenderTextureInitializ
     
     SafeAssign(owner_, static_cast<ReferenceObject*>(owner));
 
-	if (parameter.Format != TextureFormatType::R8G8B8A8_UNORM) {
-		throw "Not implemented.";
-	}
-	data.resize(parameter.Size.X * parameter.Size.Y * 4);	// TODO: pixel size
-	return impl->Initialize(owner->GetImpl(), parameter);
+    if(!impl->Initialize(owner->GetImpl(), parameter))
+    {
+        return false;
+    }
+    
+    format_ = ConvertFormat(impl->texture.pixelFormat);
+    data.resize(GetTextureMemorySize(format_, impl->size_));
+    
+    return true;
 }
 
 void TextureMetal::Reset(id<MTLTexture> nativeTexture)
 {
     type_ = TextureType::Screen;
     impl->Reset(nativeTexture);
+    
+    format_ = ConvertFormat(impl->texture.pixelFormat);
 }
 
 void* TextureMetal::Lock() { return data.data(); }

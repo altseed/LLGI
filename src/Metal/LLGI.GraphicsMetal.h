@@ -91,7 +91,7 @@ public:
 	Texture* CreateTexture(uint64_t id) override;
 
     //! internal function
-	std::shared_ptr<RenderPassPipelineStateMetal> CreateRenderPassPipelineState(MTLPixelFormat format, MTLPixelFormat depthStencilFormat);
+	std::shared_ptr<RenderPassPipelineStateMetal> CreateRenderPassPipelineStateInternal(MTLPixelFormat format, MTLPixelFormat depthStencilFormat);
 
     RenderPassPipelineState* CreateRenderPassPipelineState(RenderPass* renderPass) override;
     
