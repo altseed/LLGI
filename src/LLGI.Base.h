@@ -78,6 +78,7 @@ enum class VertexLayoutFormat
 	R8G8B8A8_UNORM,
 	R8G8B8A8_UINT,
 	R32G32_FLOAT,
+	R32_FLOAT,
 };
 
 enum class TopologyType

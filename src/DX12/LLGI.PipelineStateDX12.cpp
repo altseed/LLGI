@@ -36,7 +36,7 @@ void PipelineStateDX12::SetShader(ShaderStageType stage, Shader* shader)
 	shaders_[static_cast<int>(stage)] = shader;
 }
 
-void PipelineStateDX12::Compile()
+bool PipelineStateDX12::Compile()
 {
 	CreateRootSignature();
 
@@ -46,7 +46,7 @@ void PipelineStateDX12::Compile()
 	{
 		auto shader = static_cast<ShaderDX12*>(shaders_.at(i));
 		if (shader == nullptr)
-			return;
+			return false;
 
 		auto& shaderData = shader->GetData();
 
@@ -79,6 +79,11 @@ void PipelineStateDX12::Compile()
 			elementDescs[i].Format = DXGI_FORMAT_R32G32_FLOAT;
 			elementOffset += sizeof(float) * 2;
 		}
+		else if (VertexLayouts[i] == VertexLayoutFormat::R32G32_FLOAT)
+		{
+			elementDescs[i].Format = DXGI_FORMAT_R32G32_FLOAT;
+			elementOffset += sizeof(float) * 2;
+		}
 		else if (VertexLayouts[i] == VertexLayoutFormat::R32G32B32_FLOAT)
 		{
 			elementDescs[i].Format = DXGI_FORMAT_R32G32B32_FLOAT;
@@ -101,7 +106,8 @@ void PipelineStateDX12::Compile()
 		}
 		else
 		{
-			assert(0);
+			Log(LogType::Error, "Unimplemented VertexLoayoutFormat");
+			return false;
 		}
 	}
 
@@ -234,11 +240,11 @@ void PipelineStateDX12::Compile()
 		goto FAILED_EXIT;
 	}
 
-	return;
+	return true;
 
 FAILED_EXIT:
 	SafeRelease(pipelineState_);
-	return;
+	return false;
 }
 
 bool PipelineStateDX12::CreateRootSignature()
