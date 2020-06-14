@@ -46,7 +46,7 @@ public:
 
 	virtual void SetRenderPassPipelineState(RenderPassPipelineState* renderPassPipelineState);
 
-	virtual bool Compile();
+	virtual void Compile();
 };
 
 } // namespace LLGI
