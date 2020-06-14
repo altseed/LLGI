@@ -390,6 +390,10 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 void test_multiRenderPass(LLGI::DeviceType deviceType)
 {
+    if(deviceType == LLGI::DeviceType::Metal ||
+       deviceType == LLGI::DeviceType::Vulkan)
+        return;
+    
 	auto code_gl_vs = R"(
 #version 440 core
 layout(location = 0) in vec3 a_position;
