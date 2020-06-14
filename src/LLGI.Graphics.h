@@ -129,7 +129,8 @@ struct RenderPassPipelineStateKey
 				return false;
 		}
 
-		return (IsPresent == value.IsPresent && HasDepth == value.HasDepth && IsColorCleared == value.IsColorCleared && IsDepthCleared == value.IsDepthCleared);
+		return (IsPresent == value.IsPresent && HasDepth == value.HasDepth && IsColorCleared == value.IsColorCleared &&
+				IsDepthCleared == value.IsDepthCleared);
 	}
 
 	struct Hash
@@ -209,7 +210,7 @@ public:
 
 	/**
 		@brief create a memory pool
-        @param  drawingCount(drawingCount is ignored in DirectX12)
+		@param  drawingCount(drawingCount is ignored in DirectX12)
 	*/
 	virtual SingleFrameMemoryPool* CreateSingleFrameMemoryPool(int32_t constantBufferPoolSize, int32_t drawingCount);
 

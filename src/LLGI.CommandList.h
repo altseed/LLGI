@@ -54,7 +54,6 @@ private:
 	int32_t swapCount_ = 0;
 	std::vector<SwapObject> swapObjects;
 
-    
 	BindingVertexBuffer bindingVertexBuffer;
 	BindingIndexBuffer bindingIndexBuffer;
 
@@ -69,8 +68,8 @@ private:
 
 protected:
 	bool isInRenderPass_ = false;
-    bool isInBegin_ = false;
-    
+	bool isInBegin_ = false;
+
 	std::array<std::array<BindingTexture, NumTexture>, static_cast<int>(ShaderStageType::Max)> currentTextures;
 
 protected:

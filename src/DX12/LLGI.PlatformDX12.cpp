@@ -80,7 +80,8 @@ PlatformDX12::~PlatformDX12()
 	}
 }
 
-void PlatformDX12::ResetSwapBuffer() {
+void PlatformDX12::ResetSwapBuffer()
+{
 
 	Wait();
 
@@ -101,7 +102,8 @@ void PlatformDX12::ResetSwapBuffer() {
 	SafeRelease(swapChain);
 }
 
-bool PlatformDX12::GenerateSwapBuffer() {
+bool PlatformDX12::GenerateSwapBuffer()
+{
 	// Swap chain
 	DXGI_SWAP_CHAIN_DESC DXGISwapChainDesc;
 	ZeroMemory(&DXGISwapChainDesc, sizeof(DXGISwapChainDesc));
@@ -140,7 +142,7 @@ bool PlatformDX12::GenerateSwapBuffer() {
 	SafeRelease(swapChain_);
 
 	// Render target
-	
+
 	// Render target DescriptorHeap
 	renderPassHeapDesc.NumDescriptors = SwapBufferCount;
 	renderPassHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
@@ -330,7 +332,6 @@ bool PlatformDX12::Initialize(Window* window, bool waitVSync)
 	}
 	commandListPresent->Close();
 
-
 	return true;
 
 FAILED_EXIT:;
@@ -426,11 +427,12 @@ Graphics* PlatformDX12::CreateGraphics()
 
 ID3D12Device* PlatformDX12::GetDevice() { return device; }
 
-void PlatformDX12::SetWindowSize(const Vec2I& windowSize) {
+void PlatformDX12::SetWindowSize(const Vec2I& windowSize)
+{
 
 	if (windowSize_ == windowSize)
 	{
-		return;	
+		return;
 	}
 
 	if (inFrame_)

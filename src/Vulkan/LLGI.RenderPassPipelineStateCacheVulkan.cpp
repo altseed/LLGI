@@ -105,7 +105,7 @@ RenderPassPipelineStateVulkan* RenderPassPipelineStateCacheVulkan::Create(bool i
 		// When clearing, the initialLayout does not matter.
 		attachmentDescs.at(colorCount).initialLayout =
 			(isDepthCleared) ? vk::ImageLayout::eUndefined : vk::ImageLayout::eDepthStencilAttachmentOptimal;
-		attachmentDescs.at(colorCount).finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;	
+		attachmentDescs.at(colorCount).finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 	}
 
 	for (size_t i = 0; i < attachmentDescs.size(); i++)

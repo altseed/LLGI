@@ -22,7 +22,7 @@ ID3D12Resource* CreateResourceBuffer(ID3D12Device* device,
 	heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
 
 	heapProps.CreationNodeMask = 1; // TODO: set properly for multi-adaptor.
-	heapProps.VisibleNodeMask = 1;  // TODO: set properly for multi-adaptor.
+	heapProps.VisibleNodeMask = 1;	// TODO: set properly for multi-adaptor.
 
 	resDesc.Dimension = resourceDimention;
 	resDesc.Width = size.X;
@@ -88,7 +88,7 @@ DXGI_FORMAT ConvertFormat(TextureFormatType format)
 	return DXGI_FORMAT_UNKNOWN;
 }
 
-TextureFormatType ConvertFormat(DXGI_FORMAT format) 
+TextureFormatType ConvertFormat(DXGI_FORMAT format)
 {
 	if (format == DXGI_FORMAT_R8G8B8A8_UNORM)
 		return TextureFormatType::R8G8B8A8_UNORM;

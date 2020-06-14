@@ -226,7 +226,8 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 		commandList->BeginRenderPass(screenRenderPass);
 		commandList->SetVertexBuffer(vb3.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib3.get());
-		commandList->SetTexture(colorBuffer.get(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Linear, 0, LLGI::ShaderStageType::Pixel);
+		commandList->SetTexture(
+			colorBuffer.get(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Linear, 0, LLGI::ShaderStageType::Pixel);
 		commandList->SetPipelineState(screenPips[screenRenderPassPipelineState].get());
 		commandList->Draw(2);
 		commandList->EndRenderPass();

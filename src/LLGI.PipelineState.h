@@ -32,12 +32,12 @@ public:
 	bool IsDepthWriteEnabled = false;
 	bool IsStencilTestEnabled = false;
 	DepthFuncType DepthFunc = DepthFuncType::Less;
-	
+
 	bool IsMSAA = false;
 
 	std::array<std::string, VertexLayoutMax> VertexLayoutNames;
 	std::array<VertexLayoutFormat, VertexLayoutMax> VertexLayouts;
-	
+
 	//! only for DirectX12
 	std::array<int32_t, VertexLayoutMax> VertexLayoutSemantics;
 	int32_t VertexLayoutCount = 0;

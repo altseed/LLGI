@@ -163,12 +163,14 @@ ConstantBuffer* GraphicsVulkan::CreateConstantBuffer(int32_t size)
 RenderPass* GraphicsVulkan::CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture)
 {
 	assert(textures != nullptr);
-	if(textures == nullptr) return nullptr;
+	if (textures == nullptr)
+		return nullptr;
 
-	for(size_t i = 0; i < textureCount; i++)
+	for (size_t i = 0; i < textureCount; i++)
 	{
 		assert(textures[i] != nullptr);
-		if(textures[i] == nullptr) return nullptr;	
+		if (textures[i] == nullptr)
+			return nullptr;
 	}
 
 	auto dt = static_cast<TextureVulkan*>(depthTexture);
@@ -195,7 +197,7 @@ Texture* GraphicsVulkan::CreateTexture(const Vec2I& size, bool isRenderPass, boo
 		}
 		return obj;
 	}
-	
+
 	if (!obj->Initialize(this, true, size, isRenderPass))
 	{
 		SafeRelease(obj);
@@ -208,10 +210,10 @@ Texture* GraphicsVulkan::CreateTexture(const Vec2I& size, bool isRenderPass, boo
 
 Texture* GraphicsVulkan::CreateTexture(uint64_t id) { throw "Not inplemented"; }
 
-Texture* GraphicsVulkan::CreateTexture(const TextureInitializationParameter& parameter) 
+Texture* GraphicsVulkan::CreateTexture(const TextureInitializationParameter& parameter)
 {
 	auto obj = new TextureVulkan();
-	
+
 	if (!obj->Initialize(this, true, parameter.Size, false))
 	{
 		SafeRelease(obj);
@@ -237,7 +239,7 @@ Texture* GraphicsVulkan::CreateDepthTexture(const DepthTextureInitializationPara
 {
 	auto obj = new TextureVulkan();
 
-	if (!obj->InitializeAsDepthStencil( this->vkDevice, this->vkPysicalDevice, parameter.Size, this))
+	if (!obj->InitializeAsDepthStencil(this->vkDevice, this->vkPysicalDevice, parameter.Size, this))
 	{
 		SafeRelease(obj);
 		return nullptr;
@@ -370,7 +372,7 @@ RenderPassPipelineState* GraphicsVulkan::CreateRenderPassPipelineState(const Ren
 	FixedSizeVector<vk::Format, RenderTargetMax> renderTargets;
 
 	renderTargets.resize(key.RenderTargetFormats.size());
-	for(size_t i = 0; i < renderTargets.size(); i++)
+	for (size_t i = 0; i < renderTargets.size(); i++)
 	{
 		renderTargets.at(i) = (vk::Format)VulkanHelper::TextureFormatToVkFormat(key.RenderTargetFormats.at(i));
 	}
