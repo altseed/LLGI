@@ -45,8 +45,6 @@ bool Graphics_Impl::Initialize()
 			break;
 		}
 	}
-	if (maxMultiSamplingCount == 0)
-		throw "Unsupported.";
 
 	return true;
 }
