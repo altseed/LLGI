@@ -5,6 +5,7 @@
 
 void test_capture(LLGI::DeviceType deviceType, LLGI::Vec2I windowSize)
 {
+try {
 	int count = 0;
 
 	LLGI::PlatformParameter pp;
@@ -99,6 +100,13 @@ void test_capture(LLGI::DeviceType deviceType, LLGI::Vec2I windowSize)
 	}
 
 	pips.clear();
+
+}
+catch(const char* c)
+{
+printf(c);
+}
+
 }
 
 #if defined(__linux__) || defined(__APPLE__) || defined(WIN32)
