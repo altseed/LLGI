@@ -265,11 +265,12 @@ Texture* GraphicsMetal::CreateDepthTexture(const DepthTextureInitializationParam
 
 Texture* GraphicsMetal::CreateTexture(uint64_t id) { throw "Not inplemented"; }
 
-std::shared_ptr<RenderPassPipelineStateMetal> GraphicsMetal::CreateRenderPassPipelineStateInternal(MTLPixelFormat format,
-																								   MTLPixelFormat depthStencilFormat)
+std::shared_ptr<RenderPassPipelineStateMetal>
+GraphicsMetal::CreateRenderPassPipelineStateInternal(const FixedSizeVector<MTLPixelFormat, RenderTargetMax>& formats,
+													 MTLPixelFormat depthStencilFormat)
 {
 	RenderPassPipelineStateMetalKey key;
-	key.format = format;
+	key.formats = formats;
 	key.depthStencilFormat = depthStencilFormat;
 
 	// already?
@@ -286,7 +287,7 @@ std::shared_ptr<RenderPassPipelineStateMetal> GraphicsMetal::CreateRenderPassPip
 	}
 
 	std::shared_ptr<RenderPassPipelineStateMetal> ret = LLGI::CreateSharedPtr<>(new RenderPassPipelineStateMetal());
-	ret->GetImpl()->pixelFormat = format;
+	ret->GetImpl()->pixelFormats = formats;
 	ret->GetImpl()->depthStencilFormat = depthStencilFormat;
 
 	renderPassPipelineStates[key] = ret;
@@ -299,7 +300,7 @@ RenderPassPipelineState* GraphicsMetal::CreateRenderPassPipelineState(RenderPass
 	auto renderPass_ = static_cast<RenderPassMetal*>(renderPass);
 
 	auto renderPassPipelineState =
-		CreateRenderPassPipelineStateInternal(renderPass_->GetImpl()->pixelFormat, renderPass_->GetImpl()->depthStencilFormat);
+		CreateRenderPassPipelineStateInternal(renderPass_->GetImpl()->pixelFormats, renderPass_->GetImpl()->depthStencilFormat);
 
 	auto ret = renderPassPipelineState.get();
 	SafeAddRef(ret);

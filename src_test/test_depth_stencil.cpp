@@ -75,7 +75,7 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 	struct PipelineStateSet
 	{
 		std::shared_ptr<LLGI::PipelineState> writeState; // write depth or stencil
-		std::shared_ptr<LLGI::PipelineState> testState;	 // depth-test or stencil-test
+		std::shared_ptr<LLGI::PipelineState> testState;  // depth-test or stencil-test
 	};
 	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, PipelineStateSet> pips;
 

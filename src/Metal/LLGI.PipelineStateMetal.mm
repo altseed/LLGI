@@ -213,8 +213,12 @@ bool PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 		colorAttachment.blendingEnabled = false;
 	}
 
-	[pipelineStateDescriptor.colorAttachments objectAtIndexedSubscript:0].pixelFormat =
-		renderPassPipelineStateMetal_->GetImpl()->pixelFormat;
+	for (size_t i = 0; i < renderPassPipelineStateMetal_->GetImpl()->pixelFormats.size(); i++)
+	{
+		[pipelineStateDescriptor.colorAttachments objectAtIndexedSubscript:i].pixelFormat =
+			renderPassPipelineStateMetal_->GetImpl()->pixelFormats.at(i);
+	}
+
 	if (renderPassPipelineStateMetal_->GetImpl()->depthStencilFormat != MTLPixelFormatInvalid)
 	{
 		pipelineStateDescriptor.depthAttachmentPixelFormat = renderPassPipelineStateMetal_->GetImpl()->depthStencilFormat;

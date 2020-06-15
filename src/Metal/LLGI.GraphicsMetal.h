@@ -1,9 +1,20 @@
 #pragma once
 
 #include "../LLGI.Graphics.h"
+#include "../Utils/LLGI.FixedSizeVector.h"
 #import <MetalKit/MetalKit.h>
 #include <functional>
 #include <unordered_map>
+
+namespace std
+{
+
+template <> struct hash<MTLPixelFormat>
+{
+	size_t operator()(const MTLPixelFormat& _Keyval) const noexcept { return std::hash<uint32_t>()(static_cast<uint32_t>(_Keyval)); }
+};
+
+} // namespace std
 
 namespace LLGI
 {
@@ -19,12 +30,22 @@ class TextureMetal;
 
 struct RenderPassPipelineStateMetalKey
 {
-	MTLPixelFormat format;
+	FixedSizeVector<MTLPixelFormat, RenderTargetMax> formats;
 	MTLPixelFormat depthStencilFormat = MTLPixelFormatInvalid; // MTLPixelFormatInvalid if texture is not set.
 
 	bool operator==(const RenderPassPipelineStateMetalKey& value) const
 	{
-		return (format == value.format && depthStencilFormat == value.depthStencilFormat);
+		if (depthStencilFormat == value.depthStencilFormat)
+		{
+			return false;
+		}
+
+		if (formats.size() != value.formats.size())
+		{
+			return false;
+		}
+
+		return formats == value.formats;
 	}
 
 	struct Hash
@@ -33,7 +54,7 @@ struct RenderPassPipelineStateMetalKey
 
 		std::size_t operator()(const RenderPassPipelineStateMetalKey& key) const
 		{
-			return std::hash<std::int32_t>()(static_cast<int>(key.format) + (static_cast<int>(key.depthStencilFormat) * 10000));
+			return key.formats.get_hash() + (static_cast<int>(key.depthStencilFormat) * 10000);
 		}
 	};
 };
@@ -95,8 +116,9 @@ public:
 	Texture* CreateTexture(uint64_t id) override;
 
 	//! internal function
-	std::shared_ptr<RenderPassPipelineStateMetal> CreateRenderPassPipelineStateInternal(MTLPixelFormat format,
-																						MTLPixelFormat depthStencilFormat);
+	std::shared_ptr<RenderPassPipelineStateMetal>
+	CreateRenderPassPipelineStateInternal(const FixedSizeVector<MTLPixelFormat, RenderTargetMax>& formats,
+										  MTLPixelFormat depthStencilFormat);
 
 	RenderPassPipelineState* CreateRenderPassPipelineState(RenderPass* renderPass) override;
 

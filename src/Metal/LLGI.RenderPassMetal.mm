@@ -34,6 +34,8 @@ bool RenderPass_Impl::Initialize()
 
 void RenderPass_Impl::UpdateTarget(Texture_Impl** textures, int32_t textureCount, Texture_Impl* depthTexture)
 {
+	pixelFormats.resize(textureCount);
+
 	for (int i = 0; i < textureCount; i++)
 	{
 		if (textures[i]->multiSampled_)
@@ -46,6 +48,8 @@ void RenderPass_Impl::UpdateTarget(Texture_Impl** textures, int32_t textureCount
 		{
 			renderPassDescriptor.colorAttachments[i].texture = textures[i]->texture;
 		}
+
+		pixelFormats.at(i) = textures[i]->texture.pixelFormat;
 	}
 
 	if (depthTexture != nullptr)
@@ -54,8 +58,6 @@ void RenderPass_Impl::UpdateTarget(Texture_Impl** textures, int32_t textureCount
 		renderPassDescriptor.stencilAttachment.texture = depthTexture->texture;
 		depthStencilFormat = depthTexture->texture.pixelFormat;
 	}
-
-	pixelFormat = textures[0]->texture.pixelFormat;
 }
 
 RenderPassMetal::RenderPassMetal()
