@@ -285,12 +285,6 @@ void CommandListMetal::Draw(int32_t pritimiveCount)
 	}
 
 	// draw
-	int indexPerPrim = 0;
-	if (pip->Topology == TopologyType::Triangle)
-		indexPerPrim = 3;
-	if (pip->Topology == TopologyType::Line)
-		indexPerPrim = 2;
-
 	MTLPrimitiveType topology = MTLPrimitiveTypeTriangle;
 	MTLIndexType indexType = MTLIndexTypeUInt32;
 
