@@ -58,11 +58,11 @@ jobs:
         inputs:
           cmakeArgs: '--build . --config Release'
 
-    #  - task: Bash@3
-    #    inputs:
-    #      targetType: 'inline'
-    #      script: |
-    #        ./build/src_test/LLGI_Test test
+      - task: Bash@3
+        inputs:
+          targetType: 'inline'
+          script: |
+            ./build/src_test/LLGI_Test
 
     #  - task: PublishBuildArtifacts@1
     #    inputs:
