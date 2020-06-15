@@ -370,7 +370,7 @@ bool PipelineStateVulkan::Compile()
 	graphicsPipelineInfo.layout = pipelineLayout_;
 
 	// setup a pipeline
-	pipeline_ = graphics_->GetDevice().createGraphicsPipeline(nullptr, graphicsPipelineInfo);
+	pipeline_ = static_cast<vk::Pipeline>(graphics_->GetDevice().createGraphicsPipeline(nullptr, graphicsPipelineInfo));
 
 	return true;
 }
