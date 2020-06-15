@@ -85,6 +85,7 @@ enum class TopologyType
 {
 	Triangle,
 	Line,
+	Point,
 };
 
 enum class TextureWrapMode

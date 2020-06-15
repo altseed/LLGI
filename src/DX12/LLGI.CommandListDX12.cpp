@@ -395,10 +395,34 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 	}
 
 	// setup a topology (triangle)
-	currentCommandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	int indexPerPrim = 0;
+	D3D_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+	if (pip_->Topology == TopologyType::Triangle)
+	{
+		indexPerPrim = 3;
+		topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	}
+	else if (pip_->Topology == TopologyType::Line)
+	{
+		indexPerPrim = 2;
+		topology = D3D_PRIMITIVE_TOPOLOGY_LINELIST;
+	}
+	else if (pip_->Topology == TopologyType::Point)
+	{
+		indexPerPrim = 1;
+		topology = D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
+	}
+	else
+	{
+		assert(0);
+	}
+
+	currentCommandList_->IASetPrimitiveTopology(topology);
 
 	// draw polygon
-	currentCommandList_->DrawIndexedInstanced(pritimiveCount * 3 /*triangle*/, 1, 0, 0, 0);
+	currentCommandList_->DrawIndexedInstanced(pritimiveCount * indexPerPrim, 1, 0, 0, 0);
 
 	CommandList::Draw(pritimiveCount);
 }

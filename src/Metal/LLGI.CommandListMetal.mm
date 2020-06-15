@@ -294,9 +294,27 @@ void CommandListMetal::Draw(int32_t pritimiveCount)
 	MTLPrimitiveType topology = MTLPrimitiveTypeTriangle;
 	MTLIndexType indexType = MTLIndexTypeUInt32;
 
-	if (pip->Topology == TopologyType::Line)
+	int indexPerPrim = 0;
+	D3D_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+	if (pip_->Topology == TopologyType::Triangle)
 	{
+		indexPerPrim = 3;
+		topology = MTLPrimitiveTypeTriangle;
+	}
+	else if (pip_->Topology == TopologyType::Line)
+	{
+		indexPerPrim = 2;
 		topology = MTLPrimitiveTypeLine;
+	}
+	else if (pip_->Topology == TopologyType::Point)
+	{
+		indexPerPrim = 1;
+		topology = MTLPrimitiveTypePoint;
+	}
+	else
+	{
+		assert(0);
 	}
 
 	if (ib->GetStride() == 2)

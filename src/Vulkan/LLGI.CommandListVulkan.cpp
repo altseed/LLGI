@@ -348,9 +348,21 @@ void CommandListVulkan::Draw(int32_t pritimiveCount)
 	// draw
 	int indexPerPrim = 0;
 	if (pip->Topology == TopologyType::Triangle)
+	{
 		indexPerPrim = 3;
-	if (pip->Topology == TopologyType::Line)
+	}
+	else if (pip->Topology == TopologyType::Line)
+	{
 		indexPerPrim = 2;
+	}
+	else if (pip->Topology == TopologyType::Point)
+	{
+		indexPerPrim = 1;
+	}
+	else
+	{
+		assert(0);
+	}
 
 	cmdBuffer.drawIndexed(indexPerPrim * pritimiveCount, 1, 0, 0, 0);
 

@@ -162,9 +162,14 @@ bool PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 	{
 		pipelineStateDescriptor.inputPrimitiveTopology = MTLPrimitiveTopologyClassLine;
 	}
+	else if (self_->Topology == TopologyType::Point)
+	{
+		pipelineStateDescriptor.inputPrimitiveTopology = MTLPrimitiveTopologyClassPoint;
+	}
 	else
 	{
-		assert(0);
+		Log(LogType::Error, "Unimplemented TopologyType");
+		return false;
 	}
 
 	// clulling (on commandlist)

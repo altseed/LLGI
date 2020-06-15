@@ -159,11 +159,16 @@ bool PipelineStateVulkan::Compile()
 	{
 		inputAssemblyStateInfo.topology = vk::PrimitiveTopology::eLineList;
 	}
+	else if (Topology == TopologyType::Point)
+	{
+		inputAssemblyStateInfo.topology = vk::PrimitiveTopology::ePointList;
+	}
 	else
 	{
-		assert(0);
+		Log(LogType::Error, "Unimplemented TopologyType");
 		return false;
 	}
+
 	inputAssemblyStateInfo.primitiveRestartEnable = false;
 
 	graphicsPipelineInfo.pInputAssemblyState = &inputAssemblyStateInfo;
@@ -253,51 +258,61 @@ bool PipelineStateVulkan::Compile()
 
 	graphicsPipelineInfo.pDepthStencilState = &depthStencilInfo;
 
+	assert(renderPassPipelineState_ != nullptr);
+	auto renderPassPipelineState = static_cast<RenderPassPipelineStateVulkan*>(renderPassPipelineState_.get());
+	auto renderPass = renderPassPipelineState->GetRenderPass();
+
 	// blending
-	vk::PipelineColorBlendAttachmentState blendInfo;
-	blendInfo.colorWriteMask =
-		vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+	std::array<vk::PipelineColorBlendAttachmentState, RenderTargetMax> blendInfos;
 
-	if (IsBlendEnabled)
+	for (int32_t i = 0; i < renderPassPipelineState->RenderTargetCount; i++)
 	{
-		blendInfo.blendEnable = true;
+		auto& blendInfo = blendInfos[i];
 
-		std::array<vk::BlendOp, 10> blendOps;
-		blendOps[static_cast<int>(BlendEquationType::Add)] = vk::BlendOp::eAdd;
-		blendOps[static_cast<int>(BlendEquationType::Sub)] = vk::BlendOp::eSubtract;
-		blendOps[static_cast<int>(BlendEquationType::ReverseSub)] = vk::BlendOp::eReverseSubtract;
-		blendOps[static_cast<int>(BlendEquationType::Min)] = vk::BlendOp::eMin;
-		blendOps[static_cast<int>(BlendEquationType::Max)] = vk::BlendOp::eMax;
+		blendInfo.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB |
+								   vk::ColorComponentFlagBits::eA;
 
-		std::array<vk::BlendFactor, 20> blendFuncs;
-		blendFuncs[static_cast<int>(BlendFuncType::Zero)] = vk::BlendFactor::eZero;
-		blendFuncs[static_cast<int>(BlendFuncType::One)] = vk::BlendFactor::eOne;
-		blendFuncs[static_cast<int>(BlendFuncType::SrcColor)] = vk::BlendFactor::eSrcColor;
-		blendFuncs[static_cast<int>(BlendFuncType::OneMinusSrcColor)] = vk::BlendFactor::eOneMinusSrcColor;
-		blendFuncs[static_cast<int>(BlendFuncType::SrcAlpha)] = vk::BlendFactor::eSrcAlpha;
-		blendFuncs[static_cast<int>(BlendFuncType::OneMinusSrcAlpha)] = vk::BlendFactor::eSrcAlpha;
-		blendFuncs[static_cast<int>(BlendFuncType::DstColor)] = vk::BlendFactor::eDstColor;
-		blendFuncs[static_cast<int>(BlendFuncType::OneMinusDstColor)] = vk::BlendFactor::eOneMinusDstColor;
-		blendFuncs[static_cast<int>(BlendFuncType::DstAlpha)] = vk::BlendFactor::eDstAlpha;
-		blendFuncs[static_cast<int>(BlendFuncType::OneMinusDstAlpha)] = vk::BlendFactor::eDstAlpha;
+		if (IsBlendEnabled)
+		{
+			blendInfo.blendEnable = true;
 
-		blendInfo.srcColorBlendFactor = blendFuncs[static_cast<int>(BlendSrcFunc)];
-		blendInfo.dstColorBlendFactor = blendFuncs[static_cast<int>(BlendDstFunc)];
-		blendInfo.srcAlphaBlendFactor = blendFuncs[static_cast<int>(BlendSrcFuncAlpha)];
-		blendInfo.dstAlphaBlendFactor = blendFuncs[static_cast<int>(BlendDstFuncAlpha)];
-		blendInfo.colorBlendOp = blendOps[static_cast<int>(BlendEquationRGB)];
-		blendInfo.alphaBlendOp = blendOps[static_cast<int>(BlendEquationAlpha)];
-	}
-	else
-	{
-		blendInfo.blendEnable = false;
+			std::array<vk::BlendOp, 10> blendOps;
+			blendOps[static_cast<int>(BlendEquationType::Add)] = vk::BlendOp::eAdd;
+			blendOps[static_cast<int>(BlendEquationType::Sub)] = vk::BlendOp::eSubtract;
+			blendOps[static_cast<int>(BlendEquationType::ReverseSub)] = vk::BlendOp::eReverseSubtract;
+			blendOps[static_cast<int>(BlendEquationType::Min)] = vk::BlendOp::eMin;
+			blendOps[static_cast<int>(BlendEquationType::Max)] = vk::BlendOp::eMax;
+
+			std::array<vk::BlendFactor, 20> blendFuncs;
+			blendFuncs[static_cast<int>(BlendFuncType::Zero)] = vk::BlendFactor::eZero;
+			blendFuncs[static_cast<int>(BlendFuncType::One)] = vk::BlendFactor::eOne;
+			blendFuncs[static_cast<int>(BlendFuncType::SrcColor)] = vk::BlendFactor::eSrcColor;
+			blendFuncs[static_cast<int>(BlendFuncType::OneMinusSrcColor)] = vk::BlendFactor::eOneMinusSrcColor;
+			blendFuncs[static_cast<int>(BlendFuncType::SrcAlpha)] = vk::BlendFactor::eSrcAlpha;
+			blendFuncs[static_cast<int>(BlendFuncType::OneMinusSrcAlpha)] = vk::BlendFactor::eSrcAlpha;
+			blendFuncs[static_cast<int>(BlendFuncType::DstColor)] = vk::BlendFactor::eDstColor;
+			blendFuncs[static_cast<int>(BlendFuncType::OneMinusDstColor)] = vk::BlendFactor::eOneMinusDstColor;
+			blendFuncs[static_cast<int>(BlendFuncType::DstAlpha)] = vk::BlendFactor::eDstAlpha;
+			blendFuncs[static_cast<int>(BlendFuncType::OneMinusDstAlpha)] = vk::BlendFactor::eDstAlpha;
+
+			blendInfo.srcColorBlendFactor = blendFuncs[static_cast<int>(BlendSrcFunc)];
+			blendInfo.dstColorBlendFactor = blendFuncs[static_cast<int>(BlendDstFunc)];
+			blendInfo.srcAlphaBlendFactor = blendFuncs[static_cast<int>(BlendSrcFuncAlpha)];
+			blendInfo.dstAlphaBlendFactor = blendFuncs[static_cast<int>(BlendDstFuncAlpha)];
+			blendInfo.colorBlendOp = blendOps[static_cast<int>(BlendEquationRGB)];
+			blendInfo.alphaBlendOp = blendOps[static_cast<int>(BlendEquationAlpha)];
+		}
+		else
+		{
+			blendInfo.blendEnable = false;
+		}
 	}
 
 	vk::PipelineColorBlendStateCreateInfo colorBlendInfo;
 	colorBlendInfo.logicOpEnable = VK_FALSE;
 	colorBlendInfo.logicOp = vk::LogicOp::eCopy;
-	colorBlendInfo.attachmentCount = 1;
-	colorBlendInfo.pAttachments = &blendInfo;
+	colorBlendInfo.attachmentCount = renderPassPipelineState->RenderTargetCount;
+	colorBlendInfo.pAttachments = blendInfos.data();
 	colorBlendInfo.blendConstants[0] = 0.0f;
 	colorBlendInfo.blendConstants[1] = 0.0f;
 	colorBlendInfo.blendConstants[2] = 0.0f;
@@ -315,8 +330,8 @@ bool PipelineStateVulkan::Compile()
 	graphicsPipelineInfo.pDynamicState = &dynamicStateInfo;
 
 	// setup a render pass
-	assert(renderPassPipelineState_ != nullptr);
-	graphicsPipelineInfo.renderPass = static_cast<RenderPassPipelineStateVulkan*>(renderPassPipelineState_.get())->GetRenderPass();
+
+	graphicsPipelineInfo.renderPass = renderPass;
 
 	// uniform layout info
 	std::array<vk::DescriptorSetLayoutBinding, 3> uboLayoutBindings;
@@ -339,7 +354,7 @@ bool PipelineStateVulkan::Compile()
 	uboLayoutBindings[2].pImmutableSamplers = nullptr;
 
 	vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutInfo;
-	descriptorSetLayoutInfo.bindingCount = uboLayoutBindings.size();
+	descriptorSetLayoutInfo.bindingCount = static_cast<int32_t>(uboLayoutBindings.size());
 	descriptorSetLayoutInfo.pBindings = uboLayoutBindings.data();
 
 	descriptorSetLayouts[0] = graphics_->GetDevice().createDescriptorSetLayout(descriptorSetLayoutInfo);

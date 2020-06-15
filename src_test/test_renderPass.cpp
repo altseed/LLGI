@@ -390,7 +390,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 void test_multiRenderPass(LLGI::DeviceType deviceType)
 {
-	if (deviceType == LLGI::DeviceType::Metal || deviceType == LLGI::DeviceType::Vulkan)
+	if (deviceType == LLGI::DeviceType::Metal)
 		return;
 
 	auto code_gl_vs = R"(
@@ -437,68 +437,6 @@ void main()
 
 )";
 
-	auto code_dx_vs = R"(
-struct VS_INPUT{
-    float3 Position : POSITION0;
-	float2 UV : UV0;
-    float4 Color : COLOR0;
-};
-struct VS_OUTPUT{
-    float4 Position : SV_POSITION;
-	float2 UV : UV0;
-    float4 Color : COLOR0;
-};
-    
-VS_OUTPUT main(VS_INPUT input){
-    VS_OUTPUT output;
-        
-    output.Position = float4(input.Position, 1.0f);
-	output.UV = input.UV;
-    output.Color = input.Color;
-        
-    return output;
-}
-)";
-
-	auto code_dx_ps = R"(
-Texture2D txt : register(t0);
-SamplerState smp : register(s0);
-
-struct PS_INPUT
-{
-    float4  Position : SV_POSITION;
-	float2  UV : UV0;
-    float4  Color    : COLOR0;
-};
-
-struct PS_OUTPUT
-{
-    float4  Color0 : SV_TARGET0;
-    float4  Color1 : SV_TARGET1;
-};
-
-
-PS_OUTPUT main(PS_INPUT input)
-{ 
-	PS_OUTPUT output;
-
-	float4 c;
-	c = txt.Sample(smp, input.UV);
-	c.a = 255;
-	output.Color0 = c;
-
-	c.r = 1.0f - c.r;
-	c.g = 1.0f - c.g;
-	c.b = 1.0f - c.b;
-	output.Color1 = c;
-
-	return output;
-}
-)";
-
-	/**
-		TODO : added single target shader
-	*/
 	auto compiler = LLGI::CreateCompiler(deviceType);
 
 	int count = 0;
@@ -507,9 +445,9 @@ PS_OUTPUT main(PS_INPUT input)
 	pp.Device = deviceType;
 	pp.WaitVSync = true;
 	auto window = std::unique_ptr<LLGI::Window>(LLGI::CreateWindow("MRT", LLGI::Vec2I(1280, 720)));
-	auto platform = LLGI::CreatePlatform(pp, window.get());
+	auto platform = LLGI::CreateSharedPtr(LLGI::CreatePlatform(pp, window.get()));
 
-	auto graphics = platform->CreateGraphics();
+	auto graphics = LLGI::CreateSharedPtr(platform->CreateGraphics());
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
 
 	std::array<LLGI::CommandList*, 3> commandLists;
@@ -522,9 +460,9 @@ PS_OUTPUT main(PS_INPUT input)
 	LLGI::RenderTextureInitializationParameter renderTexParam;
 	renderTexParam.Size = LLGI::Vec2I(256, 256);
 
-	auto renderTexture = graphics->CreateRenderTexture(renderTexParam);
+	auto renderTexture1 = graphics->CreateRenderTexture(renderTexParam);
 	auto renderTexture2 = graphics->CreateRenderTexture(renderTexParam);
-	const LLGI::Texture* renderTextures[2] = {(const LLGI::Texture*)renderTexture, (const LLGI::Texture*)renderTexture2};
+	const LLGI::Texture* renderTextures[2] = {(const LLGI::Texture*)renderTexture1, (const LLGI::Texture*)renderTexture2};
 	auto renderPass = graphics->CreateRenderPass((const LLGI::Texture**)renderTextures, 2, nullptr);
 	assert(renderPass->GetRenderTextureCount() == 2);
 
@@ -543,82 +481,21 @@ PS_OUTPUT main(PS_INPUT input)
 	}
 	texture->Unlock();
 
-	LLGI::Shader* shader_vs = nullptr;
-	LLGI::Shader* shader_ps = nullptr;
+	std::shared_ptr<LLGI::Shader> shader_paste_vs = nullptr;
+	std::shared_ptr<LLGI::Shader> shader_paste_ps = nullptr;
 
-	std::vector<LLGI::DataStructure> data_vs;
-	std::vector<LLGI::DataStructure> data_ps;
+	TestHelper::CreateShader(
+		graphics.get(), deviceType, "simple_texture_rectangle.vert", "simple_texture_rectangle.frag", shader_paste_vs, shader_paste_ps);
 
-	if (compiler == nullptr)
-	{
-		auto binary_vs = TestHelper::LoadData("simple_texture_rectangle.vert.spv");
-		auto binary_ps = TestHelper::LoadData("simple_texture_rectangle.frag.spv");
+	std::shared_ptr<LLGI::Shader> shader_mrt_vs = nullptr;
+	std::shared_ptr<LLGI::Shader> shader_mrt_ps = nullptr;
 
-		LLGI::DataStructure d_vs;
-		LLGI::DataStructure d_ps;
-
-		d_vs.Data = binary_vs.data();
-		d_vs.Size = static_cast<int32_t>(binary_vs.size());
-		d_ps.Data = binary_ps.data();
-		d_ps.Size = static_cast<int32_t>(binary_ps.size());
-
-		data_vs.push_back(d_vs);
-		data_ps.push_back(d_ps);
-
-		shader_vs = graphics->CreateShader(data_vs.data(), static_cast<int32_t>(data_vs.size()));
-		shader_ps = graphics->CreateShader(data_ps.data(), static_cast<int32_t>(data_ps.size()));
-	}
-	else
-	{
-		LLGI::CompilerResult result_vs;
-		LLGI::CompilerResult result_ps;
-
-		if (platform->GetDeviceType() == LLGI::DeviceType::Metal)
-		{
-			auto code_vs = TestHelper::LoadData("simple_texture_rectangle.vert");
-			auto code_ps = TestHelper::LoadData("simple_texture_rectangle.frag");
-			code_vs.push_back(0);
-			code_ps.push_back(0);
-
-			compiler->Compile(result_vs, (const char*)code_vs.data(), LLGI::ShaderStageType::Vertex);
-			compiler->Compile(result_ps, (const char*)code_ps.data(), LLGI::ShaderStageType::Pixel);
-		}
-		else if (platform->GetDeviceType() == LLGI::DeviceType::DirectX12)
-		{
-			compiler->Compile(result_vs, code_dx_vs, LLGI::ShaderStageType::Vertex);
-			assert(result_vs.Message == "");
-			compiler->Compile(result_ps, code_dx_ps, LLGI::ShaderStageType::Pixel);
-			assert(result_ps.Message == "");
-		}
-		else
-		{
-			compiler->Compile(result_vs, code_gl_vs, LLGI::ShaderStageType::Vertex);
-			compiler->Compile(result_ps, code_gl_ps, LLGI::ShaderStageType::Pixel);
-		}
-
-		for (auto& b : result_vs.Binary)
-		{
-			LLGI::DataStructure d;
-			d.Data = b.data();
-			d.Size = static_cast<int32_t>(b.size());
-			data_vs.push_back(d);
-		}
-
-		for (auto& b : result_ps.Binary)
-		{
-			LLGI::DataStructure d;
-			d.Data = b.data();
-			d.Size = static_cast<int32_t>(b.size());
-			data_ps.push_back(d);
-		}
-
-		shader_vs = graphics->CreateShader(data_vs.data(), static_cast<int32_t>(data_vs.size()));
-		shader_ps = graphics->CreateShader(data_ps.data(), static_cast<int32_t>(data_ps.size()));
-	}
+	TestHelper::CreateShader(
+		graphics.get(), deviceType, "simple_texture_rectangle.vert", "simple_mrt_texture_rectangle.frag", shader_mrt_vs, shader_mrt_ps);
 
 	std::shared_ptr<LLGI::VertexBuffer> vb;
 	std::shared_ptr<LLGI::IndexBuffer> ib;
-	TestHelper::CreateRectangle(graphics,
+	TestHelper::CreateRectangle(graphics.get(),
 								LLGI::Vec3F(-0.75, -0.25, 0.5),
 								LLGI::Vec3F(-0.25, -0.75, 0.5),
 								LLGI::Color8(255, 255, 255, 255),
@@ -628,7 +505,7 @@ PS_OUTPUT main(PS_INPUT input)
 
 	std::shared_ptr<LLGI::VertexBuffer> vb2;
 	std::shared_ptr<LLGI::IndexBuffer> ib2;
-	TestHelper::CreateRectangle(graphics,
+	TestHelper::CreateRectangle(graphics.get(),
 								LLGI::Vec3F(0.25, 0.75, 0.5),
 								LLGI::Vec3F(0.75, 0.25, 0.5),
 								LLGI::Color8(255, 255, 255, 255),
@@ -684,8 +561,8 @@ PS_OUTPUT main(PS_INPUT input)
 			pip->VertexLayoutCount = 3;
 
 			pip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan
-			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs);
-			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps);
+			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_mrt_vs.get());
+			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_mrt_ps.get());
 			pip->SetRenderPassPipelineState(renderPassPipelineState.get());
 			pip->Compile();
 
@@ -715,8 +592,8 @@ PS_OUTPUT main(PS_INPUT input)
 			pip->VertexLayoutCount = 3;
 
 			pip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan
-			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs);
-			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps);
+			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_paste_vs.get());
+			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_paste_ps.get());
 			pip->SetRenderPassPipelineState(renderPassPipelineStateSc.get());
 			pip->Compile();
 
@@ -725,8 +602,11 @@ PS_OUTPUT main(PS_INPUT input)
 
 		// Render to Backbuffer
 		commandList->SetPipelineState(pips[renderPassPipelineStateSc].get());
+
+		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
+		commandList->SetIndexBuffer(ib.get());
 		commandList->SetTexture(
-			renderTexture, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+			renderTexture1, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 
 		commandList->SetVertexBuffer(vb2.get(), sizeof(SimpleVertex), 0);
@@ -757,16 +637,12 @@ PS_OUTPUT main(PS_INPUT input)
 	graphics->WaitFinish();
 
 	LLGI::SafeRelease(sfMemoryPool);
-	LLGI::SafeRelease(renderTexture);
+	LLGI::SafeRelease(renderTexture1);
 	LLGI::SafeRelease(renderTexture2);
 	LLGI::SafeRelease(renderPass);
 	LLGI::SafeRelease(texture);
-	LLGI::SafeRelease(shader_vs);
-	LLGI::SafeRelease(shader_ps);
 	for (int i = 0; i < commandLists.size(); i++)
 		LLGI::SafeRelease(commandLists[i]);
-	LLGI::SafeRelease(graphics);
-	LLGI::SafeRelease(platform);
 
 	LLGI::SafeRelease(compiler);
 }

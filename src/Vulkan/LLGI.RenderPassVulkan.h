@@ -66,6 +66,7 @@ public:
 	virtual ~RenderPassPipelineStateVulkan();
 
 	vk::RenderPass renderPass_;
+	int32_t RenderTargetCount = 0;
 	FixedSizeVector<vk::ImageLayout, RenderTargetMax + 1> finalLayouts_;
 
 	vk::RenderPass GetRenderPass() const;

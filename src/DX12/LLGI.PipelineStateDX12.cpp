@@ -113,9 +113,22 @@ bool PipelineStateDX12::Compile()
 
 	// setup a topology
 	if (Topology == TopologyType::Triangle)
+	{
 		pipelineStateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	if (Topology == TopologyType::Line)
+	}
+	else if (Topology == TopologyType::Line)
+	{
 		pipelineStateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+	}
+	else if (Topology == TopologyType::Point)
+	{
+		pipelineStateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+	}
+	else
+	{
+		Log(LogType::Error, "Unimplemented TopologyType");
+		return false;
+	}
 
 	// TODO...(generate from parameters)
 	D3D12_RASTERIZER_DESC rasterizerDesc = {};

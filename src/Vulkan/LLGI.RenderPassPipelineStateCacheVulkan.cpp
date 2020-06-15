@@ -144,40 +144,48 @@ RenderPassPipelineStateVulkan* RenderPassPipelineStateCacheVulkan::Create(bool i
 		}
 	}
 
-	std::array<vk::SubpassDependency, 1> subpassDepends;
+	std::array<vk::SubpassDependency, RenderTargetMax * 2> dependencies;
+
+	if (!isPresentMode)
 	{
-		vk::SubpassDependency& dependency = subpassDepends[0];
+		for (int i = 0; i < colorCount; i++)
+		{
+			dependencies[i * 2 + 0].srcSubpass = VK_SUBPASS_EXTERNAL;
+			dependencies[i * 2 + 0].dstSubpass = i;
+			dependencies[i * 2 + 0].srcStageMask = (vk::PipelineStageFlags)VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+			dependencies[i * 2 + 0].dstStageMask = (vk::PipelineStageFlags)VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+			dependencies[i * 2 + 0].srcAccessMask = (vk::AccessFlags)VK_ACCESS_SHADER_READ_BIT;
+			dependencies[i * 2 + 0].dstAccessMask = (vk::AccessFlags)VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+			dependencies[i * 2 + 0].dependencyFlags = (vk::DependencyFlags)VK_DEPENDENCY_BY_REGION_BIT;
 
-		/*
-		//monsho
-		dependency.srcSubpass = 0;
-		dependency.dstSubpass = VK_SUBPASS_EXTERNAL;
-		dependency.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
-		dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead;
-		dependency.srcStageMask = vk::PipelineStageFlagBits::eBottomOfPipe;
-		dependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-		*/
-
-		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-		dependency.dstSubpass = 0;
-		dependency.srcAccessMask = static_cast<vk::AccessFlagBits>(0);
-		dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
-		dependency.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-		dependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+			dependencies[i * 2 + 1].srcSubpass = i;
+			dependencies[i * 2 + 1].dstSubpass = VK_SUBPASS_EXTERNAL;
+			dependencies[i * 2 + 1].srcStageMask = (vk::PipelineStageFlags)VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+			dependencies[i * 2 + 1].dstStageMask = (vk::PipelineStageFlags)VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+			dependencies[i * 2 + 1].srcAccessMask = (vk::AccessFlags)VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+			dependencies[i * 2 + 1].dstAccessMask = (vk::AccessFlags)VK_ACCESS_SHADER_READ_BIT;
+			dependencies[i * 2 + 1].dependencyFlags = (vk::DependencyFlags)VK_DEPENDENCY_BY_REGION_BIT;
+		}
 	}
 
 	{
 		vk::RenderPassCreateInfo renderPassInfo;
 		renderPassInfo.attachmentCount = (uint32_t)attachmentDescs.size();
 		renderPassInfo.pAttachments = attachmentDescs.data();
+
 		renderPassInfo.subpassCount = (uint32_t)subpasses.size();
 		renderPassInfo.pSubpasses = subpasses.data();
 
-		// based on official
-		// renderPassInfo.dependencyCount = (uint32_t)subpassDepends.size();
-		// renderPassInfo.pDependencies = subpassDepends.data();
-		renderPassInfo.dependencyCount = 0;
-		renderPassInfo.pDependencies = nullptr;
+		if (!isPresentMode)
+		{
+			renderPassInfo.dependencyCount = static_cast<uint32_t>(colorCount * 2);
+			renderPassInfo.pDependencies = dependencies.data();
+		}
+		else
+		{
+			renderPassInfo.dependencyCount = 0;
+			renderPassInfo.pDependencies = nullptr;
+		}
 
 		auto renderPass = device_.createRenderPass(renderPassInfo);
 		if (!renderPass)
@@ -192,6 +200,9 @@ RenderPassPipelineStateVulkan* RenderPassPipelineStateCacheVulkan::Create(bool i
 
 		auto retptr = ret.get();
 		SafeAddRef(retptr);
+
+		retptr->RenderTargetCount = colorCount;
+
 		return retptr;
 	}
 }
