@@ -35,6 +35,7 @@ struct Graphics_Impl
 struct RenderPass_Impl
 {
 	MTLRenderPassDescriptor* renderPassDescriptor;
+    
 	Color8 clearColor;
 	bool isColorCleared;
 	bool isDepthCleared;
@@ -59,6 +60,7 @@ struct CommandList_Impl
 	Graphics_Impl* graphics_ = nullptr;
 	id<MTLCommandBuffer> commandBuffer = nullptr;
 	id<MTLRenderCommandEncoder> renderEncoder = nullptr;
+
 	bool isCompleted = true;
 
 	CommandList_Impl();

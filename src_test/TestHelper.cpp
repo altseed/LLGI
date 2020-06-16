@@ -101,7 +101,7 @@ std::vector<uint8_t> TestHelper::LoadDataWithoutRoot(const char* path)
 
 	if (fp == nullptr)
 	{
-		std::cout << "Error: " << path << std::endl;
+		std::cout << "Not found : " << path << std::endl;
 		return ret;
 	}
 

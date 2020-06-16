@@ -61,7 +61,6 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 								ib2);
 
 	// Screen
-	// Blue: far
 	std::shared_ptr<LLGI::VertexBuffer> vb3;
 	std::shared_ptr<LLGI::IndexBuffer> ib3;
 	TestHelper::CreateRectangle(graphics.get(),
@@ -80,9 +79,6 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, PipelineStateSet> pips;
 
 	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> screenPips;
-
-	// auto screenRenderPass = graphics->GetCurrentScreen(color, true, true);
-	// auto depthBuffer = graphics->CreateTexture(LLGI::Vec2I(256, 256), false, true);
 
 	std::shared_ptr<LLGI::Texture> colorBuffer;
 	std::shared_ptr<LLGI::Texture> depthBuffer;

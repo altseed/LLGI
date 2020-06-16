@@ -59,6 +59,7 @@ elseif(APPLE)
     set(EXTRA_LIBS ${COCOA_LIBRARY} ${APPKIT_LIBRARY} ${METAL_LIBRARY} ${METALKIT_LIBRARY} ${QUARTZ_CORE_LIBRARY})
     target_link_libraries(example_imgui PRIVATE ${EXTRA_LIBS})
 
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-arc")
     set_target_properties(example_imgui PROPERTIES XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC "YES")
 else()
 

@@ -129,25 +129,31 @@ bool PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 
 	if (renderPassPipelineStateMetal_->GetImpl()->depthStencilFormat != MTLPixelFormatInvalid)
 	{
+		MTLStencilDescriptor* stencilDescriptor = [[MTLStencilDescriptor alloc] init];
+
 		if (self_->IsStencilTestEnabled)
 		{
-			depthStencilDescriptor.frontFaceStencil.depthFailureOperation = MTLStencilOperationKeep;
-			depthStencilDescriptor.frontFaceStencil.stencilFailureOperation = MTLStencilOperationKeep;
-			depthStencilDescriptor.frontFaceStencil.depthStencilPassOperation = MTLStencilOperationKeep;
-			depthStencilDescriptor.frontFaceStencil.stencilCompareFunction = MTLCompareFunctionEqual;
-			depthStencilDescriptor.frontFaceStencil.readMask = 0xFF;
-			depthStencilDescriptor.frontFaceStencil.writeMask = 0xFF;
+			stencilDescriptor.depthFailureOperation = MTLStencilOperationKeep;
+			stencilDescriptor.stencilFailureOperation = MTLStencilOperationKeep;
+			stencilDescriptor.depthStencilPassOperation = MTLStencilOperationKeep;
+			stencilDescriptor.stencilCompareFunction = MTLCompareFunctionEqual;
+			stencilDescriptor.readMask = 0xFF;
+			stencilDescriptor.writeMask = 0xFF;
 		}
 		else
 		{
 			// always write to stencil reference value
-			depthStencilDescriptor.frontFaceStencil.depthFailureOperation = MTLStencilOperationKeep;
-			depthStencilDescriptor.frontFaceStencil.stencilFailureOperation = MTLStencilOperationKeep;
-			depthStencilDescriptor.frontFaceStencil.depthStencilPassOperation = MTLStencilOperationReplace;
-			depthStencilDescriptor.frontFaceStencil.stencilCompareFunction = MTLCompareFunctionAlways;
-			depthStencilDescriptor.frontFaceStencil.readMask = 0xFF;
-			depthStencilDescriptor.frontFaceStencil.writeMask = 0xFF;
+			stencilDescriptor.depthFailureOperation = MTLStencilOperationKeep;
+			stencilDescriptor.stencilFailureOperation = MTLStencilOperationKeep;
+			stencilDescriptor.depthStencilPassOperation = MTLStencilOperationReplace;
+			stencilDescriptor.stencilCompareFunction = MTLCompareFunctionAlways;
+			stencilDescriptor.readMask = 0xFF;
+			stencilDescriptor.writeMask = 0xFF;
 		}
+
+		depthStencilDescriptor.frontFaceStencil = stencilDescriptor;
+		depthStencilDescriptor.backFaceStencil = stencilDescriptor;
+		[stencilDescriptor release];
 	}
 
 	depthStencilState = [graphics->device newDepthStencilStateWithDescriptor:depthStencilDescriptor];

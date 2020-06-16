@@ -64,6 +64,7 @@ void CommandList_Impl::BeginRenderPass(RenderPass_Impl* renderPass)
 		auto b_ = renderPass->clearColor.B / 255.0;
 		auto a_ = renderPass->clearColor.A / 255.0;
 
+		// TODO MRT
 		renderPass->renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
 		renderPass->renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(r_, g_, b_, a_);
 	}
@@ -350,7 +351,7 @@ void CommandListMetal::CopyTexture(Texture* src, Texture* dst)
 				destinationLevel:0
 			   destinationOrigin:{0, 0, 0}];
 	[blitEncoder endEncoding];
-
+    
 	RegisterReferencedObject(src);
 	RegisterReferencedObject(dst);
 }

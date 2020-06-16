@@ -17,7 +17,7 @@ if(APPLE)
 endif()
 
 target_include_directories(LLGI_Test PUBLIC ../src/ ${LLGI_GOOGLETEST_INCLUDE})
-target_link_directories(LLGI_Test PRIVATE ${LLGI_GOOGLETEST_LIBRARY_DIRECTORY})
+
 target_link_libraries(
 	LLGI_Test
   PRIVATE
@@ -28,29 +28,21 @@ if(MSVC)
   target_link_libraries(
 	  LLGI_Test
     PRIVATE
-	  debug gtestd
-	  optimized gtest
   )
 elseif(APPLE)
   target_link_libraries(
     LLGI_Test 
-    PRIVATE
-    debug gtestd
-    optimized gtest)
+    PRIVATE)
 else()
 	find_package(Threads REQUIRED)
 	target_link_libraries(
     LLGI_Test 
     PRIVATE 
     ${CMAKE_THREAD_LIBS_INIT}
-    gtest
     pthread
     X11
     X11-xcb)
 endif()
-
-
-add_dependencies(LLGI_Test ExternalProject_googletest)
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)
 
