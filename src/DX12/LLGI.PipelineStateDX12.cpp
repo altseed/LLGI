@@ -235,12 +235,37 @@ bool PipelineStateDX12::Compile()
 		depthStencilDesc.DepthEnable = IsDepthTestEnabled | IsDepthWriteEnabled;
 		if (!IsDepthTestEnabled)
 		{
-			depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_NEVER;
+			depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
 		}
-		depthStencilDesc.StencilEnable = false;
+
+		depthStencilDesc.StencilEnable = true;
+
+		D3D12_DEPTH_STENCILOP_DESC stencilDesc;
+
+		if (IsStencilTestEnabled)
+		{
+			stencilDesc.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+			stencilDesc.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+			stencilDesc.StencilPassOp = D3D12_STENCIL_OP_KEEP;
+			stencilDesc.StencilFunc = D3D12_COMPARISON_FUNC_EQUAL;
+			depthStencilDesc.StencilReadMask = 0xff;
+			depthStencilDesc.StencilWriteMask = 0xff;
+		}
+		else
+		{
+			stencilDesc.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+			stencilDesc.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+			stencilDesc.StencilPassOp = D3D12_STENCIL_OP_REPLACE;
+			stencilDesc.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+			depthStencilDesc.StencilReadMask = 0xff;
+			depthStencilDesc.StencilWriteMask = 0xff;
+		}
+
+		depthStencilDesc.BackFace = stencilDesc;
+		depthStencilDesc.FrontFace = stencilDesc;
 
 		pipelineStateDesc.DepthStencilState = depthStencilDesc;
-		pipelineStateDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+		pipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	}
 
 	pipelineStateDesc.SampleDesc.Count = 1;

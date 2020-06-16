@@ -43,7 +43,7 @@ ID3D12Resource* CreateResourceBuffer(ID3D12Device* device,
 
 	if ((flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) != 0)
 	{
-		clearValue.Format = DXGI_FORMAT_D32_FLOAT;
+		clearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 		clearValue.DepthStencil.Depth = 1.0f;
 		clearValue.DepthStencil.Stencil = 0;
 	}

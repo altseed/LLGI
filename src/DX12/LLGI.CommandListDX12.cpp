@@ -237,6 +237,7 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 		currentCommandList_->SetGraphicsRootSignature(pip->GetRootSignature());
 		auto p = pip->GetPipelineState();
 		currentCommandList_->SetPipelineState(p);
+		currentCommandList_->OMSetStencilRef(0xff);
 	}
 
 	// count descriptor
@@ -491,7 +492,7 @@ void CommandListDX12::ClearDepth()
 	auto handle = rt->GetHandleDSV();
 	for (int i = 0; i < rt->GetCount(); i++)
 	{
-		currentCommandList_->ClearDepthStencilView(handle[i], D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+		currentCommandList_->ClearDepthStencilView(handle[i], D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 	}
 }
 

@@ -81,7 +81,7 @@ bool TextureDX12::Initialize(const Vec2I& size, TextureType type, const TextureF
 	if (type_ == TextureType::Depth)
 	{
 		format_ = TextureFormatType::Uknown;
-		dxgiFormat_ = DXGI_FORMAT_D32_FLOAT;
+		dxgiFormat_ = DXGI_FORMAT_D24_UNORM_S8_UINT;
 		cpuMemorySize_ = size.X * size.Y * 4;
 	}
 	else
