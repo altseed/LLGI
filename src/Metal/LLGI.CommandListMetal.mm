@@ -27,11 +27,17 @@ CommandList_Impl::~CommandList_Impl()
 	{
 		[renderEncoder release];
 	}
+    
+    if(fence != nullptr)
+    {
+        [fence release];
+    }
 }
 
 bool CommandList_Impl::Initialize(Graphics_Impl* graphics)
 {
 	graphics_ = graphics;
+    fence = [graphics->device newFence];
 	return true;
 }
 
@@ -87,12 +93,15 @@ void CommandList_Impl::BeginRenderPass(RenderPass_Impl* renderPass)
 	}
 
 	renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPass->renderPassDescriptor];
+    
+    [renderEncoder waitForFence:fence beforeStages:MTLRenderStageVertex];
 }
 
 void CommandList_Impl::EndRenderPass()
 {
 	if (renderEncoder)
 	{
+        [renderEncoder updateFence:fence afterStages:MTLRenderStageFragment];
 		[renderEncoder endEncoding];
 		renderEncoder = nullptr;
 	}
