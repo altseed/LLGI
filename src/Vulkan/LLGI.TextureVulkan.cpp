@@ -29,7 +29,7 @@ TextureVulkan::~TextureVulkan()
 	SafeRelease(owner_);
 }
 
-bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const Vec2I& size, bool isRenderPass)
+bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const Vec2I& size, vk::Format format, TextureType textureType)
 {
 	graphics_ = graphics;
 	if (isStrongRef_)
@@ -37,16 +37,10 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const
 		SafeAddRef(graphics_);
 	}
 
-	type_ = TextureType::Color;
-
-	if (isRenderPass)
-	{
-		type_ = TextureType::Render;
-	}
+	type_ = textureType;
+	format_ = VulkanHelper::VkFormatToTextureFormat(static_cast<VkFormat>(format));
 
 	cpuBuf = std::unique_ptr<Buffer>(new Buffer(graphics_));
-
-	vk::Format format = vk::Format::eR8G8B8A8Unorm;
 
 	// image
 	vk::ImageCreateInfo imageCreateInfo;
@@ -61,9 +55,8 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const
 	imageCreateInfo.tiling = vk::ImageTiling::eOptimal;
 	imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
 
-	if (isRenderPass)
+	if (type_ == TextureType::Render)
 	{
-		isRenderPass_ = isRenderPass;
 		imageCreateInfo.usage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferDst |
 								vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eSampled;
 	}
@@ -83,7 +76,7 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const
 	auto device = graphics_->GetDevice();
 
 	// calculate size
-	memorySize = size.X * size.Y * 4;
+	memorySize = GetTextureMemorySize(format_, size);
 
 	// create a buffer on cpu
 	{
@@ -139,7 +132,8 @@ bool TextureVulkan::InitializeAsRenderTexture(GraphicsVulkan* graphics,
 											  bool isStrongRef,
 											  const RenderTextureInitializationParameter& parameter)
 {
-	return Initialize(graphics, isStrongRef, parameter.Size, true);
+	return Initialize(
+		graphics, isStrongRef, parameter.Size, (vk::Format)VulkanHelper::TextureFormatToVkFormat(parameter.Format), TextureType::Render);
 }
 
 bool TextureVulkan::InitializeAsScreen(const vk::Image& image, const vk::ImageView& imageVew, vk::Format format, const Vec2I& size)
@@ -173,7 +167,11 @@ bool TextureVulkan::InitializeAsDepthStencil(
 	vk::FormatProperties formatProps = physicalDevice.getFormatProperties(depthFormat);
 	assert(formatProps.optimalTilingFeatures & vk::FormatFeatureFlagBits::eDepthStencilAttachment);
 
-	vk::ImageAspectFlags aspect = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
+	vk::ImageAspectFlags aspect = vk::ImageAspectFlagBits::eDepth;
+	if (HasStencil(format_))
+	{
+		aspect = aspect | vk::ImageAspectFlagBits::eStencil;
+	}
 
 	// create an image
 	vk::ImageCreateInfo imageCreateInfo;

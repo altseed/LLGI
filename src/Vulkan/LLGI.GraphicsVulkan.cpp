@@ -214,7 +214,8 @@ Texture* GraphicsVulkan::CreateTexture(const TextureInitializationParameter& par
 {
 	auto obj = new TextureVulkan();
 
-	if (!obj->Initialize(this, true, parameter.Size, false))
+	if (!obj->Initialize(
+			this, true, parameter.Size, (vk::Format)VulkanHelper::TextureFormatToVkFormat(parameter.Format), TextureType::Color))
 	{
 		SafeRelease(obj);
 		return nullptr;

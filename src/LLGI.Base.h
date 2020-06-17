@@ -198,6 +198,14 @@ enum class TextureFormatType
 	Unknown = 255,
 };
 
+inline bool HasStencil(TextureFormatType format)
+{
+	if (format == TextureFormatType::D24S8)
+		return true;
+
+	return false;
+}
+
 enum class TextureType
 {
 	Screen,

@@ -30,15 +30,13 @@ private:
 	std::unique_ptr<Buffer> cpuBuf;
 	void* data = nullptr;
 
-	bool isRenderPass_ = false;
-	bool isDepthBuffer_ = false;
 	bool isExternalResource_ = false;
 
 public:
 	TextureVulkan();
 	virtual ~TextureVulkan();
 
-	bool Initialize(GraphicsVulkan* graphics, bool isStrongRef, const Vec2I& size, bool isRenderPass);
+	bool Initialize(GraphicsVulkan* graphics, bool isStrongRef, const Vec2I& size, vk::Format format, TextureType textureType);
 
 	bool InitializeAsRenderTexture(GraphicsVulkan* graphics, bool isStrongRef, const RenderTextureInitializationParameter& parameter);
 
