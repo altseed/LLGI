@@ -472,7 +472,7 @@ void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
 
 	for (size_t i = 0; i < renderPass_->GetRenderTextureCount(); i++)
 	{
-		auto t = static_cast<TextureVulkan*>(renderPass_->GetRenderTexture(i));
+		auto t = static_cast<TextureVulkan*>(renderPass_->GetRenderTexture(static_cast<int32_t>(i)));
 		t->ChangeImageLayout(renderPass_->renderPassPipelineState->finalLayouts_.at(i));
 	}
 

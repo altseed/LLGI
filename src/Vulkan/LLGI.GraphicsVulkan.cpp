@@ -239,7 +239,14 @@ Texture* GraphicsVulkan::CreateDepthTexture(const DepthTextureInitializationPara
 {
 	auto obj = new TextureVulkan();
 
-	if (!obj->InitializeAsDepthStencil(this->vkDevice, this->vkPysicalDevice, parameter.Size, this))
+	auto format = TextureFormatType::D32;
+	if (parameter.Mode == DepthTextureMode::DepthStencil)
+	{
+		format = TextureFormatType::D24S8;
+	}
+
+	if (!obj->InitializeAsDepthStencil(
+			this->vkDevice, this->vkPysicalDevice, parameter.Size, (vk::Format)VulkanHelper::TextureFormatToVkFormat(format), this))
 	{
 		SafeRelease(obj);
 		return nullptr;
@@ -369,15 +376,7 @@ RenderPassPipelineState* GraphicsVulkan::CreateRenderPassPipelineState(RenderPas
 
 RenderPassPipelineState* GraphicsVulkan::CreateRenderPassPipelineState(const RenderPassPipelineStateKey& key)
 {
-	FixedSizeVector<vk::Format, RenderTargetMax> renderTargets;
-
-	renderTargets.resize(key.RenderTargetFormats.size());
-	for (size_t i = 0; i < renderTargets.size(); i++)
-	{
-		renderTargets.at(i) = (vk::Format)VulkanHelper::TextureFormatToVkFormat(key.RenderTargetFormats.at(i));
-	}
-
-	return renderPassPipelineStateCache_->Create(key.IsPresent, key.HasDepth, renderTargets, key.IsColorCleared, key.IsDepthCleared);
+	return renderPassPipelineStateCache_->Create(key);
 }
 
 int32_t GraphicsVulkan::GetSwapBufferCount() const { return swapBufferCount_; }

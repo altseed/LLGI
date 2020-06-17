@@ -87,7 +87,7 @@ bool PipelineStateVulkan::Compile()
 	}
 
 	graphicsPipelineInfo.pStages = shaderStageInfos.data();
-	graphicsPipelineInfo.stageCount = shaderStageInfos.size();
+	graphicsPipelineInfo.stageCount = static_cast<int32_t>(shaderStageInfos.size());
 
 	// setup layouts
 	std::vector<vk::VertexInputBindingDescription> bindDescs;
@@ -145,8 +145,8 @@ bool PipelineStateVulkan::Compile()
 	vk::PipelineVertexInputStateCreateInfo inputStateInfo;
 	inputStateInfo.pVertexBindingDescriptions = bindDescs.data();
 	inputStateInfo.pVertexAttributeDescriptions = attribDescs.data();
-	inputStateInfo.vertexBindingDescriptionCount = bindDescs.size();
-	inputStateInfo.vertexAttributeDescriptionCount = attribDescs.size();
+	inputStateInfo.vertexBindingDescriptionCount = static_cast<int32_t>(bindDescs.size());
+	inputStateInfo.vertexAttributeDescriptionCount = static_cast<int32_t>(attribDescs.size());
 	graphicsPipelineInfo.pVertexInputState = &inputStateInfo;
 
 	// setup a topology

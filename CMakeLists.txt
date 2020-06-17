@@ -59,17 +59,6 @@ endif()
 add_subdirectory("src")
 
 if(BUILD_TEST)
-  ExternalProject_Add(
-    ExternalProject_googletest
-    SOURCE_DIR        ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/googletest
-    BINARY_DIR        ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/Build/googletest
-    PREFIX            ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/Build/googletest
-    INSTALL_DIR       ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/Install/googletest
-    CMAKE_ARGS        -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/Install/googletest
-                      -Dgtest_force_shared_crt=${USE_MSVC_RUNTIME_LIBRARY_DLL}
-  )
-  set(LLGI_GOOGLETEST_INCLUDE ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/Install/googletest/include)
-  set(LLGI_GOOGLETEST_LIBRARY_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/ThirdParty/Install/googletest/lib)
   add_subdirectory("src_test")
 endif()
 

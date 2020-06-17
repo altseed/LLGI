@@ -29,7 +29,7 @@ ID3D12Resource* CreateResourceBuffer(ID3D12Device* device,
 	resDesc.Height = size.Y;
 	resDesc.DepthOrArraySize = 1;
 	resDesc.MipLevels = 1;
-	resDesc.Format = format;
+	resDesc.Format = DirectX12::GetGeneratedFormat(format);
 	resDesc.Layout = (resourceDimention == D3D12_RESOURCE_DIMENSION_BUFFER ? D3D12_TEXTURE_LAYOUT_ROW_MAJOR : D3D12_TEXTURE_LAYOUT_UNKNOWN);
 	resDesc.SampleDesc.Count = 1;
 	resDesc.Flags = flags;
@@ -43,7 +43,7 @@ ID3D12Resource* CreateResourceBuffer(ID3D12Device* device,
 
 	if ((flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) != 0)
 	{
-		clearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+		clearValue.Format = format;
 		clearValue.DepthStencil.Depth = 1.0f;
 		clearValue.DepthStencil.Stencil = 0;
 	}
@@ -84,6 +84,12 @@ DXGI_FORMAT ConvertFormat(TextureFormatType format)
 	if (format == TextureFormatType::R8_UNORM)
 		return DXGI_FORMAT_R8_UNORM;
 
+	if (format == TextureFormatType::D32)
+		return DXGI_FORMAT_D32_FLOAT;
+
+	if (format == TextureFormatType::D24S8)
+		return DXGI_FORMAT_D24_UNORM_S8_UINT;
+
 	throw "Not implemented";
 	return DXGI_FORMAT_UNKNOWN;
 }
@@ -108,8 +114,41 @@ TextureFormatType ConvertFormat(DXGI_FORMAT format)
 	if (format == DXGI_FORMAT_R8_UNORM)
 		return TextureFormatType::R8_UNORM;
 
+	if (format == DXGI_FORMAT_D32_FLOAT)
+		return TextureFormatType::D32;
+
+	if (format == DXGI_FORMAT_D24_UNORM_S8_UINT)
+		return TextureFormatType::D24S8;
+
 	throw "Not implemented";
-	return TextureFormatType::Uknown;
+	return TextureFormatType::Unknown;
 }
+
+namespace DirectX12
+{
+
+DXGI_FORMAT GetGeneratedFormat(DXGI_FORMAT format)
+{
+	if (format == DXGI_FORMAT_D24_UNORM_S8_UINT)
+		format = DXGI_FORMAT_R24G8_TYPELESS;
+
+	if (format == DXGI_FORMAT_D32_FLOAT)
+		format = DXGI_FORMAT_R32_TYPELESS;
+
+	return format;
+}
+
+DXGI_FORMAT GetShaderResourceViewFormat(DXGI_FORMAT format)
+{
+	if (format == DXGI_FORMAT_D24_UNORM_S8_UINT)
+		format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+
+	if (format == DXGI_FORMAT_D32_FLOAT)
+		format = DXGI_FORMAT_R32_FLOAT;
+
+	return format;
+}
+
+} // namespace DirectX12
 
 } // namespace LLGI

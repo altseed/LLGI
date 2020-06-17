@@ -190,7 +190,14 @@ Texture* GraphicsDX12::CreateRenderTexture(const RenderTextureInitializationPara
 Texture* GraphicsDX12::CreateDepthTexture(const DepthTextureInitializationParameter& parameter)
 {
 	auto obj = new TextureDX12(this, true);
-	if (!obj->Initialize(parameter.Size, TextureType::Depth, TextureFormatType::Uknown))
+
+	auto format = TextureFormatType::D32;
+	if (parameter.Mode == DepthTextureMode::DepthStencil)
+	{
+		format = TextureFormatType::D24S8;
+	}
+
+	if (!obj->Initialize(parameter.Size, TextureType::Depth, format))
 	{
 		SafeRelease(obj);
 		return nullptr;
@@ -198,84 +205,41 @@ Texture* GraphicsDX12::CreateDepthTexture(const DepthTextureInitializationParame
 	return obj;
 }
 
-std::shared_ptr<RenderPassPipelineStateDX12> GraphicsDX12::CreateRenderPassPipelineState(bool isPresentMode,
-																						 bool hasDepth,
-																						 int32_t renderTargetCount,
-																						 std::array<DXGI_FORMAT, 8> renderTargetFormats)
-{
-	RenderPassPipelineStateDX12Key key;
-	key.isPresentMode = isPresentMode;
-	key.hasDepth = hasDepth;
-	key.RenderTargetCount = renderTargetCount;
-	key.RenderTargetFormats = renderTargetFormats;
-
-	// already?
-	{
-		auto it = renderPassPipelineStates.find(key);
-
-		if (it != renderPassPipelineStates.end())
-		{
-			auto ret = it->second;
-
-			if (ret != nullptr)
-				return ret;
-		}
-	}
-
-	auto ret = CreateSharedPtr<>(new RenderPassPipelineStateDX12());
-	renderPassPipelineStates[key] = ret;
-
-	ret->RenderTargetCount = renderTargetCount;
-	ret->RenderTargetFormats = renderTargetFormats;
-	ret->HasDepth = hasDepth;
-
-	return ret;
-}
-
 RenderPassPipelineState* GraphicsDX12::CreateRenderPassPipelineState(RenderPass* renderPass)
 {
 	auto renderPass_ = static_cast<RenderPassDX12*>(renderPass);
-
-	std::array<DXGI_FORMAT, RenderTargetMax> renderTargetFormats;
-	renderTargetFormats.fill(DXGI_FORMAT_UNKNOWN);
-	int32_t renderTargetCount = renderPass->GetRenderTextureCount();
-	;
-	for (int32_t i = 0; i < renderPass_->GetCount(); i++)
-	{
-		if (renderPass_->GetRenderTarget(i) == nullptr)
-		{
-			renderTargetCount = i;
-			break;
-		}
-
-		renderTargetFormats[i] = renderPass_->GetRenderTarget(i)->texture_->GetDXGIFormat();
-	}
-
-	auto ret = CreateRenderPassPipelineState(
-		renderPass_->GetIsSwapchainScreen(), renderPass->GetHasDepthTexture(), renderTargetCount, renderTargetFormats);
-
-	auto ptr = ret.get();
-	SafeAddRef(ptr);
-	return ptr;
+	auto key = renderPass_->GetKey();
+	return CreateRenderPassPipelineState(key);
 }
 
 RenderPassPipelineState* GraphicsDX12::CreateRenderPassPipelineState(const RenderPassPipelineStateKey& key)
 {
-	std::array<DXGI_FORMAT, RenderTargetMax> renderTargetFormats;
-	renderTargetFormats.fill(DXGI_FORMAT_UNKNOWN);
-	int32_t renderTargetCount = static_cast<int32_t>(key.RenderTargetFormats.size());
-
-	for (int32_t i = 0; i < renderTargetCount; i++)
+	// already?
 	{
-		renderTargetFormats[i] = ConvertFormat(key.RenderTargetFormats.at(i));
+		auto it = renderPassPipelineStates_.find(key);
+
+		if (it != renderPassPipelineStates_.end())
+		{
+			auto ret = it->second;
+
+			if (ret != nullptr)
+			{
+				auto ptr = ret.get();
+				SafeAddRef(ptr);
+				return ptr;
+			}
+		}
 	}
 
-	auto ret = CreateRenderPassPipelineState(
-		key.IsPresent, key.HasDepth, static_cast<int32_t>(key.RenderTargetFormats.size()), renderTargetFormats);
+	auto ret = CreateSharedPtr<>(new RenderPassPipelineStateDX12());
+	renderPassPipelineStates_[key] = ret;
+	ret->Key = key;
 
-	auto ptr = ret.get();
-	SafeAddRef(ptr);
-	return ptr;
+	{
+		auto ptr = ret.get();
+		SafeAddRef(ptr);
+		return ptr;
+	}
 }
 
 ID3D12Device* GraphicsDX12::GetDevice() { return device_; }

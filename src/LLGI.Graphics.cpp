@@ -178,6 +178,37 @@ void RenderPass::SetClearColor(const Color8& color) { color_ = color; }
 
 bool RenderPass::GetIsSwapchainScreen() const { return GetRenderTexture(0)->GetType() == TextureType::Screen; }
 
+RenderPassPipelineStateKey RenderPass::GetKey() const
+{
+	RenderPassPipelineStateKey key;
+
+	key.IsPresent = GetIsSwapchainScreen();
+	key.IsColorCleared = GetIsColorCleared();
+	key.IsDepthCleared = GetIsDepthCleared();
+	key.RenderTargetFormats.resize(GetRenderTextureCount());
+
+	for (size_t i = 0; i < key.RenderTargetFormats.size(); i++)
+	{
+		key.RenderTargetFormats.at(i) = GetRenderTexture(static_cast<int32_t>(i))->GetFormat();
+	}
+
+	if (GetHasDepthTexture())
+	{
+		key.DepthFormat = GetDepthTexture()->GetFormat();
+	}
+	else
+	{
+		key.DepthFormat = TextureFormatType::Unknown;
+	}
+
+	if (key.RenderTargetFormats.at(0) == TextureFormatType::Unknown)
+	{
+		printf("");
+	}
+
+	return key;
+}
+
 Graphics::~Graphics()
 {
 	if (disposed_ != nullptr)

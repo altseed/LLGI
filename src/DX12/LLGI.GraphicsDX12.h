@@ -28,8 +28,8 @@ private:
 	ID3D12CommandAllocator* commandAllocator_ = nullptr;
 	ReferenceObject* owner_ = nullptr;
 
-	std::unordered_map<RenderPassPipelineStateDX12Key, std::shared_ptr<RenderPassPipelineStateDX12>, RenderPassPipelineStateDX12Key::Hash>
-		renderPassPipelineStates;
+	std::unordered_map<RenderPassPipelineStateKey, std::shared_ptr<RenderPassPipelineStateDX12>, RenderPassPipelineStateKey::Hash>
+		renderPassPipelineStates_;
 
 public:
 	GraphicsDX12(ID3D12Device* device,
@@ -55,11 +55,6 @@ public:
 	Texture* CreateTexture(const TextureInitializationParameter& parameter) override;
 	Texture* CreateRenderTexture(const RenderTextureInitializationParameter& parameter) override;
 	Texture* CreateDepthTexture(const DepthTextureInitializationParameter& parameter) override;
-
-	std::shared_ptr<RenderPassPipelineStateDX12> CreateRenderPassPipelineState(bool isPresentMode,
-																			   bool hasDepth,
-																			   int32_t renderTargetCount,
-																			   std::array<DXGI_FORMAT, 8> renderTargetFormats);
 
 	RenderPassPipelineState* CreateRenderPassPipelineState(RenderPass* renderpass) override;
 

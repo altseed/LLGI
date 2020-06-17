@@ -29,4 +29,13 @@ DXGI_FORMAT ConvertFormat(TextureFormatType format);
 
 TextureFormatType ConvertFormat(DXGI_FORMAT format);
 
+namespace DirectX12
+{
+
+DXGI_FORMAT GetGeneratedFormat(DXGI_FORMAT format);
+
+DXGI_FORMAT GetShaderResourceViewFormat(DXGI_FORMAT format);
+
+} // namespace DirectX12
+
 } // namespace LLGI

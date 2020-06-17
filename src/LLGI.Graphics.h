@@ -23,9 +23,16 @@ struct RenderTextureInitializationParameter
 	bool IsMultiSampling = false;
 };
 
+enum class DepthTextureMode
+{
+	Depth,
+	DepthStencil,
+};
+
 struct DepthTextureInitializationParameter
 {
 	Vec2I Size;
+	DepthTextureMode Mode = DepthTextureMode::Depth;
 };
 
 /**
@@ -59,6 +66,50 @@ public:
 	virtual void NewFrame();
 
 	virtual ConstantBuffer* CreateConstantBuffer(int32_t size);
+};
+
+struct RenderPassPipelineStateKey
+{
+	bool IsPresent = false;
+	TextureFormatType DepthFormat = TextureFormatType::Unknown;
+	FixedSizeVector<TextureFormatType, RenderTargetMax> RenderTargetFormats;
+	bool IsColorCleared = true;
+	bool IsDepthCleared = true;
+
+	bool operator==(const RenderPassPipelineStateKey& value) const
+	{
+		if (RenderTargetFormats.size() != value.RenderTargetFormats.size())
+			return false;
+
+		for (size_t i = 0; i < RenderTargetFormats.size(); i++)
+		{
+			if (RenderTargetFormats.at(i) != value.RenderTargetFormats.at(i))
+				return false;
+		}
+
+		return (IsPresent == value.IsPresent && DepthFormat == value.DepthFormat && IsColorCleared == value.IsColorCleared &&
+				IsDepthCleared == value.IsDepthCleared);
+	}
+
+	struct Hash
+	{
+		typedef std::size_t result_type;
+
+		std::size_t operator()(const RenderPassPipelineStateKey& key) const
+		{
+			auto ret = std::hash<bool>()(key.IsPresent);
+			ret += std::hash<TextureFormatType>()(key.DepthFormat);
+			ret += std::hash<bool>()(key.IsColorCleared);
+			ret += std::hash<bool>()(key.IsDepthCleared);
+
+			for (int32_t i = 0; i < key.RenderTargetFormats.size(); i++)
+			{
+				ret += std::hash<uint64_t>()((uint64_t)key.RenderTargetFormats.at(i));
+			}
+
+			return ret;
+		}
+	};
 };
 
 class RenderPass : public ReferenceObject
@@ -108,50 +159,8 @@ public:
 	virtual bool GetIsSwapchainScreen() const;
 
 	virtual Vec2I GetScreenSize() const { return screenSize_; }
-};
 
-struct RenderPassPipelineStateKey
-{
-	bool IsPresent = false;
-	bool HasDepth = false;
-	FixedSizeVector<TextureFormatType, RenderTargetMax> RenderTargetFormats;
-	bool IsColorCleared = true;
-	bool IsDepthCleared = true;
-
-	bool operator==(const RenderPassPipelineStateKey& value) const
-	{
-		if (RenderTargetFormats.size() != value.RenderTargetFormats.size())
-			return false;
-
-		for (size_t i = 0; i < RenderTargetFormats.size(); i++)
-		{
-			if (RenderTargetFormats.at(i) != value.RenderTargetFormats.at(i))
-				return false;
-		}
-
-		return (IsPresent == value.IsPresent && HasDepth == value.HasDepth && IsColorCleared == value.IsColorCleared &&
-				IsDepthCleared == value.IsDepthCleared);
-	}
-
-	struct Hash
-	{
-		typedef std::size_t result_type;
-
-		std::size_t operator()(const RenderPassPipelineStateKey& key) const
-		{
-			auto ret = std::hash<bool>()(key.IsPresent);
-			ret += std::hash<bool>()(key.HasDepth);
-			ret += std::hash<bool>()(key.IsColorCleared);
-			ret += std::hash<bool>()(key.IsDepthCleared);
-
-			for (int32_t i = 0; i < key.RenderTargetFormats.size(); i++)
-			{
-				ret += std::hash<uint64_t>()((uint64_t)key.RenderTargetFormats.at(i));
-			}
-
-			return ret;
-		}
-	};
+	RenderPassPipelineStateKey GetKey() const;
 };
 
 /**
@@ -163,6 +172,7 @@ private:
 public:
 	RenderPassPipelineState() = default;
 	virtual ~RenderPassPipelineState() = default;
+	RenderPassPipelineStateKey Key;
 };
 
 /**

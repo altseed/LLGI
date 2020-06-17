@@ -191,9 +191,11 @@ enum class TextureFormatType
 	BC2_SRGB = 9,
 	BC3_SRGB = 10,
 
+	D32 = 12,
+	D24S8 = 13,
 	//! for internal
 	B8G8R8A8_UNORM = 254,
-	Uknown = 255,
+	Unknown = 255,
 };
 
 enum class TextureType
@@ -395,3 +397,16 @@ public:
 };
 
 } // namespace LLGI
+
+namespace std
+{
+
+template <> struct hash<LLGI::TextureFormatType>
+{
+	size_t operator()(const LLGI::TextureFormatType& _Keyval) const noexcept
+	{
+		return std::hash<uint32_t>()(static_cast<uint32_t>(_Keyval));
+	}
+};
+
+} // namespace std

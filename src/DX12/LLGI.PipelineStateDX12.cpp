@@ -209,15 +209,15 @@ bool PipelineStateDX12::Compile()
 	pipelineStateDesc.BlendState = blendDesc;
 
 	auto renderPassPipelineState = static_cast<RenderPassPipelineStateDX12*>(renderPassPipelineState_.get());
-	pipelineStateDesc.NumRenderTargets = renderPassPipelineState->RenderTargetCount;
+	pipelineStateDesc.NumRenderTargets = static_cast<UINT>(renderPassPipelineState->Key.RenderTargetFormats.size());
 
 	for (uint32_t i = 0; i < pipelineStateDesc.NumRenderTargets; i++)
 	{
-		pipelineStateDesc.RTVFormats[i] = renderPassPipelineState->RenderTargetFormats[i];
+		pipelineStateDesc.RTVFormats[i] = ConvertFormat(renderPassPipelineState->Key.RenderTargetFormats.at(i));
 	}
 
 	// setup a depth stencil
-	if (renderPassPipelineState->HasDepth)
+	if (renderPassPipelineState->Key.DepthFormat != TextureFormatType::Unknown)
 	{
 		std::array<D3D12_COMPARISON_FUNC, 10> depthCompareOps;
 		depthCompareOps[static_cast<int>(DepthFuncType::Never)] = D3D12_COMPARISON_FUNC_NEVER;
@@ -265,7 +265,7 @@ bool PipelineStateDX12::Compile()
 		depthStencilDesc.FrontFace = stencilDesc;
 
 		pipelineStateDesc.DepthStencilState = depthStencilDesc;
-		pipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+		pipelineStateDesc.DSVFormat = ConvertFormat(renderPassPipelineState->Key.DepthFormat);
 	}
 
 	pipelineStateDesc.SampleDesc.Count = 1;

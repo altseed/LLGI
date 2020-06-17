@@ -129,6 +129,7 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const
 
 	textureSize = size;
 	vkTextureFormat_ = imageCreateInfo.format;
+	format_ = VulkanHelper::VkFormatToTextureFormat(static_cast<VkFormat>(vkTextureFormat_));
 	device_ = graphics_->GetDevice();
 
 	return true;
@@ -155,10 +156,8 @@ bool TextureVulkan::InitializeAsScreen(const vk::Image& image, const vk::ImageVi
 	return true;
 }
 
-bool TextureVulkan::InitializeAsDepthStencil(vk::Device device,
-											 vk::PhysicalDevice physicalDevice,
-											 const Vec2I& size,
-											 ReferenceObject* owner)
+bool TextureVulkan::InitializeAsDepthStencil(
+	vk::Device device, vk::PhysicalDevice physicalDevice, const Vec2I& size, vk::Format format, ReferenceObject* owner)
 {
 	type_ = TextureType::Depth;
 	textureSize = size;
@@ -168,7 +167,9 @@ bool TextureVulkan::InitializeAsDepthStencil(vk::Device device,
 	device_ = device;
 
 	// check a format whether specified format is supported
-	vk::Format depthFormat = vk::Format::eD32SfloatS8Uint;
+	vk::Format depthFormat = format;
+	format_ = VulkanHelper::VkFormatToTextureFormat(static_cast<VkFormat>(format));
+
 	vk::FormatProperties formatProps = physicalDevice.getFormatProperties(depthFormat);
 	assert(formatProps.optimalTilingFeatures & vk::FormatFeatureFlagBits::eDepthStencilAttachment);
 
@@ -217,6 +218,7 @@ bool TextureVulkan::InitializeFromExternal(TextureType type, VkImage image, VkIm
 	vkTextureFormat_ = vk::Format(format);
 	textureSize = size;
 	isExternalResource_ = true;
+	format_ = VulkanHelper::VkFormatToTextureFormat(static_cast<VkFormat>(vkTextureFormat_));
 
 	if (type_ == TextureType::Depth)
 	{

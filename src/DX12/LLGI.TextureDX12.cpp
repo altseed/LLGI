@@ -34,7 +34,7 @@ TextureDX12::TextureDX12(ID3D12Resource* textureResource, ID3D12Device* device, 
 	dxgiFormat_ = desc.Format;
 
 	format_ = ConvertFormat(desc.Format);
-	textureSize_ = Vec2I(desc.Width, desc.Height);
+	textureSize_ = Vec2I(static_cast<int32_t>(desc.Width), static_cast<int32_t>(desc.Height));
 	cpuMemorySize_ = GetTextureMemorySize(format_, textureSize_);
 
 	UINT64 size = 0;
@@ -65,7 +65,7 @@ bool TextureDX12::Initialize(ID3D12Resource* textureResource)
 	dxgiFormat_ = desc.Format;
 
 	format_ = ConvertFormat(desc.Format);
-	textureSize_ = Vec2I(desc.Width, desc.Height);
+	textureSize_ = Vec2I(static_cast<int32_t>(desc.Width), static_cast<int32_t>(desc.Height));
 	cpuMemorySize_ = GetTextureMemorySize(format_, textureSize_);
 
 	UINT64 size = 0;
@@ -80,8 +80,8 @@ bool TextureDX12::Initialize(const Vec2I& size, TextureType type, const TextureF
 
 	if (type_ == TextureType::Depth)
 	{
-		format_ = TextureFormatType::Uknown;
-		dxgiFormat_ = DXGI_FORMAT_D24_UNORM_S8_UINT;
+		format_ = formatType;
+		dxgiFormat_ = ConvertFormat(formatType);
 		cpuMemorySize_ = size.X * size.Y * 4;
 	}
 	else
@@ -199,6 +199,7 @@ void TextureDX12::Unlock()
 	HANDLE event = CreateEvent(0, 0, 0, 0);
 
 	D3D12_TEXTURE_COPY_LOCATION src = {}, dst = {};
+	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
 
 	auto hr = device_->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
 	if (FAILED(hr))
@@ -223,7 +224,6 @@ void TextureDX12::Unlock()
 		goto FAILED_EXIT;
 	}
 
-	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
 	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	queueDesc.NodeMask = 1;

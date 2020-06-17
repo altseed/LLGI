@@ -68,17 +68,21 @@ static FormatConversionItem s_formatConversionTable[] = {
 	{TextureFormatType::BC3_SRGB, VK_FORMAT_BC3_SRGB_BLOCK},
 	{TextureFormatType::R16G16B16A16_FLOAT, VK_FORMAT_R16G16B16A16_SFLOAT},
 	{TextureFormatType::B8G8R8A8_UNORM, VK_FORMAT_B8G8R8A8_UNORM},
+	{TextureFormatType::D32, VK_FORMAT_D32_SFLOAT},
+	{TextureFormatType::D24S8, VK_FORMAT_D24_UNORM_S8_UINT},
+
 };
 
 VkFormat VulkanHelper::TextureFormatToVkFormat(TextureFormatType format)
 {
-	if (format == TextureFormatType::Uknown)
-		return VK_FORMAT_UNDEFINED;
-	if (format == TextureFormatType::B8G8R8A8_UNORM)
-		return VK_FORMAT_B8G8R8A8_UNORM;
+	for (size_t i = 0; i < sizeof(s_formatConversionTable); i++)
+	{
+		if (s_formatConversionTable[i].format == format)
+			return s_formatConversionTable[i].vulkanFormat;
+	}
 
-	assert(s_formatConversionTable[(int)format].format == format);
-	return s_formatConversionTable[(int)format].vulkanFormat;
+	assert(0);
+	return VK_FORMAT_UNDEFINED;
 }
 
 TextureFormatType VulkanHelper::VkFormatToTextureFormat(VkFormat format)
@@ -89,7 +93,8 @@ TextureFormatType VulkanHelper::VkFormatToTextureFormat(VkFormat format)
 			return s_formatConversionTable[i].format;
 	}
 
-	return TextureFormatType::Uknown;
+	assert(0);
+	return TextureFormatType::Unknown;
 }
 
 Buffer::Buffer(GraphicsVulkan* graphics)

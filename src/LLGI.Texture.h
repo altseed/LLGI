@@ -11,7 +11,7 @@ class Texture : public ReferenceObject
 private:
 protected:
 	TextureType type_ = TextureType::Unknown;
-	TextureFormatType format_ = TextureFormatType::Uknown;
+	TextureFormatType format_ = TextureFormatType::Unknown;
 
 public:
 	Texture() = default;

@@ -165,7 +165,8 @@ bool PlatformVulkan::CreateDepthBuffer(Vec2I windowSize)
 	SafeRelease(depthStencilTexture_);
 
 	depthStencilTexture_ = new TextureVulkan();
-	if (!depthStencilTexture_->InitializeAsDepthStencil(vkDevice_, vkPhysicalDevice, windowSize, nullptr))
+	if (!depthStencilTexture_->InitializeAsDepthStencil(
+			vkDevice_, vkPhysicalDevice, windowSize, (vk::Format)VulkanHelper::TextureFormatToVkFormat(TextureFormatType::D24S8), nullptr))
 	{
 		return false;
 	}
@@ -824,13 +825,19 @@ Graphics* PlatformVulkan::CreateGraphics()
 		std::array<vk::SubmitInfo, 1> copySubmitInfos;
 		copySubmitInfos[0].commandBufferCount = 1;
 		copySubmitInfos[0].pCommandBuffers = &commandBuffer;
-		vkQueue.submit(copySubmitInfos.size(), copySubmitInfos.data(), fence);
+		vkQueue.submit(static_cast<uint32_t>(copySubmitInfos.size()), copySubmitInfos.data(), fence);
 
 		this->executedCommandCount++;
 	};
 
-	auto graphics = new GraphicsVulkan(
-		vkDevice_, vkQueue, vkCmdPool_, vkPhysicalDevice, swapBuffers.size(), addCommand, renderPassPipelineStateCache_, this);
+	auto graphics = new GraphicsVulkan(vkDevice_,
+									   vkQueue,
+									   vkCmdPool_,
+									   vkPhysicalDevice,
+									   static_cast<int32_t>(swapBuffers.size()),
+									   addCommand,
+									   renderPassPipelineStateCache_,
+									   this);
 
 	return graphics;
 }

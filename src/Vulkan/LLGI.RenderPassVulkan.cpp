@@ -121,8 +121,7 @@ void RenderPassVulkan::ResetRenderPassPipelineState()
 		formats.at(i) = renderTargetProperties.at(i).colorBufferPtr->GetVulkanFormat();
 	}
 
-	this->renderPassPipelineState = renderPassPipelineStateCache_->Create(
-		GetIsSwapchainScreen(), GetHasDepthTexture(), formats, GetIsColorCleared(), GetIsDepthCleared());
+	this->renderPassPipelineState = renderPassPipelineStateCache_->Create(GetKey());
 }
 
 RenderPassPipelineStateVulkan::RenderPassPipelineStateVulkan(vk::Device device, ReferenceObject* owner)

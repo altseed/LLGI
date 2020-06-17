@@ -347,7 +347,7 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 					{
 						D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 						srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-						srvDesc.Format = texture->GetDXGIFormat();
+						srvDesc.Format = DirectX12::GetShaderResourceViewFormat(texture->GetDXGIFormat());
 						srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 						srvDesc.Texture2D.MipLevels = 1;
 						srvDesc.Texture2D.MostDetailedMip = 0;
