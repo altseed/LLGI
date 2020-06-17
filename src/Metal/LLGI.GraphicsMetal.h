@@ -6,16 +6,6 @@
 #include <functional>
 #include <unordered_map>
 
-namespace std
-{
-
-template <> struct hash<MTLPixelFormat>
-{
-	size_t operator()(const MTLPixelFormat& _Keyval) const noexcept { return std::hash<uint32_t>()(static_cast<uint32_t>(_Keyval)); }
-};
-
-} // namespace std
-
 namespace LLGI
 {
 
@@ -28,37 +18,6 @@ class RenderPassMetal;
 class RenderPassPipelineStateMetal;
 class TextureMetal;
 
-struct RenderPassPipelineStateMetalKey
-{
-	FixedSizeVector<MTLPixelFormat, RenderTargetMax> formats;
-	MTLPixelFormat depthStencilFormat = MTLPixelFormatInvalid; // MTLPixelFormatInvalid if texture is not set.
-
-	bool operator==(const RenderPassPipelineStateMetalKey& value) const
-	{
-		if (depthStencilFormat == value.depthStencilFormat)
-		{
-			return false;
-		}
-
-		if (formats.size() != value.formats.size())
-		{
-			return false;
-		}
-
-		return formats == value.formats;
-	}
-
-	struct Hash
-	{
-		typedef std::size_t result_type;
-
-		std::size_t operator()(const RenderPassPipelineStateMetalKey& key) const
-		{
-			return key.formats.get_hash() + (static_cast<int>(key.depthStencilFormat) * 10000);
-		}
-	};
-};
-
 struct GraphicsView
 {
 	id<CAMetalDrawable> drawable;
@@ -69,9 +28,8 @@ class GraphicsMetal : public Graphics
 	Graphics_Impl* impl = nullptr;
 
 	//! cached
-	std::
-		unordered_map<RenderPassPipelineStateMetalKey, std::shared_ptr<RenderPassPipelineStateMetal>, RenderPassPipelineStateMetalKey::Hash>
-			renderPassPipelineStates;
+	std::unordered_map<RenderPassPipelineStateKey, std::shared_ptr<RenderPassPipelineStateMetal>, RenderPassPipelineStateKey::Hash>
+		renderPassPipelineStates_;
 
 	std::shared_ptr<RenderPassMetal> renderPass_ = nullptr;
 	std::function<GraphicsView()> getGraphicsView_;
@@ -115,12 +73,9 @@ public:
 
 	Texture* CreateTexture(uint64_t id) override;
 
-	//! internal function
-	std::shared_ptr<RenderPassPipelineStateMetal>
-	CreateRenderPassPipelineStateInternal(const FixedSizeVector<MTLPixelFormat, RenderTargetMax>& formats,
-										  MTLPixelFormat depthStencilFormat);
-
 	RenderPassPipelineState* CreateRenderPassPipelineState(RenderPass* renderPass) override;
+
+	RenderPassPipelineState* CreateRenderPassPipelineState(const RenderPassPipelineStateKey& key) override;
 
 	std::vector<uint8_t> CaptureRenderTarget(Texture* renderTarget) override;
 

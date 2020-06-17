@@ -64,7 +64,7 @@ GraphicsMetal::~GraphicsMetal()
 	}
 	executingCommandList_.clear();
 
-	renderPassPipelineStates.clear();
+	renderPassPipelineStates_.clear();
 	SafeDelete(impl);
 }
 
@@ -254,7 +254,7 @@ Texture* GraphicsMetal::CreateRenderTexture(const RenderTextureInitializationPar
 Texture* GraphicsMetal::CreateDepthTexture(const DepthTextureInitializationParameter& parameter)
 {
 	auto o = new TextureMetal();
-	if (o->Initialize(this->GetImpl()->device, this, parameter.Size, TextureType::Depth))
+	if (o->Initialize(this, parameter))
 	{
 		return o;
 	}
@@ -265,46 +265,40 @@ Texture* GraphicsMetal::CreateDepthTexture(const DepthTextureInitializationParam
 
 Texture* GraphicsMetal::CreateTexture(uint64_t id) { throw "Not inplemented"; }
 
-std::shared_ptr<RenderPassPipelineStateMetal>
-GraphicsMetal::CreateRenderPassPipelineStateInternal(const FixedSizeVector<MTLPixelFormat, RenderTargetMax>& formats,
-													 MTLPixelFormat depthStencilFormat)
+RenderPassPipelineState* GraphicsMetal::CreateRenderPassPipelineState(RenderPass* renderPass)
 {
-	RenderPassPipelineStateMetalKey key;
-	key.formats = formats;
-	key.depthStencilFormat = depthStencilFormat;
+	return CreateRenderPassPipelineState(renderPass->GetKey());
+}
 
+RenderPassPipelineState* GraphicsMetal::CreateRenderPassPipelineState(const RenderPassPipelineStateKey& key)
+{
 	// already?
 	{
-		auto it = renderPassPipelineStates.find(key);
+		auto it = renderPassPipelineStates_.find(key);
 
-		if (it != renderPassPipelineStates.end())
+		if (it != renderPassPipelineStates_.end())
 		{
 			auto ret = it->second;
 
 			if (ret != nullptr)
-				return ret;
+			{
+				auto ptr = ret.get();
+				SafeAddRef(ptr);
+				return ptr;
+			}
 		}
 	}
 
 	std::shared_ptr<RenderPassPipelineStateMetal> ret = LLGI::CreateSharedPtr<>(new RenderPassPipelineStateMetal());
-	ret->GetImpl()->pixelFormats = formats;
-	ret->GetImpl()->depthStencilFormat = depthStencilFormat;
+	ret->SetKey(key);
 
-	renderPassPipelineStates[key] = ret;
+	renderPassPipelineStates_[key] = ret;
 
-	return ret;
-}
-
-RenderPassPipelineState* GraphicsMetal::CreateRenderPassPipelineState(RenderPass* renderPass)
-{
-	auto renderPass_ = static_cast<RenderPassMetal*>(renderPass);
-
-	auto renderPassPipelineState =
-		CreateRenderPassPipelineStateInternal(renderPass_->GetImpl()->pixelFormats, renderPass_->GetImpl()->depthStencilFormat);
-
-	auto ret = renderPassPipelineState.get();
-	SafeAddRef(ret);
-	return ret;
+	{
+		auto ptr = ret.get();
+		SafeAddRef(ptr);
+		return ptr;
+	}
 }
 
 std::vector<uint8_t> GraphicsMetal::CaptureRenderTarget(Texture* renderTarget)

@@ -129,31 +129,34 @@ bool PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 
 	if (renderPassPipelineStateMetal_->GetImpl()->depthStencilFormat != MTLPixelFormatInvalid)
 	{
-		MTLStencilDescriptor* stencilDescriptor = [[MTLStencilDescriptor alloc] init];
-
-		if (self_->IsStencilTestEnabled)
+		if (renderPassPipelineStateMetal_->Key.DepthFormat == TextureFormatType::D24S8)
 		{
-			stencilDescriptor.depthFailureOperation = MTLStencilOperationKeep;
-			stencilDescriptor.stencilFailureOperation = MTLStencilOperationKeep;
-			stencilDescriptor.depthStencilPassOperation = MTLStencilOperationKeep;
-			stencilDescriptor.stencilCompareFunction = MTLCompareFunctionEqual;
-			stencilDescriptor.readMask = 0xFF;
-			stencilDescriptor.writeMask = 0xFF;
-		}
-		else
-		{
-			// always write to stencil reference value
-			stencilDescriptor.depthFailureOperation = MTLStencilOperationKeep;
-			stencilDescriptor.stencilFailureOperation = MTLStencilOperationKeep;
-			stencilDescriptor.depthStencilPassOperation = MTLStencilOperationReplace;
-			stencilDescriptor.stencilCompareFunction = MTLCompareFunctionAlways;
-			stencilDescriptor.readMask = 0xFF;
-			stencilDescriptor.writeMask = 0xFF;
-		}
+			MTLStencilDescriptor* stencilDescriptor = [[MTLStencilDescriptor alloc] init];
 
-		depthStencilDescriptor.frontFaceStencil = stencilDescriptor;
-		depthStencilDescriptor.backFaceStencil = stencilDescriptor;
-		[stencilDescriptor release];
+			if (self_->IsStencilTestEnabled)
+			{
+				stencilDescriptor.depthFailureOperation = MTLStencilOperationKeep;
+				stencilDescriptor.stencilFailureOperation = MTLStencilOperationKeep;
+				stencilDescriptor.depthStencilPassOperation = MTLStencilOperationKeep;
+				stencilDescriptor.stencilCompareFunction = MTLCompareFunctionEqual;
+				stencilDescriptor.readMask = 0xFF;
+				stencilDescriptor.writeMask = 0xFF;
+			}
+			else
+			{
+				// always write to stencil reference value
+				stencilDescriptor.depthFailureOperation = MTLStencilOperationKeep;
+				stencilDescriptor.stencilFailureOperation = MTLStencilOperationKeep;
+				stencilDescriptor.depthStencilPassOperation = MTLStencilOperationReplace;
+				stencilDescriptor.stencilCompareFunction = MTLCompareFunctionAlways;
+				stencilDescriptor.readMask = 0xFF;
+				stencilDescriptor.writeMask = 0xFF;
+			}
+
+			depthStencilDescriptor.frontFaceStencil = stencilDescriptor;
+			depthStencilDescriptor.backFaceStencil = stencilDescriptor;
+			[stencilDescriptor release];
+		}
 	}
 
 	depthStencilState = [graphics->device newDepthStencilStateWithDescriptor:depthStencilDescriptor];
@@ -228,7 +231,11 @@ bool PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 	if (renderPassPipelineStateMetal_->GetImpl()->depthStencilFormat != MTLPixelFormatInvalid)
 	{
 		pipelineStateDescriptor.depthAttachmentPixelFormat = renderPassPipelineStateMetal_->GetImpl()->depthStencilFormat;
-		pipelineStateDescriptor.stencilAttachmentPixelFormat = renderPassPipelineStateMetal_->GetImpl()->depthStencilFormat;
+
+		if (renderPassPipelineStateMetal_->Key.DepthFormat == TextureFormatType::D24S8)
+		{
+			pipelineStateDescriptor.stencilAttachmentPixelFormat = renderPassPipelineStateMetal_->GetImpl()->depthStencilFormat;
+		}
 	}
 
 	if (self_->IsMSAA)

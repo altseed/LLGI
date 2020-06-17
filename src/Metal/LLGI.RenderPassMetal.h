@@ -46,6 +46,8 @@ public:
 	RenderPassPipelineStateMetal();
 	virtual ~RenderPassPipelineStateMetal();
 
+	void SetKey(const RenderPassPipelineStateKey& key);
+
 	RenderPassPipelineState_Impl* GetImpl() const;
 };
 

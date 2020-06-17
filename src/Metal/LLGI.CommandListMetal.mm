@@ -27,17 +27,17 @@ CommandList_Impl::~CommandList_Impl()
 	{
 		[renderEncoder release];
 	}
-    
-    if(fence != nullptr)
-    {
-        [fence release];
-    }
+
+	if (fence != nullptr)
+	{
+		[fence release];
+	}
 }
 
 bool CommandList_Impl::Initialize(Graphics_Impl* graphics)
 {
 	graphics_ = graphics;
-    fence = [graphics->device newFence];
+	fence = [graphics->device newFence];
 	return true;
 }
 
@@ -83,8 +83,12 @@ void CommandList_Impl::BeginRenderPass(RenderPass_Impl* renderPass)
 	{
 		renderPass->renderPassDescriptor.depthAttachment.loadAction = MTLLoadActionClear;
 		renderPass->renderPassDescriptor.depthAttachment.clearDepth = 1.0;
-		renderPass->renderPassDescriptor.stencilAttachment.loadAction = MTLLoadActionClear;
-		renderPass->renderPassDescriptor.stencilAttachment.clearStencil = 0;
+
+		if (renderPass->depthStencilFormat != MTLPixelFormatDepth24Unorm_Stencil8)
+		{
+			renderPass->renderPassDescriptor.stencilAttachment.loadAction = MTLLoadActionClear;
+			renderPass->renderPassDescriptor.stencilAttachment.clearStencil = 0;
+		}
 	}
 	else
 	{
@@ -93,15 +97,15 @@ void CommandList_Impl::BeginRenderPass(RenderPass_Impl* renderPass)
 	}
 
 	renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPass->renderPassDescriptor];
-    
-    [renderEncoder waitForFence:fence beforeStages:MTLRenderStageVertex];
+
+	[renderEncoder waitForFence:fence beforeStages:MTLRenderStageVertex];
 }
 
 void CommandList_Impl::EndRenderPass()
 {
 	if (renderEncoder)
 	{
-        [renderEncoder updateFence:fence afterStages:MTLRenderStageFragment];
+		[renderEncoder updateFence:fence afterStages:MTLRenderStageFragment];
 		[renderEncoder endEncoding];
 		renderEncoder = nullptr;
 	}
@@ -360,7 +364,7 @@ void CommandListMetal::CopyTexture(Texture* src, Texture* dst)
 				destinationLevel:0
 			   destinationOrigin:{0, 0, 0}];
 	[blitEncoder endEncoding];
-    
+
 	RegisterReferencedObject(src);
 	RegisterReferencedObject(dst);
 }

@@ -66,6 +66,14 @@ MTLPixelFormat ConvertFormat(TextureFormatType format)
 	{
 		return MTLPixelFormatBC3_RGBA_sRGB;
 	}
+	else if (format == TextureFormatType::D32)
+	{
+		return MTLPixelFormatDepth32Float;
+	}
+	else if (format == TextureFormatType::D24S8)
+	{
+		return MTLPixelFormatDepth24Unorm_Stencil8;
+	}
 
 	return MTLPixelFormatInvalid;
 }
@@ -124,8 +132,16 @@ TextureFormatType ConvertFormat(MTLPixelFormat format)
 	{
 		return TextureFormatType::BC3_SRGB;
 	}
+	else if (format == MTLPixelFormatDepth32Float)
+	{
+		return TextureFormatType::D32;
+	}
+	else if (format == MTLPixelFormatDepth24Unorm_Stencil8)
+	{
+		return TextureFormatType::D24S8;
+	}
 
-	return TextureFormatType::Uknown;
+	return TextureFormatType::Unknown;
 }
 
 }

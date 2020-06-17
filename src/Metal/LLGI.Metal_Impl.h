@@ -35,7 +35,7 @@ struct Graphics_Impl
 struct RenderPass_Impl
 {
 	MTLRenderPassDescriptor* renderPassDescriptor;
-    
+
 	Color8 clearColor;
 	bool isColorCleared;
 	bool isDepthCleared;
@@ -53,6 +53,8 @@ struct RenderPassPipelineState_Impl
 {
 	FixedSizeVector<MTLPixelFormat, RenderTargetMax> pixelFormats;
 	MTLPixelFormat depthStencilFormat = MTLPixelFormatInvalid;
+
+	void SetKey(RenderPassPipelineStateKey key);
 };
 
 struct CommandList_Impl
@@ -60,8 +62,8 @@ struct CommandList_Impl
 	Graphics_Impl* graphics_ = nullptr;
 	id<MTLCommandBuffer> commandBuffer = nullptr;
 	id<MTLRenderCommandEncoder> renderEncoder = nullptr;
-    id<MTLFence> fence = nullptr;
-    
+	id<MTLFence> fence = nullptr;
+
 	bool isCompleted = true;
 
 	CommandList_Impl();

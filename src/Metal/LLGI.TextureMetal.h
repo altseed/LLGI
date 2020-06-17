@@ -20,9 +20,10 @@ public:
 	TextureMetal();
 	virtual ~TextureMetal();
 
-	bool Initialize(id<MTLDevice> device, ReferenceObject* owner, Vec2I size, TextureType type);
 	bool Initialize(GraphicsMetal* owner, const TextureInitializationParameter& parameter);
 	bool Initialize(GraphicsMetal* owner, const RenderTextureInitializationParameter& parameter);
+	bool Initialize(GraphicsMetal* owner, const DepthTextureInitializationParameter& parameter);
+
 	void Reset(id<MTLTexture> nativeTexture);
 	void* Lock() override;
 	void Unlock() override;

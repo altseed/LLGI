@@ -26,14 +26,10 @@ bool Texture_Impl::Initialize(id<MTLDevice> device, const Vec2I& size, TextureFo
 
 	if (type == TextureType::Depth)
 	{
-#if TARGET_OS_IOS
-		auto format = MTLPixelFormatDepth32Float_Stencil8;
-#elif TARGET_OS_MAC
-		bool supported = device.isDepth24Stencil8PixelFormatSupported;
-
-		auto format = (supported) ? MTLPixelFormatDepth24Unorm_Stencil8 : MTLPixelFormatDepth32Float_Stencil8;
-#endif
-		textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:format width:size.X height:size.Y mipmapped:NO];
+		textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:ConvertFormat(format)
+																			   width:size.X
+																			  height:size.Y
+																		   mipmapped:NO];
 		textureDescriptor.usage = MTLTextureUsageRenderTarget;
 		textureDescriptor.textureType = MTLTextureType2D;
 		textureDescriptor.storageMode = MTLStorageModePrivate;
@@ -128,24 +124,6 @@ TextureMetal::~TextureMetal()
 	SafeRelease(owner_);
 }
 
-bool TextureMetal::Initialize(id<MTLDevice> device, ReferenceObject* owner, Vec2I size, TextureType type)
-{
-	type_ = type;
-
-	SafeAssign(owner_, owner);
-
-	if (!impl->Initialize(device, size, TextureFormatType::R8G8B8A8_UNORM, type_))
-	{
-		return false;
-	}
-
-	// Depth
-	// format_ = ConvertFormat(impl->texture.pixelFormat);
-	// data.resize(GetTextureMemorySize(format_, impl->size_));
-
-	return true;
-}
-
 bool TextureMetal::Initialize(GraphicsMetal* owner, const TextureInitializationParameter& parameter)
 {
 	type_ = TextureType::Color;
@@ -170,6 +148,44 @@ bool TextureMetal::Initialize(GraphicsMetal* owner, const RenderTextureInitializ
 	SafeAssign(owner_, static_cast<ReferenceObject*>(owner));
 
 	if (!impl->Initialize(owner->GetImpl(), parameter))
+	{
+		return false;
+	}
+
+	format_ = ConvertFormat(impl->texture.pixelFormat);
+	data.resize(GetTextureMemorySize(format_, impl->size_));
+
+	return true;
+}
+
+bool TextureMetal::Initialize(GraphicsMetal* owner, const DepthTextureInitializationParameter& parameter)
+{
+	type_ = TextureType::Depth;
+
+	/*
+	 #if TARGET_OS_IOS
+			 auto format = MTLPixelFormatDepth32Float_Stencil8;
+	 #elif TARGET_OS_MAC
+			 bool supported = device.isDepth24Stencil8PixelFormatSupported;
+
+			 auto format = (supported) ? MTLPixelFormatDepth24Unorm_Stencil8 : MTLPixelFormatDepth32Float_Stencil8;
+	 #endif
+	 **/
+
+	SafeAssign(owner_, static_cast<ReferenceObject*>(owner));
+
+	TextureFormatType format = TextureFormatType::D32;
+	if (parameter.Mode == DepthTextureMode::DepthStencil)
+	{
+		format = TextureFormatType::D24S8;
+
+		if (!owner->GetImpl()->device.isDepth24Stencil8PixelFormatSupported)
+		{
+			return false;
+		}
+	}
+
+	if (!impl->Initialize(owner->GetImpl()->device, parameter.Size, format, type_))
 	{
 		return false;
 	}

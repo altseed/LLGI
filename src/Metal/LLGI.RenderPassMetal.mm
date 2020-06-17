@@ -15,6 +15,18 @@
 namespace LLGI
 {
 
+void RenderPassPipelineState_Impl::SetKey(RenderPassPipelineStateKey key)
+{
+	pixelFormats.resize(key.RenderTargetFormats.size());
+
+	for (size_t i = 0; i < pixelFormats.size(); i++)
+	{
+		pixelFormats.at(i) = ConvertFormat(key.RenderTargetFormats.at(i));
+	}
+
+	depthStencilFormat = ConvertFormat(key.DepthFormat);
+}
+
 RenderPass_Impl::RenderPass_Impl() {}
 
 RenderPass_Impl::~RenderPass_Impl()
@@ -55,7 +67,12 @@ void RenderPass_Impl::UpdateTarget(Texture_Impl** textures, int32_t textureCount
 	if (depthTexture != nullptr)
 	{
 		renderPassDescriptor.depthAttachment.texture = depthTexture->texture;
-		renderPassDescriptor.stencilAttachment.texture = depthTexture->texture;
+
+		if (depthTexture->texture.pixelFormat == MTLPixelFormatDepth24Unorm_Stencil8)
+		{
+			renderPassDescriptor.stencilAttachment.texture = depthTexture->texture;
+		}
+
 		depthStencilFormat = depthTexture->texture.pixelFormat;
 	}
 }
@@ -130,6 +147,12 @@ RenderPass_Impl* RenderPassMetal::GetImpl() const { return impl; }
 RenderPassPipelineStateMetal::RenderPassPipelineStateMetal() { impl = new RenderPassPipelineState_Impl(); }
 
 RenderPassPipelineStateMetal::~RenderPassPipelineStateMetal() { SafeDelete(impl); }
+
+void RenderPassPipelineStateMetal::SetKey(const RenderPassPipelineStateKey& key)
+{
+	Key = key;
+	impl->SetKey(key);
+}
 
 RenderPassPipelineState_Impl* RenderPassPipelineStateMetal::GetImpl() const { return impl; }
 

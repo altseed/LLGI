@@ -359,6 +359,10 @@ inline int32_t GetTextureMemorySize(TextureFormatType format, Vec2I size)
 		return size.X * size.Y * 1;
 	case TextureFormatType::B8G8R8A8_UNORM:
 		return size.X * size.Y * 4;
+	case TextureFormatType::D32:
+		return size.X * size.Y * 4;
+	case TextureFormatType::D24S8:
+		return size.X * size.Y * 4;
 	default:
 		assert(0);
 	}
