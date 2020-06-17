@@ -85,12 +85,17 @@ RenderPassPipelineStateVulkan* RenderPassPipelineStateCacheVulkan::Create(const 
 		attachmentDescs.at(colorCount).samples = vk::SampleCountFlagBits::e1;
 
 		if (key.IsDepthCleared)
+		{
 			attachmentDescs.at(colorCount).loadOp = vk::AttachmentLoadOp::eClear;
+			attachmentDescs.at(colorCount).stencilLoadOp = vk::AttachmentLoadOp::eClear;
+		}
 		else
+		{
 			attachmentDescs.at(colorCount).loadOp = vk::AttachmentLoadOp::eDontCare;
+			attachmentDescs.at(colorCount).stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
+		}
 
 		attachmentDescs.at(colorCount).storeOp = vk::AttachmentStoreOp::eStore;
-		attachmentDescs.at(colorCount).stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
 		attachmentDescs.at(colorCount).stencilStoreOp = vk::AttachmentStoreOp::eStore;
 
 		// When clearing, the initialLayout does not matter.

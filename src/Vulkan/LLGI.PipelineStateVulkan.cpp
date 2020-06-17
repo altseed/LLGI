@@ -256,6 +256,32 @@ bool PipelineStateVulkan::Compile()
 
 	depthStencilInfo.depthCompareOp = depthCompareOps[static_cast<int>(DepthFunc)];
 
+	vk::StencilOpState stencil;
+
+	if (IsStencilTestEnabled)
+	{
+		stencil.depthFailOp = vk::StencilOp::eKeep;
+		stencil.failOp = vk::StencilOp::eKeep;
+		stencil.passOp = vk::StencilOp::eKeep;
+		stencil.compareOp = vk::CompareOp::eLess;
+		stencil.writeMask = 0xff;
+		stencil.compareMask = 0xff;
+		stencil.reference = 0xff;
+	}
+	else
+	{
+		stencil.depthFailOp = vk::StencilOp::eKeep;
+		stencil.failOp = vk::StencilOp::eKeep;
+		stencil.passOp = vk::StencilOp::eReplace;
+		stencil.compareOp = vk::CompareOp::eAlways;
+		stencil.writeMask = 0xff;
+		stencil.compareMask = 0xff;
+		stencil.reference = 0xff;
+	}
+
+	depthStencilInfo.front = stencil;
+	depthStencilInfo.back = stencil;
+
 	graphicsPipelineInfo.pDepthStencilState = &depthStencilInfo;
 
 	assert(renderPassPipelineState_ != nullptr);
