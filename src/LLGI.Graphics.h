@@ -20,6 +20,8 @@ struct RenderTextureInitializationParameter
 {
 	Vec2I Size;
 	TextureFormatType Format = TextureFormatType::R8G8B8A8_UNORM;
+	int32_t SamplingCount = 1;
+
 	bool IsMultiSampling = false;
 };
 
@@ -75,6 +77,7 @@ struct RenderPassPipelineStateKey
 	FixedSizeVector<TextureFormatType, RenderTargetMax> RenderTargetFormats;
 	bool IsColorCleared = true;
 	bool IsDepthCleared = true;
+	int32_t SamplingCount = 1;
 
 	bool operator==(const RenderPassPipelineStateKey& value) const
 	{
@@ -88,7 +91,7 @@ struct RenderPassPipelineStateKey
 		}
 
 		return (IsPresent == value.IsPresent && DepthFormat == value.DepthFormat && IsColorCleared == value.IsColorCleared &&
-				IsDepthCleared == value.IsDepthCleared);
+				IsDepthCleared == value.IsDepthCleared && SamplingCount == value.SamplingCount);
 	}
 
 	struct Hash
@@ -101,6 +104,7 @@ struct RenderPassPipelineStateKey
 			ret += std::hash<TextureFormatType>()(key.DepthFormat);
 			ret += std::hash<bool>()(key.IsColorCleared);
 			ret += std::hash<bool>()(key.IsDepthCleared);
+			ret += std::hash<int32_t>()(key.SamplingCount);
 
 			for (int32_t i = 0; i < key.RenderTargetFormats.size(); i++)
 			{
@@ -123,14 +127,17 @@ private:
 
 	FixedSizeVector<Texture*, RenderTargetMax> renderTextures_;
 	Texture* depthTexture_ = nullptr;
+	Texture* resolvedTexture_ = nullptr;
 
 protected:
 	Vec2I screenSize_;
 
 	bool assignRenderTextures(Texture** textures, int32_t count);
 	bool assignDepthTexture(Texture* depthTexture);
-
-	bool getSize(Vec2I& size, const Texture** textures, int32_t textureCount, Texture* depthTexture) const;
+	bool assignResolvedTexture(Texture* texture);
+	bool
+	getSize(Vec2I& size, const Texture** textures, int32_t textureCount, Texture* depthTexture, Texture* resolvedTexture = nullptr) const;
+	bool sanitize();
 
 public:
 	RenderPass() = default;
@@ -155,6 +162,8 @@ public:
 	Texture* GetDepthTexture() const { return depthTexture_; }
 
 	bool GetHasDepthTexture() const { return GetDepthTexture() != nullptr; }
+
+	Texture* GetResolvedTexture() const { return resolvedTexture_; }
 
 	virtual bool GetIsSwapchainScreen() const;
 
@@ -237,6 +246,8 @@ public:
 	virtual ConstantBuffer* CreateConstantBuffer(int32_t size);
 
 	virtual RenderPass* CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture) { return nullptr; }
+
+	virtual RenderPass* CreateRenderPass(const Texture* texture, const Texture* resolvedTexture, Texture* depthTexture) { return nullptr; }
 
 	virtual Texture* CreateTexture(const TextureInitializationParameter& parameter) { return nullptr; }
 

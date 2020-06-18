@@ -146,7 +146,22 @@ CommandList* GraphicsDX12::CreateCommandList(SingleFrameMemoryPool* memoryPool)
 RenderPass* GraphicsDX12::CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture)
 {
 	auto renderPass = new RenderPassDX12(this->device_);
-	if (!renderPass->Initialize((TextureDX12**)textures, textureCount, (TextureDX12*)depthTexture))
+	if (!renderPass->Initialize((TextureDX12**)textures, textureCount, (TextureDX12*)depthTexture, nullptr))
+	{
+		SafeRelease(renderPass);
+	}
+
+	return renderPass;
+}
+
+RenderPass* GraphicsDX12::CreateRenderPass(const Texture* texture, const Texture* resolvedTexture, Texture* depthTexture)
+{
+	auto renderPass = new RenderPassDX12(this->device_);
+
+	std::array<TextureDX12*, 1> t;
+	t[0] = const_cast<TextureDX12*>(static_cast<const TextureDX12*>(texture));
+
+	if (!renderPass->Initialize(t.data(), static_cast<int32_t>(t.size()), (TextureDX12*)depthTexture, (TextureDX12*)resolvedTexture))
 	{
 		SafeRelease(renderPass);
 	}
@@ -168,7 +183,7 @@ Texture* GraphicsDX12::CreateTexture(uint64_t id)
 Texture* GraphicsDX12::CreateTexture(const TextureInitializationParameter& parameter)
 {
 	auto obj = new TextureDX12(this, true);
-	if (!obj->Initialize(parameter.Size, TextureType::Color, parameter.Format))
+	if (!obj->Initialize(parameter.Size, TextureType::Color, parameter.Format, 1))
 	{
 		SafeRelease(obj);
 		return nullptr;
@@ -179,7 +194,7 @@ Texture* GraphicsDX12::CreateTexture(const TextureInitializationParameter& param
 Texture* GraphicsDX12::CreateRenderTexture(const RenderTextureInitializationParameter& parameter)
 {
 	auto obj = new TextureDX12(this, true);
-	if (!obj->Initialize(parameter.Size, TextureType::Render, parameter.Format))
+	if (!obj->Initialize(parameter.Size, TextureType::Render, parameter.Format, parameter.SamplingCount))
 	{
 		SafeRelease(obj);
 		return nullptr;
@@ -197,7 +212,7 @@ Texture* GraphicsDX12::CreateDepthTexture(const DepthTextureInitializationParame
 		format = TextureFormatType::D24S8;
 	}
 
-	if (!obj->Initialize(parameter.Size, TextureType::Depth, format))
+	if (!obj->Initialize(parameter.Size, TextureType::Depth, format, 1))
 	{
 		SafeRelease(obj);
 		return nullptr;
@@ -253,7 +268,7 @@ ID3D12Resource* GraphicsDX12::CreateResource(D3D12_HEAP_TYPE heapType,
 											 D3D12_RESOURCE_FLAGS flags,
 											 Vec2I size)
 {
-	return CreateResourceBuffer(device_, heapType, format, resourceDimention, resourceState, flags, size);
+	return CreateResourceBuffer(device_, heapType, format, resourceDimention, resourceState, flags, size, 1);
 }
 
 std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)

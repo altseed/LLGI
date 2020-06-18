@@ -12,6 +12,7 @@ private:
 protected:
 	TextureType type_ = TextureType::Unknown;
 	TextureFormatType format_ = TextureFormatType::Unknown;
+	int32_t samplingCount_ = 1;
 
 public:
 	Texture() = default;
@@ -28,6 +29,8 @@ public:
 	TextureType GetType() const { return type_; }
 
 	virtual TextureFormatType GetFormat() const;
+
+	int32_t GetSamplingCount() const { return samplingCount_; }
 };
 
 } // namespace LLGI

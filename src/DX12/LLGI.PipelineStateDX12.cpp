@@ -268,7 +268,7 @@ bool PipelineStateDX12::Compile()
 		pipelineStateDesc.DSVFormat = ConvertFormat(renderPassPipelineState->Key.DepthFormat);
 	}
 
-	pipelineStateDesc.SampleDesc.Count = 1;
+	pipelineStateDesc.SampleDesc.Count = renderPassPipelineState->Key.SamplingCount;
 	pipelineStateDesc.SampleMask = UINT_MAX;
 
 	auto hr = graphics_->GetDevice()->CreateGraphicsPipelineState(&pipelineStateDesc, IID_PPV_ARGS(&pipelineState_));

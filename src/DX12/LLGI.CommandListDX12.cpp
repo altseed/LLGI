@@ -183,6 +183,18 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 
 void CommandListDX12::EndRenderPass()
 {
+	// Resolve MSAA
+	if (renderPass_ != nullptr && renderPass_->GetResolvedTexture() != nullptr)
+	{
+		auto src = static_cast<TextureDX12*>(renderPass_->GetRenderTexture(0));
+		auto dst = static_cast<TextureDX12*>(renderPass_->GetResolvedTexture());
+
+		src->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_RESOLVE_SOURCE);
+		dst->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_RESOLVE_DEST);
+
+		currentCommandList_->ResolveSubresource(dst->Get(), 0, src->Get(), 0, dst->GetDXGIFormat());
+	}
+
 	renderPass_.reset();
 	CommandList::EndRenderPass();
 }

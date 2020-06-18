@@ -29,13 +29,31 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 
 	LLGI::RenderTextureInitializationParameter params;
 	params.Size = LLGI::Vec2I(256, 256);
-	params.IsMultiSampling = mode == RenderPassTestMode::MSAA;
+
+	if (mode == RenderPassTestMode::MSAA)
+	{
+		params.IsMultiSampling = true;
+		params.SamplingCount = 4;
+	}
+
 	auto renderTexture = graphics->CreateRenderTexture(params);
 	assert(renderTexture->GetType() == LLGI::TextureType::Render);
 
+	params.IsMultiSampling = false;
+	params.SamplingCount = 1;
 	auto renderTextureDst = graphics->CreateRenderTexture(params);
 
-	auto renderPass = graphics->CreateRenderPass((const LLGI::Texture**)&renderTexture, 1, nullptr);
+	LLGI::RenderPass* renderPass = nullptr;
+
+	if (deviceType == LLGI::DeviceType::DirectX12 && mode == RenderPassTestMode::MSAA)
+	{
+		renderPass = graphics->CreateRenderPass(renderTexture, renderTextureDst, nullptr);
+	}
+	else
+	{
+		renderPass = graphics->CreateRenderPass((const LLGI::Texture**)&renderTexture, 1, nullptr);
+	}
+
 	assert(renderPass->GetRenderTextureCount() == 1);
 
 	LLGI::TextureInitializationParameter texParam;
@@ -190,7 +208,7 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 		// Render to backbuffer
 		commandList->SetPipelineState(pips[renderPassPipelineStateSc].get());
 
-		if (mode == RenderPassTestMode::CopyTexture)
+		if (mode == RenderPassTestMode::CopyTexture || (mode == RenderPassTestMode::MSAA && deviceType == LLGI::DeviceType::DirectX12))
 		{
 			commandList->SetTexture(
 				renderTextureDst, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);

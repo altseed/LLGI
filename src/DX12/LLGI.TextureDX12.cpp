@@ -74,7 +74,7 @@ bool TextureDX12::Initialize(ID3D12Resource* textureResource)
 	return true;
 }
 
-bool TextureDX12::Initialize(const Vec2I& size, TextureType type, const TextureFormatType formatType)
+bool TextureDX12::Initialize(const Vec2I& size, TextureType type, const TextureFormatType formatType, int32_t samplingCount)
 {
 	type_ = type;
 
@@ -82,7 +82,7 @@ bool TextureDX12::Initialize(const Vec2I& size, TextureType type, const TextureF
 	{
 		format_ = formatType;
 		dxgiFormat_ = ConvertFormat(formatType);
-		cpuMemorySize_ = size.X * size.Y * 4;
+		cpuMemorySize_ = GetTextureMemorySize(format_, textureSize_);
 	}
 	else
 	{
@@ -100,7 +100,8 @@ bool TextureDX12::Initialize(const Vec2I& size, TextureType type, const TextureF
 										D3D12_RESOURCE_DIMENSION_TEXTURE2D,
 										D3D12_RESOURCE_STATE_GENERIC_READ,
 										D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
-										size);
+										size,
+										samplingCount);
 		state_ = D3D12_RESOURCE_STATE_GENERIC_READ;
 	}
 	else if (type_ == TextureType::Depth)
@@ -111,7 +112,8 @@ bool TextureDX12::Initialize(const Vec2I& size, TextureType type, const TextureF
 										D3D12_RESOURCE_DIMENSION_TEXTURE2D,
 										D3D12_RESOURCE_STATE_DEPTH_READ,
 										D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
-										size);
+										size,
+										samplingCount);
 		state_ = D3D12_RESOURCE_STATE_DEPTH_READ;
 	}
 	else if (type_ == TextureType::Color)
@@ -122,11 +124,14 @@ bool TextureDX12::Initialize(const Vec2I& size, TextureType type, const TextureF
 										D3D12_RESOURCE_DIMENSION_TEXTURE2D,
 										D3D12_RESOURCE_STATE_COPY_DEST,
 										D3D12_RESOURCE_FLAG_NONE,
-										size);
+										size,
+										samplingCount);
 
 		state_ = D3D12_RESOURCE_STATE_COPY_DEST;
 	}
 	textureSize_ = size;
+	samplingCount_ = samplingCount;
+
 	if (texture_ == nullptr)
 		return false;
 
@@ -148,7 +153,8 @@ void TextureDX12::CreateBuffer()
 								   D3D12_RESOURCE_DIMENSION_BUFFER,
 								   D3D12_RESOURCE_STATE_GENERIC_READ,
 								   D3D12_RESOURCE_FLAG_NONE,
-								   Vec2I(static_cast<int32_t>(size), 1));
+								   Vec2I(static_cast<int32_t>(size), 1),
+								   1);
 	assert(buffer_ != nullptr);
 
 	if (footprint_.Footprint.RowPitch != cpuMemorySize_ / textureSize_.Y)

@@ -22,7 +22,7 @@ RenderPassDX12 ::~RenderPassDX12()
 	SafeRelease(device_);
 }
 
-bool RenderPassDX12::Initialize(TextureDX12** textures, int numTextures, TextureDX12* depthTexture)
+bool RenderPassDX12::Initialize(TextureDX12** textures, int numTextures, TextureDX12* depthTexture, TextureDX12* resolvedTexture)
 {
 	if (textures[0]->Get() == nullptr)
 		return false;
@@ -33,6 +33,16 @@ bool RenderPassDX12::Initialize(TextureDX12** textures, int numTextures, Texture
 	}
 
 	if (!assignDepthTexture(depthTexture))
+	{
+		return false;
+	}
+
+	if (!assignResolvedTexture(resolvedTexture))
+	{
+		return false;
+	}
+
+	if (!sanitize())
 	{
 		return false;
 	}
@@ -89,7 +99,15 @@ bool RenderPassDX12::ReinitializeRenderTargetViews(CommandListDX12* commandList,
 	{
 		D3D12_RENDER_TARGET_VIEW_DESC desc = {};
 		desc.Format = renderTargets_[i].texture_->GetDXGIFormat();
-		desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+
+		if (GetRenderTexture(0)->GetSamplingCount() > 1)
+		{
+			desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMS;
+		}
+		else
+		{
+			desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+		}
 		auto cpuHandle = cpuDescriptorHandleRTV[i];
 		device_->CreateRenderTargetView(renderTargets_[i].renderPass_, &desc, cpuHandle);
 		handleRTV_[i] = cpuHandle;

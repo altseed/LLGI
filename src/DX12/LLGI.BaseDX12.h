@@ -23,7 +23,8 @@ ID3D12Resource* CreateResourceBuffer(ID3D12Device* device,
 									 D3D12_RESOURCE_DIMENSION resourceDimention,
 									 D3D12_RESOURCE_STATES resourceState,
 									 D3D12_RESOURCE_FLAGS flags,
-									 Vec2I size);
+									 Vec2I size,
+									 int32_t samplingCount);
 
 DXGI_FORMAT ConvertFormat(TextureFormatType format);
 

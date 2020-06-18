@@ -10,7 +10,8 @@ ID3D12Resource* CreateResourceBuffer(ID3D12Device* device,
 									 D3D12_RESOURCE_DIMENSION resourceDimention,
 									 D3D12_RESOURCE_STATES resourceState,
 									 D3D12_RESOURCE_FLAGS flags,
-									 Vec2I size)
+									 Vec2I size,
+									 int32_t samplingCount)
 {
 	D3D12_HEAP_PROPERTIES heapProps = {};
 	D3D12_RESOURCE_DESC resDesc = {};
@@ -24,6 +25,20 @@ ID3D12Resource* CreateResourceBuffer(ID3D12Device* device,
 	heapProps.CreationNodeMask = 1; // TODO: set properly for multi-adaptor.
 	heapProps.VisibleNodeMask = 1;	// TODO: set properly for multi-adaptor.
 
+	if (samplingCount > 1)
+	{
+		D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msaaQualityDesc{};
+		msaaQualityDesc.SampleCount = samplingCount;
+		msaaQualityDesc.Format = format;
+		msaaQualityDesc.Flags = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
+
+		HRESULT hr = device->CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, &msaaQualityDesc, sizeof(msaaQualityDesc));
+		if (FAILED(hr))
+		{
+			return nullptr;
+		}
+	}
+
 	resDesc.Dimension = resourceDimention;
 	resDesc.Width = size.X;
 	resDesc.Height = size.Y;
@@ -31,7 +46,7 @@ ID3D12Resource* CreateResourceBuffer(ID3D12Device* device,
 	resDesc.MipLevels = 1;
 	resDesc.Format = DirectX12::GetGeneratedFormat(format);
 	resDesc.Layout = (resourceDimention == D3D12_RESOURCE_DIMENSION_BUFFER ? D3D12_TEXTURE_LAYOUT_ROW_MAJOR : D3D12_TEXTURE_LAYOUT_UNKNOWN);
-	resDesc.SampleDesc.Count = 1;
+	resDesc.SampleDesc.Count = samplingCount;
 	resDesc.Flags = flags;
 
 	D3D12_CLEAR_VALUE clearValue = {};
