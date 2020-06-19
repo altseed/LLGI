@@ -232,6 +232,7 @@ RenderPassPipelineStateKey RenderPass::GetKey() const
 	key.IsDepthCleared = GetIsDepthCleared();
 	key.RenderTargetFormats.resize(GetRenderTextureCount());
 	key.SamplingCount = renderTextures_.at(0)->GetSamplingCount();
+	key.HasResolvedRenderTarget = GetResolvedTexture() != nullptr;
 
 	for (size_t i = 0; i < key.RenderTargetFormats.size(); i++)
 	{

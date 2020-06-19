@@ -36,7 +36,8 @@ public:
 	TextureVulkan();
 	virtual ~TextureVulkan();
 
-	bool Initialize(GraphicsVulkan* graphics, bool isStrongRef, const Vec2I& size, vk::Format format, TextureType textureType);
+	bool Initialize(
+		GraphicsVulkan* graphics, bool isStrongRef, const Vec2I& size, vk::Format format, int samplingCount, TextureType textureType);
 
 	bool InitializeAsRenderTexture(GraphicsVulkan* graphics, bool isStrongRef, const RenderTextureInitializationParameter& parameter);
 

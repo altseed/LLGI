@@ -39,17 +39,19 @@ RenderPassPipelineStateVulkan* RenderPassPipelineStateCacheVulkan::Create(const 
 	FixedSizeVector<vk::AttachmentDescription, RenderTargetMax + 1> attachmentDescs;
 	FixedSizeVector<vk::AttachmentReference, RenderTargetMax + 1> attachmentRefs;
 	FixedSizeVector<vk::ImageLayout, RenderTargetMax + 1> finalLayouts;
-	attachmentDescs.resize(key.RenderTargetFormats.size() + (hasDepth ? 1 : 0));
-	attachmentRefs.resize(key.RenderTargetFormats.size() + (hasDepth ? 1 : 0));
-	finalLayouts.resize(key.RenderTargetFormats.size() + (hasDepth ? 1 : 0));
+
+	int colorCount = static_cast<int32_t>(key.RenderTargetFormats.size());
+	int depthCount = key.DepthFormat != TextureFormatType::Unknown ? 1 : 0;
+
+	attachmentDescs.resize(colorCount + depthCount);
+	attachmentRefs.resize(colorCount + depthCount);
 
 	// color buffer
-	int colorCount = static_cast<int32_t>(key.RenderTargetFormats.size());
 
 	for (int i = 0; i < colorCount; i++)
 	{
 		attachmentDescs.at(i).format = (vk::Format)VulkanHelper::TextureFormatToVkFormat(key.RenderTargetFormats.at(i));
-		attachmentDescs.at(i).samples = vk::SampleCountFlagBits::e1;
+		attachmentDescs.at(i).samples = (vk::SampleCountFlagBits)key.SamplingCount;
 
 		if (key.IsColorCleared)
 			attachmentDescs.at(i).loadOp = vk::AttachmentLoadOp::eClear;
@@ -82,7 +84,7 @@ RenderPassPipelineStateVulkan* RenderPassPipelineStateCacheVulkan::Create(const 
 	if (hasDepth)
 	{
 		attachmentDescs.at(colorCount).format = (vk::Format)VulkanHelper::TextureFormatToVkFormat(key.DepthFormat);
-		attachmentDescs.at(colorCount).samples = vk::SampleCountFlagBits::e1;
+		attachmentDescs.at(colorCount).samples = (vk::SampleCountFlagBits)key.SamplingCount;
 
 		if (key.IsDepthCleared)
 		{
@@ -104,9 +106,20 @@ RenderPassPipelineStateVulkan* RenderPassPipelineStateCacheVulkan::Create(const 
 		attachmentDescs.at(colorCount).finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 	}
 
-	for (size_t i = 0; i < attachmentDescs.size(); i++)
+	// resolve
+	int32_t resolveIndex = -1;
+	if (key.HasResolvedRenderTarget)
 	{
-		finalLayouts.at(i) = attachmentDescs.at(i).finalLayout;
+		attachmentDescs.resize(attachmentDescs.size() + 1);
+		auto& desc = attachmentDescs.at(attachmentDescs.size() - 1);
+		resolveIndex = static_cast<int32_t>(attachmentDescs.size()) - 1;
+
+		desc.format = (vk::Format)VulkanHelper::TextureFormatToVkFormat(key.RenderTargetFormats.at(0));
+		desc.samples = vk::SampleCountFlagBits::e1;
+		desc.loadOp = vk::AttachmentLoadOp::eDontCare;
+		desc.storeOp = vk::AttachmentStoreOp::eStore;
+		desc.initialLayout = vk::ImageLayout::eUndefined;
+		desc.finalLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 	}
 
 	for (int i = 0; i < colorCount; i++)
@@ -123,6 +136,21 @@ RenderPassPipelineStateVulkan* RenderPassPipelineStateCacheVulkan::Create(const 
 		depthReference.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 	}
 
+	if (key.HasResolvedRenderTarget)
+	{
+		attachmentRefs.resize(attachmentRefs.size() + 1);
+		auto& ref = attachmentRefs.at(attachmentRefs.size() - 1);
+		ref.attachment = resolveIndex;
+		ref.layout = vk::ImageLayout::eColorAttachmentOptimal;
+	}
+
+	finalLayouts.resize(attachmentDescs.size());
+
+	for (size_t i = 0; i < attachmentDescs.size(); i++)
+	{
+		finalLayouts.at(i) = attachmentDescs.at(i).finalLayout;
+	}
+
 	std::array<vk::SubpassDescription, 1> subpasses;
 	{
 		vk::SubpassDescription& subpass = subpasses[0];
@@ -137,6 +165,11 @@ RenderPassPipelineStateVulkan* RenderPassPipelineStateCacheVulkan::Create(const 
 		else
 		{
 			subpass.pDepthStencilAttachment = nullptr;
+		}
+
+		if (key.HasResolvedRenderTarget)
+		{
+			subpass.pResolveAttachments = &attachmentRefs.at(resolveIndex);
 		}
 	}
 
@@ -198,6 +231,8 @@ RenderPassPipelineStateVulkan* RenderPassPipelineStateCacheVulkan::Create(const 
 		SafeAddRef(retptr);
 
 		retptr->RenderTargetCount = colorCount;
+
+		retptr->Key = key;
 
 		return retptr;
 	}

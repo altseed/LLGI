@@ -77,6 +77,8 @@ struct RenderPassPipelineStateKey
 	FixedSizeVector<TextureFormatType, RenderTargetMax> RenderTargetFormats;
 	bool IsColorCleared = true;
 	bool IsDepthCleared = true;
+	bool HasResolvedRenderTarget = false;
+	bool HasResolvedDepthTarget = false;
 	int32_t SamplingCount = 1;
 
 	bool operator==(const RenderPassPipelineStateKey& value) const
@@ -91,7 +93,8 @@ struct RenderPassPipelineStateKey
 		}
 
 		return (IsPresent == value.IsPresent && DepthFormat == value.DepthFormat && IsColorCleared == value.IsColorCleared &&
-				IsDepthCleared == value.IsDepthCleared && SamplingCount == value.SamplingCount);
+				IsDepthCleared == value.IsDepthCleared && SamplingCount == value.SamplingCount &&
+				HasResolvedRenderTarget == value.HasResolvedRenderTarget && HasResolvedDepthTarget && value.HasResolvedDepthTarget);
 	}
 
 	struct Hash
@@ -105,6 +108,8 @@ struct RenderPassPipelineStateKey
 			ret += std::hash<bool>()(key.IsColorCleared);
 			ret += std::hash<bool>()(key.IsDepthCleared);
 			ret += std::hash<int32_t>()(key.SamplingCount);
+			ret += std::hash<bool>()(key.HasResolvedRenderTarget);
+			ret += std::hash<bool>()(key.HasResolvedDepthTarget);
 
 			for (int32_t i = 0; i < key.RenderTargetFormats.size(); i++)
 			{

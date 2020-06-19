@@ -45,7 +45,7 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 
 	LLGI::RenderPass* renderPass = nullptr;
 
-	if (deviceType == LLGI::DeviceType::DirectX12 && mode == RenderPassTestMode::MSAA)
+	if ((deviceType == LLGI::DeviceType::DirectX12 || deviceType == LLGI::DeviceType::Vulkan) && mode == RenderPassTestMode::MSAA)
 	{
 		renderPass = graphics->CreateRenderPass(renderTexture, renderTextureDst, nullptr);
 	}
@@ -208,7 +208,8 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 		// Render to backbuffer
 		commandList->SetPipelineState(pips[renderPassPipelineStateSc].get());
 
-		if (mode == RenderPassTestMode::CopyTexture || (mode == RenderPassTestMode::MSAA && deviceType == LLGI::DeviceType::DirectX12))
+		if (mode == RenderPassTestMode::CopyTexture ||
+			(mode == RenderPassTestMode::MSAA && (deviceType == LLGI::DeviceType::DirectX12 || deviceType == LLGI::DeviceType::Vulkan)))
 		{
 			commandList->SetTexture(
 				renderTextureDst, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);

@@ -176,7 +176,24 @@ RenderPass* GraphicsVulkan::CreateRenderPass(const Texture** textures, int32_t t
 	auto dt = static_cast<TextureVulkan*>(depthTexture);
 
 	auto renderPass = new RenderPassVulkan(renderPassPipelineStateCache_, GetDevice(), this);
-	if (!renderPass->Initialize((const TextureVulkan**)textures, textureCount, dt))
+	if (!renderPass->Initialize((const TextureVulkan**)textures, textureCount, dt, nullptr))
+	{
+		SafeRelease(renderPass);
+	}
+
+	return renderPass;
+}
+
+RenderPass* GraphicsVulkan::CreateRenderPass(const Texture* texture, const Texture* resolvedTexture, Texture* depthTexture)
+{
+	if (texture == nullptr)
+		return nullptr;
+
+	auto dt = static_cast<TextureVulkan*>(depthTexture);
+	auto rt = static_cast<const TextureVulkan*>(resolvedTexture);
+
+	auto renderPass = new RenderPassVulkan(renderPassPipelineStateCache_, GetDevice(), this);
+	if (!renderPass->Initialize((const TextureVulkan**)(&texture), 1, dt, (TextureVulkan*)rt))
 	{
 		SafeRelease(renderPass);
 	}
@@ -215,7 +232,7 @@ Texture* GraphicsVulkan::CreateTexture(const TextureInitializationParameter& par
 	auto obj = new TextureVulkan();
 
 	if (!obj->Initialize(
-			this, true, parameter.Size, (vk::Format)VulkanHelper::TextureFormatToVkFormat(parameter.Format), TextureType::Color))
+			this, true, parameter.Size, (vk::Format)VulkanHelper::TextureFormatToVkFormat(parameter.Format), 1, TextureType::Color))
 	{
 		SafeRelease(obj);
 		return nullptr;

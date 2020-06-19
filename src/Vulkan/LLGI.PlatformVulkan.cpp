@@ -183,7 +183,7 @@ void PlatformVulkan::CreateRenderPass()
 		std::array<TextureVulkan*, 1> textures;
 		textures[0] = swapBuffers[i].texture;
 
-		renderPass->Initialize(const_cast<const TextureVulkan**>(textures.data()), 1, depthStencilTexture_);
+		renderPass->Initialize(const_cast<const TextureVulkan**>(textures.data()), 1, depthStencilTexture_, nullptr);
 
 		renderPasses.emplace_back(CreateSharedPtr(renderPass));
 	}

@@ -470,16 +470,29 @@ void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
 	vk::Rect2D scissor = vk::Rect2D(vk::Offset2D(), vk::Extent2D(renderPass_->GetImageSize().X, renderPass_->GetImageSize().Y));
 	cmdBuffer.setScissor(0, scissor);
 
+	auto layoutOffset = 0;
 	for (size_t i = 0; i < renderPass_->GetRenderTextureCount(); i++)
 	{
 		auto t = static_cast<TextureVulkan*>(renderPass_->GetRenderTexture(static_cast<int32_t>(i)));
 		t->ChangeImageLayout(renderPass_->renderPassPipelineState->finalLayouts_.at(i));
 	}
 
+	layoutOffset += renderPass_->GetRenderTextureCount();
+
 	if (renderPass_->GetHasDepthTexture())
 	{
 		auto t = static_cast<TextureVulkan*>(renderPass_->GetDepthTexture());
-		t->ChangeImageLayout(renderPass_->renderPassPipelineState->finalLayouts_.at(renderPass_->GetRenderTextureCount()));
+		t->ChangeImageLayout(renderPass_->renderPassPipelineState->finalLayouts_.at(layoutOffset));
+	}
+
+	if (renderPass_->GetHasDepthTexture())
+	{
+		layoutOffset += 1;
+	}
+
+	if (auto t = static_cast<TextureVulkan*>(renderPass_->GetResolvedTexture()))
+	{
+		t->ChangeImageLayout(renderPass_->renderPassPipelineState->finalLayouts_.at(layoutOffset));
 	}
 
 	CommandList::BeginRenderPass(renderPass);

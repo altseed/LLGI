@@ -34,7 +34,10 @@ RenderPassVulkan::~RenderPassVulkan()
 	SafeRelease(owner_);
 }
 
-bool RenderPassVulkan::Initialize(const TextureVulkan** textures, int32_t textureCount, TextureVulkan* depthTexture)
+bool RenderPassVulkan::Initialize(const TextureVulkan** textures,
+								  int32_t textureCount,
+								  TextureVulkan* depthTexture,
+								  TextureVulkan* resolvedTexture)
 {
 	if (textureCount == 0)
 		return false;
@@ -49,7 +52,17 @@ bool RenderPassVulkan::Initialize(const TextureVulkan** textures, int32_t textur
 		return false;
 	}
 
+	if (!assignResolvedTexture(resolvedTexture))
+	{
+		return false;
+	}
+
 	if (!getSize(screenSize_, reinterpret_cast<const Texture**>(textures), textureCount, depthTexture))
+	{
+		return false;
+	}
+
+	if (!sanitize())
 	{
 		return false;
 	}
@@ -69,7 +82,7 @@ bool RenderPassVulkan::Initialize(const TextureVulkan** textures, int32_t textur
 	}
 
 	FixedSizeVector<vk::ImageView, RenderTargetMax + 1> views;
-	views.resize(textureCount + (GetHasDepthTexture() ? 1 : 0));
+	views.resize(textureCount);
 
 	for (int32_t i = 0; i < textureCount; i++)
 	{
@@ -78,7 +91,14 @@ bool RenderPassVulkan::Initialize(const TextureVulkan** textures, int32_t textur
 
 	if (GetHasDepthTexture())
 	{
-		views.at(textureCount) = depthTexture->GetView();
+		views.resize(views.size() + 1);
+		views.at(views.size() - 1) = depthTexture->GetView();
+	}
+
+	if (auto resolvedTexture = static_cast<TextureVulkan*>(GetResolvedTexture()))
+	{
+		views.resize(views.size() + 1);
+		views.at(views.size() - 1) = resolvedTexture->GetView();
 	}
 
 	ResetRenderPassPipelineState();

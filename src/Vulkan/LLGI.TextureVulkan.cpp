@@ -29,7 +29,8 @@ TextureVulkan::~TextureVulkan()
 	SafeRelease(owner_);
 }
 
-bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const Vec2I& size, vk::Format format, TextureType textureType)
+bool TextureVulkan::Initialize(
+	GraphicsVulkan* graphics, bool isStrongRef, const Vec2I& size, vk::Format format, int samplingCount, TextureType textureType)
 {
 	graphics_ = graphics;
 	if (isStrongRef_)
@@ -39,6 +40,7 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const
 
 	type_ = textureType;
 	format_ = VulkanHelper::VkFormatToTextureFormat(static_cast<VkFormat>(format));
+	samplingCount_ = samplingCount;
 
 	cpuBuf = std::unique_ptr<Buffer>(new Buffer(graphics_));
 
@@ -67,7 +69,7 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const
 	}
 
 	imageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
-	imageCreateInfo.samples = vk::SampleCountFlagBits::e1;
+	imageCreateInfo.samples = (vk::SampleCountFlagBits)samplingCount_;
 	imageCreateInfo.flags = (vk::ImageCreateFlagBits)0;
 
 	image_ = graphics_->GetDevice().createImage(imageCreateInfo);
@@ -132,8 +134,12 @@ bool TextureVulkan::InitializeAsRenderTexture(GraphicsVulkan* graphics,
 											  bool isStrongRef,
 											  const RenderTextureInitializationParameter& parameter)
 {
-	return Initialize(
-		graphics, isStrongRef, parameter.Size, (vk::Format)VulkanHelper::TextureFormatToVkFormat(parameter.Format), TextureType::Render);
+	return Initialize(graphics,
+					  isStrongRef,
+					  parameter.Size,
+					  (vk::Format)VulkanHelper::TextureFormatToVkFormat(parameter.Format),
+					  parameter.SamplingCount,
+					  TextureType::Render);
 }
 
 bool TextureVulkan::InitializeAsScreen(const vk::Image& image, const vk::ImageView& imageVew, vk::Format format, const Vec2I& size)

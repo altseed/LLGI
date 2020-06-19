@@ -226,10 +226,14 @@ bool PipelineStateVulkan::Compile()
 
 	graphicsPipelineInfo.pRasterizationState = &rasterizationState;
 
+	assert(renderPassPipelineState_ != nullptr);
+	auto renderPassPipelineState = static_cast<RenderPassPipelineStateVulkan*>(renderPassPipelineState_.get());
+	auto renderPass = renderPassPipelineState->GetRenderPass();
+
 	// setup a multisampling
 	vk::PipelineMultisampleStateCreateInfo multisampleStateInfo;
-	multisampleStateInfo.sampleShadingEnable = false;
-	multisampleStateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
+	multisampleStateInfo.sampleShadingEnable = renderPassPipelineState->Key.SamplingCount > 1;
+	multisampleStateInfo.rasterizationSamples = (vk::SampleCountFlagBits)renderPassPipelineState->Key.SamplingCount;
 	multisampleStateInfo.minSampleShading = 1.0f;
 	multisampleStateInfo.pSampleMask = nullptr;
 	multisampleStateInfo.alphaToCoverageEnable = false;
@@ -283,10 +287,6 @@ bool PipelineStateVulkan::Compile()
 	depthStencilInfo.back = stencil;
 
 	graphicsPipelineInfo.pDepthStencilState = &depthStencilInfo;
-
-	assert(renderPassPipelineState_ != nullptr);
-	auto renderPassPipelineState = static_cast<RenderPassPipelineStateVulkan*>(renderPassPipelineState_.get());
-	auto renderPass = renderPassPipelineState->GetRenderPass();
 
 	// blending
 	std::array<vk::PipelineColorBlendAttachmentState, RenderTargetMax> blendInfos;
