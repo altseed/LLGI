@@ -88,7 +88,8 @@ public:
 
 	std::vector<uint8_t> CaptureRenderTarget(Texture* renderTarget);
 
-	bool IsResolvedDepthSupported() const override { return true; }
+	//! ResolvingDepth is only supported on the latestet Nvidia video card and driver
+	bool IsResolvedDepthSupported() const override { return false; }
 };
 
 } // namespace LLGI
