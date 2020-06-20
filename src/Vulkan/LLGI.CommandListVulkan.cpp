@@ -285,7 +285,17 @@ void CommandListVulkan::Draw(int32_t pritimiveCount)
 			auto mm = (int32_t)currentTextures[stage_ind][unit_ind].minMagFilter;
 
 			vk::DescriptorImageInfo imageInfo;
-			imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+			if (texture->GetType() == TextureType::Depth)
+			{
+				//	texture->ResourceBarrior(cmdBuffer, vk::ImageLayout::eDepthStencilReadOnlyOptimal);
+				imageInfo.imageLayout = vk::ImageLayout::eDepthStencilReadOnlyOptimal;
+			}
+			else
+			{
+				//	texture->ResourceBarrior(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
+				imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+			}
+
 			imageInfo.imageView = texture->GetView();
 			imageInfo.sampler = graphics_->GetDefaultSampler();
 			descriptorImageInfos[descriptorImageIndex] = imageInfo;
