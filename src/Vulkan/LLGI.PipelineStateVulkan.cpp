@@ -244,9 +244,10 @@ bool PipelineStateVulkan::Compile()
 	// setup a depthstencil
 	vk::PipelineDepthStencilStateCreateInfo depthStencilInfo;
 
-	depthStencilInfo.depthTestEnable = IsDepthTestEnabled;
+	// DepthTest flag must be enabled because DepthWrite and Stencil are depended on DepthTestFlag
+	depthStencilInfo.depthTestEnable = true;
+
 	depthStencilInfo.depthWriteEnable = IsDepthWriteEnabled;
-	depthStencilInfo.stencilTestEnable = IsStencilTestEnabled;
 
 	std::array<vk::CompareOp, 10> depthCompareOps;
 	depthCompareOps[static_cast<int>(DepthFuncType::Never)] = vk::CompareOp::eNever;
@@ -260,14 +261,20 @@ bool PipelineStateVulkan::Compile()
 
 	depthStencilInfo.depthCompareOp = depthCompareOps[static_cast<int>(DepthFunc)];
 
+	if (!IsDepthTestEnabled)
+	{
+		depthStencilInfo.depthCompareOp = vk::CompareOp::eAlways;
+	}
+
 	vk::StencilOpState stencil;
+	depthStencilInfo.stencilTestEnable = true;
 
 	if (IsStencilTestEnabled)
 	{
 		stencil.depthFailOp = vk::StencilOp::eKeep;
 		stencil.failOp = vk::StencilOp::eKeep;
 		stencil.passOp = vk::StencilOp::eKeep;
-		stencil.compareOp = vk::CompareOp::eLess;
+		stencil.compareOp = vk::CompareOp::eEqual;
 		stencil.writeMask = 0xff;
 		stencil.compareMask = 0xff;
 		stencil.reference = 0xff;
@@ -285,6 +292,10 @@ bool PipelineStateVulkan::Compile()
 
 	depthStencilInfo.front = stencil;
 	depthStencilInfo.back = stencil;
+
+	depthStencilInfo.minDepthBounds = 0.0f;
+	depthStencilInfo.maxDepthBounds = 1.0f;
+	depthStencilInfo.depthBoundsTestEnable = false;
 
 	graphicsPipelineInfo.pDepthStencilState = &depthStencilInfo;
 

@@ -189,7 +189,7 @@ bool TextureVulkan::InitializeAsDepthStencil(
 	imageCreateInfo.mipLevels = 1;
 	imageCreateInfo.arrayLayers = 1;
 	imageCreateInfo.samples = (vk::SampleCountFlagBits)samplingCount_;
-	imageCreateInfo.usage = vk::ImageUsageFlagBits::eDepthStencilAttachment;
+	imageCreateInfo.usage = vk::ImageUsageFlagBits::eDepthStencilAttachment /* | vk::ImageUsageFlagBits::eSampled*/;
 	image_ = device.createImage(imageCreateInfo);
 
 	// allocate memory

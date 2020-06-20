@@ -97,13 +97,14 @@ RenderPassPipelineStateVulkan* RenderPassPipelineStateCacheVulkan::Create(const 
 			attachmentDescs.at(colorCount).stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
 		}
 
-		attachmentDescs.at(colorCount).storeOp = vk::AttachmentStoreOp::eStore;
-		attachmentDescs.at(colorCount).stencilStoreOp = vk::AttachmentStoreOp::eStore;
+		attachmentDescs.at(colorCount).storeOp = vk::AttachmentStoreOp::eDontCare;
+		attachmentDescs.at(colorCount).stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
 
 		// When clearing, the initialLayout does not matter.
 		attachmentDescs.at(colorCount).initialLayout =
 			(key.IsDepthCleared) ? vk::ImageLayout::eUndefined : vk::ImageLayout::eDepthStencilAttachmentOptimal;
 		attachmentDescs.at(colorCount).finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+		//attachmentDescs.at(colorCount).finalLayout = vk::ImageLayout::eDepthStencilReadOnlyOptimal;
 	}
 
 	// resolve
