@@ -3,9 +3,19 @@
 namespace LLGI
 {
 
+static bool doExit_ = false;
+
 #ifdef _WIN32
 
-LRESULT LLGI_WndProc_Win(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) { return DefWindowProc(hwnd, msg, wParam, lParam); }
+LRESULT LLGI_WndProc_Win(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	if (msg == WM_CLOSE)
+	{
+		doExit_ = true;
+	}
+
+	return DefWindowProc(hwnd, msg, wParam, lParam);
+}
 #endif
 
 WindowWin::~WindowWin() { Terminate(); }
@@ -40,6 +50,8 @@ bool WindowWin::Initialize(const char* title, const Vec2I& windowSize)
 	windowSize_ = windowSize;
 
 	// TODO : check many things
+
+	doExit_ = false;
 
 	return true;
 }
@@ -82,7 +94,7 @@ bool WindowWin::OnNewFrame()
 		}
 	}
 
-	return true;
+	return !doExit_;
 }
 
 void* WindowWin::GetNativePtr(int32_t index)

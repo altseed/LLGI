@@ -326,7 +326,7 @@ bool PipelineStateVulkan::Compile()
 			blendFuncs[static_cast<int>(BlendFuncType::SrcColor)] = vk::BlendFactor::eSrcColor;
 			blendFuncs[static_cast<int>(BlendFuncType::OneMinusSrcColor)] = vk::BlendFactor::eOneMinusSrcColor;
 			blendFuncs[static_cast<int>(BlendFuncType::SrcAlpha)] = vk::BlendFactor::eSrcAlpha;
-			blendFuncs[static_cast<int>(BlendFuncType::OneMinusSrcAlpha)] = vk::BlendFactor::eSrcAlpha;
+			blendFuncs[static_cast<int>(BlendFuncType::OneMinusSrcAlpha)] = vk::BlendFactor::eOneMinusSrcAlpha;
 			blendFuncs[static_cast<int>(BlendFuncType::DstColor)] = vk::BlendFactor::eDstColor;
 			blendFuncs[static_cast<int>(BlendFuncType::OneMinusDstColor)] = vk::BlendFactor::eOneMinusDstColor;
 			blendFuncs[static_cast<int>(BlendFuncType::DstAlpha)] = vk::BlendFactor::eDstAlpha;
