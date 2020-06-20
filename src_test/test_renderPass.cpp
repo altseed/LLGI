@@ -7,11 +7,20 @@ enum class RenderPassTestMode
 {
 	None,
 	MSAA,
+	MSAADepth,
 	CopyTexture,
 };
 
 void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 {
+	bool isMSAATest = mode == RenderPassTestMode::MSAA || mode == RenderPassTestMode::MSAADepth;
+	bool isNewMSAAEnabled = deviceType == LLGI::DeviceType::DirectX12 || deviceType == LLGI::DeviceType::Vulkan;
+
+	if (!isNewMSAAEnabled && mode == RenderPassTestMode::MSAADepth)
+	{
+		return;
+	}
+
 	int count = 0;
 
 	LLGI::PlatformParameter pp;
@@ -30,7 +39,7 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 	LLGI::RenderTextureInitializationParameter params;
 	params.Size = LLGI::Vec2I(256, 256);
 
-	if (mode == RenderPassTestMode::MSAA)
+	if (isMSAATest)
 	{
 		params.IsMultiSampling = true;
 		params.SamplingCount = 4;
@@ -43,11 +52,39 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 	params.SamplingCount = 1;
 	auto renderTextureDst = graphics->CreateRenderTexture(params);
 
+	LLGI::Texture* depthTexture = nullptr;
+	LLGI::Texture* depthTextureDst = nullptr;
+
+	if (isNewMSAAEnabled && mode == RenderPassTestMode::MSAADepth)
+	{
+		LLGI::DepthTextureInitializationParameter depthParam;
+		depthParam.Size = params.Size;
+		depthParam.SamplingCount = 4;
+
+		depthTexture = graphics->CreateDepthTexture(depthParam);
+
+		LLGI::DepthTextureInitializationParameter depthParamDst;
+		depthParamDst.Size = params.Size;
+
+		depthTextureDst = graphics->CreateDepthTexture(depthParamDst);
+	}
+
 	LLGI::RenderPass* renderPass = nullptr;
 
-	if ((deviceType == LLGI::DeviceType::DirectX12 || deviceType == LLGI::DeviceType::Vulkan) && mode == RenderPassTestMode::MSAA)
+	if (isNewMSAAEnabled && mode == RenderPassTestMode::MSAADepth)
 	{
-		renderPass = graphics->CreateRenderPass(renderTexture, renderTextureDst, nullptr);
+		if (graphics->IsResolvedDepthSupported())
+		{
+			renderPass = graphics->CreateRenderPass(renderTexture, renderTextureDst, depthTexture, depthTextureDst);
+		}
+		else
+		{
+			renderPass = graphics->CreateRenderPass(renderTexture, renderTextureDst, depthTexture, nullptr);
+		}
+	}
+	else if (isNewMSAAEnabled && mode == RenderPassTestMode::MSAA)
+	{
+		renderPass = graphics->CreateRenderPass(renderTexture, renderTextureDst, nullptr, nullptr);
 	}
 	else
 	{
@@ -208,8 +245,7 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 		// Render to backbuffer
 		commandList->SetPipelineState(pips[renderPassPipelineStateSc].get());
 
-		if (mode == RenderPassTestMode::CopyTexture ||
-			(mode == RenderPassTestMode::MSAA && (deviceType == LLGI::DeviceType::DirectX12 || deviceType == LLGI::DeviceType::Vulkan)))
+		if (mode == RenderPassTestMode::CopyTexture || (isMSAATest && isNewMSAAEnabled))
 		{
 			commandList->SetTexture(
 				renderTextureDst, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
@@ -258,6 +294,8 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 	LLGI::SafeRelease(sfMemoryPool);
 	LLGI::SafeRelease(renderTexture);
 	LLGI::SafeRelease(renderTextureDst);
+	LLGI::SafeRelease(depthTexture);
+	LLGI::SafeRelease(depthTextureDst);
 	LLGI::SafeRelease(renderPass);
 	LLGI::SafeRelease(texture);
 	for (int i = 0; i < commandLists.size(); i++)
@@ -482,6 +520,9 @@ TestRegister RenderPass_Basic("RenderPass.Basic",
 							  [](LLGI::DeviceType device) -> void { test_renderPass(device, RenderPassTestMode::None); });
 
 TestRegister RenderPass_MSAA("RenderPass.MSAA", [](LLGI::DeviceType device) -> void { test_renderPass(device, RenderPassTestMode::MSAA); });
+
+TestRegister RenderPass_MSAADepth("RenderPass.MSAADepth",
+								  [](LLGI::DeviceType device) -> void { test_renderPass(device, RenderPassTestMode::MSAADepth); });
 
 TestRegister RenderPass_CopyTexture("RenderPass.CopyTexture",
 									[](LLGI::DeviceType device) -> void { test_renderPass(device, RenderPassTestMode::CopyTexture); });

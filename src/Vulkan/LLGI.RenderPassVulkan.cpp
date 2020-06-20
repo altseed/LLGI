@@ -37,7 +37,8 @@ RenderPassVulkan::~RenderPassVulkan()
 bool RenderPassVulkan::Initialize(const TextureVulkan** textures,
 								  int32_t textureCount,
 								  TextureVulkan* depthTexture,
-								  TextureVulkan* resolvedTexture)
+								  TextureVulkan* resolvedTexture,
+								  TextureVulkan* resolvedDepthTexture)
 {
 	if (textureCount == 0)
 		return false;
@@ -52,7 +53,12 @@ bool RenderPassVulkan::Initialize(const TextureVulkan** textures,
 		return false;
 	}
 
-	if (!assignResolvedTexture(resolvedTexture))
+	if (!assignResolvedRenderTexture(resolvedTexture))
+	{
+		return false;
+	}
+
+	if (!assignResolvedDepthTexture(resolvedDepthTexture))
 	{
 		return false;
 	}
@@ -95,10 +101,17 @@ bool RenderPassVulkan::Initialize(const TextureVulkan** textures,
 		views.at(views.size() - 1) = depthTexture->GetView();
 	}
 
-	if (auto resolvedTexture = static_cast<TextureVulkan*>(GetResolvedTexture()))
+	if (auto resolvedTexture = static_cast<TextureVulkan*>(GetResolvedRenderTexture()))
 	{
 		views.resize(views.size() + 1);
 		views.at(views.size() - 1) = resolvedTexture->GetView();
+	}
+
+	if (auto resolvedTexture = static_cast<TextureVulkan*>(GetResolvedDepthTexture()))
+	{
+		// Wait 1.2
+		// views.resize(views.size() + 1);
+		// views.at(views.size() - 1) = resolvedTexture->GetView();
 	}
 
 	ResetRenderPassPipelineState();

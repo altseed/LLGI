@@ -176,7 +176,7 @@ RenderPass* GraphicsVulkan::CreateRenderPass(const Texture** textures, int32_t t
 	auto dt = static_cast<TextureVulkan*>(depthTexture);
 
 	auto renderPass = new RenderPassVulkan(renderPassPipelineStateCache_, GetDevice(), this);
-	if (!renderPass->Initialize((const TextureVulkan**)textures, textureCount, dt, nullptr))
+	if (!renderPass->Initialize((const TextureVulkan**)textures, textureCount, dt, nullptr, nullptr))
 	{
 		SafeRelease(renderPass);
 	}
@@ -184,16 +184,20 @@ RenderPass* GraphicsVulkan::CreateRenderPass(const Texture** textures, int32_t t
 	return renderPass;
 }
 
-RenderPass* GraphicsVulkan::CreateRenderPass(const Texture* texture, const Texture* resolvedTexture, Texture* depthTexture)
+RenderPass* GraphicsVulkan::CreateRenderPass(const Texture* texture,
+											 const Texture* resolvedTexture,
+											 const Texture* depthTexture,
+											 const Texture* resolvedDepthTexture)
 {
 	if (texture == nullptr)
 		return nullptr;
 
-	auto dt = static_cast<TextureVulkan*>(depthTexture);
+	auto dt = static_cast<const TextureVulkan*>(depthTexture);
 	auto rt = static_cast<const TextureVulkan*>(resolvedTexture);
+	auto rdt = static_cast<const TextureVulkan*>(resolvedDepthTexture);
 
 	auto renderPass = new RenderPassVulkan(renderPassPipelineStateCache_, GetDevice(), this);
-	if (!renderPass->Initialize((const TextureVulkan**)(&texture), 1, dt, (TextureVulkan*)rt))
+	if (!renderPass->Initialize((const TextureVulkan**)(&texture), 1, (TextureVulkan*)dt, (TextureVulkan*)rt, (TextureVulkan*)rdt))
 	{
 		SafeRelease(renderPass);
 	}
@@ -263,8 +267,12 @@ Texture* GraphicsVulkan::CreateDepthTexture(const DepthTextureInitializationPara
 		format = TextureFormatType::D24S8;
 	}
 
-	if (!obj->InitializeAsDepthStencil(
-			this->vkDevice, this->vkPysicalDevice, parameter.Size, (vk::Format)VulkanHelper::TextureFormatToVkFormat(format), this))
+	if (!obj->InitializeAsDepthStencil(this->vkDevice,
+									   this->vkPysicalDevice,
+									   parameter.Size,
+									   (vk::Format)VulkanHelper::TextureFormatToVkFormat(format),
+									   parameter.SamplingCount,
+									   this))
 	{
 		SafeRelease(obj);
 		return nullptr;

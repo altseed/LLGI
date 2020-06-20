@@ -490,7 +490,7 @@ void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
 		layoutOffset += 1;
 	}
 
-	if (auto t = static_cast<TextureVulkan*>(renderPass_->GetResolvedTexture()))
+	if (auto t = static_cast<TextureVulkan*>(renderPass_->GetResolvedRenderTexture()))
 	{
 		t->ChangeImageLayout(renderPass_->renderPassPipelineState->finalLayouts_.at(layoutOffset));
 	}

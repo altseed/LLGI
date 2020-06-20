@@ -34,6 +34,7 @@ enum class DepthTextureMode
 struct DepthTextureInitializationParameter
 {
 	Vec2I Size;
+	int32_t SamplingCount = 1;
 	DepthTextureMode Mode = DepthTextureMode::Depth;
 };
 
@@ -132,16 +133,23 @@ private:
 
 	FixedSizeVector<Texture*, RenderTargetMax> renderTextures_;
 	Texture* depthTexture_ = nullptr;
-	Texture* resolvedTexture_ = nullptr;
+	Texture* resolvedRenderTexture_ = nullptr;
+	Texture* resolvedDepthTexture_ = nullptr;
 
 protected:
 	Vec2I screenSize_;
 
 	bool assignRenderTextures(Texture** textures, int32_t count);
 	bool assignDepthTexture(Texture* depthTexture);
-	bool assignResolvedTexture(Texture* texture);
-	bool
-	getSize(Vec2I& size, const Texture** textures, int32_t textureCount, Texture* depthTexture, Texture* resolvedTexture = nullptr) const;
+	bool assignResolvedRenderTexture(Texture* texture);
+	bool assignResolvedDepthTexture(Texture* texture);
+
+	bool getSize(Vec2I& size,
+				 const Texture** textures,
+				 int32_t textureCount,
+				 Texture* depthTexture,
+				 Texture* resolvedRenderTexture = nullptr,
+				 Texture* resolvedDepthTexture = nullptr) const;
 	bool sanitize();
 
 public:
@@ -168,7 +176,9 @@ public:
 
 	bool GetHasDepthTexture() const { return GetDepthTexture() != nullptr; }
 
-	Texture* GetResolvedTexture() const { return resolvedTexture_; }
+	Texture* GetResolvedRenderTexture() const { return resolvedRenderTexture_; }
+
+	Texture* GetResolvedDepthTexture() const { return resolvedDepthTexture_; }
 
 	virtual bool GetIsSwapchainScreen() const;
 
@@ -252,7 +262,13 @@ public:
 
 	virtual RenderPass* CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture) { return nullptr; }
 
-	virtual RenderPass* CreateRenderPass(const Texture* texture, const Texture* resolvedTexture, Texture* depthTexture) { return nullptr; }
+	virtual RenderPass* CreateRenderPass(const Texture* texture,
+										 const Texture* resolvedTexture,
+										 const Texture* depthTexture,
+										 const Texture* resolvedDepthTexture)
+	{
+		return nullptr;
+	}
 
 	virtual Texture* CreateTexture(const TextureInitializationParameter& parameter) { return nullptr; }
 
@@ -289,6 +305,8 @@ public:
 		@param	disposed	called function
 	*/
 	void SetDisposed(const std::function<void()>& disposed);
+
+	virtual bool IsResolvedDepthSupported() const { return false; }
 };
 
 } // namespace LLGI

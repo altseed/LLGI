@@ -157,7 +157,7 @@ bool TextureVulkan::InitializeAsScreen(const vk::Image& image, const vk::ImageVi
 }
 
 bool TextureVulkan::InitializeAsDepthStencil(
-	vk::Device device, vk::PhysicalDevice physicalDevice, const Vec2I& size, vk::Format format, ReferenceObject* owner)
+	vk::Device device, vk::PhysicalDevice physicalDevice, const Vec2I& size, vk::Format format, int samplingCount, ReferenceObject* owner)
 {
 	type_ = TextureType::Depth;
 	textureSize = size;
@@ -165,6 +165,8 @@ bool TextureVulkan::InitializeAsDepthStencil(
 	owner_ = owner;
 	SafeAddRef(owner_);
 	device_ = device;
+
+	samplingCount_ = samplingCount;
 
 	// check a format whether specified format is supported
 	vk::Format depthFormat = format;
@@ -186,6 +188,7 @@ bool TextureVulkan::InitializeAsDepthStencil(
 	imageCreateInfo.format = depthFormat;
 	imageCreateInfo.mipLevels = 1;
 	imageCreateInfo.arrayLayers = 1;
+	imageCreateInfo.samples = (vk::SampleCountFlagBits)samplingCount_;
 	imageCreateInfo.usage = vk::ImageUsageFlagBits::eDepthStencilAttachment;
 	image_ = device.createImage(imageCreateInfo);
 

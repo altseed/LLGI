@@ -22,7 +22,8 @@ RenderPassDX12 ::~RenderPassDX12()
 	SafeRelease(device_);
 }
 
-bool RenderPassDX12::Initialize(TextureDX12** textures, int numTextures, TextureDX12* depthTexture, TextureDX12* resolvedTexture)
+bool RenderPassDX12::Initialize(
+	TextureDX12** textures, int numTextures, TextureDX12* depthTexture, TextureDX12* resolvedTexture, TextureDX12* resolvedDepthTexture)
 {
 	if (textures[0]->Get() == nullptr)
 		return false;
@@ -37,7 +38,12 @@ bool RenderPassDX12::Initialize(TextureDX12** textures, int numTextures, Texture
 		return false;
 	}
 
-	if (!assignResolvedTexture(resolvedTexture))
+	if (!assignResolvedRenderTexture(resolvedTexture))
+	{
+		return false;
+	}
+
+	if (!assignResolvedDepthTexture(resolvedDepthTexture))
 	{
 		return false;
 	}
@@ -125,7 +131,15 @@ bool RenderPassDX12::ReinitializeRenderTargetViews(CommandListDX12* commandList,
 
 		D3D12_DEPTH_STENCIL_VIEW_DESC desc = {};
 		desc.Format = depthTexture->GetDXGIFormat();
-		desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+
+		if (depthTexture->GetSamplingCount() > 1)
+		{
+			desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMS;
+		}
+		else
+		{
+			desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+		}
 
 		auto cpuHandle = cpuDescriptorHandleDSV[0];
 		device_->CreateDepthStencilView(depthTexture->Get(), &desc, cpuHandle);

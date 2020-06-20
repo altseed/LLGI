@@ -165,8 +165,12 @@ bool PlatformVulkan::CreateDepthBuffer(Vec2I windowSize)
 	SafeRelease(depthStencilTexture_);
 
 	depthStencilTexture_ = new TextureVulkan();
-	if (!depthStencilTexture_->InitializeAsDepthStencil(
-			vkDevice_, vkPhysicalDevice, windowSize, (vk::Format)VulkanHelper::TextureFormatToVkFormat(TextureFormatType::D24S8), nullptr))
+	if (!depthStencilTexture_->InitializeAsDepthStencil(vkDevice_,
+														vkPhysicalDevice,
+														windowSize,
+														(vk::Format)VulkanHelper::TextureFormatToVkFormat(TextureFormatType::D24S8),
+														1,
+														nullptr))
 	{
 		return false;
 	}
@@ -183,7 +187,7 @@ void PlatformVulkan::CreateRenderPass()
 		std::array<TextureVulkan*, 1> textures;
 		textures[0] = swapBuffers[i].texture;
 
-		renderPass->Initialize(const_cast<const TextureVulkan**>(textures.data()), 1, depthStencilTexture_, nullptr);
+		renderPass->Initialize(const_cast<const TextureVulkan**>(textures.data()), 1, depthStencilTexture_, nullptr, nullptr);
 
 		renderPasses.emplace_back(CreateSharedPtr(renderPass));
 	}

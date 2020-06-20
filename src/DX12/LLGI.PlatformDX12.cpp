@@ -175,7 +175,7 @@ bool PlatformDX12::GenerateSwapBuffer()
 
 		renderTargets_[i] = new TextureDX12(renderResources_[i], device, commandQueue);
 		renderPasses_[i] = new RenderPassDX12(device);
-		renderPasses_[i]->Initialize(&renderTargets_[i], 1, nullptr, nullptr);
+		renderPasses_[i]->Initialize(&renderTargets_[i], 1, nullptr, nullptr, nullptr);
 	}
 
 	return true;

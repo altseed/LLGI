@@ -146,7 +146,7 @@ CommandList* GraphicsDX12::CreateCommandList(SingleFrameMemoryPool* memoryPool)
 RenderPass* GraphicsDX12::CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture)
 {
 	auto renderPass = new RenderPassDX12(this->device_);
-	if (!renderPass->Initialize((TextureDX12**)textures, textureCount, (TextureDX12*)depthTexture, nullptr))
+	if (!renderPass->Initialize((TextureDX12**)textures, textureCount, (TextureDX12*)depthTexture, nullptr, nullptr))
 	{
 		SafeRelease(renderPass);
 	}
@@ -154,14 +154,21 @@ RenderPass* GraphicsDX12::CreateRenderPass(const Texture** textures, int32_t tex
 	return renderPass;
 }
 
-RenderPass* GraphicsDX12::CreateRenderPass(const Texture* texture, const Texture* resolvedTexture, Texture* depthTexture)
+RenderPass* GraphicsDX12::CreateRenderPass(const Texture* texture,
+										   const Texture* resolvedTexture,
+										   const Texture* depthTexture,
+										   const Texture* resolvedDepthTexture)
 {
 	auto renderPass = new RenderPassDX12(this->device_);
 
 	std::array<TextureDX12*, 1> t;
 	t[0] = const_cast<TextureDX12*>(static_cast<const TextureDX12*>(texture));
 
-	if (!renderPass->Initialize(t.data(), static_cast<int32_t>(t.size()), (TextureDX12*)depthTexture, (TextureDX12*)resolvedTexture))
+	if (!renderPass->Initialize(t.data(),
+								static_cast<int32_t>(t.size()),
+								(TextureDX12*)depthTexture,
+								(TextureDX12*)resolvedTexture,
+								(TextureDX12*)resolvedDepthTexture))
 	{
 		SafeRelease(renderPass);
 	}
@@ -212,7 +219,7 @@ Texture* GraphicsDX12::CreateDepthTexture(const DepthTextureInitializationParame
 		format = TextureFormatType::D24S8;
 	}
 
-	if (!obj->Initialize(parameter.Size, TextureType::Depth, format, 1))
+	if (!obj->Initialize(parameter.Size, TextureType::Depth, format, parameter.SamplingCount))
 	{
 		SafeRelease(obj);
 		return nullptr;

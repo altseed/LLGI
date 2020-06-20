@@ -122,6 +122,22 @@ RenderPassPipelineStateVulkan* RenderPassPipelineStateCacheVulkan::Create(const 
 		desc.finalLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 	}
 
+	int32_t resolveDepthIndex = -1;
+	if (key.HasResolvedDepthTarget)
+	{
+		// Wait 1.2
+		// attachmentDescs.resize(attachmentDescs.size() + 1);
+		// auto& desc = attachmentDescs.at(attachmentDescs.size() - 1);
+		// resolveDepthIndex = static_cast<int32_t>(attachmentDescs.size()) - 1;
+		//
+		// desc.format = (vk::Format)VulkanHelper::TextureFormatToVkFormat(key.DepthFormat);
+		// desc.samples = vk::SampleCountFlagBits::e1;
+		// desc.loadOp = vk::AttachmentLoadOp::eDontCare;
+		// desc.storeOp = vk::AttachmentStoreOp::eStore;
+		// desc.initialLayout = vk::ImageLayout::eUndefined;
+		// desc.finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+	}
+
 	for (int i = 0; i < colorCount; i++)
 	{
 		vk::AttachmentReference& colorReference = attachmentRefs.at(i);
@@ -142,6 +158,15 @@ RenderPassPipelineStateVulkan* RenderPassPipelineStateCacheVulkan::Create(const 
 		auto& ref = attachmentRefs.at(attachmentRefs.size() - 1);
 		ref.attachment = resolveIndex;
 		ref.layout = vk::ImageLayout::eColorAttachmentOptimal;
+	}
+
+	if (key.HasResolvedDepthTarget)
+	{
+		// Wait 1.2
+		// attachmentRefs.resize(attachmentRefs.size() + 1);
+		// auto& ref = attachmentRefs.at(attachmentRefs.size() - 1);
+		// ref.attachment = resolveDepthIndex;
+		// ref.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 	}
 
 	finalLayouts.resize(attachmentDescs.size());
@@ -170,6 +195,11 @@ RenderPassPipelineStateVulkan* RenderPassPipelineStateCacheVulkan::Create(const 
 		if (key.HasResolvedRenderTarget)
 		{
 			subpass.pResolveAttachments = &attachmentRefs.at(resolveIndex);
+		}
+
+		if (key.HasResolvedDepthTarget)
+		{
+			// Wait 1.2
 		}
 	}
 

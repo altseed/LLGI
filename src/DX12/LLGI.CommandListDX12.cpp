@@ -184,15 +184,26 @@ void CommandListDX12::BeginRenderPass(RenderPass* renderPass)
 void CommandListDX12::EndRenderPass()
 {
 	// Resolve MSAA
-	if (renderPass_ != nullptr && renderPass_->GetResolvedTexture() != nullptr)
+	if (renderPass_ != nullptr && renderPass_->GetResolvedRenderTexture() != nullptr)
 	{
 		auto src = static_cast<TextureDX12*>(renderPass_->GetRenderTexture(0));
-		auto dst = static_cast<TextureDX12*>(renderPass_->GetResolvedTexture());
+		auto dst = static_cast<TextureDX12*>(renderPass_->GetResolvedRenderTexture());
 
 		src->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_RESOLVE_SOURCE);
 		dst->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_RESOLVE_DEST);
 
 		currentCommandList_->ResolveSubresource(dst->Get(), 0, src->Get(), 0, dst->GetDXGIFormat());
+	}
+
+	if (renderPass_ != nullptr && renderPass_->GetResolvedDepthTexture() != nullptr)
+	{
+		auto src = static_cast<TextureDX12*>(renderPass_->GetDepthTexture());
+		auto dst = static_cast<TextureDX12*>(renderPass_->GetResolvedDepthTexture());
+
+		src->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_RESOLVE_SOURCE);
+		dst->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_RESOLVE_DEST);
+
+		currentCommandList_->ResolveSubresource(dst->Get(), 0, src->Get(), 0, DirectX12::GetShaderResourceViewFormat(dst->GetDXGIFormat()));
 	}
 
 	renderPass_.reset();
@@ -358,7 +369,16 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 					// SRV
 					{
 						D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-						srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+
+						if (texture->GetSamplingCount() > 1)
+						{
+							srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
+						}
+						else
+						{
+							srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+						}
+
 						srvDesc.Format = DirectX12::GetShaderResourceViewFormat(texture->GetDXGIFormat());
 						srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 						srvDesc.Texture2D.MipLevels = 1;

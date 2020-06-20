@@ -46,8 +46,12 @@ public:
 	*/
 	bool InitializeAsScreen(const vk::Image& image, const vk::ImageView& imageVew, vk::Format format, const Vec2I& size);
 
-	bool InitializeAsDepthStencil(
-		vk::Device device, vk::PhysicalDevice physicalDevice, const Vec2I& size, vk::Format format, ReferenceObject* owner);
+	bool InitializeAsDepthStencil(vk::Device device,
+								  vk::PhysicalDevice physicalDevice,
+								  const Vec2I& size,
+								  vk::Format format,
+								  int samplingCount,
+								  ReferenceObject* owner);
 
 	bool InitializeFromExternal(TextureType type, VkImage image, VkImageView imageView, VkFormat format, const Vec2I& size);
 

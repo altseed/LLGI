@@ -126,22 +126,42 @@ bool RenderPass::assignDepthTexture(Texture* depthTexture)
 	return true;
 }
 
-bool RenderPass::assignResolvedTexture(Texture* texture)
+bool RenderPass::assignResolvedRenderTexture(Texture* texture)
 {
-	if (resolvedTexture_ != nullptr && resolvedTexture_->GetType() != TextureType::Render)
+	if (resolvedRenderTexture_ != nullptr && resolvedRenderTexture_->GetType() != TextureType::Render)
 	{
 		Log(LogType::Error, "RenderPass : Invalid ResolvedTexture.");
 		return false;
 	}
 
 	SafeAddRef(texture);
-	SafeRelease(resolvedTexture_);
-	resolvedTexture_ = texture;
+	SafeRelease(resolvedRenderTexture_);
+	resolvedRenderTexture_ = texture;
 
 	return true;
 }
 
-bool RenderPass::getSize(Vec2I& size, const Texture** textures, int32_t textureCount, Texture* depthTexture, Texture* resolvedTexture) const
+bool RenderPass::assignResolvedDepthTexture(Texture* texture)
+{
+	if (resolvedDepthTexture_ != nullptr && resolvedDepthTexture_->GetType() != TextureType::Depth)
+	{
+		Log(LogType::Error, "RenderPass : Invalid ResolvedTexture.");
+		return false;
+	}
+
+	SafeAddRef(texture);
+	SafeRelease(resolvedDepthTexture_);
+	resolvedDepthTexture_ = texture;
+
+	return true;
+}
+
+bool RenderPass::getSize(Vec2I& size,
+						 const Texture** textures,
+						 int32_t textureCount,
+						 Texture* depthTexture,
+						 Texture* resolvedRenderTexture,
+						 Texture* resolvedDepthTexture) const
 {
 	if (textureCount == 0)
 	{
@@ -168,11 +188,19 @@ bool RenderPass::getSize(Vec2I& size, const Texture** textures, int32_t textureC
 			goto FAIL;
 	}
 
-	if (resolvedTexture != nullptr)
+	if (resolvedRenderTexture != nullptr)
 	{
-		if (size.X != resolvedTexture->GetSizeAs2D().X)
+		if (size.X != resolvedRenderTexture->GetSizeAs2D().X)
 			goto FAIL;
-		if (size.Y != resolvedTexture->GetSizeAs2D().Y)
+		if (size.Y != resolvedRenderTexture->GetSizeAs2D().Y)
+			goto FAIL;
+	}
+
+	if (resolvedDepthTexture != nullptr)
+	{
+		if (size.X != resolvedDepthTexture->GetSizeAs2D().X)
+			goto FAIL;
+		if (size.Y != resolvedDepthTexture->GetSizeAs2D().Y)
 			goto FAIL;
 	}
 
@@ -186,7 +214,7 @@ FAIL:;
 bool RenderPass::sanitize()
 {
 
-	if (resolvedTexture_ != nullptr)
+	if (resolvedRenderTexture_ != nullptr)
 	{
 		if (renderTextures_.size() != 1)
 		{
@@ -194,11 +222,32 @@ bool RenderPass::sanitize()
 			return false;
 		}
 
-		if (renderTextures_.at(0)->GetFormat() != resolvedTexture_->GetFormat())
+		if (renderTextures_.at(0)->GetFormat() != resolvedRenderTexture_->GetFormat())
 		{
 			Log(LogType::Error, "RenderPass : Formats are not same between Render and Resolved.");
 			return false;
 		}
+	}
+
+	if (resolvedDepthTexture_ != nullptr)
+	{
+		if (depthTexture_ == nullptr)
+		{
+			Log(LogType::Error, "RenderPass : Require a depth texture.");
+			return false;
+		}
+
+		if (depthTexture_->GetFormat() != resolvedDepthTexture_->GetFormat())
+		{
+			Log(LogType::Error, "RenderPass : Formats are not same between Render and Resolved.");
+			return false;
+		}
+	}
+
+	if (depthTexture_ != nullptr && renderTextures_.at(0)->GetSamplingCount() != depthTexture_->GetSamplingCount())
+	{
+		Log(LogType::Error, "RenderPass : SamplingCount are not same.");
+		return false;
 	}
 
 	return true;
@@ -207,7 +256,8 @@ bool RenderPass::sanitize()
 RenderPass::~RenderPass()
 {
 	SafeRelease(depthTexture_);
-	SafeRelease(resolvedTexture_);
+	SafeRelease(resolvedRenderTexture_);
+	SafeRelease(resolvedDepthTexture_);
 
 	for (size_t i = 0; i < renderTextures_.size(); i++)
 	{
@@ -232,7 +282,8 @@ RenderPassPipelineStateKey RenderPass::GetKey() const
 	key.IsDepthCleared = GetIsDepthCleared();
 	key.RenderTargetFormats.resize(GetRenderTextureCount());
 	key.SamplingCount = renderTextures_.at(0)->GetSamplingCount();
-	key.HasResolvedRenderTarget = GetResolvedTexture() != nullptr;
+	key.HasResolvedRenderTarget = GetResolvedRenderTexture() != nullptr;
+	key.HasResolvedDepthTarget = GetResolvedDepthTexture() != nullptr;
 
 	for (size_t i = 0; i < key.RenderTargetFormats.size(); i++)
 	{

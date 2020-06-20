@@ -42,7 +42,11 @@ public:
 	RenderPassVulkan(RenderPassPipelineStateCacheVulkan* renderPassPipelineStateCache, vk::Device device, ReferenceObject* owner);
 	virtual ~RenderPassVulkan();
 
-	bool Initialize(const TextureVulkan** textures, int32_t textureCount, TextureVulkan* depthTexture, TextureVulkan* resolvedTexture);
+	bool Initialize(const TextureVulkan** textures,
+					int32_t textureCount,
+					TextureVulkan* depthTexture,
+					TextureVulkan* resolvedTexture,
+					TextureVulkan* resolvedDepthTexture);
 
 	Vec2I GetImageSize() const;
 

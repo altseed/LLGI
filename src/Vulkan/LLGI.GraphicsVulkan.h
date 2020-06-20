@@ -57,7 +57,10 @@ public:
 	ConstantBuffer* CreateConstantBuffer(int32_t size) override;
 	RenderPass* CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture) override;
 
-	RenderPass* CreateRenderPass(const Texture* texture, const Texture* resolvedTexture, Texture* depthTexture) override;
+	RenderPass* CreateRenderPass(const Texture* texture,
+								 const Texture* resolvedTexture,
+								 const Texture* depthTexture,
+								 const Texture* resolvedDepthTexture) override;
 
 	Texture* CreateTexture(const TextureInitializationParameter& parameter) override;
 	Texture* CreateRenderTexture(const RenderTextureInitializationParameter& parameter) override;
