@@ -93,7 +93,7 @@ struct RenderPassPipelineStateKey
 
 		return (IsPresent == value.IsPresent && DepthFormat == value.DepthFormat && IsColorCleared == value.IsColorCleared &&
 				IsDepthCleared == value.IsDepthCleared && SamplingCount == value.SamplingCount &&
-				HasResolvedRenderTarget == value.HasResolvedRenderTarget && HasResolvedDepthTarget && value.HasResolvedDepthTarget);
+				HasResolvedRenderTarget == value.HasResolvedRenderTarget && HasResolvedDepthTarget == value.HasResolvedDepthTarget);
 	}
 
 	struct Hash

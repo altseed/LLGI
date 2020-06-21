@@ -1,4 +1,5 @@
 #include "ImGuiPlatformVulkan.h"
+#include <Vulkan/LLGI.TextureVulkan.h>
 
 ImguiPlatformVulkan::ImguiPlatformVulkan(LLGI::Graphics* g, LLGI::Platform* p)
 	: g_(static_cast<LLGI::GraphicsVulkan*>(g)), p_(static_cast<LLGI::PlatformVulkan*>(p))
@@ -100,7 +101,54 @@ ImguiPlatformVulkan::ImguiPlatformVulkan(LLGI::Graphics* g, LLGI::Platform* p)
 
 ImguiPlatformVulkan::~ImguiPlatformVulkan()
 {
+	for (auto& it : textures_)
+	{
+		VkDescriptorSet ds = (VkDescriptorSet)it.second.id;
+		vkFreeDescriptorSets(g_->GetDevice(), descriptorPool_, 1, &ds);
+	}
+
 	vkDestroyDescriptorPool(g_->GetDevice(), descriptorPool_, nullptr);
 	ImGui_ImplVulkan_Shutdown();
 	LLGI::SafeRelease(ps_);
+}
+
+void ImguiPlatformVulkan::NewFrame(LLGI::RenderPass* renderPass)
+{
+	for (auto it = textures_.begin(); it != textures_.end();)
+	{
+		if (it->second.life == 0)
+		{
+			VkDescriptorSet ds = (VkDescriptorSet)it->second.id;
+			vkFreeDescriptorSets(g_->GetDevice(), descriptorPool_, 1, &ds);
+			it = textures_.erase(it);
+		}
+		else
+		{
+			it->second.life--;
+			++it;
+		}
+	}
+
+	ImGui_ImplVulkan_NewFrame();
+}
+
+ImTextureID ImguiPlatformVulkan::GetTextureIDToRender(LLGI::Texture* texture, LLGI::CommandList* commandList)
+{
+	auto it = textures_.find(texture);
+	if (it != textures_.end())
+	{
+		it->second.life = 10;
+		return it->second.id;
+	}
+
+	auto textureVulkan = static_cast<LLGI::TextureVulkan*>(texture);
+	auto id = ImGui_ImplVulkan_AddTexture(g_->GetDefaultSampler(), textureVulkan->GetView(), (VkImageLayout)textureVulkan->GetImageLayout());
+
+	TextureHolder th;
+	th.texture = LLGI::CreateSharedPtr(texture, true);
+	th.life = 10;
+	th.id = id;
+
+	textures_[texture] = th;
+	return id;
 }
