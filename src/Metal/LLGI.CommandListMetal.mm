@@ -63,20 +63,22 @@ void CommandList_Impl::End() {}
 
 void CommandList_Impl::BeginRenderPass(RenderPass_Impl* renderPass)
 {
-	if (renderPass->isColorCleared)
+	for (size_t i = 0; i < renderPass->pixelFormats.size(); i++)
 	{
-		auto r_ = renderPass->clearColor.R / 255.0;
-		auto g_ = renderPass->clearColor.G / 255.0;
-		auto b_ = renderPass->clearColor.B / 255.0;
-		auto a_ = renderPass->clearColor.A / 255.0;
+		if (renderPass->isColorCleared)
+		{
+			auto r_ = renderPass->clearColor.R / 255.0;
+			auto g_ = renderPass->clearColor.G / 255.0;
+			auto b_ = renderPass->clearColor.B / 255.0;
+			auto a_ = renderPass->clearColor.A / 255.0;
 
-		// TODO MRT
-		renderPass->renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
-		renderPass->renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(r_, g_, b_, a_);
-	}
-	else
-	{
-		renderPass->renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionDontCare;
+			renderPass->renderPassDescriptor.colorAttachments[i].loadAction = MTLLoadActionClear;
+			renderPass->renderPassDescriptor.colorAttachments[i].clearColor = MTLClearColorMake(r_, g_, b_, a_);
+		}
+		else
+		{
+			renderPass->renderPassDescriptor.colorAttachments[i].loadAction = MTLLoadActionDontCare;
+		}
 	}
 
 	if (renderPass->isDepthCleared)

@@ -218,7 +218,27 @@ RenderPass* GraphicsMetal::CreateRenderPass(const Texture** textures, int32_t te
 {
 	auto renderPass = new RenderPassMetal();
 
-	if (!renderPass->UpdateRenderTarget((Texture**)textures, textureCount, depthTexture))
+	if (!renderPass->UpdateRenderTarget((Texture**)textures, textureCount, depthTexture, nullptr, nullptr))
+	{
+		SafeRelease(renderPass);
+		return nullptr;
+	}
+
+	return renderPass;
+}
+
+RenderPass* GraphicsMetal::CreateRenderPass(const Texture* texture,
+											const Texture* resolvedTexture,
+											const Texture* depthTexture,
+											const Texture* resolvedDepthTexture)
+{
+	auto renderPass = new RenderPassMetal();
+
+	std::array<Texture*, 1> textures;
+	textures[0] = const_cast<Texture*>(texture);
+
+	if (!renderPass->UpdateRenderTarget(
+			textures.data(), 1, (Texture*)depthTexture, (Texture*)resolvedTexture, (Texture*)resolvedDepthTexture))
 	{
 		SafeRelease(renderPass);
 		return nullptr;

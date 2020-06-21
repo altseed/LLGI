@@ -238,10 +238,7 @@ bool PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 		}
 	}
 
-	if (self_->IsMSAA)
-	{
-		pipelineStateDescriptor.sampleCount = graphics->maxMultiSamplingCount;
-	}
+	pipelineStateDescriptor.sampleCount = renderPassPipelineStateMetal_->Key.SamplingCount;
 
 	NSError* pipelineError = nil;
 	pipelineState = [graphics->device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor error:&pipelineError];

@@ -14,12 +14,6 @@ enum class RenderPassTestMode
 void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 {
 	bool isMSAATest = mode == RenderPassTestMode::MSAA || mode == RenderPassTestMode::MSAADepth;
-	bool isNewMSAAEnabled = deviceType == LLGI::DeviceType::DirectX12 || deviceType == LLGI::DeviceType::Vulkan;
-
-	if (!isNewMSAAEnabled && mode == RenderPassTestMode::MSAADepth)
-	{
-		return;
-	}
 
 	int count = 0;
 
@@ -41,21 +35,19 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 
 	if (isMSAATest)
 	{
-		params.IsMultiSampling = true;
 		params.SamplingCount = 4;
 	}
 
 	auto renderTexture = graphics->CreateRenderTexture(params);
 	assert(renderTexture->GetType() == LLGI::TextureType::Render);
 
-	params.IsMultiSampling = false;
 	params.SamplingCount = 1;
 	auto renderTextureDst = graphics->CreateRenderTexture(params);
 
 	LLGI::Texture* depthTexture = nullptr;
 	LLGI::Texture* depthTextureDst = nullptr;
 
-	if (isNewMSAAEnabled && mode == RenderPassTestMode::MSAADepth)
+	if (mode == RenderPassTestMode::MSAADepth)
 	{
 		LLGI::DepthTextureInitializationParameter depthParam;
 		depthParam.Size = params.Size;
@@ -71,7 +63,7 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 
 	LLGI::RenderPass* renderPass = nullptr;
 
-	if (isNewMSAAEnabled && mode == RenderPassTestMode::MSAADepth)
+	if (mode == RenderPassTestMode::MSAADepth)
 	{
 		if (graphics->IsResolvedDepthSupported())
 		{
@@ -82,7 +74,7 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 			renderPass = graphics->CreateRenderPass(renderTexture, renderTextureDst, depthTexture, nullptr);
 		}
 	}
-	else if (isNewMSAAEnabled && mode == RenderPassTestMode::MSAA)
+	else if (mode == RenderPassTestMode::MSAA)
 	{
 		renderPass = graphics->CreateRenderPass(renderTexture, renderTextureDst, nullptr, nullptr);
 	}
@@ -199,7 +191,6 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs.get());
 			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps.get());
 			pip->SetRenderPassPipelineState(renderPassPipelineState.get());
-			pip->IsMSAA = mode == RenderPassTestMode::MSAA;
 			pip->Compile();
 
 			pips[renderPassPipelineState] = LLGI::CreateSharedPtr(pip);
@@ -245,7 +236,7 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 		// Render to backbuffer
 		commandList->SetPipelineState(pips[renderPassPipelineStateSc].get());
 
-		if (mode == RenderPassTestMode::CopyTexture || (isMSAATest && isNewMSAAEnabled))
+		if (mode == RenderPassTestMode::CopyTexture || (isMSAATest))
 		{
 			commandList->SetTexture(
 				renderTextureDst, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);

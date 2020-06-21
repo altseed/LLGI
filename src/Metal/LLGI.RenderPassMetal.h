@@ -26,7 +26,8 @@ public:
 
 	virtual ~RenderPassMetal();
 
-	bool UpdateRenderTarget(Texture** textures, int32_t textureCount, Texture* depthTexture);
+	bool UpdateRenderTarget(
+		Texture** textures, int32_t textureCount, Texture* depthTexture, Texture* resolvedTexture, Texture* resolvedDepthTexture);
 
 	void SetIsColorCleared(bool isColorCleared) override;
 

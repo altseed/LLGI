@@ -33,8 +33,6 @@ public:
 	bool IsStencilTestEnabled = false;
 	DepthFuncType DepthFunc = DepthFuncType::Less;
 
-	bool IsMSAA = false;
-
 	std::array<std::string, VertexLayoutMax> VertexLayoutNames;
 	std::array<VertexLayoutFormat, VertexLayoutMax> VertexLayouts;
 

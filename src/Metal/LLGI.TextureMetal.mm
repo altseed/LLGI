@@ -4,7 +4,7 @@
 namespace LLGI
 {
 
-Texture_Impl::Texture_Impl() : msaaTexture_(nullptr) {}
+Texture_Impl::Texture_Impl() {}
 
 Texture_Impl::~Texture_Impl()
 {
@@ -13,14 +13,9 @@ Texture_Impl::~Texture_Impl()
 		[texture release];
 		texture = nullptr;
 	}
-	if (msaaTexture_ != nullptr)
-	{
-		[msaaTexture_ release];
-		msaaTexture_ = nullptr;
-	}
 }
 
-bool Texture_Impl::Initialize(id<MTLDevice> device, const Vec2I& size, TextureFormatType format, TextureType type)
+bool Texture_Impl::Initialize(id<MTLDevice> device, const Vec2I& size, TextureFormatType format, int samplingCount, TextureType type)
 {
 	MTLTextureDescriptor* textureDescriptor = nullptr;
 
@@ -33,6 +28,13 @@ bool Texture_Impl::Initialize(id<MTLDevice> device, const Vec2I& size, TextureFo
 		textureDescriptor.usage = MTLTextureUsageRenderTarget;
 		textureDescriptor.textureType = MTLTextureType2D;
 		textureDescriptor.storageMode = MTLStorageModePrivate;
+		textureDescriptor.sampleCount = samplingCount;
+
+		if (samplingCount > 1)
+		{
+			textureDescriptor.textureType = MTLTextureType2DMultisample;
+			textureDescriptor.storageMode = MTLStorageModePrivate;
+		}
 	}
 	else
 	{
@@ -40,14 +42,6 @@ bool Texture_Impl::Initialize(id<MTLDevice> device, const Vec2I& size, TextureFo
 																			   width:size.X
 																			  height:size.Y
 																		   mipmapped:NO];
-	}
-
-	if (type == TextureType::Render)
-	{
-		textureDescriptor.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
-		textureDescriptor.textureType = MTLTextureType2D;
-		textureDescriptor.depth = 1;
-		textureDescriptor.storageMode = MTLStorageModePrivate;
 	}
 
 	texture = [device newTextureWithDescriptor:textureDescriptor];
@@ -69,28 +63,22 @@ bool Texture_Impl::Initialize(Graphics_Impl* graphics, const RenderTextureInitia
 																		  height:parameter.Size.Y
 																	   mipmapped:NO];
 	textureDescriptor.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
-	textureDescriptor.textureType = MTLTextureType2D;
 	textureDescriptor.depth = 1;
 
-	// Make copy enabled in GetBuffer
-	// TODO : Optimize
-	textureDescriptor.storageMode = MTLStorageModeManaged;
-
-	if (parameter.IsMultiSampling)
+	if (parameter.SamplingCount > 1)
 	{
-		multiSampled_ = true;
-
-		MTLTextureDescriptor* desc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:ConvertFormat(parameter.Format)
-																						width:parameter.Size.X
-																					   height:parameter.Size.Y
-																					mipmapped:NO];
-		desc.textureType = MTLTextureType2DMultisample;
-		desc.storageMode = MTLStorageModePrivate;
-		desc.sampleCount = graphics->maxMultiSamplingCount;
-		desc.usage = MTLTextureUsageRenderTarget;
-
-		msaaTexture_ = [device newTextureWithDescriptor:desc];
+		textureDescriptor.textureType = MTLTextureType2DMultisample;
+		textureDescriptor.storageMode = MTLStorageModePrivate;
 	}
+	else
+	{
+		textureDescriptor.textureType = MTLTextureType2D;
+		// Make copy enabled in GetBuffer
+		// TODO : Optimize
+		textureDescriptor.storageMode = MTLStorageModeManaged;
+	}
+
+	textureDescriptor.sampleCount = parameter.SamplingCount;
 
 	texture = [device newTextureWithDescriptor:textureDescriptor];
 
@@ -130,7 +118,7 @@ bool TextureMetal::Initialize(GraphicsMetal* owner, const TextureInitializationP
 
 	SafeAssign(owner_, static_cast<ReferenceObject*>(owner));
 
-	if (!impl->Initialize(owner->GetImpl()->device, parameter.Size, parameter.Format, type_))
+	if (!impl->Initialize(owner->GetImpl()->device, parameter.Size, parameter.Format, 1, type_))
 	{
 		return false;
 	}
@@ -144,6 +132,7 @@ bool TextureMetal::Initialize(GraphicsMetal* owner, const TextureInitializationP
 bool TextureMetal::Initialize(GraphicsMetal* owner, const RenderTextureInitializationParameter& parameter)
 {
 	type_ = TextureType::Render;
+	samplingCount_ = parameter.SamplingCount;
 
 	SafeAssign(owner_, static_cast<ReferenceObject*>(owner));
 
@@ -172,6 +161,8 @@ bool TextureMetal::Initialize(GraphicsMetal* owner, const DepthTextureInitializa
 	 #endif
 	 **/
 
+	samplingCount_ = parameter.SamplingCount;
+
 	SafeAssign(owner_, static_cast<ReferenceObject*>(owner));
 
 	TextureFormatType format = TextureFormatType::D32;
@@ -185,7 +176,7 @@ bool TextureMetal::Initialize(GraphicsMetal* owner, const DepthTextureInitializa
 		}
 	}
 
-	if (!impl->Initialize(owner->GetImpl()->device, parameter.Size, format, type_))
+	if (!impl->Initialize(owner->GetImpl()->device, parameter.Size, format, parameter.SamplingCount, type_))
 	{
 		return false;
 	}

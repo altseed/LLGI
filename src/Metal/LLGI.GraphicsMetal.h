@@ -47,8 +47,6 @@ public:
 
 	void WaitFinish() override;
 
-	// RenderPass* GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) override;
-
 	VertexBuffer* CreateVertexBuffer(int32_t size) override;
 
 	IndexBuffer* CreateIndexBuffer(int32_t stride, int32_t count) override;
@@ -64,6 +62,11 @@ public:
 	ConstantBuffer* CreateConstantBuffer(int32_t size) override;
 
 	RenderPass* CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture) override;
+
+	RenderPass* CreateRenderPass(const Texture* texture,
+								 const Texture* resolvedTexture,
+								 const Texture* depthTexture,
+								 const Texture* resolvedDepthTexture) override;
 
 	Texture* CreateTexture(const TextureInitializationParameter& parameter) override;
 

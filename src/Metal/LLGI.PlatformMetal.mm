@@ -135,7 +135,7 @@ RenderPass* PlatformMetal::GetCurrentScreen(const Color8& clearColor, bool isCol
 	// delay init
 	ringBuffers_[ringIndex_].renderTexture->Reset(this->impl->drawable.texture);
 	auto texPtr = ringBuffers_[ringIndex_].renderTexture.get();
-	ringBuffers_[ringIndex_].renderPass->UpdateRenderTarget((Texture**)&texPtr, 1, nullptr);
+	ringBuffers_[ringIndex_].renderPass->UpdateRenderTarget((Texture**)&texPtr, 1, nullptr, nullptr, nullptr);
 
 	ringBuffers_[ringIndex_].renderPass->SetClearColor(clearColor);
 	ringBuffers_[ringIndex_].renderPass->SetIsColorCleared(isColorCleared);

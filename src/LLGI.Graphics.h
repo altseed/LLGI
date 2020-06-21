@@ -21,8 +21,6 @@ struct RenderTextureInitializationParameter
 	Vec2I Size;
 	TextureFormatType Format = TextureFormatType::R8G8B8A8_UNORM;
 	int32_t SamplingCount = 1;
-
-	bool IsMultiSampling = false;
 };
 
 enum class DepthTextureMode
