@@ -129,7 +129,8 @@ bool PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 
 	if (renderPassPipelineStateMetal_->GetImpl()->depthStencilFormat != MTLPixelFormatInvalid)
 	{
-		if (renderPassPipelineStateMetal_->Key.DepthFormat == TextureFormatType::D24S8)
+		if (renderPassPipelineStateMetal_->Key.DepthFormat == TextureFormatType::D24S8 ||
+            renderPassPipelineStateMetal_->Key.DepthFormat == TextureFormatType::D32S8)
 		{
 			MTLStencilDescriptor* stencilDescriptor = [[MTLStencilDescriptor alloc] init];
 
@@ -232,7 +233,8 @@ bool PipelineState_Impl::Compile(PipelineState* self, Graphics_Impl* graphics)
 	{
 		pipelineStateDescriptor.depthAttachmentPixelFormat = renderPassPipelineStateMetal_->GetImpl()->depthStencilFormat;
 
-		if (renderPassPipelineStateMetal_->Key.DepthFormat == TextureFormatType::D24S8)
+		if (renderPassPipelineStateMetal_->Key.DepthFormat == TextureFormatType::D24S8 ||
+            renderPassPipelineStateMetal_->Key.DepthFormat == TextureFormatType::D32S8)
 		{
 			pipelineStateDescriptor.stencilAttachmentPixelFormat = renderPassPipelineStateMetal_->GetImpl()->depthStencilFormat;
 		}

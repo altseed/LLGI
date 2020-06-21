@@ -75,7 +75,11 @@ bool Texture_Impl::Initialize(Graphics_Impl* graphics, const RenderTextureInitia
 		textureDescriptor.textureType = MTLTextureType2D;
 		// Make copy enabled in GetBuffer
 		// TODO : Optimize
-		textureDescriptor.storageMode = MTLStorageModeManaged;
+#if TARGET_OS_MACOS
+        textureDescriptor.storageMode = MTLStorageModeManaged;
+#else
+        textureDescriptor.storageMode = MTLStorageModePrivate;
+#endif
 	}
 
 	textureDescriptor.sampleCount = parameter.SamplingCount;
