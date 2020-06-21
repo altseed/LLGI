@@ -136,8 +136,8 @@ int main()
 			{
 				for (size_t x = 0; x < 256; x++)
 				{
-					ptr[x + y * 256].R = x;
-					ptr[x + y * 256].G = y;
+					ptr[x + y * 256].R = static_cast<uint8_t>(x);
+					ptr[x + y * 256].G = static_cast<uint8_t>(y);
 					ptr[x + y * 256].B = 0;
 					ptr[x + y * 256].A = 255;
 				}
@@ -159,8 +159,8 @@ int main()
 			{
 				for (size_t x = 0; x < 256; x++)
 				{
-					ptr[x + y * 256].R = x;
-					ptr[x + y * 256].G = y;
+					ptr[x + y * 256].R = static_cast<uint8_t>(x);
+					ptr[x + y * 256].G = static_cast<uint8_t>(y);
 					ptr[x + y * 256].B = 0;
 					ptr[x + y * 256].A = 255;
 				}
@@ -184,13 +184,23 @@ int main()
 	// Setup Platform/Renderer bindings
 	ImGui_ImplGlfw_InitForVulkan(window, true);
 
+	std::shared_ptr<ImguiPlatform> imguiPlatform;
+
 #ifdef ENABLE_VULKAN
-	auto imguiPlatform = std::make_shared<ImguiPlatformVulkan>(graphics, platform);
-#elif defined(_WIN32)
-	auto imguiPlatform = std::make_shared<ImguiPlatformDX12>(graphics);
-#elif defined(__APPLE__)
-	auto imguiPlatform = std::make_shared<ImguiPlatformMetal>(graphics);
+	if (deviceType == LLGI::DeviceType::Vulkan)
+	{
+		imguiPlatform = std::make_shared<ImguiPlatformVulkan>(graphics, platform);
+	}
 #endif
+
+	if (imguiPlatform == nullptr)
+	{
+#if defined(_WIN32)
+		imguiPlatform = std::make_shared<ImguiPlatformDX12>(graphics);
+#elif defined(__APPLE__)
+		imguiPlatform = std::make_shared<ImguiPlatformMetal>(graphics);
+#endif
+	}
 
 	while (glfwWindowShouldClose(window) == GL_FALSE)
 	{

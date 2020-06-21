@@ -27,7 +27,7 @@ ImguiPlatformVulkan::ImguiPlatformVulkan(LLGI::Graphics* g, LLGI::Platform* p)
 
 	LLGI::RenderPassPipelineStateKey psk;
 	psk.IsPresent = true;
-	psk.HasDepth = true;
+	psk.DepthFormat = LLGI::TextureFormatType::D24S8;
 	psk.RenderTargetFormats.resize(1);
 	psk.RenderTargetFormats.at(0) = LLGI::TextureFormatType::B8G8R8A8_UNORM;
 
@@ -54,7 +54,7 @@ ImguiPlatformVulkan::ImguiPlatformVulkan(LLGI::Graphics* g, LLGI::Platform* p)
 
 	sfm->NewFrame();
 	cl->Begin();
-	
+
 	ImGui_ImplVulkan_CreateFontsTexture(cl->GetCommandBuffer());
 
 	cl->End();

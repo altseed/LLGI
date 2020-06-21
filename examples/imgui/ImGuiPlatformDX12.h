@@ -33,6 +33,7 @@ public:
 		ImGui_ImplDX12_Init(g_->GetDevice(),
 							g_->GetSwapBufferCount(),
 							DXGI_FORMAT_R8G8B8A8_UNORM,
+							srvDescHeap_,
 							srvDescHeap_->GetCPUDescriptorHandleForHeapStart(),
 							srvDescHeap_->GetGPUDescriptorHandleForHeapStart());
 
