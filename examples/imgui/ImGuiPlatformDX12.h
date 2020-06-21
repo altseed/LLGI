@@ -103,4 +103,6 @@ public:
 		cl->GetCommandList()->SetDescriptorHeaps(1, &srvDescHeap_);
 		ImGui_ImplDX12_RenderDrawData(draw_data, cl->GetCommandList());
 	}
+
+	void InvalidateDeviceObjects() override { ImGui_ImplDX12_InvalidateDeviceObjects(); }
 };

@@ -50,4 +50,6 @@ public:
 	}
 
 	ImTextureID GetTextureIDToRender(LLGI::Texture* texture, LLGI::CommandList* commandList) override;
+
+	void InvalidateDeviceObjects() override { ImGui_ImplVulkan_DestroyFontUploadObjects(); }
 };
