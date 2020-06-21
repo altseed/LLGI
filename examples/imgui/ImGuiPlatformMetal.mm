@@ -62,3 +62,8 @@ ImTextureID ImguiPlatformMetal::GetTextureIDToRender(LLGI::Texture* texture, LLG
     auto impl = t->GetImpl();
     return (__bridge void*)(impl->texture);
 }
+
+void ImguiPlatformMetal::InvalidateDeviceObjects()
+{
+    ImGui_ImplMetal_DestroyFontsTexture();
+}
