@@ -192,7 +192,8 @@ enum class TextureFormatType
 	BC3_SRGB = 10,
 
 	D32 = 12,
-	D24S8 = 13,
+    D32S8 = 13,
+	D24S8 = 14,
 	//! for internal
 	B8G8R8A8_UNORM = 254,
 	Unknown = 255,
