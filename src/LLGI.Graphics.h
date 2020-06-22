@@ -258,12 +258,9 @@ public:
 	*/
 	virtual ConstantBuffer* CreateConstantBuffer(int32_t size);
 
-	virtual RenderPass* CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture) { return nullptr; }
+	virtual RenderPass* CreateRenderPass(Texture** textures, int32_t textureCount, Texture* depthTexture) { return nullptr; }
 
-	virtual RenderPass* CreateRenderPass(const Texture* texture,
-										 const Texture* resolvedTexture,
-										 const Texture* depthTexture,
-										 const Texture* resolvedDepthTexture)
+	virtual RenderPass* CreateRenderPass(Texture* texture, Texture* resolvedTexture, Texture* depthTexture, Texture* resolvedDepthTexture)
 	{
 		return nullptr;
 	}

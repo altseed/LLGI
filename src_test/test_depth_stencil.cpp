@@ -81,7 +81,7 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 	struct PipelineStateSet
 	{
 		std::shared_ptr<LLGI::PipelineState> writeState; // write depth or stencil
-		std::shared_ptr<LLGI::PipelineState> testState;	 // depth-test or stencil-test
+		std::shared_ptr<LLGI::PipelineState> testState;  // depth-test or stencil-test
 	};
 	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, PipelineStateSet> pips;
 
@@ -127,8 +127,8 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 			std::array<LLGI::Texture*, 1> colorBuffers;
 			colorBuffers[0] = colorBuffer.get();
 
-			renderPass = LLGI::CreateSharedPtr(graphics->CreateRenderPass(
-				const_cast<const LLGI::Texture**>(colorBuffers.data()), static_cast<int32_t>(colorBuffers.size()), depthBuffer.get()));
+			renderPass = LLGI::CreateSharedPtr(
+				graphics->CreateRenderPass(colorBuffers.data(), static_cast<int32_t>(colorBuffers.size()), depthBuffer.get()));
 		}
 
 		renderPass->SetIsColorCleared(true);
