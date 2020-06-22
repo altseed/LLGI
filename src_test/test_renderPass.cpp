@@ -80,7 +80,7 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 	}
 	else
 	{
-		renderPass = graphics->CreateRenderPass((const LLGI::Texture**)&renderTexture, 1, nullptr);
+		renderPass = graphics->CreateRenderPass(&renderTexture, 1, nullptr);
 	}
 
 	assert(renderPass->GetRenderTextureCount() == 1);
@@ -322,8 +322,8 @@ void test_multiRenderPass(LLGI::DeviceType deviceType)
 
 	auto renderTexture1 = graphics->CreateRenderTexture(renderTexParam);
 	auto renderTexture2 = graphics->CreateRenderTexture(renderTexParam);
-	const LLGI::Texture* renderTextures[2] = {(const LLGI::Texture*)renderTexture1, (const LLGI::Texture*)renderTexture2};
-	auto renderPass = graphics->CreateRenderPass((const LLGI::Texture**)renderTextures, 2, nullptr);
+	LLGI::Texture* renderTextures[2] = {renderTexture1, renderTexture2};
+	auto renderPass = graphics->CreateRenderPass(renderTextures, 2, nullptr);
 	assert(renderPass->GetRenderTextureCount() == 2);
 
 	auto texture = graphics->CreateTexture(texParam);

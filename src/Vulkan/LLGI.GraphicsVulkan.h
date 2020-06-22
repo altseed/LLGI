@@ -55,12 +55,9 @@ public:
 	SingleFrameMemoryPool* CreateSingleFrameMemoryPool(int32_t constantBufferPoolSize, int32_t drawingCount) override;
 	CommandList* CreateCommandList(SingleFrameMemoryPool* memoryPool) override;
 	ConstantBuffer* CreateConstantBuffer(int32_t size) override;
-	RenderPass* CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture) override;
+	RenderPass* CreateRenderPass(Texture** textures, int32_t textureCount, Texture* depthTexture) override;
 
-	RenderPass* CreateRenderPass(const Texture* texture,
-								 const Texture* resolvedTexture,
-								 const Texture* depthTexture,
-								 const Texture* resolvedDepthTexture) override;
+	RenderPass* CreateRenderPass(Texture* texture, Texture* resolvedTexture, Texture* depthTexture, Texture* resolvedDepthTexture) override;
 
 	Texture* CreateTexture(const TextureInitializationParameter& parameter) override;
 	Texture* CreateRenderTexture(const RenderTextureInitializationParameter& parameter) override;

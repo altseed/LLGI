@@ -86,11 +86,11 @@ void CommandList_Impl::BeginRenderPass(RenderPass_Impl* renderPass)
 		renderPass->renderPassDescriptor.depthAttachment.loadAction = MTLLoadActionClear;
 		renderPass->renderPassDescriptor.depthAttachment.clearDepth = 1.0;
 
-        if (renderPass->depthStencilFormat != MTLPixelFormatDepth32Float_Stencil8
+		if (renderPass->depthStencilFormat != MTLPixelFormatDepth32Float_Stencil8
 #if TARGET_OS_MACOS
-		    && renderPass->depthStencilFormat != MTLPixelFormatDepth24Unorm_Stencil8
+			&& renderPass->depthStencilFormat != MTLPixelFormatDepth24Unorm_Stencil8
 #endif
-            )
+		)
 		{
 			renderPass->renderPassDescriptor.stencilAttachment.loadAction = MTLLoadActionClear;
 			renderPass->renderPassDescriptor.stencilAttachment.clearStencil = 0;

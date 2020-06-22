@@ -143,7 +143,7 @@ CommandList* GraphicsDX12::CreateCommandList(SingleFrameMemoryPool* memoryPool)
 	return obj;
 }
 
-RenderPass* GraphicsDX12::CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture)
+RenderPass* GraphicsDX12::CreateRenderPass(Texture** textures, int32_t textureCount, Texture* depthTexture)
 {
 	auto renderPass = new RenderPassDX12(this->device_);
 	if (!renderPass->Initialize((TextureDX12**)textures, textureCount, (TextureDX12*)depthTexture, nullptr, nullptr))
@@ -154,10 +154,7 @@ RenderPass* GraphicsDX12::CreateRenderPass(const Texture** textures, int32_t tex
 	return renderPass;
 }
 
-RenderPass* GraphicsDX12::CreateRenderPass(const Texture* texture,
-										   const Texture* resolvedTexture,
-										   const Texture* depthTexture,
-										   const Texture* resolvedDepthTexture)
+RenderPass* GraphicsDX12::CreateRenderPass(Texture* texture, Texture* resolvedTexture, Texture* depthTexture, Texture* resolvedDepthTexture)
 {
 	auto renderPass = new RenderPassDX12(this->device_);
 
