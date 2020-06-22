@@ -214,7 +214,7 @@ ConstantBuffer* GraphicsMetal::CreateConstantBuffer(int32_t size)
 	return nullptr;
 }
 
-RenderPass* GraphicsMetal::CreateRenderPass(const Texture** textures, int32_t textureCount, Texture* depthTexture)
+RenderPass* GraphicsMetal::CreateRenderPass(Texture** textures, int32_t textureCount, Texture* depthTexture)
 {
 	auto renderPass = new RenderPassMetal();
 
@@ -227,10 +227,8 @@ RenderPass* GraphicsMetal::CreateRenderPass(const Texture** textures, int32_t te
 	return renderPass;
 }
 
-RenderPass* GraphicsMetal::CreateRenderPass(const Texture* texture,
-											const Texture* resolvedTexture,
-											const Texture* depthTexture,
-											const Texture* resolvedDepthTexture)
+RenderPass*
+GraphicsMetal::CreateRenderPass(Texture* texture, Texture* resolvedTexture, Texture* depthTexture, Texture* resolvedDepthTexture)
 {
 	auto renderPass = new RenderPassMetal();
 

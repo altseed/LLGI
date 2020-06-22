@@ -76,9 +76,9 @@ bool Texture_Impl::Initialize(Graphics_Impl* graphics, const RenderTextureInitia
 		// Make copy enabled in GetBuffer
 		// TODO : Optimize
 #if TARGET_OS_MACOS
-        textureDescriptor.storageMode = MTLStorageModeManaged;
+		textureDescriptor.storageMode = MTLStorageModeManaged;
 #else
-        textureDescriptor.storageMode = MTLStorageModePrivate;
+		textureDescriptor.storageMode = MTLStorageModePrivate;
 #endif
 	}
 
