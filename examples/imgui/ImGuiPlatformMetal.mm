@@ -10,9 +10,9 @@
 
 class ImguiPlatformMetal_Impl
 {
+public:
 	LLGI::GraphicsMetal* g_ = nullptr;
 
-public:
 	ImguiPlatformMetal_Impl(LLGI::Graphics* g) : g_(static_cast<LLGI::GraphicsMetal*>(g)) { ImGui_ImplMetal_Init(g_->GetImpl()->device); }
 
 	virtual ~ImguiPlatformMetal_Impl() { ImGui_ImplMetal_Shutdown(); }
@@ -63,7 +63,12 @@ ImTextureID ImguiPlatformMetal::GetTextureIDToRender(LLGI::Texture* texture, LLG
     return (__bridge void*)(impl->texture);
 }
 
-void ImguiPlatformMetal::InvalidateDeviceObjects()
+void ImguiPlatformMetal::CreateFont()
+{
+    ImGui_ImplMetal_CreateFontsTexture(impl->g_->GetImpl()->device);
+}
+
+void ImguiPlatformMetal::DisposeFont()
 {
     ImGui_ImplMetal_DestroyFontsTexture();
 }
