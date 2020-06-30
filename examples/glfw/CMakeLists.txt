@@ -44,3 +44,15 @@ else()
     X11-xcb)
 
 endif()
+
+
+
+if(BUILD_VULKAN)
+    find_package(Vulkan REQUIRED)
+    target_include_directories(example_glfw PRIVATE ${Vulkan_INCLUDE_DIRS})
+    target_link_libraries(example_glfw PRIVATE ${Vulkan_LIBRARIES})
+
+    target_include_directories(example_glfw PRIVATE ${LLGI_THIRDPARTY_INCLUDES})
+    target_link_libraries(example_glfw PRIVATE ${LLGI_THIRDPARTY_LIBRARIES})
+    target_link_directories(example_glfw PRIVATE ${LLGI_THIRDPARTY_LIBRARY_DIRECTORIES})
+endif()

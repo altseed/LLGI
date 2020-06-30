@@ -16,7 +16,7 @@ if(APPLE)
 
 endif()
 
-target_include_directories(LLGI_Test PUBLIC ../src/ ${LLGI_GOOGLETEST_INCLUDE})
+target_include_directories(LLGI_Test PUBLIC ../src/)
 
 target_link_libraries(
 	LLGI_Test
@@ -24,8 +24,8 @@ target_link_libraries(
 	LLGI
 )
 
-target_link_directories(LLGI_Test PRIVATE ${THIRDPARTY_LIBRARY_DIRECTORIES})
-target_link_libraries(LLGI_Test PRIVATE ${THIRDPARTY_LIBRARIES})
+target_link_directories(LLGI_Test PRIVATE ${LLGI_THIRDPARTY_LIBRARY_DIRECTORIES})
+target_link_libraries(LLGI_Test PRIVATE ${LLGI_THIRDPARTY_LIBRARIES})
 
 if(MSVC)
   target_link_libraries(

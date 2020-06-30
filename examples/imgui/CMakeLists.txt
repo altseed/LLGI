@@ -81,4 +81,9 @@ if(BUILD_VULKAN)
     find_package(Vulkan REQUIRED)
     target_include_directories(example_imgui PRIVATE ${Vulkan_INCLUDE_DIRS})
     target_link_libraries(example_imgui PRIVATE ${Vulkan_LIBRARIES})
+
+    target_include_directories(example_imgui PRIVATE ${LLGI_THIRDPARTY_INCLUDES})
+    target_link_libraries(example_imgui PRIVATE ${LLGI_THIRDPARTY_LIBRARIES})
+    target_link_directories(example_imgui PRIVATE ${LLGI_THIRDPARTY_LIBRARY_DIRECTORIES})
+
 endif()
