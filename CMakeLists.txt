@@ -46,17 +46,23 @@ if (MSVC)
   endif()
 endif()
 
-if(BUILD_VULKAN_COMPILER OR BUILD_TOOL)
-  if(USE_THIRD_PARTY_DIRECTORY)
-    add_subdirectory("thirdparty/glslang")
-    add_subdirectory("thirdparty/SPIRV-Cross")
-  endif()
-endif()
-
 if(BUILD_VULKAN)
   add_definitions(-DENABLE_VULKAN)
   if(BUILD_VULKAN_COMPILER)
     add_definitions(-DENABLE_VULKAN_COMPILER)
+    
+    ExternalProject_Add(
+        ExternalProject_glslang
+        GIT_REPOSITORY  https://github.com/KhronosGroup/glslang.git
+        GIT_TAG         7.12.3352
+        SOURCE_DIR      ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/glslang-src
+        BINARY_DIR      ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/glslang-build
+        PREFIX          ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Build/glslang
+        INSTALL_DIR     ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang
+        CMAKE_ARGS      -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang
+    )
+    list(APPEND THIRDPARTY_INCLUDES ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang/include)
+    list(APPEND THIRDPARTY_LIBRARY_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang/lib)
   endif()
 endif()
 
