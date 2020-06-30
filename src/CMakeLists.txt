@@ -97,15 +97,7 @@ if(BUILD_VULKAN)
     set_target_properties(SPIRV PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_INSTALL_PREFIX}/include)
     target_include_directories(glslang PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/../thirdparty/glslang>)
     target_include_directories(SPIRV PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/../thirdparty/glslang>)
-
-    install(TARGETS glslang
-            EXPORT glslang-export
-            INCLUDES DESTINATION include/LLGI
-            PUBLIC_HEADER DESTINATION include/LLGI
-            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-    install(EXPORT glslang-export
-            FILE glslang-config.cmake
-            DESTINATION lib/cmake)
+    
         
     install(TARGETS OGLCompiler
             EXPORT OGLCompiler-export
@@ -120,19 +112,28 @@ if(BUILD_VULKAN)
     install(EXPORT OSDependent-export
             FILE OSDependent-config.cmake
             DESTINATION lib/cmake)
-        
-    install(TARGETS HLSL
-            EXPORT HLSL-export
-            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-    install(EXPORT HLSL-export
-            FILE HLSL-config.cmake
-            DESTINATION lib/cmake)
 
     install(TARGETS SPIRV
             EXPORT SPIRV-export
             ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
     install(EXPORT SPIRV-export
             FILE SPIRV-config.cmake
+            DESTINATION lib/cmake)
+
+    install(TARGETS glslang
+            EXPORT glslang-export
+            INCLUDES DESTINATION include/LLGI
+            PUBLIC_HEADER DESTINATION include/LLGI
+            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+    install(EXPORT glslang-export
+            FILE glslang-config.cmake
+            DESTINATION lib/cmake)
+        
+    install(TARGETS HLSL
+            EXPORT HLSL-export
+            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+    install(EXPORT HLSL-export
+            FILE HLSL-config.cmake
             DESTINATION lib/cmake)
   endif()
 endif()
