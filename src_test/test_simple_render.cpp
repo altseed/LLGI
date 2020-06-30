@@ -277,57 +277,6 @@ void main()
 
 )";
 
-	auto code_dx_vs = R"(
-struct VS_INPUT{
-    float3 Position : POSITION0;
-	float2 UV : UV0;
-    float4 Color : COLOR0;
-};
-struct VS_OUTPUT{
-    float4 Position : SV_POSITION;
-	float2 UV : UV0;
-    float4 Color : COLOR0;
-};
-   
-
-cbuffer CB : register(b0)
-{
-  float4 offset;
-};
-
-VS_OUTPUT main(VS_INPUT input){
-    VS_OUTPUT output;
-        
-    output.Position = float4(input.Position, 1.0f) + offset;
-	output.UV = input.UV;
-    output.Color = input.Color;
-        
-    return output;
-}
-)";
-
-	auto code_dx_ps = R"(
-
-cbuffer CB : register(b1)
-{
-  float4 offset;
-};
-
-struct PS_INPUT
-{
-    float4  Position : SV_POSITION;
-	float2  UV : UV0;
-    float4  Color    : COLOR0;
-};
-
-float4 main(PS_INPUT input) : SV_TARGET 
-{ 
-	float4 c;
-	c = input.Color + offset;
-	c.a = 1.0f;
-	return c;
-}
-)";
 
 	auto compiler = LLGI::CreateCompiler(deviceType);
 
@@ -379,7 +328,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 		LLGI::CompilerResult result_vs;
 		LLGI::CompilerResult result_ps;
 
-		if (platform->GetDeviceType() == LLGI::DeviceType::Metal)
+		if (platform->GetDeviceType() == LLGI::DeviceType::Metal || platform->GetDeviceType() == LLGI::DeviceType::DirectX12)
 		{
 			auto code_vs = TestHelper::LoadData("simple_constant_rectangle.vert");
 			auto code_ps = TestHelper::LoadData("simple_constant_rectangle.frag");
@@ -388,13 +337,6 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 			compiler->Compile(result_vs, (const char*)code_vs.data(), LLGI::ShaderStageType::Vertex);
 			compiler->Compile(result_ps, (const char*)code_ps.data(), LLGI::ShaderStageType::Pixel);
-		}
-		else if (platform->GetDeviceType() == LLGI::DeviceType::DirectX12)
-		{
-			compiler->Compile(result_vs, code_dx_vs, LLGI::ShaderStageType::Vertex);
-			assert(result_vs.Message == "");
-			compiler->Compile(result_ps, code_dx_ps, LLGI::ShaderStageType::Pixel);
-			assert(result_ps.Message == "");
 		}
 		else
 		{
