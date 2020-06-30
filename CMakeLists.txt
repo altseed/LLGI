@@ -63,6 +63,18 @@ if(BUILD_VULKAN)
     )
     list(APPEND THIRDPARTY_INCLUDES ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang/include)
     list(APPEND THIRDPARTY_LIBRARY_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang/lib)
+    list(
+      APPEND THIRDPARTY_LIBRARIES
+      debug glslangd
+      debug SPIRVd
+      debug OGLCompilerd
+      debug OSDependentd
+      debug HLSLd
+      optimized glslang
+      optimized SPIRV
+      optimized OGLCompiler
+      optimized OSDependent
+      optimized HLSL)
   endif()
 endif()
 
