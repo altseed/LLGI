@@ -100,7 +100,7 @@ jobs:
             
       - task: CMake@1
         inputs:
-          cmakeArgs: '.. -DBUILD_TEST=ON -DBUILD_VULKAN_COMPILER=ON -DBUILD_EXAMPLE=ON'
+          cmakeArgs: '.. -DBUILD_TEST=ON -DBUILD_VULKAN_COMPILER=ON -DBUILD_EXAMPLE=ON -DENABLE_GLSLANG_INSTALL=ON'
 
       - task: CMake@1
         inputs:
