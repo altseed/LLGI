@@ -74,18 +74,6 @@ if(BUILD_VULKAN)
   target_link_libraries(LLGI PRIVATE ${Vulkan_LIBRARIES})
   if(BUILD_VULKAN_COMPILER)
     target_include_directories(LLGI PRIVATE ${THIRDPARTY_INCLUDES})
-    target_link_libraries(
-      LLGI PRIVATE
-      debug glslangd
-      debug SPIRVd
-      debug OGLCompilerd
-      debug OSDependentd
-      debug HLSLd
-      optimized glslang
-      optimized SPIRV
-      optimized OGLCompiler
-      optimized OSDependent
-      optimized HLSL)
   endif()
 endif()
 
