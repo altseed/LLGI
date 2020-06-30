@@ -16,6 +16,9 @@ target_link_libraries(
 	glfw
 )
 
+target_link_directories(example_glfw PRIVATE ${THIRDPARTY_LIBRARY_DIRECTORIES})
+target_link_libraries(example_glfw PRIVATE ${THIRDPARTY_LIBRARIES})
+
 if(WIN32)
 # None
 elseif(APPLE)

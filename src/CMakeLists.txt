@@ -73,7 +73,7 @@ if(BUILD_VULKAN)
   target_include_directories(LLGI PRIVATE ${Vulkan_INCLUDE_DIRS})
   target_link_libraries(LLGI PRIVATE ${Vulkan_LIBRARIES})
   if(BUILD_VULKAN_COMPILER)
-    target_link_libraries(LLGI PRIVATE glslang SPIRV)
+    target_include_directories(LLGI PRIVATE ${THIRDPARTY_INCLUDES})
   endif()
 endif()
 
@@ -82,61 +82,6 @@ elseif(APPLE)
 else()
   set_property(TARGET LLGI PROPERTY POSITION_INDEPENDENT_CODE TRUE) 
 endif()
-
-#--------------------
-# Install glslang
-#   FIXME: This code is "HACK" for a cmake successful configuration.
-#          glslang doesn't support EXPORT, so get an error.
-#          Overriding glslang installation settings.
-
-if(BUILD_VULKAN)
-
-  if(BUILD_VULKAN_COMPILER)
-
-    set_target_properties(glslang PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_INSTALL_PREFIX}/include)
-    set_target_properties(SPIRV PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_INSTALL_PREFIX}/include)
-    target_include_directories(glslang PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/../thirdparty/glslang>)
-    target_include_directories(SPIRV PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/../thirdparty/glslang>)
-
-    install(TARGETS glslang
-            EXPORT glslang-export
-            INCLUDES DESTINATION include/LLGI
-            PUBLIC_HEADER DESTINATION include/LLGI
-            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-    install(EXPORT glslang-export
-            FILE glslang-config.cmake
-            DESTINATION lib/cmake)
-        
-    install(TARGETS OGLCompiler
-            EXPORT OGLCompiler-export
-            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-    install(EXPORT OGLCompiler-export
-            FILE OGLCompiler-config.cmake
-            DESTINATION lib/cmake)
-
-    install(TARGETS OSDependent
-            EXPORT OSDependent-export
-            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-    install(EXPORT OSDependent-export
-            FILE OSDependent-config.cmake
-            DESTINATION lib/cmake)
-        
-    install(TARGETS HLSL
-            EXPORT HLSL-export
-            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-    install(EXPORT HLSL-export
-            FILE HLSL-config.cmake
-            DESTINATION lib/cmake)
-
-    install(TARGETS SPIRV
-            EXPORT SPIRV-export
-            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-    install(EXPORT SPIRV-export
-            FILE SPIRV-config.cmake
-            DESTINATION lib/cmake)
-  endif()
-endif()
-
 
 #--------------------
 # Install

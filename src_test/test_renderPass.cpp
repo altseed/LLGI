@@ -295,6 +295,95 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 	LLGI::SafeRelease(platform);
 }
 
+void test_copyTextureToScreen(LLGI::DeviceType deviceType)
+{
+	if (deviceType != LLGI::DeviceType::DirectX12)
+		return;
+
+	int count = 0;
+
+	LLGI::PlatformParameter pp;
+	pp.Device = deviceType;
+	pp.WaitVSync = true;
+	auto window = std::unique_ptr<LLGI::Window>(LLGI::CreateWindow("RenderPass", LLGI::Vec2I(1280, 720)));
+	auto platform = LLGI::CreatePlatform(pp, window.get());
+
+	auto graphics = platform->CreateGraphics();
+	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
+
+	std::array<LLGI::CommandList*, 3> commandLists;
+	for (int i = 0; i < commandLists.size(); i++)
+		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
+
+	LLGI::RenderTextureInitializationParameter params;
+	params.Size = LLGI::Vec2I(1280, 720);
+
+	auto renderTexture = graphics->CreateRenderTexture(params);
+	assert(renderTexture->GetType() == LLGI::TextureType::Render);
+
+	LLGI::RenderPass* renderPass = graphics->CreateRenderPass(&renderTexture, 1, nullptr);
+
+	assert(renderPass->GetRenderTextureCount() == 1);
+
+	while (count < 60)
+	{
+		if (!platform->NewFrame())
+		{
+			break;
+		}
+
+		sfMemoryPool->NewFrame();
+
+		LLGI::Color8 color1;
+		color1.R = 0;
+		color1.G = count % 255;
+		color1.B = 0;
+		color1.A = 255;
+		renderPass->SetIsColorCleared(true);
+		renderPass->SetClearColor(color1);
+
+		LLGI::Color8 color2;
+		color2.R = count % 255;
+		color2.G = 0;
+		color2.B = 0;
+		color2.A = 255;
+
+		auto commandList = commandLists[count % commandLists.size()];
+		commandList->Begin();
+		commandList->BeginRenderPass(renderPass);
+		commandList->EndRenderPass();
+
+		commandList->CopyTexture(renderTexture, platform->GetCurrentScreen(color2, true)->GetRenderTexture(0));
+
+		commandList->End();
+
+		graphics->Execute(commandList);
+
+		platform->Present();
+		count++;
+
+		if (TestHelper::GetIsCaptureRequired() && count == 30)
+		{
+			commandList->WaitUntilCompleted();
+			auto texture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
+			auto data = graphics->CaptureRenderTarget(texture);
+
+			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat())
+				.Save("RenderPass.CopyTextureToScreen.png");
+		}
+	}
+
+	graphics->WaitFinish();
+
+	LLGI::SafeRelease(sfMemoryPool);
+	LLGI::SafeRelease(renderTexture);
+	LLGI::SafeRelease(renderPass);
+	for (int i = 0; i < commandLists.size(); i++)
+		LLGI::SafeRelease(commandLists[i]);
+	LLGI::SafeRelease(graphics);
+	LLGI::SafeRelease(platform);
+}
+
 void test_multiRenderPass(LLGI::DeviceType deviceType)
 {
 	auto compiler = LLGI::CreateCompiler(deviceType);
@@ -517,5 +606,8 @@ TestRegister RenderPass_MSAADepth("RenderPass.MSAADepth",
 
 TestRegister RenderPass_CopyTexture("RenderPass.CopyTexture",
 									[](LLGI::DeviceType device) -> void { test_renderPass(device, RenderPassTestMode::CopyTexture); });
+
+TestRegister RenderPass_CopyTextureToScreen("RenderPass.CopyTextureToScreen",
+											[](LLGI::DeviceType device) -> void { test_copyTextureToScreen(device); });
 
 TestRegister RenderPass_MRT("RenderPass.MRT", [](LLGI::DeviceType device) -> void { test_multiRenderPass(device); });

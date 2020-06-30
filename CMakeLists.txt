@@ -15,6 +15,8 @@ option(BUILD_VULKAN "build vulkan" OFF)
 option(BUILD_VULKAN_COMPILER "build vulkan compiler" OFF)
 option(BUILD_TEST "build test" OFF)
 option(BUILD_EXAMPLE "build examples" OFF)
+option(BUILD_TOOL "build tools" OFF)
+option(USE_THIRD_PARTY_DIRECTORY "Use a third party directory" ON)
 
 if(LINUX)
   set(BUILD_VULKAN TRUE)
@@ -48,7 +50,31 @@ if(BUILD_VULKAN)
   add_definitions(-DENABLE_VULKAN)
   if(BUILD_VULKAN_COMPILER)
     add_definitions(-DENABLE_VULKAN_COMPILER)
-    add_subdirectory("thirdparty/glslang")
+    
+    ExternalProject_Add(
+        ExternalProject_glslang
+        GIT_REPOSITORY  https://github.com/KhronosGroup/glslang.git
+        GIT_TAG         7.12.3352
+        SOURCE_DIR      ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/glslang-src
+        BINARY_DIR      ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/glslang-build
+        PREFIX          ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Build/glslang
+        INSTALL_DIR     ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang
+        CMAKE_ARGS      -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang
+    )
+    list(APPEND THIRDPARTY_INCLUDES ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang/include)
+    list(APPEND THIRDPARTY_LIBRARY_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang/lib)
+    list(
+      APPEND THIRDPARTY_LIBRARIES
+      debug glslangd
+      debug SPIRVd
+      debug OGLCompilerd
+      debug OSDependentd
+      debug HLSLd
+      optimized glslang
+      optimized SPIRV
+      optimized OGLCompiler
+      optimized OSDependent
+      optimized HLSL)
   endif()
 endif()
 
@@ -64,4 +90,8 @@ endif()
 
 if(BUILD_EXAMPLE)
   add_subdirectory("examples")
+endif()
+
+if(BUILD_TOOL)
+  add_subdirectory("tools")
 endif()
