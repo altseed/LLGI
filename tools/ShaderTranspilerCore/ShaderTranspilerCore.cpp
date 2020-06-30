@@ -171,7 +171,11 @@ std::shared_ptr<SPIRV> SPIRVGenerator::Generate(const char* code, ShaderStageTyp
 	}
 
 	std::vector<unsigned int> spirv;
-	glslang::GlslangToSpv(*program.getIntermediate(shaderStage), spirv);
+	glslang::SpvOptions spvOptions;
+	spvOptions.optimizeSize = true;
+	spvOptions.disableOptimizer = false;
+
+	glslang::GlslangToSpv(*program.getIntermediate(shaderStage), spirv, &spvOptions);
 
 	return std::make_shared<SPIRV>(spirv, shaderStageType);
 }
