@@ -16,6 +16,7 @@ option(BUILD_VULKAN_COMPILER "build vulkan compiler" OFF)
 option(BUILD_TEST "build test" OFF)
 option(BUILD_EXAMPLE "build examples" OFF)
 option(BUILD_TOOL "build tools" OFF)
+option(USE_THIRDPARTY_DIRECTORY "Whether do it compile with third party directory" ON)
 
 if(LINUX)
   set(BUILD_VULKAN TRUE)
@@ -45,7 +46,7 @@ if (MSVC)
   endif()
 endif()
 
-if(BUILD_VULKAN_COMPILER OR BUILD_TOOL)
+if((BUILD_VULKAN_COMPILER OR BUILD_TOOL) AND USE_THIRDPARTY_DIRECTORY)
   ExternalProject_Add(
       ExternalProject_glslang
       SOURCE_DIR      ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/glslang
@@ -103,10 +104,9 @@ if(BUILD_VULKAN_COMPILER OR BUILD_TOOL)
     optimized spirv-cross-msl
     optimized spirv-cross-reflect
     optimized spirv-cross-util)
-
 endif()
 
-if(BUILD_VULKAN OR BUILD_TOOL)
+if(BUILD_VULKAN)
   add_definitions(-DENABLE_VULKAN)
   if(BUILD_VULKAN_COMPILER)
     add_definitions(-DENABLE_VULKAN_COMPILER)
