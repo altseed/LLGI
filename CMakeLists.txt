@@ -16,7 +16,6 @@ option(BUILD_VULKAN_COMPILER "build vulkan compiler" OFF)
 option(BUILD_TEST "build test" OFF)
 option(BUILD_EXAMPLE "build examples" OFF)
 option(BUILD_TOOL "build tools" OFF)
-option(USE_THIRD_PARTY_DIRECTORY "Use a third party directory" ON)
 
 if(LINUX)
   set(BUILD_VULKAN TRUE)
@@ -46,35 +45,71 @@ if (MSVC)
   endif()
 endif()
 
-if(BUILD_VULKAN)
+if(BUILD_VULKAN_COMPILER OR BUILD_TOOL)
+  ExternalProject_Add(
+      ExternalProject_glslang
+      SOURCE_DIR      ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/glslang
+      PREFIX          ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Build/glslang
+      INSTALL_DIR     ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang
+      CMAKE_ARGS      -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang
+                      -DCMAKE_DEBUG_POSTFIX=d
+  )
+  list(APPEND LLGI_THIRDPARTY_INCLUDES ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang/include)
+  list(APPEND LLGI_THIRDPARTY_LIBRARY_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang/lib)
+  list(
+    APPEND LLGI_THIRDPARTY_LIBRARIES
+    debug glslangd
+    debug SPIRVd
+    debug OGLCompilerd
+    debug OSDependentd
+    debug HLSLd
+    optimized glslang
+    optimized SPIRV
+    optimized OGLCompiler
+    optimized OSDependent
+    optimized HLSL)
+
+  ExternalProject_Add(
+      ExternalProject_SPIRV-Cross
+      SOURCE_DIR      ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/SPIRV-Cross
+      PREFIX          ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Build/SPIRV-Cross
+      INSTALL_DIR     ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/SPIRV-Cross
+      CMAKE_ARGS      -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/SPIRV-Cross
+                      -DCMAKE_DEBUG_POSTFIX=d
+                      -DBUILD_SHARED_LIBS=OFF
+                      -DSPIRV_CROSS_ENABLE_TESTS=OFF
+                      -DSPIRV_CROSS_FORCE_PIC=ON
+  )
+
+  list(APPEND LLGI_THIRDPARTY_INCLUDES ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/SPIRV-Cross/include)
+  list(APPEND LLGI_THIRDPARTY_LIBRARY_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/SPIRV-Cross/lib)
+
+  list(
+    APPEND LLGI_THIRDPARTY_LIBRARIES
+    debug spirv-cross-cored
+    debug spirv-cross-cd
+    debug spirv-cross-cppd
+    debug spirv-cross-hlsld
+    debug spirv-cross-glsld
+    debug spirv-cross-msld
+    debug spirv-cross-reflectd
+    debug spirv-cross-utild
+
+    optimized spirv-cross-core
+    optimized spirv-cross-c
+    optimized spirv-cross-cpp
+    optimized spirv-cross-hlsl
+    optimized spirv-cross-glsl
+    optimized spirv-cross-msl
+    optimized spirv-cross-reflect
+    optimized spirv-cross-util)
+
+endif()
+
+if(BUILD_VULKAN OR BUILD_TOOL)
   add_definitions(-DENABLE_VULKAN)
   if(BUILD_VULKAN_COMPILER)
     add_definitions(-DENABLE_VULKAN_COMPILER)
-    
-    ExternalProject_Add(
-        ExternalProject_glslang
-        GIT_REPOSITORY  https://github.com/KhronosGroup/glslang.git
-        GIT_TAG         7.12.3352
-        SOURCE_DIR      ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/glslang-src
-        BINARY_DIR      ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/glslang-build
-        PREFIX          ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Build/glslang
-        INSTALL_DIR     ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang
-        CMAKE_ARGS      -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang
-    )
-    list(APPEND THIRDPARTY_INCLUDES ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang/include)
-    list(APPEND THIRDPARTY_LIBRARY_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang/lib)
-    list(
-      APPEND THIRDPARTY_LIBRARIES
-      debug glslangd
-      debug SPIRVd
-      debug OGLCompilerd
-      debug OSDependentd
-      debug HLSLd
-      optimized glslang
-      optimized SPIRV
-      optimized OGLCompiler
-      optimized OSDependent
-      optimized HLSL)
   endif()
 endif()
 

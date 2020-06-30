@@ -73,7 +73,7 @@ if(BUILD_VULKAN)
   target_include_directories(LLGI PRIVATE ${Vulkan_INCLUDE_DIRS})
   target_link_libraries(LLGI PRIVATE ${Vulkan_LIBRARIES})
   if(BUILD_VULKAN_COMPILER)
-    target_include_directories(LLGI PRIVATE ${THIRDPARTY_INCLUDES})
+    target_include_directories(LLGI PRIVATE ${LLGI_THIRDPARTY_INCLUDES})
   endif()
 endif()
 
