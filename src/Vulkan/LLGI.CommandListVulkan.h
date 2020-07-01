@@ -52,7 +52,7 @@ public:
 	void EndExternal();
 
 	void SetScissor(int32_t x, int32_t y, int32_t width, int32_t height) override;
-	void Draw(int32_t pritimiveCount) override;
+	void Draw(int32_t primitiveCount, int32_t instanceCount) override;
 	void CopyTexture(Texture* src, Texture* dst) override;
 
 	void BeginRenderPass(RenderPass* renderPass) override;

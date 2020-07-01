@@ -210,7 +210,7 @@ void CommandListDX12::EndRenderPass()
 	CommandList::EndRenderPass();
 }
 
-void CommandListDX12::Draw(int32_t pritimiveCount)
+void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 {
 	assert(currentCommandList_ != nullptr);
 
@@ -455,9 +455,9 @@ void CommandListDX12::Draw(int32_t pritimiveCount)
 	currentCommandList_->IASetPrimitiveTopology(topology);
 
 	// draw polygon
-	currentCommandList_->DrawIndexedInstanced(pritimiveCount * indexPerPrim, 1, 0, 0, 0);
+	currentCommandList_->DrawIndexedInstanced(primitiveCount * indexPerPrim, instanceCount, 0, 0, 0);
 
-	CommandList::Draw(pritimiveCount);
+	CommandList::Draw(primitiveCount, instanceCount);
 }
 
 void CommandListDX12::CopyTexture(Texture* src, Texture* dst)

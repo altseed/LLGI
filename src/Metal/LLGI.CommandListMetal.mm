@@ -211,7 +211,7 @@ void CommandListMetal::End()
 
 void CommandListMetal::SetScissor(int32_t x, int32_t y, int32_t width, int32_t height) { impl->SetScissor(x, y, width, height); }
 
-void CommandListMetal::Draw(int32_t pritimiveCount)
+void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 {
 	BindingVertexBuffer vb_;
 	BindingIndexBuffer ib_;
@@ -335,12 +335,13 @@ void CommandListMetal::Draw(int32_t pritimiveCount)
 	}
 
 	[impl->renderEncoder drawIndexedPrimitives:topology
-									indexCount:pritimiveCount * indexPerPrim
+									indexCount:primitiveCount * indexPerPrim
 									 indexType:indexType
 								   indexBuffer:ib->GetImpl()->buffer
-							 indexBufferOffset:ib_.offset];
+							 indexBufferOffset:ib_.offset
+                            instanceCount:instanceCount];
 
-	CommandList::Draw(pritimiveCount);
+	CommandList::Draw(primitiveCount, instanceCount);
 }
 
 void CommandListMetal::CopyTexture(Texture* src, Texture* dst)
