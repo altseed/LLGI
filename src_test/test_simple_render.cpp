@@ -71,7 +71,6 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 			pip->VertexLayoutNames[2] = "COLOR";
 			pip->VertexLayoutCount = 3;
 
-			pip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan
 			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs.get());
 			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps.get());
 			pip->SetRenderPassPipelineState(renderPassPipelineState.get());
@@ -177,7 +176,6 @@ void test_index_offset(LLGI::DeviceType deviceType)
 			pip->VertexLayoutNames[2] = "COLOR";
 			pip->VertexLayoutCount = 3;
 
-			pip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan
 			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs.get());
 			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps.get());
 			pip->SetRenderPassPipelineState(renderPassPipelineState.get());
@@ -445,7 +443,6 @@ void main()
 			pip->VertexLayoutNames[2] = "COLOR";
 			pip->VertexLayoutCount = 3;
 
-			pip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan
 			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs);
 			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps);
 			pip->SetRenderPassPipelineState(renderPassPipelineState.get());
@@ -562,48 +559,6 @@ void main()
 
 )";
 
-	auto code_dx_vs = R"(
-struct VS_INPUT{
-    float3 Position : POSITION0;
-	float2 UV : UV0;
-    float4 Color : COLOR0;
-};
-struct VS_OUTPUT{
-    float4 Position : SV_POSITION;
-	float2 UV : UV0;
-    float4 Color : COLOR0;
-};
-    
-VS_OUTPUT main(VS_INPUT input){
-    VS_OUTPUT output;
-        
-    output.Position = float4(input.Position, 1.0f);
-	output.UV = input.UV;
-    output.Color = input.Color;
-        
-    return output;
-}
-)";
-
-	auto code_dx_ps = R"(
-Texture2D txt : register(t0);
-SamplerState smp : register(s0);
-
-struct PS_INPUT
-{
-    float4  Position : SV_POSITION;
-	float2  UV : UV0;
-    float4  Color    : COLOR0;
-};
-
-float4 main(PS_INPUT input) : SV_TARGET 
-{ 
-	float4 c;
-	c = input.Color * txt.Sample(smp, input.UV);
-	return c;
-}
-)";
-
 	auto compiler = LLGI::CreateCompiler(deviceType);
 
 	int count = 0;
@@ -664,7 +619,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 		LLGI::CompilerResult result_vs;
 		LLGI::CompilerResult result_ps;
 
-		if (platform->GetDeviceType() == LLGI::DeviceType::Metal)
+		if (platform->GetDeviceType() == LLGI::DeviceType::Metal || platform->GetDeviceType() == LLGI::DeviceType::DirectX12)
 		{
 			auto code_vs = TestHelper::LoadData("simple_texture_rectangle.vert");
 			auto code_ps = TestHelper::LoadData("simple_texture_rectangle.frag");
@@ -673,13 +628,6 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 			compiler->Compile(result_vs, (const char*)code_vs.data(), LLGI::ShaderStageType::Vertex);
 			compiler->Compile(result_ps, (const char*)code_ps.data(), LLGI::ShaderStageType::Pixel);
-		}
-		else if (platform->GetDeviceType() == LLGI::DeviceType::DirectX12)
-		{
-			compiler->Compile(result_vs, code_dx_vs, LLGI::ShaderStageType::Vertex);
-			assert(result_vs.Message == "");
-			compiler->Compile(result_ps, code_dx_ps, LLGI::ShaderStageType::Pixel);
-			assert(result_ps.Message == "");
 		}
 		else
 		{
@@ -748,7 +696,6 @@ float4 main(PS_INPUT input) : SV_TARGET
 			pip->VertexLayoutNames[2] = "COLOR";
 			pip->VertexLayoutCount = 3;
 
-			pip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan
 			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs);
 			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps);
 			pip->SetRenderPassPipelineState(renderPassPipelineState.get());
@@ -814,5 +761,5 @@ TestRegister SimpleRender_ConstantST("SimpleRender.ConstantST", [](LLGI::DeviceT
 	test_simple_constant_rectangle(LLGI::ConstantBufferType::ShortTime, device);
 });
 
-TestRegister SimpleRender_ConstantTex("SimpleRender.ConstantTex",
+TestRegister SimpleRender_ConstantTex("SimpleRender.Texture",
 									  [](LLGI::DeviceType device) -> void { test_simple_texture_rectangle(device); });

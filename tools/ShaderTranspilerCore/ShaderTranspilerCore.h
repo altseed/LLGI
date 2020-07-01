@@ -10,6 +10,20 @@
 
 namespace LLGI
 {
+
+struct ShaderReflectionUniform
+{
+	std::string Name;
+	int32_t Offset = 0;
+	int32_t Size = 0;
+};
+
+struct ShaderReflectionTexture
+{
+	std::string Name;
+	int32_t Offset = 0;
+};
+
 class SPIRV
 {
 private:
@@ -69,6 +83,16 @@ public:
 	SPIRVToGLSLTranspiler(bool isVulkanMode) : isVulkanMode_(isVulkanMode) {}
 
 	bool Transpile(const std::shared_ptr<SPIRV>& spirv) override;
+};
+
+class SPIRVReflection : public SPIRVTranspiler
+{
+public:
+	bool Transpile(const std::shared_ptr<SPIRV>& spirv) override;
+
+	std::vector<ShaderReflectionUniform> Uniforms;
+
+	std::vector<ShaderReflectionTexture> Textures;
 };
 
 class SPIRVGenerator

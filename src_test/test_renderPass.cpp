@@ -187,7 +187,6 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 			pip->VertexLayoutNames[2] = "COLOR";
 			pip->VertexLayoutCount = 3;
 
-			pip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan
 			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs.get());
 			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps.get());
 			pip->SetRenderPassPipelineState(renderPassPipelineState.get());
@@ -224,7 +223,6 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 			pip->VertexLayoutNames[2] = "COLOR";
 			pip->VertexLayoutCount = 3;
 
-			pip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan
 			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs.get());
 			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps.get());
 			pip->SetRenderPassPipelineState(renderPassPipelineStateSc.get());
@@ -509,7 +507,6 @@ void test_multiRenderPass(LLGI::DeviceType deviceType)
 			pip->VertexLayoutNames[2] = "COLOR";
 			pip->VertexLayoutCount = 3;
 
-			pip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan
 			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_mrt_vs.get());
 			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_mrt_ps.get());
 			pip->SetRenderPassPipelineState(renderPassPipelineState.get());
@@ -540,7 +537,6 @@ void test_multiRenderPass(LLGI::DeviceType deviceType)
 			pip->VertexLayoutNames[2] = "COLOR";
 			pip->VertexLayoutCount = 3;
 
-			pip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan
 			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_paste_vs.get());
 			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_paste_ps.get());
 			pip->SetRenderPassPipelineState(renderPassPipelineStateSc.get());
