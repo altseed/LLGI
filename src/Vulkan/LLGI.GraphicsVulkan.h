@@ -24,8 +24,6 @@ private:
 	vk::CommandPool vkCmdPool;
 	vk::PhysicalDevice vkPysicalDevice;
 
-	vk::Sampler defaultSampler_ = nullptr;
-
 	std::function<void(vk::CommandBuffer, vk::Fence)> addCommand_;
 	RenderPassPipelineStateCacheVulkan* renderPassPipelineStateCache_ = nullptr;
 	ReferenceObject* owner_ = nullptr;
@@ -81,9 +79,6 @@ public:
 
 	VkCommandBuffer BeginSingleTimeCommands();
 	bool EndSingleTimeCommands(VkCommandBuffer commandBuffer);
-
-	//! temp
-	vk::Sampler& GetDefaultSampler() { return defaultSampler_; };
 };
 
 } // namespace LLGI

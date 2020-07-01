@@ -97,6 +97,25 @@ ImguiPlatformVulkan::ImguiPlatformVulkan(LLGI::Graphics* g, LLGI::Platform* p)
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
 }
 	*/
+
+	vk::SamplerCreateInfo samplerInfo;
+	samplerInfo.magFilter = vk::Filter::eLinear;
+	samplerInfo.minFilter = vk::Filter::eLinear;
+	samplerInfo.anisotropyEnable = false;
+	samplerInfo.maxAnisotropy = 1;
+	samplerInfo.addressModeU = vk::SamplerAddressMode::eRepeat;
+	samplerInfo.addressModeV = vk::SamplerAddressMode::eRepeat;
+	samplerInfo.addressModeW = vk::SamplerAddressMode::eRepeat;
+	samplerInfo.borderColor = vk::BorderColor::eIntOpaqueBlack;
+	samplerInfo.unnormalizedCoordinates = false;
+	samplerInfo.compareEnable = false;
+	samplerInfo.compareOp = vk::CompareOp::eAlways;
+	samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+	samplerInfo.mipLodBias = 0.0f;
+	samplerInfo.minLod = 0.0f;
+	samplerInfo.maxLod = 0.0f;
+
+	defaultSampler_ = g_->GetDevice().createSampler(samplerInfo);
 }
 
 ImguiPlatformVulkan::~ImguiPlatformVulkan()
@@ -108,6 +127,12 @@ ImguiPlatformVulkan::~ImguiPlatformVulkan()
 	}
 
 	vkDestroyDescriptorPool(g_->GetDevice(), descriptorPool_, nullptr);
+
+	if (defaultSampler_)
+	{
+		g_->GetDevice().destroySampler(defaultSampler_);
+	}
+
 	ImGui_ImplVulkan_Shutdown();
 	LLGI::SafeRelease(ps_);
 }
@@ -143,7 +168,7 @@ ImTextureID ImguiPlatformVulkan::GetTextureIDToRender(LLGI::Texture* texture, LL
 
 	auto textureVulkan = static_cast<LLGI::TextureVulkan*>(texture);
 	auto id =
-		ImGui_ImplVulkan_AddTexture(g_->GetDefaultSampler(), textureVulkan->GetView(), (VkImageLayout)textureVulkan->GetImageLayout());
+		ImGui_ImplVulkan_AddTexture(defaultSampler_, textureVulkan->GetView(), (VkImageLayout)textureVulkan->GetImageLayout());
 
 	TextureHolder th;
 	th.texture = LLGI::CreateSharedPtr(texture, true);

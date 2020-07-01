@@ -74,6 +74,17 @@ CommandListVulkan::~CommandListVulkan()
 		graphics_->GetDevice().destroyFence(fences_[i]);
 	}
 	fences_.clear();
+
+	for (int w = 0; w < 2; w++)
+	{
+		for (int f = 0; f < 2; f++)
+		{
+			if (samplers_[w][f])
+			{
+				graphics_->GetDevice().destroySampler(samplers_[w][f]);
+			}
+		}
+	}
 }
 
 bool CommandListVulkan::Initialize(GraphicsVulkan* graphics, int32_t drawingCount, CommandListPreCondition precondition)
@@ -99,6 +110,40 @@ bool CommandListVulkan::Initialize(GraphicsVulkan* graphics, int32_t drawingCoun
 		descriptorPools.push_back(dp);
 
 		fences_.emplace_back(graphics->GetDevice().createFence(vk::FenceCreateFlags()));
+	}
+
+	// Sampler
+	for (int w = 0; w < 2; w++)
+	{
+		for (int f = 0; f < 2; f++)
+		{
+			vk::Filter filters[2];
+			filters[0] = vk::Filter::eNearest;
+			filters[1] = vk::Filter::eLinear;
+
+			vk::SamplerAddressMode am[2];
+			am[0] = vk::SamplerAddressMode::eClampToEdge;
+			am[1] = vk::SamplerAddressMode::eRepeat;
+
+			vk::SamplerCreateInfo samplerInfo;
+			samplerInfo.magFilter = filters[f];
+			samplerInfo.minFilter = filters[f];
+			samplerInfo.anisotropyEnable = false;
+			samplerInfo.maxAnisotropy = 1;
+			samplerInfo.addressModeU = am[w];
+			samplerInfo.addressModeV = am[w];
+			samplerInfo.addressModeW = am[w];
+			samplerInfo.borderColor = vk::BorderColor::eIntOpaqueBlack;
+			samplerInfo.unnormalizedCoordinates = false;
+			samplerInfo.compareEnable = false;
+			samplerInfo.compareOp = vk::CompareOp::eAlways;
+			samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+			samplerInfo.mipLodBias = 0.0f;
+			samplerInfo.minLod = 0.0f;
+			samplerInfo.maxLod = 0.0f;
+
+			samplers_[w][f] = graphics_->GetDevice().createSampler(samplerInfo);
+		}
 	}
 
 	currentSwapBufferIndex_ = -1;
@@ -297,7 +342,7 @@ void CommandListVulkan::Draw(int32_t pritimiveCount)
 			}
 
 			imageInfo.imageView = texture->GetView();
-			imageInfo.sampler = graphics_->GetDefaultSampler();
+			imageInfo.sampler = samplers_[wm][mm];
 			descriptorImageInfos[descriptorImageIndex] = imageInfo;
 
 			vk::WriteDescriptorSet desc;

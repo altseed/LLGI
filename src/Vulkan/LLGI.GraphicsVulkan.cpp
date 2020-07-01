@@ -32,25 +32,6 @@ GraphicsVulkan::GraphicsVulkan(const vk::Device& device,
 
 	swapBufferCount_ = swapBufferCount;
 
-	vk::SamplerCreateInfo samplerInfo;
-	samplerInfo.magFilter = vk::Filter::eLinear;
-	samplerInfo.minFilter = vk::Filter::eLinear;
-	samplerInfo.anisotropyEnable = false;
-	samplerInfo.maxAnisotropy = 1;
-	samplerInfo.addressModeU = vk::SamplerAddressMode::eRepeat;
-	samplerInfo.addressModeV = vk::SamplerAddressMode::eRepeat;
-	samplerInfo.addressModeW = vk::SamplerAddressMode::eRepeat;
-	samplerInfo.borderColor = vk::BorderColor::eIntOpaqueBlack;
-	samplerInfo.unnormalizedCoordinates = false;
-	samplerInfo.compareEnable = false;
-	samplerInfo.compareOp = vk::CompareOp::eAlways;
-	samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
-	samplerInfo.mipLodBias = 0.0f;
-	samplerInfo.minLod = 0.0f;
-	samplerInfo.maxLod = 0.0f;
-
-	defaultSampler_ = vkDevice.createSampler(samplerInfo);
-
 	SafeAddRef(renderPassPipelineStateCache_);
 	if (renderPassPipelineStateCache_ == nullptr)
 	{
@@ -61,11 +42,6 @@ GraphicsVulkan::GraphicsVulkan(const vk::Device& device,
 GraphicsVulkan::~GraphicsVulkan()
 {
 	SafeRelease(renderPassPipelineStateCache_);
-
-	if (defaultSampler_)
-	{
-		vkDevice.destroySampler(defaultSampler_);
-	}
 
 	SafeRelease(owner_);
 }

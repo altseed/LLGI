@@ -35,6 +35,7 @@ private:
 	VkDescriptorPool descriptorPool_ = VK_NULL_HANDLE;
 
 	std::unordered_map<LLGI::Texture*, TextureHolder> textures_;
+	vk::Sampler defaultSampler_ = nullptr;
 
 public:
 	ImguiPlatformVulkan(LLGI::Graphics* g, LLGI::Platform* p);
