@@ -10,6 +10,7 @@ enum class OutputType
 	GLSL,
 	VULKAN_GLSL,
 	MSL,
+	HLSL,
 	Max,
 };
 
@@ -48,6 +49,11 @@ int main(int argc, char* argv[])
 		else if (args[i] == "-M")
 		{
 			outputType = OutputType::MSL;
+			i += 1;
+		}
+		else if (args[i] == "-H")
+		{
+			outputType = OutputType::HLSL;
 			i += 1;
 		}
 		else if (args[i] == "-V")
@@ -132,6 +138,10 @@ int main(int argc, char* argv[])
 	else if (outputType == OutputType::MSL)
 	{
 		transpiler = std::make_shared<LLGI::SPIRVToMSLTranspiler>();
+	}
+	else if (outputType == OutputType::HLSL)
+	{
+		transpiler = std::make_shared<LLGI::SPIRVToHLSLTranspiler>();
 	}
 
 	if (!transpiler->Transpile(spirv))

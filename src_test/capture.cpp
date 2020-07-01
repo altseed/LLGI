@@ -62,7 +62,6 @@ void test_capture(LLGI::DeviceType deviceType, LLGI::Vec2I windowSize)
 			pip->VertexLayoutNames[2] = "COLOR";
 			pip->VertexLayoutCount = 3;
 
-			pip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan
 			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs.get());
 			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps.get());
 			pip->SetRenderPassPipelineState(renderPassPipelineState.get());

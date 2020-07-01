@@ -148,8 +148,6 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 			writepip->VertexLayoutNames[2] = "COLOR";
 			writepip->VertexLayoutCount = 3;
 
-			writepip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan
-
 			writepip->IsBlendEnabled = false;
 
 			if (mode == DepthStencilTestMode::Depth || mode == DepthStencilTestMode::DepthAsTexture)
@@ -170,8 +168,6 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 			testpip->VertexLayoutNames[1] = "UV";
 			testpip->VertexLayoutNames[2] = "COLOR";
 			testpip->VertexLayoutCount = 3;
-
-			testpip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan
 
 			testpip->IsBlendEnabled = false;
 
@@ -205,7 +201,7 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 			screenpip->VertexLayoutNames[1] = "UV";
 			screenpip->VertexLayoutNames[2] = "COLOR";
 			screenpip->VertexLayoutCount = 3;
-			screenpip->Culling = LLGI::CullingMode::DoubleSide; // TEMP :vulkan
+
 			screenpip->IsBlendEnabled = false;
 			screenpip->SetShader(LLGI::ShaderStageType::Vertex, shader_screen_vs.get());
 			screenpip->SetShader(LLGI::ShaderStageType::Pixel, shader_screen_ps.get());

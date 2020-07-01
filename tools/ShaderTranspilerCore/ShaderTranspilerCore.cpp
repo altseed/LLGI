@@ -27,7 +27,7 @@ EShLanguage GetGlslangShaderStage(ShaderStageType type)
 
 SPIRV::SPIRV(const std::vector<uint32_t>& data, ShaderStageType shaderStage) : data_(data), shaderStage_(shaderStage) {}
 
-SPIRV::SPIRV(const std::string& error) : error_(error) {}
+SPIRV::SPIRV(const std::string& error) : error_(error), shaderStage_{} {}
 
 ShaderStageType SPIRV::GetStage() const { return shaderStage_; }
 
@@ -48,6 +48,7 @@ bool SPIRVToHLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 	compiler.set_common_options(options);
 
 	spirv_cross::CompilerHLSL::Options targetOptions;
+	targetOptions.shader_model = 40;
 	compiler.set_hlsl_options(targetOptions);
 
 	code_ = compiler.compile();
@@ -125,6 +126,61 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 	return true;
 }
 
+class ReflectionCompiler : public spirv_cross::Compiler
+{
+public:
+	ReflectionCompiler(const std::vector<uint32_t>& data) : Compiler(data) {}
+	virtual ~ReflectionCompiler() = default;
+
+	size_t get_member_count(uint32_t id) const
+	{
+		const spirv_cross::Meta& m = ir.meta.at(id);
+		return m.members.size();
+	}
+
+	spirv_cross::SPIRType get_member_type(const spirv_cross::SPIRType& struct_type, uint32_t index) const
+	{
+		return get<spirv_cross::SPIRType>(struct_type.member_types[index]);
+	}
+};
+
+bool SPIRVReflection::Transpile(const std::shared_ptr<SPIRV>& spirv)
+{
+	Textures.clear();
+	Uniforms.clear();
+
+	ReflectionCompiler compiler(spirv->GetData());
+	spirv_cross::ShaderResources resources = compiler.get_shader_resources();
+
+	// Texture
+	for (const auto& sampler : resources.separate_images)
+	{
+		ShaderReflectionTexture t;
+		t.Name = sampler.name;
+		t.Offset = compiler.get_decoration(sampler.id, spv::DecorationBinding);
+		Textures.push_back(t);
+	}
+
+	// Uniform
+	for (const auto& resource : resources.uniform_buffers)
+	{
+		auto count = compiler.get_member_count(resource.base_type_id);
+		auto spirvType = compiler.get_type(resource.type_id);
+
+		for (auto i = 0; i < count; i++)
+		{
+			ShaderReflectionUniform u;
+			auto memberType = compiler.get_member_type(spirvType, i);
+			u.Name = compiler.get_member_name(resource.base_type_id, i);
+			u.Size = static_cast<int32_t>(compiler.get_declared_struct_member_size(spirvType, i));
+			u.Offset = compiler.get_member_decoration(resource.base_type_id, i, spv::DecorationOffset);
+			Uniforms.push_back(u);
+		}
+	}
+
+	return true;
+}
+
 SPIRVGenerator::SPIRVGenerator() { glslang::InitializeProcess(); }
 
 SPIRVGenerator::~SPIRVGenerator() { glslang::FinalizeProcess(); }
@@ -140,7 +196,7 @@ std::shared_ptr<SPIRV> SPIRVGenerator::Generate(const char* code, ShaderStageTyp
 	shader.setEnvInput(glslang::EShSourceHlsl, shaderStage, glslang::EShClientOpenGL, glslang::EShTargetOpenGL_450);
 	shader.setEnvClient(glslang::EShClientOpenGL, glslang::EShTargetOpenGL_450);
 	shader.setEnvTarget(glslang::EShTargetSpv, glslang::EShTargetSpv_1_0);
-	
+
 	if (isYInverted)
 	{
 		shader.setInvertY(true);
@@ -171,7 +227,11 @@ std::shared_ptr<SPIRV> SPIRVGenerator::Generate(const char* code, ShaderStageTyp
 	}
 
 	std::vector<unsigned int> spirv;
-	glslang::GlslangToSpv(*program.getIntermediate(shaderStage), spirv);
+	glslang::SpvOptions spvOptions;
+	spvOptions.optimizeSize = true;
+	spvOptions.disableOptimizer = false;
+
+	glslang::GlslangToSpv(*program.getIntermediate(shaderStage), spirv, &spvOptions);
 
 	return std::make_shared<SPIRV>(spirv, shaderStageType);
 }
