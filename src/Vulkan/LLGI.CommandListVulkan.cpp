@@ -230,7 +230,7 @@ void CommandListVulkan::Draw(int32_t pritimiveCount)
 		stages[0] = true;
 
 		descriptorBufferInfos[descriptorBufferIndex].buffer = (static_cast<ConstantBufferVulkan*>(vcb)->GetBuffer());
-		descriptorBufferInfos[descriptorBufferIndex].offset = 0;
+		descriptorBufferInfos[descriptorBufferIndex].offset = static_cast<ConstantBufferVulkan*>(vcb)->GetOffset();
 		descriptorBufferInfos[descriptorBufferIndex].range = vcb->GetSize();
 
 		vk::WriteDescriptorSet desc;
@@ -254,7 +254,7 @@ void CommandListVulkan::Draw(int32_t pritimiveCount)
 		stages[1] = true;
 
 		descriptorBufferInfos[descriptorBufferIndex].buffer = (static_cast<ConstantBufferVulkan*>(pcb)->GetBuffer());
-		descriptorBufferInfos[descriptorBufferIndex].offset = 0;
+		descriptorBufferInfos[descriptorBufferIndex].offset = static_cast<ConstantBufferVulkan*>(pcb)->GetOffset();
 		descriptorBufferInfos[descriptorBufferIndex].range = pcb->GetSize();
 		vk::WriteDescriptorSet desc;
 		desc.descriptorType = vk::DescriptorType::eUniformBufferDynamic;
