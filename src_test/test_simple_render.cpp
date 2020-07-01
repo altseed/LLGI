@@ -749,6 +749,118 @@ void main()
 	LLGI::SafeRelease(compiler);
 }
 
+void test_instancing(LLGI::DeviceType deviceType)
+{
+	int count = 0;
+
+	LLGI::PlatformParameter pp;
+	pp.Device = deviceType;
+	pp.WaitVSync = true;
+	auto window = std::unique_ptr<LLGI::Window>(LLGI::CreateWindow("Instancing", LLGI::Vec2I(1280, 720)));
+	auto platform = LLGI::CreateSharedPtr(LLGI::CreatePlatform(pp, window.get()));
+	auto graphics = LLGI::CreateSharedPtr(platform->CreateGraphics());
+
+	auto sfMemoryPool = LLGI::CreateSharedPtr(graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128));
+
+	auto commandListPool = std::make_shared<LLGI::CommandListPool>(graphics.get(), sfMemoryPool.get(), 3);
+
+	std::shared_ptr<LLGI::Shader> shader_vs = nullptr;
+	std::shared_ptr<LLGI::Shader> shader_ps = nullptr;
+
+	TestHelper::CreateShader(graphics.get(), deviceType, "instancing.vert", "simple_rectangle.frag", shader_vs, shader_ps);
+
+	std::shared_ptr<LLGI::VertexBuffer> vb;
+	std::shared_ptr<LLGI::IndexBuffer> ib;
+	TestHelper::CreateRectangle(graphics.get(),
+								LLGI::Vec3F(-0.2, 0.2, 0.5),
+								LLGI::Vec3F(0.2, -0.2, 0.5),
+								LLGI::Color8(255, 255, 255, 255),
+								LLGI::Color8(0, 255, 0, 255),
+								vb,
+								ib);
+
+	auto cb = LLGI::CreateSharedPtr(graphics->CreateConstantBuffer(sizeof(float) * 4 * 10));
+
+	if (auto buf = static_cast<float*>(cb->Lock()))
+	{
+		for (int32_t i = 0; i < 10; i++)
+		{
+			buf[i * 4 + 0] = i * 0.1f;
+			buf[i * 4 + 1] = i * 0.1f;
+			buf[i * 4 + 2] = 0.0f;
+			buf[i * 4 + 3] = 0.0f;
+		}
+		cb->Unlock();
+	}
+
+	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pips;
+
+	while (count < 60)
+	{
+		if (!platform->NewFrame())
+			break;
+
+		sfMemoryPool->NewFrame();
+
+		LLGI::Color8 color;
+		color.R = count % 255;
+		color.G = 0;
+		color.B = 0;
+		color.A = 255;
+
+		auto renderPass = platform->GetCurrentScreen(color, true, false); // TODO: isDepthClear is false, because it fails with dx12.
+		auto renderPassPipelineState = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPass));
+
+		if (pips.count(renderPassPipelineState) == 0)
+		{
+			auto pip = graphics->CreatePiplineState();
+			pip->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
+			pip->VertexLayouts[1] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
+			pip->VertexLayouts[2] = LLGI::VertexLayoutFormat::R8G8B8A8_UNORM;
+			pip->VertexLayoutNames[0] = "POSITION";
+			pip->VertexLayoutNames[1] = "UV";
+			pip->VertexLayoutNames[2] = "COLOR";
+			pip->VertexLayoutCount = 3;
+
+			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs.get());
+			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps.get());
+			pip->SetRenderPassPipelineState(renderPassPipelineState.get());
+			pip->Compile();
+
+			pips[renderPassPipelineState] = LLGI::CreateSharedPtr(pip);
+		}
+
+		auto commandList = commandListPool->Get();
+		commandList->Begin();
+		commandList->BeginRenderPass(renderPass);
+		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
+		commandList->SetIndexBuffer(ib.get());
+		commandList->SetPipelineState(pips[renderPassPipelineState].get());
+		commandList->SetConstantBuffer(cb.get(), LLGI::ShaderStageType::Vertex);
+		commandList->Draw(2,5);
+		commandList->EndRenderPass();
+		commandList->End();
+
+		graphics->Execute(commandList);
+
+		platform->Present();
+		count++;
+
+		if (TestHelper::GetIsCaptureRequired() && count == 30)
+		{
+			commandList->WaitUntilCompleted();
+			auto texture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
+			auto data = graphics->CaptureRenderTarget(texture);
+
+			// save
+			std::string path = "SimpleRender.Instancing.png";
+			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save(path.c_str());
+		}
+	}
+
+	pips.clear();
+}
+
 TestRegister SimpleRender_Basic("SimpleRender.Basic", [](LLGI::DeviceType device) -> void { test_simple_rectangle(device); });
 
 TestRegister SimpleRender_IndexOffset("SimpleRender.IndexOffset", [](LLGI::DeviceType device) -> void { test_index_offset(device); });
@@ -763,3 +875,5 @@ TestRegister SimpleRender_ConstantST("SimpleRender.ConstantST", [](LLGI::DeviceT
 
 TestRegister SimpleRender_ConstantTex("SimpleRender.Texture",
 									  [](LLGI::DeviceType device) -> void { test_simple_texture_rectangle(device); });
+
+TestRegister SimpleRender_Instansing("SimpleRender.Instansing", [](LLGI::DeviceType device) -> void { test_instancing(device); });

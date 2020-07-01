@@ -102,7 +102,7 @@ public:
 	virtual void EndWithPlatform();
 
 	virtual void SetScissor(int32_t x, int32_t y, int32_t width, int32_t height);
-	virtual void Draw(int32_t pritimiveCount);
+	virtual void Draw(int32_t primitiveCount, int32_t instanceCount = 1);
 	virtual void SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride, int32_t offset);
 	virtual void SetIndexBuffer(IndexBuffer* indexBuffer, int32_t offset = 0);
 	virtual void SetPipelineState(PipelineState* pipelineState);

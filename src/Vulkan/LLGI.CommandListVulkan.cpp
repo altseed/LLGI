@@ -198,7 +198,7 @@ void CommandListVulkan::SetScissor(int32_t x, int32_t y, int32_t width, int32_t 
 	cmdBuffer.setScissor(0, scissor);
 }
 
-void CommandListVulkan::Draw(int32_t pritimiveCount)
+void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 {
 	BindingVertexBuffer vb_;
 	BindingIndexBuffer ib_;
@@ -419,9 +419,9 @@ void CommandListVulkan::Draw(int32_t pritimiveCount)
 		assert(0);
 	}
 
-	cmdBuffer.drawIndexed(indexPerPrim * pritimiveCount, 1, 0, 0, 0);
+	cmdBuffer.drawIndexed(indexPerPrim * primitiveCount, instanceCount, 0, 0, 0);
 
-	CommandList::Draw(pritimiveCount);
+	CommandList::Draw(primitiveCount, instanceCount);
 }
 
 void CommandListVulkan::CopyTexture(Texture* src, Texture* dst)
