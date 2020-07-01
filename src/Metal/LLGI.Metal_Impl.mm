@@ -42,7 +42,7 @@ MTLPixelFormat ConvertFormat(TextureFormatType format)
 	{
 		return MTLPixelFormatRG32Float;
 	}
-#if TARGET_OS_MACOS
+#if !(TARGET_OS_IPHONE) && !(TARGET_OS_SIMULATOR)
 	else if (format == TextureFormatType::BC1)
 	{
 		return MTLPixelFormatBC1_RGBA;
@@ -114,7 +114,7 @@ TextureFormatType ConvertFormat(MTLPixelFormat format)
 	{
 		return TextureFormatType::R16G16_FLOAT;
 	}
-#if TARGET_OS_MACOS
+#if !(TARGET_OS_IPHONE) && !(TARGET_OS_SIMULATOR)
 	else if (format == MTLPixelFormatBC1_RGBA)
 	{
 		return TextureFormatType::BC1;
