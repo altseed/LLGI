@@ -66,6 +66,63 @@ ParsedArgs TestHelper::ParseArg(int argc, char* argv[])
 	return args;
 }
 
+void TestHelper::WriteDummyTexture(LLGI::Texture* texture) {
+
+	if (texture->GetFormat() == LLGI::TextureFormatType::R8G8B8A8_UNORM)
+	{
+		auto data = static_cast<LLGI::Color8*>(texture->Lock());
+		auto size = texture->GetSizeAs2D();
+		
+		for (int y = 0; y < size.Y; y++)
+		{
+			for (int x = 0; x < size.X; x++)
+			{
+				data[x + y * size.X].R = x;
+				data[x + y * size.X].G = y;
+				data[x + y * size.X].B = (x % 16 > 8 || y % 16 > 8) ? 128 : 0;
+				data[x + y * size.X].A = 255;
+			}
+		}
+
+		texture->Unlock();
+	}
+
+	if (texture->GetFormat() == LLGI::TextureFormatType::R32G32B32A32_FLOAT)
+	{
+		auto data = static_cast<LLGI::ColorF*>(texture->Lock());
+		auto size = texture->GetSizeAs2D();
+
+		for (int y = 0; y < size.Y; y++)
+		{
+			for (int x = 0; x < size.X; x++)
+			{
+				data[x + y * size.X].R = x / static_cast<float>(size.X);
+				data[x + y * size.X].G = y / static_cast<float>(size.Y);
+				data[x + y * size.X].B = (x % 16 > 8 || y % 16 > 8) ? 0.5f : 0.0f;
+				data[x + y * size.X].A = 1.0f;
+			}
+		}
+
+		texture->Unlock();
+	}
+
+	if (texture->GetFormat() == LLGI::TextureFormatType::R8_UNORM)
+	{
+		auto data = static_cast<uint8_t*>(texture->Lock());
+		auto size = texture->GetSizeAs2D();
+
+		for (int y = 0; y < size.Y; y++)
+		{
+			for (int x = 0; x < size.X; x++)
+			{
+				data[x + y * size.X] = (x % 16 > 8 || y % 16 > 8) ? 128 : 0;
+			}
+		}
+
+		texture->Unlock();
+	}
+}
+
 void TestHelper::WriteDummyTexture(LLGI::Color8* data, LLGI::Vec2I size)
 {
 	for (int y = 0; y < size.Y; y++)

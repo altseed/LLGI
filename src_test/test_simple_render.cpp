@@ -15,6 +15,13 @@ enum class SingleRectangleTestMode
 	Point,
 };
 
+enum class SimpleTextureRectangleTestMode
+{
+	RGBA8,
+	RGBA32F,
+	R8,
+};
+
 void test_simple_rectangle(LLGI::DeviceType deviceType, SingleRectangleTestMode mode)
 {
 	if (mode == SingleRectangleTestMode::Point)
@@ -553,7 +560,7 @@ void main()
 	LLGI::SafeRelease(compiler);
 }
 
-void test_simple_texture_rectangle(LLGI::DeviceType deviceType)
+void test_simple_texture_rectangle(LLGI::DeviceType deviceType, SimpleTextureRectangleTestMode mode)
 {
 	auto code_gl_vs = R"(
 #version 440 core
@@ -617,17 +624,26 @@ void main()
 		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
 
 	LLGI::TextureInitializationParameter texParam;
-	texParam.Size = LLGI::Vec2I(256, 256);
 
-	LLGI::RenderTextureInitializationParameter renderTexParam;
-	renderTexParam.Size = LLGI::Vec2I(256, 256);
+	if (mode == SimpleTextureRectangleTestMode::RGBA8)
+	{
+		texParam.Format = LLGI::TextureFormatType::R8G8B8A8_UNORM;
+	}
+	else if (mode == SimpleTextureRectangleTestMode::RGBA32F)
+	{
+		texParam.Format = LLGI::TextureFormatType::R32G32B32A32_FLOAT;
+	}
+	else if (mode == SimpleTextureRectangleTestMode::R8)
+	{
+		texParam.Format = LLGI::TextureFormatType::R8_UNORM;
+	}
+
+	texParam.Size = LLGI::Vec2I(256, 256);
 
 	auto texture = graphics->CreateTexture(texParam);
 	assert(texture->GetType() == LLGI::TextureType::Color);
 
-	auto texture_buf = (LLGI::Color8*)texture->Lock();
-	TestHelper::WriteDummyTexture(texture_buf, texture->GetSizeAs2D());
-	texture->Unlock();
+	TestHelper::WriteDummyTexture(texture);
 
 	LLGI::Shader* shader_vs = nullptr;
 	LLGI::Shader* shader_ps = nullptr;
@@ -768,8 +784,22 @@ void main()
 			auto texture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
 			auto data = graphics->CaptureRenderTarget(texture);
 
-			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save("SimpleRender.ConstantTex.png");
+			if (mode == SimpleTextureRectangleTestMode::RGBA8)
+			{
+				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat())
+					.Save("SimpleRender.TextureRGB8.png");
+			}
 
+			if (mode == SimpleTextureRectangleTestMode::RGBA32F)
+			{
+				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat())
+					.Save("SimpleRender.TextureRGB32F.png");
+			}
+
+			if (mode == SimpleTextureRectangleTestMode::R8)
+			{
+				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save("SimpleRender.TextureR8.png");
+			}
 			break;
 		}
 	}
@@ -923,7 +953,15 @@ TestRegister SimpleRender_ConstantST("SimpleRender.ConstantST", [](LLGI::DeviceT
 	test_simple_constant_rectangle(LLGI::ConstantBufferType::ShortTime, device);
 });
 
-TestRegister SimpleRender_ConstantTex("SimpleRender.Texture",
-									  [](LLGI::DeviceType device) -> void { test_simple_texture_rectangle(device); });
+TestRegister SimpleRender_Tex_RGBA8("SimpleRender.Texture_RGBA8", [](LLGI::DeviceType device) -> void {
+	test_simple_texture_rectangle(device, SimpleTextureRectangleTestMode::RGBA8);
+});
+
+TestRegister SimpleRender_Tex_RGBA32F("SimpleRender.Texture_RGBA32F", [](LLGI::DeviceType device) -> void {
+	test_simple_texture_rectangle(device, SimpleTextureRectangleTestMode::RGBA32F);
+});
+TestRegister SimpleRender_Tex_R8("SimpleRender.Texture_R8", [](LLGI::DeviceType device) -> void {
+	test_simple_texture_rectangle(device, SimpleTextureRectangleTestMode::R8);
+});
 
 TestRegister SimpleRender_Instansing("SimpleRender.Instansing", [](LLGI::DeviceType device) -> void { test_instancing(device); });

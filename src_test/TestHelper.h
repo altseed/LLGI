@@ -24,6 +24,8 @@ private:
 public:
 	static ParsedArgs ParseArg(int argc, char* argv[]);
 
+	static void WriteDummyTexture(LLGI::Texture* texture);
+
 	static void WriteDummyTexture(LLGI::Color8* data, LLGI::Vec2I size);
 
 	static std::vector<uint8_t> LoadData(const char* path);
