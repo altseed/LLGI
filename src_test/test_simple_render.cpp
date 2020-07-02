@@ -8,8 +8,21 @@
 #include <iostream>
 #include <map>
 
-void test_simple_rectangle(LLGI::DeviceType deviceType)
+enum class SingleRectangleTestMode
 {
+	Triangle,
+	Line,
+	Point,
+};
+
+void test_simple_rectangle(LLGI::DeviceType deviceType, SingleRectangleTestMode mode)
+{
+	if (mode == SingleRectangleTestMode::Point)
+	{
+		if (deviceType != LLGI::DeviceType::DirectX12)
+			return;
+	}
+
 	int count = 0;
 
 	LLGI::PlatformParameter pp;
@@ -71,6 +84,19 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 			pip->VertexLayoutNames[2] = "COLOR";
 			pip->VertexLayoutCount = 3;
 
+			if (mode == SingleRectangleTestMode::Triangle)
+			{
+				pip->Topology = LLGI::TopologyType::Triangle;
+			}
+			else if (mode == SingleRectangleTestMode::Line)
+			{
+				pip->Topology = LLGI::TopologyType::Line;
+			}
+			else if (mode == SingleRectangleTestMode::Point)
+			{
+				pip->Topology = LLGI::TopologyType::Point;
+			}
+
 			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs.get());
 			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps.get());
 			pip->SetRenderPassPipelineState(renderPassPipelineState.get());
@@ -99,7 +125,21 @@ void test_simple_rectangle(LLGI::DeviceType deviceType)
 			commandList->WaitUntilCompleted();
 			auto texture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
 			auto data = graphics->CaptureRenderTarget(texture);
-			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save("SimpleRender.Basic.png");
+
+			if (mode == SingleRectangleTestMode::Triangle)
+			{
+				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat())
+					.Save("SimpleRender.BasicTriangle.png");
+			}
+			else if (mode == SingleRectangleTestMode::Line)
+			{
+				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save("SimpleRender.BasicLine.png");
+			}
+			else if (mode == SingleRectangleTestMode::Point)
+			{
+				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat())
+					.Save("SimpleRender.BasicPoint.png");
+			}
 			break;
 		}
 	}
@@ -275,7 +315,6 @@ void main()
 
 )";
 
-
 	auto compiler = LLGI::CreateCompiler(deviceType);
 
 	int count = 0;
@@ -326,7 +365,8 @@ void main()
 		LLGI::CompilerResult result_vs;
 		LLGI::CompilerResult result_ps;
 
-		if (platform->GetDeviceType() == LLGI::DeviceType::Metal || platform->GetDeviceType() == LLGI::DeviceType::DirectX12)
+		if (platform->GetDeviceType() == LLGI::DeviceType::Metal || platform->GetDeviceType() == LLGI::DeviceType::DirectX12 ||
+			platform->GetDeviceType() == LLGI::DeviceType::Vulkan)
 		{
 			auto code_vs = TestHelper::LoadData("simple_constant_rectangle.vert");
 			auto code_ps = TestHelper::LoadData("simple_constant_rectangle.frag");
@@ -619,7 +659,8 @@ void main()
 		LLGI::CompilerResult result_vs;
 		LLGI::CompilerResult result_ps;
 
-		if (platform->GetDeviceType() == LLGI::DeviceType::Metal || platform->GetDeviceType() == LLGI::DeviceType::DirectX12)
+		if (platform->GetDeviceType() == LLGI::DeviceType::Metal || platform->GetDeviceType() == LLGI::DeviceType::DirectX12 ||
+			platform->GetDeviceType() == LLGI::DeviceType::Vulkan)
 		{
 			auto code_vs = TestHelper::LoadData("simple_texture_rectangle.vert");
 			auto code_ps = TestHelper::LoadData("simple_texture_rectangle.frag");
@@ -837,7 +878,7 @@ void test_instancing(LLGI::DeviceType deviceType)
 		commandList->SetIndexBuffer(ib.get());
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
 		commandList->SetConstantBuffer(cb.get(), LLGI::ShaderStageType::Vertex);
-		commandList->Draw(2,5);
+		commandList->Draw(2, 5);
 		commandList->EndRenderPass();
 		commandList->End();
 
@@ -861,7 +902,16 @@ void test_instancing(LLGI::DeviceType deviceType)
 	pips.clear();
 }
 
-TestRegister SimpleRender_Basic("SimpleRender.Basic", [](LLGI::DeviceType device) -> void { test_simple_rectangle(device); });
+TestRegister SimpleRender_BasicTriangle("SimpleRender.BasicTriangle", [](LLGI::DeviceType device) -> void {
+	test_simple_rectangle(device, SingleRectangleTestMode::Triangle);
+});
+
+TestRegister SimpleRender_BasicLine("SimpleRender.BasicLine",
+									[](LLGI::DeviceType device) -> void { test_simple_rectangle(device, SingleRectangleTestMode::Line); });
+
+TestRegister SimpleRender_BasicPoint("SimpleRender.BasicPoint", [](LLGI::DeviceType device) -> void {
+	test_simple_rectangle(device, SingleRectangleTestMode::Point);
+});
 
 TestRegister SimpleRender_IndexOffset("SimpleRender.IndexOffset", [](LLGI::DeviceType device) -> void { test_index_offset(device); });
 
