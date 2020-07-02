@@ -54,6 +54,7 @@ if((BUILD_VULKAN_COMPILER OR BUILD_TOOL) AND USE_THIRDPARTY_DIRECTORY)
       INSTALL_DIR     ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang
       CMAKE_ARGS      -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang
                       -DCMAKE_DEBUG_POSTFIX=d
+                      -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
   )
   list(APPEND LLGI_THIRDPARTY_INCLUDES ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang/include)
   list(APPEND LLGI_THIRDPARTY_LIBRARY_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang/lib)
@@ -80,6 +81,7 @@ if((BUILD_VULKAN_COMPILER OR BUILD_TOOL) AND USE_THIRDPARTY_DIRECTORY)
                       -DBUILD_SHARED_LIBS=OFF
                       -DSPIRV_CROSS_ENABLE_TESTS=OFF
                       -DSPIRV_CROSS_FORCE_PIC=ON
+                      -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
   )
 
   list(APPEND LLGI_THIRDPARTY_INCLUDES ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/SPIRV-Cross/include)
