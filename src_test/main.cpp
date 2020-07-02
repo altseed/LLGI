@@ -45,7 +45,11 @@ int main(int argc, char* argv[])
 		}
 		else if (args.Device == LLGI::DeviceType::Vulkan)
 		{
+#ifdef ENABLE_VULKAN
+			TestHelper::SetRoot((path + "/Shaders/GLSL_VULKAN/").c_str());
+#else
 			TestHelper::SetRoot((path + "/Shaders/SPIRV/").c_str());
+#endif
 		}
 	}
 
