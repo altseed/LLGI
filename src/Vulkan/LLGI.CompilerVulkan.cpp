@@ -2,7 +2,7 @@
 #include <memory>
 
 #if defined(ENABLE_VULKAN_COMPILER)
-#include <SPIRV/GlslangToSpv.h>
+#include <glslang/SPIRV/GlslangToSpv.h>
 #include <glslang/Include/ResourceLimits.h>
 #include <glslang/Public/ShaderLang.h>
 #endif
@@ -107,6 +107,7 @@ const TBuiltInResource DefaultTBuiltInResource = {
 	/* .maxTaskWorkGroupSizeY_NV = */ 1,
 	/* .maxTaskWorkGroupSizeZ_NV = */ 1,
 	/* .maxMeshViewCountNV = */ 4,
+	/* .maxDualSourceDrawBuffersEXT = */ 1,
 
 	/* .limits = */
 	{
