@@ -1,35 +1,7 @@
 
-set(srcs
-    main.cpp
-    ../thirdparty/imgui/imgui.cpp
-    ../thirdparty/imgui/imgui.h
-    ../thirdparty/imgui/imgui_draw.cpp
-    ../thirdparty/imgui/imgui_widgets.cpp
-    ../thirdparty/imgui/imgui_impl_glfw.cpp
-)
-
-if(WIN32)
-    list(APPEND
-        srcs
-        ../thirdparty/imgui/imgui_impl_dx12.cpp)
-
-elseif(APPLE)
-    list(APPEND
-        srcs
-        ImGuiPlatformMetal.mm
-        ../thirdparty/imgui/imgui_impl_metal.mm)
-endif()
-
-if(BUILD_VULKAN)
-    list(APPEND
-        srcs
-        ImGuiPlatformVulkan.cpp
-        ../thirdparty/imgui/imgui_impl_vulkan.cpp)
-endif()
-
 add_executable(
     example_imgui
-    ${srcs}
+    main.cpp
 )
 
 target_include_directories(
@@ -44,6 +16,8 @@ target_link_libraries(
     PRIVATE
     LLGI
     glfw
+    imgui
+    ImGuiPlatform
 )
 
 target_link_directories(example_imgui PRIVATE ${THIRDPARTY_LIBRARY_DIRECTORIES})

@@ -29,20 +29,21 @@
 #elif __APPLE__
 #endif
 
-#include "ImGuiPlatform.h"
+// Use a library to use imgui with LLGI
+#include <ImGuiPlatform.h>
 
 #ifdef _WIN32
-#include "ImGuiPlatformDX12.h"
+#include <ImGuiPlatformDX12.h>
 
 #elif __APPLE__
-#include "ImGuiPlatformMetal.h"
+#include <ImGuiPlatformMetal.h>
 #endif
 
 #ifdef ENABLE_VULKAN
-#include "ImGuiPlatformVulkan.h"
+#include <ImGuiPlatformVulkan.h>
 #endif
 
-#include "../thirdparty/imgui/imgui_impl_glfw.h"
+#include <imgui_impl_glfw.h>
 
 class LLGIWindow : public LLGI::Window
 {
