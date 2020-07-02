@@ -18,6 +18,10 @@
 #include <Vulkan/LLGI.RenderPassVulkan.h>
 #include <unordered_map>
 
+#if defined(_WIN32)
+#undef CreateFont
+#endif
+
 class ImguiPlatformVulkan : public ImguiPlatform
 {
 private:

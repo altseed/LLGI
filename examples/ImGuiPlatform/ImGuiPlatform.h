@@ -6,6 +6,10 @@
 
 #include "../thirdparty/imgui/imgui.h"
 
+#if defined(_WIN32)
+#undef CreateFont
+#endif
+
 class ImguiPlatform
 {
 public:
