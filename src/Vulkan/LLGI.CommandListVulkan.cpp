@@ -360,38 +360,18 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 		}
 	}
 
-	graphics_->GetDevice().updateDescriptorSets(writeDescriptorIndex, writeDescriptorSets.data(), 0, nullptr);
-
-	std::array<vk::DescriptorSet, static_cast<int>(ShaderStageType::Max)> descriptorSets_;
-	std::array<uint32_t, static_cast<int>(ShaderStageType::Max)> offsets_;
-	int descriptorIndex = 0;
-	int firstSet = -1;
-
-	for (int i = 0; i < static_cast<int>(ShaderStageType::Max); i++)
+	if (writeDescriptorIndex > 0)
 	{
-		if (!stages[i])
-			continue;
-
-		descriptorSets_[descriptorIndex] = descriptorSets[i];
-		offsets_[descriptorIndex] = 0;
-
-		if (firstSet < 0)
-		{
-			firstSet = descriptorIndex;
-		}
-
-		descriptorIndex++;
+		graphics_->GetDevice().updateDescriptorSets(writeDescriptorIndex, writeDescriptorSets.data(), 0, nullptr);
 	}
 
-	if (firstSet >= 0)
+	std::array<uint32_t, static_cast<int>(ShaderStageType::Max)> offsets;
+	offsets.fill(0);
+
+	if (stages[0] || stages[1])
 	{
-		cmdBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-									 pip->GetPipelineLayout(),
-									 firstSet,
-									 descriptorIndex,
-									 descriptorSets_.data(),
-									 descriptorIndex,
-									 offsets_.data());
+		cmdBuffer.bindDescriptorSets(
+			vk::PipelineBindPoint::eGraphics, pip->GetPipelineLayout(), 0, 2, descriptorSets.data(), 2, offsets.data());
 	}
 
 	// assign a pipeline

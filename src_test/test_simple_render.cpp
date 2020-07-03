@@ -653,6 +653,8 @@ void main()
 	std::vector<LLGI::DataStructure> data_vs;
 	std::vector<LLGI::DataStructure> data_ps;
 
+	auto dummy_cb = LLGI::CreateSharedPtr(graphics->CreateConstantBuffer(16));
+
 	if (compiler == nullptr)
 	{
 		auto binary_vs = TestHelper::LoadData("simple_texture_rectangle.vert.spv");
@@ -766,6 +768,7 @@ void main()
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
 		commandList->BeginRenderPass(renderPass);
+		//commandList->SetConstantBuffer(dummy_cb.get(), LLGI::ShaderStageType::Vertex);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get());
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());

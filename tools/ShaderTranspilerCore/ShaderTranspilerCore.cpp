@@ -93,6 +93,21 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 	{
 		auto i = compiler.get_decoration(resource.id, spv::DecorationLocation);
 		compiler.set_decoration(resource.id, spv::DecorationBinding, binding_offset + i);
+
+		if (spirv->GetStage() == ShaderStageType::Vertex)
+		{
+			if (isVulkanMode_)
+			{
+				compiler.set_decoration(resource.id, spv::DecorationDescriptorSet, 0);
+			}
+		}
+		else if (spirv->GetStage() == ShaderStageType::Pixel)
+		{
+			if (isVulkanMode_)
+			{
+				compiler.set_decoration(resource.id, spv::DecorationDescriptorSet, 1);
+			}
+		}
 	}
 
 	for (auto& resource : resources.uniform_buffers)
