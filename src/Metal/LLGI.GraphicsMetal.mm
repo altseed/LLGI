@@ -326,15 +326,14 @@ std::vector<uint8_t> GraphicsMetal::CaptureRenderTarget(Texture* renderTarget)
 	auto height = metalTexture->GetSizeAs2D().Y;
 	auto impl = metalTexture->GetImpl();
 
-	NSUInteger bytesPerPixel = 4; // TODO: backbuffer only
-	NSUInteger imageByteCount = width * height * bytesPerPixel;
+    NSUInteger bytesPerPixel = GetTextureMemorySize(renderTarget->GetFormat(), renderTarget->GetSizeAs2D()) / width / height;
+    NSUInteger imageByteCount = width * height * bytesPerPixel;
 	NSUInteger bytesPerRow = width * bytesPerPixel;
 	MTLRegion region = MTLRegionMake2D(0, 0, width, height);
 
 	std::vector<uint8_t> data;
 	data.resize(imageByteCount);
 	[impl->texture getBytes:data.data() bytesPerRow:bytesPerRow fromRegion:region mipmapLevel:0];
-	// order: B=[0], G=[1], R=[2], A=[3]
 
 	return data;
 }

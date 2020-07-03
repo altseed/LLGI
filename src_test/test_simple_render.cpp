@@ -26,8 +26,10 @@ void test_simple_rectangle(LLGI::DeviceType deviceType, SingleRectangleTestMode 
 {
 	if (mode == SingleRectangleTestMode::Point)
 	{
-		if (deviceType != LLGI::DeviceType::DirectX12)
+		if (deviceType == LLGI::DeviceType::Default)
 			return;
+        if (deviceType == LLGI::DeviceType::Vulkan)
+            return;
 	}
 
 	int count = 0;

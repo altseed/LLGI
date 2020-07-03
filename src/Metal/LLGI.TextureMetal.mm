@@ -1,5 +1,6 @@
 #include "LLGI.TextureMetal.h"
 #include "LLGI.Metal_Impl.h"
+#include <TargetConditionals.h>
 
 namespace LLGI
 {
@@ -75,7 +76,7 @@ bool Texture_Impl::Initialize(Graphics_Impl* graphics, const RenderTextureInitia
 		textureDescriptor.textureType = MTLTextureType2D;
 		// Make copy enabled in GetBuffer
 		// TODO : Optimize
-#if TARGET_OS_MACOS
+#if !(TARGET_OS_IPHONE) && !(TARGET_OS_SIMULATOR)
 		textureDescriptor.storageMode = MTLStorageModeManaged;
 #else
 		textureDescriptor.storageMode = MTLStorageModePrivate;
@@ -105,7 +106,9 @@ void Texture_Impl::Write(const uint8_t* data)
 {
 	MTLRegion region = {{0, 0, 0}, {static_cast<uint32_t>(size_.X), static_cast<uint32_t>(size_.Y), 1}};
 
-	[texture replaceRegion:region mipmapLevel:0 withBytes:data bytesPerRow:size_.X * 4];
+    auto allSize = GetTextureMemorySize(ConvertFormat(texture.pixelFormat), size_);
+    
+	[texture replaceRegion:region mipmapLevel:0 withBytes:data bytesPerRow:allSize / size_.Y];
 }
 
 TextureMetal::TextureMetal() { impl = new Texture_Impl(); }
