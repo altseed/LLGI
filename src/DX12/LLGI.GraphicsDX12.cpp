@@ -283,7 +283,8 @@ std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
 	}
 
 	if (renderTarget->GetFormat() != TextureFormatType::R8G8B8A8_UNORM &&
-		renderTarget->GetFormat() != TextureFormatType::R8G8B8A8_UNORM_SRGB)
+		renderTarget->GetFormat() != TextureFormatType::R8G8B8A8_UNORM_SRGB &&
+		renderTarget->GetFormat() != TextureFormatType::R32G32B32A32_FLOAT && renderTarget->GetFormat() != TextureFormatType::R8_UNORM)
 	{
 		Log(LogType::Error, "Unimplemented.");
 		return std::vector<uint8_t>();
@@ -342,14 +343,14 @@ std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
 	SafeRelease(commandList);
 	SafeRelease(commandAllocator);
 
-	if (renderTarget->GetSizeAs2D().X * renderTarget->GetSizeAs2D().Y * 4 != dstBuffer.GetSize())
+	if (GetTextureMemorySize(renderTarget->GetFormat(), renderTarget->GetSizeAs2D()) != dstBuffer.GetSize())
 	{
-		result.resize(renderTarget->GetSizeAs2D().X * renderTarget->GetSizeAs2D().Y * 4);
+		result.resize(GetTextureMemorySize(renderTarget->GetFormat(), renderTarget->GetSizeAs2D()));
 		auto raw = static_cast<uint8_t*>(dstBuffer.Lock());
 
 		for (int32_t y = 0; y < renderTarget->GetSizeAs2D().Y; y++)
 		{
-			auto pitch = renderTarget->GetSizeAs2D().X * 4;
+			auto pitch = GetTextureMemorySize(renderTarget->GetFormat(), renderTarget->GetSizeAs2D()) / renderTarget->GetSizeAs2D().Y;
 			memcpy(result.data() + pitch * y, raw + dstFootprint.RowPitch * y, pitch);
 		}
 
