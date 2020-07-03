@@ -66,13 +66,15 @@ ParsedArgs TestHelper::ParseArg(int argc, char* argv[])
 	return args;
 }
 
-void TestHelper::WriteDummyTexture(LLGI::Texture* texture) {
+std::vector<uint8_t> TestHelper::CreateDummyTextureData(LLGI::Vec2I size, LLGI::TextureFormatType format)
+{
+	std::vector<uint8_t> ret;
+	ret.resize(LLGI::GetTextureMemorySize(format, size));
 
-	if (texture->GetFormat() == LLGI::TextureFormatType::R8G8B8A8_UNORM)
+	if (format == LLGI::TextureFormatType::R8G8B8A8_UNORM)
 	{
-		auto data = static_cast<LLGI::Color8*>(texture->Lock());
-		auto size = texture->GetSizeAs2D();
-		
+		auto data = reinterpret_cast<LLGI::Color8*>(ret.data());
+
 		for (int y = 0; y < size.Y; y++)
 		{
 			for (int x = 0; x < size.X; x++)
@@ -83,14 +85,11 @@ void TestHelper::WriteDummyTexture(LLGI::Texture* texture) {
 				data[x + y * size.X].A = 255;
 			}
 		}
-
-		texture->Unlock();
 	}
 
-	if (texture->GetFormat() == LLGI::TextureFormatType::R32G32B32A32_FLOAT)
+	if (format == LLGI::TextureFormatType::R32G32B32A32_FLOAT)
 	{
-		auto data = static_cast<LLGI::ColorF*>(texture->Lock());
-		auto size = texture->GetSizeAs2D();
+		auto data = reinterpret_cast<LLGI::ColorF*>(ret.data());
 
 		for (int y = 0; y < size.Y; y++)
 		{
@@ -102,14 +101,11 @@ void TestHelper::WriteDummyTexture(LLGI::Texture* texture) {
 				data[x + y * size.X].A = 1.0f;
 			}
 		}
-
-		texture->Unlock();
 	}
 
-	if (texture->GetFormat() == LLGI::TextureFormatType::R8_UNORM)
+	if (format == LLGI::TextureFormatType::R8_UNORM)
 	{
-		auto data = static_cast<uint8_t*>(texture->Lock());
-		auto size = texture->GetSizeAs2D();
+		auto data = reinterpret_cast<uint8_t*>(ret.data());
 
 		for (int y = 0; y < size.Y; y++)
 		{
@@ -118,9 +114,18 @@ void TestHelper::WriteDummyTexture(LLGI::Texture* texture) {
 				data[x + y * size.X] = (x % 16 > 8 || y % 16 > 8) ? 128 : 0;
 			}
 		}
-
-		texture->Unlock();
 	}
+
+	return ret;
+}
+
+void TestHelper::WriteDummyTexture(LLGI::Texture* texture)
+{
+	auto dummyData = CreateDummyTextureData(texture->GetSizeAs2D(), texture->GetFormat());
+	
+	auto data = texture->Lock();
+	memcpy(data, dummyData.data(), dummyData.size());
+	texture->Unlock();
 }
 
 void TestHelper::WriteDummyTexture(LLGI::Color8* data, LLGI::Vec2I size)
