@@ -23,11 +23,11 @@ private:
 		std::string error;
 	};
 
-	CompileShaderResultDX12 CompileShader(const CompilerDX12Option& option,
-										  const char* text,
+	CompileShaderResultDX12 CompileShader(const char* text,
 										  const char* fileName,
 										  const char* target,
-										  const std::vector<D3D_SHADER_MACRO>& macro);
+										  const std::vector<D3D_SHADER_MACRO>& macro,
+										  const CompilerDX12Option& option = LLGI::CompilerDX12Option::ColumnMajor);
 
 	CompilerDX12Option option_;
 
