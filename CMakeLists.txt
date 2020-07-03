@@ -53,6 +53,8 @@ if((BUILD_VULKAN_COMPILER OR BUILD_TOOL) AND USE_THIRDPARTY_DIRECTORY)
       PREFIX          ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Build/glslang
       INSTALL_DIR     ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang
       CMAKE_ARGS      -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang
+                      -DCMAKE_USER_MAKE_RULES_OVERRIDE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/CFlagOverrides.cmake
+                      -DUSE_MSVC_RUNTIME_LIBRARY_DLL=${USE_MSVC_RUNTIME_LIBRARY_DLL}
                       -DCMAKE_DEBUG_POSTFIX=d
                       -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
   )
@@ -77,6 +79,8 @@ if((BUILD_VULKAN_COMPILER OR BUILD_TOOL) AND USE_THIRDPARTY_DIRECTORY)
       PREFIX          ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Build/SPIRV-Cross
       INSTALL_DIR     ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/SPIRV-Cross
       CMAKE_ARGS      -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/SPIRV-Cross
+                      -DCMAKE_USER_MAKE_RULES_OVERRIDE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/CFlagOverrides.cmake
+                      -DUSE_MSVC_RUNTIME_LIBRARY_DLL=${USE_MSVC_RUNTIME_LIBRARY_DLL}
                       -DCMAKE_DEBUG_POSTFIX=d
                       -DBUILD_SHARED_LIBS=OFF
                       -DSPIRV_CROSS_ENABLE_TESTS=OFF
