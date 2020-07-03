@@ -152,6 +152,13 @@ bool TextureVulkan::InitializeAsScreen(const vk::Image& image, const vk::ImageVi
 	textureSize = size;
 	format_ = VulkanHelper::VkFormatToTextureFormat(static_cast<VkFormat>(vkTextureFormat_));
 	memorySize = GetTextureMemorySize(format_, size);
+
+	subresourceRange_.aspectMask = vk::ImageAspectFlagBits::eColor;
+	subresourceRange_.baseArrayLayer = 0;
+	subresourceRange_.levelCount = 1;
+	subresourceRange_.baseMipLevel = 0;
+	subresourceRange_.layerCount = 1;
+
 	isExternalResource_ = true;
 	return true;
 }

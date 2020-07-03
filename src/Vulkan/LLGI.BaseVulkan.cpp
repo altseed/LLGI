@@ -212,38 +212,67 @@ void SetImageLayout(vk::CommandBuffer cmdbuffer,
 
 	// current layout
 	if (oldImageLayout == vk::ImageLayout::ePreinitialized)
+	{
 		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eHostWrite;
+	}
 	else if (oldImageLayout == vk::ImageLayout::eTransferDstOptimal)
+	{
 		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+	}
 	else if (oldImageLayout == vk::ImageLayout::eColorAttachmentOptimal)
+	{
 		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+	}
 	else if (oldImageLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal)
+	{
 		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+	}
 	else if (oldImageLayout == vk::ImageLayout::eTransferSrcOptimal)
+	{
 		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eTransferRead;
+	}
 	else if (oldImageLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
 	{
 		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eShaderRead;
+	}
+	else if (oldImageLayout == vk::ImageLayout::ePresentSrcKHR)
+	{
+		imageMemoryBarrier.srcAccessMask = vk::AccessFlagBits::eMemoryRead;
 	}
 
 	// next layout
 
 	if (newImageLayout == vk::ImageLayout::eTransferDstOptimal)
+	{
 		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+	}
 	else if (newImageLayout == vk::ImageLayout::eTransferSrcOptimal)
+	{
 		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eTransferRead; // | imageMemoryBarrier.srcAccessMask;
+	}
 	else if (newImageLayout == vk::ImageLayout::eColorAttachmentOptimal)
+	{
 		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+	}
 	else if (newImageLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal)
+	{
 		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+	}
 	else if (newImageLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
+	{
 		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+	}
+	else if (newImageLayout == vk::ImageLayout::ePresentSrcKHR)
+	{
+		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eMemoryRead;
+	}
 
 	if (imageMemoryBarrier.dstAccessMask == vk::AccessFlagBits::eTransferWrite ||
 		imageMemoryBarrier.dstAccessMask == vk::AccessFlagBits::eTransferRead ||
 		imageMemoryBarrier.dstAccessMask == vk::AccessFlagBits::eColorAttachmentWrite ||
 		imageMemoryBarrier.dstAccessMask == vk::AccessFlagBits::eShaderRead ||
-		imageMemoryBarrier.srcAccessMask == vk::AccessFlagBits::eColorAttachmentWrite)
+		imageMemoryBarrier.srcAccessMask == vk::AccessFlagBits::eColorAttachmentWrite ||
+		imageMemoryBarrier.srcAccessMask == vk::AccessFlagBits::eTransferRead)
 	{
 		cmdbuffer.pipelineBarrier(
 			GetStageFlag(oldImageLayout), GetStageFlag(newImageLayout), vk::DependencyFlags(), nullptr, nullptr, imageMemoryBarrier);
