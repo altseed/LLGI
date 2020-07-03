@@ -32,7 +32,7 @@ private:
 	CompilerDX12Option option_;
 
 public:
-	CompilerDX12(const CompilerDX12Option& option = CompilerDX12Option::None);
+	CompilerDX12(const CompilerDX12Option& option = LLGI::CompilerDX12Option::ColumnMajor);
 	virtual ~CompilerDX12() = default;
 
 	void Initialize() override;
