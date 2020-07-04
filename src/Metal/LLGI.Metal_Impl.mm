@@ -80,6 +80,10 @@ MTLPixelFormat ConvertFormat(TextureFormatType format)
 	{
 		return MTLPixelFormatDepth32Float_Stencil8;
 	}
+	else if (format == TextureFormatType::Unknown)
+	{
+		return MTLPixelFormatInvalid;
+	}
 
 	return MTLPixelFormatInvalid;
 }
@@ -151,6 +155,10 @@ TextureFormatType ConvertFormat(MTLPixelFormat format)
 	else if (format == MTLPixelFormatDepth32Float_Stencil8)
 	{
 		return TextureFormatType::D32S8;
+	}
+	else if (format == MTLPixelFormatInvalid)
+	{
+		return TextureFormatType::Unknown;
 	}
 
 	return TextureFormatType::Unknown;
