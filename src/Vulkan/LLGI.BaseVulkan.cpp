@@ -70,7 +70,7 @@ static FormatConversionItem s_formatConversionTable[] = {
 	{TextureFormatType::B8G8R8A8_UNORM, VK_FORMAT_B8G8R8A8_UNORM},
 	{TextureFormatType::D32, VK_FORMAT_D32_SFLOAT},
 	{TextureFormatType::D24S8, VK_FORMAT_D24_UNORM_S8_UINT},
-
+	{TextureFormatType::Unknown, VK_FORMAT_UNDEFINED},
 };
 
 VkFormat VulkanHelper::TextureFormatToVkFormat(TextureFormatType format)
