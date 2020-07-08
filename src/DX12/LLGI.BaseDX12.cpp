@@ -105,6 +105,9 @@ DXGI_FORMAT ConvertFormat(TextureFormatType format)
 	if (format == TextureFormatType::D24S8)
 		return DXGI_FORMAT_D24_UNORM_S8_UINT;
 
+	if (format == TextureFormatType::Unknown)
+		return DXGI_FORMAT_UNKNOWN;
+
 	throw "Not implemented";
 	return DXGI_FORMAT_UNKNOWN;
 }
@@ -134,6 +137,9 @@ TextureFormatType ConvertFormat(DXGI_FORMAT format)
 
 	if (format == DXGI_FORMAT_D24_UNORM_S8_UINT)
 		return TextureFormatType::D24S8;
+
+	if (format == DXGI_FORMAT_UNKNOWN)
+		return TextureFormatType::Unknown;
 
 	throw "Not implemented";
 	return TextureFormatType::Unknown;
