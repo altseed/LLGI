@@ -147,7 +147,7 @@ bool PlatformDX12::GenerateSwapBuffer()
 	renderPassHeapDesc.NumDescriptors = SwapBufferCount;
 	renderPassHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	renderPassHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	renderPassHeapDesc.NodeMask = 0;
+	renderPassHeapDesc.NodeMask = DirectX12::GetNodeMask();
 	hr = device->CreateDescriptorHeap(&renderPassHeapDesc, IID_PPV_ARGS(&descriptorHeapRTV));
 	if (FAILED(hr))
 	{
@@ -284,7 +284,7 @@ bool PlatformDX12::Initialize(Window* window, bool waitVSync)
 	D3D12_COMMAND_QUEUE_DESC descCommandQueue;
 	ZeroMemory(&descCommandQueue, sizeof(descCommandQueue));
 	descCommandQueue.Priority = 0;
-	descCommandQueue.NodeMask = 0;
+	descCommandQueue.NodeMask = DirectX12::GetNodeMask();
 	descCommandQueue.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	descCommandQueue.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 	hr = device->CreateCommandQueue(&descCommandQueue, IID_PPV_ARGS(&commandQueue));

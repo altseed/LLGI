@@ -6,12 +6,21 @@
 #include <DirectXMath.h>
 #include <d3d12.h>
 #include <dxgi1_4.h>
+#include <system_error>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 
 namespace LLGI
 {
+
+#define SHOW_DX12_ERROR(x)                                                                                                                 \
+	if (FAILED(x))                                                                                                                         \
+	{                                                                                                                                      \
+		auto msg = (std::string("Error : ") + std::string(__FILE__) + " : " + std::to_string(__LINE__) + std::string(" : ") +              \
+					std::system_category().message(hr));                                                                                   \
+		::LLGI::Log(::LLGI::LogType::Error, msg.c_str());                                                                                  \
+	}
 
 class GraphicsDX12;
 class RenderPassDX12;
@@ -36,6 +45,10 @@ namespace DirectX12
 DXGI_FORMAT GetGeneratedFormat(DXGI_FORMAT format);
 
 DXGI_FORMAT GetShaderResourceViewFormat(DXGI_FORMAT format);
+
+int32_t GetNodeMask();
+
+void SetNodeMask(int nodeMask);
 
 } // namespace DirectX12
 

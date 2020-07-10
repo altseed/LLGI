@@ -22,8 +22,8 @@ ID3D12Resource* CreateResourceBuffer(ID3D12Device* device,
 	heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
 	heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
 
-	heapProps.CreationNodeMask = 1; // TODO: set properly for multi-adaptor.
-	heapProps.VisibleNodeMask = 1;	// TODO: set properly for multi-adaptor.
+	heapProps.CreationNodeMask = DirectX12::GetNodeMask();
+	heapProps.VisibleNodeMask = DirectX12::GetNodeMask();
 
 	if (samplingCount > 1)
 	{
@@ -148,6 +148,8 @@ TextureFormatType ConvertFormat(DXGI_FORMAT format)
 namespace DirectX12
 {
 
+static int nodeMask_ = 1;
+
 DXGI_FORMAT GetGeneratedFormat(DXGI_FORMAT format)
 {
 	if (format == DXGI_FORMAT_D24_UNORM_S8_UINT)
@@ -169,6 +171,10 @@ DXGI_FORMAT GetShaderResourceViewFormat(DXGI_FORMAT format)
 
 	return format;
 }
+
+int32_t GetNodeMask() { return nodeMask_; }
+
+void SetNodeMask(int nodeMask) { nodeMask_ = nodeMask; }
 
 } // namespace DirectX12
 
