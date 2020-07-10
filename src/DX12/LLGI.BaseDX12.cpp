@@ -4,6 +4,51 @@
 namespace LLGI
 {
 
+void DumpDX12_DRED(ID3D12Device* device)
+{
+	if (device->GetDeviceRemovedReason() == S_OK)
+		return;
+#if defined(_DEBUG)
+	ID3D12DeviceRemovedExtendedData* pDred = nullptr;
+	device->QueryInterface(IID_PPV_ARGS(&pDred));
+	D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT DredAutoBreadcrumbsOutput;
+	D3D12_DRED_PAGE_FAULT_OUTPUT DredPageFaultOutput;
+	pDred->GetAutoBreadcrumbsOutput(&DredAutoBreadcrumbsOutput);
+	pDred->GetPageFaultAllocationOutput(&DredPageFaultOutput);
+
+	pDred->Release();
+#endif
+}
+
+#if defined(_DEBUG)
+int32_t dredSettingsCount_ = 0;
+ID3D12DeviceRemovedExtendedDataSettings* pDredSettings = nullptr;
+
+void StartDX12_DRED_Debug()
+{
+	if (dredSettingsCount_ == 0)
+	{
+		D3D12GetDebugInterface(IID_PPV_ARGS(&pDredSettings));
+		pDredSettings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+		pDredSettings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+	}
+	dredSettingsCount_++;
+}
+
+void EndDX12_DRED_Debug()
+{
+	dredSettingsCount_--;
+	if (dredSettingsCount_ == 0)
+	{
+		if (pDredSettings != nullptr)
+		{
+			pDredSettings->Release();
+			pDredSettings = nullptr;
+		}
+	}
+}
+#endif
+
 ID3D12Resource* CreateResourceBuffer(ID3D12Device* device,
 									 D3D12_HEAP_TYPE heapType,
 									 DXGI_FORMAT format,
@@ -35,6 +80,7 @@ ID3D12Resource* CreateResourceBuffer(ID3D12Device* device,
 		HRESULT hr = device->CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, &msaaQualityDesc, sizeof(msaaQualityDesc));
 		if (FAILED(hr))
 		{
+			SHOW_DX12_ERROR(hr, device);
 			return nullptr;
 		}
 	}
@@ -73,6 +119,7 @@ ID3D12Resource* CreateResourceBuffer(ID3D12Device* device,
 
 	if (FAILED(hr))
 	{
+		SHOW_DX12_ERROR(hr, device);
 		SafeRelease(resource);
 		return nullptr;
 	}

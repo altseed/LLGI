@@ -40,6 +40,10 @@ PlatformDX12::PlatformDX12()
 	}
 
 	renderTargets_.fill(nullptr);
+
+	 renderResources_.fill(nullptr);
+	renderTargets_.fill(nullptr);
+	 renderPasses_.fill(nullptr);
 }
 
 PlatformDX12::~PlatformDX12()
@@ -78,6 +82,10 @@ PlatformDX12::~PlatformDX12()
 		CloseHandle(fenceEvent);
 		fenceEvent = nullptr;
 	}
+
+#if defined(_DEBUG)
+	EndDX12_DRED_Debug();
+#endif
 }
 
 void PlatformDX12::ResetSwapBuffer()
@@ -213,6 +221,8 @@ bool PlatformDX12::Initialize(Window* window, bool waitVSync)
 	debug_ = nullptr;
 
 	flagsDXGI |= DXGI_CREATE_FACTORY_DEBUG;
+
+	StartDX12_DRED_Debug();
 #endif
 
 	// factory

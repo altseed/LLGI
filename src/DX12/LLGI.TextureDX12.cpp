@@ -216,21 +216,21 @@ void TextureDX12::Unlock()
 	auto hr = device_->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
 	if (FAILED(hr))
 	{
-		SHOW_DX12_ERROR(hr);
+		SHOW_DX12_ERROR(hr, device_);
 		goto FAILED_EXIT;
 	}
 
 	hr = device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator, NULL, IID_PPV_ARGS(&commandList));
 	if (FAILED(hr))
 	{
-		SHOW_DX12_ERROR(hr);
+		SHOW_DX12_ERROR(hr, device_);
 		goto FAILED_EXIT;
 	}
 
 	hr = device_->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
 	if (FAILED(hr))
 	{
-		SHOW_DX12_ERROR(hr);
+		SHOW_DX12_ERROR(hr, device_);
 		goto FAILED_EXIT;
 	}
 
@@ -241,7 +241,7 @@ void TextureDX12::Unlock()
 	hr = device_->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&commandQueue));
 	if (FAILED(hr))
 	{
-		SHOW_DX12_ERROR(hr);
+		SHOW_DX12_ERROR(hr, device_);
 		goto FAILED_EXIT;
 	}
 

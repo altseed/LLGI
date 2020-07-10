@@ -14,12 +14,21 @@
 namespace LLGI
 {
 
-#define SHOW_DX12_ERROR(x)                                                                                                                 \
+void DumpDX12_DRED(ID3D12Device* device);
+
+#if defined(_DEBUG)
+void StartDX12_DRED_Debug();
+
+void EndDX12_DRED_Debug();
+#endif
+
+#define SHOW_DX12_ERROR(x, device)                                                                                                         \
 	if (FAILED(x))                                                                                                                         \
 	{                                                                                                                                      \
 		auto msg = (std::string("Error : ") + std::string(__FILE__) + " : " + std::to_string(__LINE__) + std::string(" : ") +              \
 					std::system_category().message(hr));                                                                                   \
 		::LLGI::Log(::LLGI::LogType::Error, msg.c_str());                                                                                  \
+		DumpDX12_DRED(device);                                                                                                             \
 	}
 
 class GraphicsDX12;
