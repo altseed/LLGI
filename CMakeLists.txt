@@ -48,19 +48,19 @@ endif()
 
 if((BUILD_VULKAN_COMPILER OR BUILD_TOOL) AND USE_THIRDPARTY_DIRECTORY)
   ExternalProject_Add(
-      ExternalProject_glslang
+      EP_glslang
       SOURCE_DIR      ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/glslang
-      PREFIX          ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Build/glslang
-      INSTALL_DIR     ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang
-      CMAKE_ARGS      -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang
+      PREFIX          ${CMAKE_CURRENT_BINARY_DIR}/EP/Build/glslang
+      INSTALL_DIR     ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang
+      CMAKE_ARGS      -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang
                       -DCMAKE_USER_MAKE_RULES_OVERRIDE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/CFlagOverrides.cmake
                       -DUSE_MSVC_RUNTIME_LIBRARY_DLL=${USE_MSVC_RUNTIME_LIBRARY_DLL}
                       -DCMAKE_DEBUG_POSTFIX=d
                       -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                       -DCMAKE_POSITION_INDEPENDENT_CODE=ON
   )
-  list(APPEND LLGI_THIRDPARTY_INCLUDES ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang/include)
-  list(APPEND LLGI_THIRDPARTY_LIBRARY_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/glslang/lib)
+  list(APPEND LLGI_THIRDPARTY_INCLUDES ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang/include)
+  list(APPEND LLGI_THIRDPARTY_LIBRARY_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang/lib)
   list(
     APPEND LLGI_THIRDPARTY_LIBRARIES
     debug glslangd
@@ -75,11 +75,11 @@ if((BUILD_VULKAN_COMPILER OR BUILD_TOOL) AND USE_THIRDPARTY_DIRECTORY)
     optimized HLSL)
 
   ExternalProject_Add(
-      ExternalProject_SPIRV-Cross
+      EP_SPIRV-Cross
       SOURCE_DIR      ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/SPIRV-Cross
-      PREFIX          ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Build/SPIRV-Cross
-      INSTALL_DIR     ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/SPIRV-Cross
-      CMAKE_ARGS      -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/SPIRV-Cross
+      PREFIX          ${CMAKE_CURRENT_BINARY_DIR}/EP/Build/SPIRV-Cross
+      INSTALL_DIR     ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/SPIRV-Cross
+      CMAKE_ARGS      -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/EP/Install/SPIRV-Cross
                       -DCMAKE_USER_MAKE_RULES_OVERRIDE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/CFlagOverrides.cmake
                       -DUSE_MSVC_RUNTIME_LIBRARY_DLL=${USE_MSVC_RUNTIME_LIBRARY_DLL}
                       -DCMAKE_DEBUG_POSTFIX=d
@@ -90,8 +90,8 @@ if((BUILD_VULKAN_COMPILER OR BUILD_TOOL) AND USE_THIRDPARTY_DIRECTORY)
                       -DCMAKE_POSITION_INDEPENDENT_CODE=ON
   )
 
-  list(APPEND LLGI_THIRDPARTY_INCLUDES ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/SPIRV-Cross/include)
-  list(APPEND LLGI_THIRDPARTY_LIBRARY_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR}/ExternalProjects/Install/SPIRV-Cross/lib)
+  list(APPEND LLGI_THIRDPARTY_INCLUDES ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/SPIRV-Cross/include)
+  list(APPEND LLGI_THIRDPARTY_LIBRARY_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/SPIRV-Cross/lib)
 
   list(
     APPEND LLGI_THIRDPARTY_LIBRARIES

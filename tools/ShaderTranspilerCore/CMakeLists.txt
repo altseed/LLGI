@@ -27,5 +27,5 @@ else()
 endif()
 
 if(USE_THIRDPARTY_DIRECTORY)
-  add_dependencies(ShaderTranspilerCore ExternalProject_glslang ExternalProject_SPIRV-Cross)
+  add_dependencies(ShaderTranspilerCore EP_glslang EP_SPIRV-Cross)
 endif()
