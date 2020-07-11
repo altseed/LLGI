@@ -11,11 +11,15 @@ bool GetIsGPUDebugEnabled() { return isGPUDebugEnabled_; }
 void SetIsGPUDebugEnabled(bool value) { isGPUDebugEnabled_ = value; }
 
 #if defined(_DEBUG)
+
+#ifdef __DRED__
 int32_t dredSettingsCount_ = 0;
 ID3D12DeviceRemovedExtendedDataSettings* pDredSettings = nullptr;
+#endif
 
 void StartDX12_DRED_Debug()
 {
+#ifdef __DRED__
 	if (dredSettingsCount_ == 0)
 	{
 		D3D12GetDebugInterface(IID_PPV_ARGS(&pDredSettings));
@@ -23,10 +27,12 @@ void StartDX12_DRED_Debug()
 		pDredSettings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
 	}
 	dredSettingsCount_++;
+#endif
 }
 
 void EndDX12_DRED_Debug()
 {
+#ifdef __DRED__
 	dredSettingsCount_--;
 	if (dredSettingsCount_ == 0)
 	{
@@ -36,6 +42,7 @@ void EndDX12_DRED_Debug()
 			pDredSettings = nullptr;
 		}
 	}
+#endif
 }
 #endif
 
@@ -44,6 +51,7 @@ void DumpDX12_DRED(ID3D12Device* device)
 	if (device->GetDeviceRemovedReason() == S_OK)
 		return;
 #if defined(_DEBUG)
+#ifdef __DRED__
 	ID3D12DeviceRemovedExtendedData* pDred = nullptr;
 	device->QueryInterface(IID_PPV_ARGS(&pDred));
 	D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT DredAutoBreadcrumbsOutput;
@@ -52,6 +60,7 @@ void DumpDX12_DRED(ID3D12Device* device)
 	pDred->GetPageFaultAllocationOutput(&DredPageFaultOutput);
 
 	pDred->Release();
+#endif
 #endif
 }
 
