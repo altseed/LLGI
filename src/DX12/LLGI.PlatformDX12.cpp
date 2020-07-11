@@ -41,9 +41,9 @@ PlatformDX12::PlatformDX12()
 
 	renderTargets_.fill(nullptr);
 
-	 renderResources_.fill(nullptr);
+	renderResources_.fill(nullptr);
 	renderTargets_.fill(nullptr);
-	 renderPasses_.fill(nullptr);
+	renderPasses_.fill(nullptr);
 }
 
 PlatformDX12::~PlatformDX12()
@@ -208,6 +208,18 @@ bool PlatformDX12::Initialize(Window* window, bool waitVSync)
 	UINT flagsDXGI = 0;
 
 #if defined(_DEBUG)
+
+	if (GetIsGPUDebugEnabled())
+	{
+		ID3D12Debug* spDebugController0;
+		ID3D12Debug1* spDebugController1;
+		D3D12GetDebugInterface(IID_PPV_ARGS(&spDebugController0));
+		spDebugController0->QueryInterface(IID_PPV_ARGS(&spDebugController1));
+		spDebugController1->SetEnableGPUBasedValidation(true);
+		spDebugController0->Release();
+		spDebugController1->Release();
+	}
+
 	ID3D12Debug* debug_ = nullptr;
 	hr = D3D12GetDebugInterface(IID_PPV_ARGS(&debug_));
 	if (FAILED(hr))

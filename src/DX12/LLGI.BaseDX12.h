@@ -14,6 +14,10 @@
 namespace LLGI
 {
 
+bool GetIsGPUDebugEnabled();
+
+void SetIsGPUDebugEnabled(bool value);
+
 void DumpDX12_DRED(ID3D12Device* device);
 
 #if defined(_DEBUG)

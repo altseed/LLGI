@@ -4,21 +4,11 @@
 namespace LLGI
 {
 
-void DumpDX12_DRED(ID3D12Device* device)
-{
-	if (device->GetDeviceRemovedReason() == S_OK)
-		return;
-#if defined(_DEBUG)
-	ID3D12DeviceRemovedExtendedData* pDred = nullptr;
-	device->QueryInterface(IID_PPV_ARGS(&pDred));
-	D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT DredAutoBreadcrumbsOutput;
-	D3D12_DRED_PAGE_FAULT_OUTPUT DredPageFaultOutput;
-	pDred->GetAutoBreadcrumbsOutput(&DredAutoBreadcrumbsOutput);
-	pDred->GetPageFaultAllocationOutput(&DredPageFaultOutput);
+static bool isGPUDebugEnabled_ = false;
 
-	pDred->Release();
-#endif
-}
+bool GetIsGPUDebugEnabled() { return isGPUDebugEnabled_; }
+
+void SetIsGPUDebugEnabled(bool value) { isGPUDebugEnabled_ = value; }
 
 #if defined(_DEBUG)
 int32_t dredSettingsCount_ = 0;
@@ -48,6 +38,22 @@ void EndDX12_DRED_Debug()
 	}
 }
 #endif
+
+void DumpDX12_DRED(ID3D12Device* device)
+{
+	if (device->GetDeviceRemovedReason() == S_OK)
+		return;
+#if defined(_DEBUG)
+	ID3D12DeviceRemovedExtendedData* pDred = nullptr;
+	device->QueryInterface(IID_PPV_ARGS(&pDred));
+	D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT DredAutoBreadcrumbsOutput;
+	D3D12_DRED_PAGE_FAULT_OUTPUT DredPageFaultOutput;
+	pDred->GetAutoBreadcrumbsOutput(&DredAutoBreadcrumbsOutput);
+	pDred->GetPageFaultAllocationOutput(&DredPageFaultOutput);
+
+	pDred->Release();
+#endif
+}
 
 ID3D12Resource* CreateResourceBuffer(ID3D12Device* device,
 									 D3D12_HEAP_TYPE heapType,

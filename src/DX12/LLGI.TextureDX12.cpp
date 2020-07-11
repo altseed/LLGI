@@ -201,10 +201,8 @@ void TextureDX12::Unlock()
 	ID3D12CommandAllocator* commandAllocator = nullptr;
 	ID3D12GraphicsCommandList* commandList = nullptr;
 	ID3D12Fence* fence = nullptr;
-	ID3D12CommandQueue* commandQueue = nullptr;
 
 	D3D12_TEXTURE_COPY_LOCATION src = {}, dst = {};
-	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
 
 	HANDLE event = CreateEvent(0, 0, 0, 0);
 
@@ -234,17 +232,6 @@ void TextureDX12::Unlock()
 		goto FAILED_EXIT;
 	}
 
-	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-	queueDesc.NodeMask = DirectX12::GetNodeMask();
-
-	hr = device_->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&commandQueue));
-	if (FAILED(hr))
-	{
-		SHOW_DX12_ERROR(hr, device_);
-		goto FAILED_EXIT;
-	}
-
 	src.pResource = buffer_;
 	src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
 	src.PlacedFootprint = footprint_;
@@ -261,17 +248,16 @@ void TextureDX12::Unlock()
 
 	commandList->Close();
 	ID3D12CommandList* list[] = {commandList};
-	commandQueue->ExecuteCommandLists(1, list);
+	commandQueue_->ExecuteCommandLists(1, list);
 
 	// TODO optimize it
-	hr = commandQueue->Signal(fence, 1);
+	hr = commandQueue_->Signal(fence, 1);
 	fence->SetEventOnCompletion(1, event);
 	WaitForSingleObject(event, INFINITE);
 
 FAILED_EXIT:
 	SafeRelease(commandList);
 	SafeRelease(commandAllocator);
-	SafeRelease(commandQueue);
 	SafeRelease(fence);
 
 	if (event != nullptr)
