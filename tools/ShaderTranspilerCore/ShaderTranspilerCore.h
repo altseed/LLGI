@@ -64,7 +64,10 @@ public:
 
 class SPIRVToHLSLTranspiler : public SPIRVTranspiler
 {
+	int32_t shaderModel_ = 30;
+
 public:
+	SPIRVToHLSLTranspiler(int32_t shaderModel = 40);
 	bool Transpile(const std::shared_ptr<SPIRV>& spirv) override;
 };
 
@@ -78,9 +81,14 @@ class SPIRVToGLSLTranspiler : public SPIRVTranspiler
 {
 private:
 	bool isVulkanMode_ = false;
+	bool isES_ = false;
+	int32_t shaderModel_ = 420;
 
 public:
-	SPIRVToGLSLTranspiler(bool isVulkanMode) : isVulkanMode_(isVulkanMode) {}
+	SPIRVToGLSLTranspiler(bool isVulkanMode, int32_t shaderModel = 420, bool isES = false)
+		: isVulkanMode_(isVulkanMode), shaderModel_(shaderModel), isES_(isES)
+	{
+	}
 
 	bool Transpile(const std::shared_ptr<SPIRV>& spirv) override;
 };
@@ -98,12 +106,14 @@ public:
 class SPIRVGenerator
 {
 private:
+	std::function<std::vector<std::uint8_t>(std::string)> onLoad_;
+
 public:
-	SPIRVGenerator();
+	SPIRVGenerator(const std::function<std::vector<std::uint8_t>(std::string)>& onLoad);
 
 	~SPIRVGenerator();
 
-	std::shared_ptr<SPIRV> Generate(const char* code, ShaderStageType shaderStageType, bool isYInverted);
+	std::shared_ptr<SPIRV> Generate(const char* path, const char* code, ShaderStageType shaderStageType, bool isYInverted);
 };
 
 } // namespace LLGI

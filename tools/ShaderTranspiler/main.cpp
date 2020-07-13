@@ -27,7 +27,10 @@ int main(int argc, char* argv[])
 	LLGI::ShaderStageType shaderStage = LLGI::ShaderStageType::Max;
 	OutputType outputType = OutputType::Max;
 	std::string code;
+	std::string inputPath;
 	std::string outputPath;
+	bool isES = false;
+	bool shaderModel = 0;
 
 	for (size_t i = 0; i < args.size();)
 	{
@@ -61,6 +64,16 @@ int main(int argc, char* argv[])
 			outputType = OutputType::VULKAN_GLSL;
 			i += 1;
 		}
+		else if (args[i] == "--sm")
+		{
+			shaderModel = atoi(args[i + 1].c_str());
+			i += 2;
+		}
+		else if (args[i] == "--es")
+		{
+			isES = true;
+			i += 1;
+		}
 		else if (args[i] == "--input")
 		{
 			if (i == args.size() - 1)
@@ -76,7 +89,7 @@ int main(int argc, char* argv[])
 				return 0;
 			}
 			code = std::string((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
-
+			inputPath = args[i + 1];
 			i += 2;
 		}
 		else if (args[i] == "--output")
@@ -115,9 +128,23 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
-	auto generator = std::make_shared<LLGI::SPIRVGenerator>();
+	auto loadFunc = [](std::string s) -> std::vector<uint8_t> {
+		std::ifstream file(s, std::ios_base::binary | std::ios_base::ate);
+		if (file)
+		{
+			std::vector<uint8_t> ret;
+			auto size = (int)file.tellg();
+			ret.resize(size);
+			file.seekg(0, file.beg);
+			file.read((char*)ret.data(), size);
+			return ret;
+		}
+		return std::vector<uint8_t>();
+	};
 
-	auto spirv = generator->Generate(code.c_str(), shaderStage, outputType == OutputType::VULKAN_GLSL);
+	auto generator = std::make_shared<LLGI::SPIRVGenerator>(loadFunc);
+
+	auto spirv = generator->Generate(inputPath.c_str(), code.c_str(), shaderStage, outputType == OutputType::VULKAN_GLSL);
 
 	if (spirv->GetData().size() == 0)
 	{
@@ -129,7 +156,7 @@ int main(int argc, char* argv[])
 
 	if (outputType == OutputType::GLSL)
 	{
-		transpiler = std::make_shared<LLGI::SPIRVToGLSLTranspiler>(false);
+		transpiler = std::make_shared<LLGI::SPIRVToGLSLTranspiler>(false, shaderModel != 0 ? shaderModel : 420, isES);
 	}
 	else if (outputType == OutputType::VULKAN_GLSL)
 	{
@@ -141,7 +168,7 @@ int main(int argc, char* argv[])
 	}
 	else if (outputType == OutputType::HLSL)
 	{
-		transpiler = std::make_shared<LLGI::SPIRVToHLSLTranspiler>();
+		transpiler = std::make_shared<LLGI::SPIRVToHLSLTranspiler>(shaderModel != 0 ? shaderModel : 40);
 	}
 
 	if (!transpiler->Transpile(spirv))

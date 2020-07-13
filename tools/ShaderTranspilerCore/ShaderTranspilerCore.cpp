@@ -4,6 +4,7 @@
 #include <glslang/Public/ShaderLang.h>
 #include <glslang/SPIRV/GlslangToSpv.h>
 
+#include <functional>
 #include <iostream>
 #include <spirv_cross/spirv_cross.hpp>
 #include <spirv_cross/spirv_glsl.hpp>
@@ -15,6 +16,109 @@
 
 namespace LLGI
 {
+
+// https://stackoverflow.com/questions/8518743/get-directory-from-file-path-c/14631366
+std::string dirnameOf(const std::string& fname)
+{
+	size_t pos = fname.find_last_of("\\/");
+	return (std::string::npos == pos) ? "" : fname.substr(0, pos);
+}
+
+// Based on https://github.com/KhronosGroup/glslang/blob/master/StandAlone/DirStackFileIncluder.h
+
+// Default include class for normal include convention of search backward
+// through the stack of active include paths (for nested includes).
+// Can be overridden to customize.
+class DirStackFileIncluder : public glslang::TShader::Includer
+{
+public:
+	DirStackFileIncluder(const std::function<std::vector<std::uint8_t>(std::string)>& onLoad)
+		: onLoad_(onLoad), externalLocalDirectoryCount(0)
+	{
+	}
+
+	virtual IncludeResult* includeLocal(const char* headerName, const char* includerName, size_t inclusionDepth) override
+	{
+		return readLocalPath(headerName, includerName, (int)inclusionDepth);
+	}
+
+	virtual IncludeResult* includeSystem(const char* headerName, const char* /*includerName*/, size_t /*inclusionDepth*/) override
+	{
+		return readSystemPath(headerName);
+	}
+
+	// Externally set directories. E.g., from a command-line -I<dir>.
+	//  - Most-recently pushed are checked first.
+	//  - All these are checked after the parse-time stack of local directories
+	//    is checked.
+	//  - This only applies to the "local" form of #include.
+	//  - Makes its own copy of the path.
+	virtual void pushExternalLocalDirectory(const std::string& dir)
+	{
+		directoryStack.push_back(dir);
+		externalLocalDirectoryCount = (int)directoryStack.size();
+	}
+
+	virtual void releaseInclude(IncludeResult* result) override
+	{
+		if (result != nullptr)
+		{
+			delete[] static_cast<tUserDataElement*>(result->userData);
+			delete result;
+		}
+	}
+
+	virtual ~DirStackFileIncluder() override {}
+
+protected:
+	typedef char tUserDataElement;
+	std::vector<std::string> directoryStack;
+	int externalLocalDirectoryCount;
+	std::function<std::vector<std::uint8_t>(std::string)> onLoad_;
+
+	// Search for a valid "local" path based on combining the stack of include
+	// directories and the nominal name of the header.
+	virtual IncludeResult* readLocalPath(const char* headerName, const char* includerName, int depth)
+	{
+		// Discard popped include directories, and
+		// initialize when at parse-time first level.
+		directoryStack.resize(depth + externalLocalDirectoryCount);
+		if (depth == 1)
+			directoryStack.back() = getDirectory(includerName);
+
+		// Find a directory that works, using a reverse search of the include stack.
+		for (auto it = directoryStack.rbegin(); it != directoryStack.rend(); ++it)
+		{
+			std::string path = *it + '/' + headerName;
+			std::replace(path.begin(), path.end(), '\\', '/');
+
+			auto file = onLoad_(path);
+
+			if (file.size() > 0)
+			{
+				directoryStack.push_back(getDirectory(path));
+
+				char* content = new tUserDataElement[file.size()];
+				memcpy(content, file.data(), file.size());
+				return new IncludeResult(path, content, file.size(), content);
+			}
+		}
+
+		return nullptr;
+	}
+
+	// Search for a valid <system> path.
+	// Not implemented yet; returning nullptr signals failure to find.
+	virtual IncludeResult* readSystemPath(const char* /*headerName*/) const { return nullptr; }
+
+	// If no path markers, return current working directory.
+	// Otherwise, strip file name and return path leading up to it.
+	virtual std::string getDirectory(const std::string path) const
+	{
+		size_t last = path.find_last_of("/\\");
+		return last == std::string::npos ? "." : path.substr(0, last);
+	}
+};
 
 EShLanguage GetGlslangShaderStage(ShaderStageType type)
 {
@@ -39,16 +143,30 @@ std::string SPIRVTranspiler::GetErrorCode() const { return errorCode_; }
 
 std::string SPIRVTranspiler::GetCode() const { return code_; }
 
+SPIRVToHLSLTranspiler::SPIRVToHLSLTranspiler(int32_t shaderModel) : shaderModel_(shaderModel) {}
+
 bool SPIRVToHLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 {
 	spirv_cross::CompilerHLSL compiler(spirv->GetData());
+
+	if (shaderModel_ <= 30)
+	{
+		compiler.build_combined_image_samplers();
+
+		spirv_cross::ShaderResources resources = compiler.get_shader_resources();
+
+		for (auto& remap : compiler.get_combined_image_samplers())
+		{
+			compiler.set_name(remap.combined_id, spirv_cross::join("Sampler_", compiler.get_name(remap.sampler_id)));
+		}
+	}
 
 	spirv_cross::CompilerGLSL::Options options;
 	options.separate_shader_objects = true;
 	compiler.set_common_options(options);
 
 	spirv_cross::CompilerHLSL::Options targetOptions;
-	targetOptions.shader_model = 40;
+	targetOptions.shader_model = shaderModel_;
 	compiler.set_hlsl_options(targetOptions);
 
 	code_ = compiler.compile();
@@ -59,8 +177,6 @@ bool SPIRVToHLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 bool SPIRVToMSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 {
 	spirv_cross::CompilerMSL compiler(spirv->GetData());
-
-	spirv_cross::ShaderResources resources = compiler.get_shader_resources();
 
 	spirv_cross::CompilerGLSL::Options options;
 	compiler.set_common_options(options);
@@ -87,6 +203,14 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 	if (isVulkanMode_)
 	{
 		binding_offset += 1;
+	}
+
+	if (shaderModel_ < 320)
+	{
+		for (auto& remap : compiler.get_combined_image_samplers())
+		{
+			compiler.set_name(remap.combined_id, spirv_cross::join("Sampler_", compiler.get_name(remap.sampler_id)));
+		}
 	}
 
 	for (auto& resource : resources.sampled_images)
@@ -131,9 +255,15 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 	}
 
 	spirv_cross::CompilerGLSL::Options options;
-	options.version = 420;
-	options.enable_420pack_extension = true;
+	options.version = shaderModel_;
+	if (shaderModel_ >= 420)
+	{
+		options.enable_420pack_extension = true;
+	}
+
 	options.vulkan_semantics = isVulkanMode_;
+	options.es = isES_;
+
 	compiler.set_common_options(options);
 
 	code_ = compiler.compile();
@@ -196,11 +326,14 @@ bool SPIRVReflection::Transpile(const std::shared_ptr<SPIRV>& spirv)
 	return true;
 }
 
-SPIRVGenerator::SPIRVGenerator() { glslang::InitializeProcess(); }
+SPIRVGenerator::SPIRVGenerator(const std::function<std::vector<std::uint8_t>(std::string)>& onLoad) : onLoad_(onLoad)
+{
+	glslang::InitializeProcess();
+}
 
 SPIRVGenerator::~SPIRVGenerator() { glslang::FinalizeProcess(); }
 
-std::shared_ptr<SPIRV> SPIRVGenerator::Generate(const char* code, ShaderStageType shaderStageType, bool isYInverted)
+std::shared_ptr<SPIRV> SPIRVGenerator::Generate(const char* path, const char* code, ShaderStageType shaderStageType, bool isYInverted)
 {
 	std::string codeStr(code);
 	glslang::TProgram program;
@@ -228,8 +361,11 @@ std::shared_ptr<SPIRV> SPIRVGenerator::Generate(const char* code, ShaderStageTyp
 	messages = (EShMessages)(messages | EShMsgReadHlsl);
 	messages = (EShMessages)(messages | EShOptFull);
 
+	DirStackFileIncluder includer(onLoad_);
+	includer.pushExternalLocalDirectory(dirnameOf(path));
+
 	int defaultVersion = 110;
-	if (!shader.parse(&resources, defaultVersion, false, messages))
+	if (!shader.parse(&resources, defaultVersion, false, messages, includer))
 	{
 		return std::make_shared<SPIRV>(shader.getInfoLog());
 	}
