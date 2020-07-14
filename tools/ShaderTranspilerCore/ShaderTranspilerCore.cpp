@@ -143,13 +143,13 @@ std::string SPIRVTranspiler::GetErrorCode() const { return errorCode_; }
 
 std::string SPIRVTranspiler::GetCode() const { return code_; }
 
-SPIRVToHLSLTranspiler::SPIRVToHLSLTranspiler(int32_t shaderModel) : shaderModel_(shaderModel) {}
+SPIRVToHLSLTranspiler::SPIRVToHLSLTranspiler(int32_t shaderModel, bool isDX12) : shaderModel_(shaderModel), isDX12_(isDX12) {}
 
 bool SPIRVToHLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 {
 	spirv_cross::CompilerHLSL compiler(spirv->GetData());
 
-	if (shaderModel_ <= 30)
+	if (shaderModel_ <= 30 && !isDX12_)
 	{
 		compiler.build_combined_image_samplers();
 
@@ -158,6 +158,25 @@ bool SPIRVToHLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 		for (auto& remap : compiler.get_combined_image_samplers())
 		{
 			compiler.set_name(remap.combined_id, spirv_cross::join("Sampler_", compiler.get_name(remap.sampler_id)));
+		}
+	}
+
+	if (isDX12_)
+	{
+		spirv_cross::ShaderResources resources = compiler.get_shader_resources();
+
+		for (auto& resource : resources.uniform_buffers)
+		{
+			if (spirv->GetStage() == ShaderStageType::Vertex)
+			{
+
+				compiler.set_decoration(resource.id, spv::DecorationBinding, 0);
+			}
+			else if (spirv->GetStage() == ShaderStageType::Pixel)
+			{
+
+				compiler.set_decoration(resource.id, spv::DecorationBinding, 1);
+			}
 		}
 	}
 

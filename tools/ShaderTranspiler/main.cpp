@@ -30,6 +30,7 @@ int main(int argc, char* argv[])
 	std::string inputPath;
 	std::string outputPath;
 	bool isES = false;
+	bool isDX12 = false;
 	bool shaderModel = 0;
 
 	for (size_t i = 0; i < args.size();)
@@ -72,6 +73,11 @@ int main(int argc, char* argv[])
 		else if (args[i] == "--es")
 		{
 			isES = true;
+			i += 1;
+		}
+		else if (args[i] == "--dx12")
+		{
+			isDX12 = true;
 			i += 1;
 		}
 		else if (args[i] == "--input")
@@ -168,7 +174,7 @@ int main(int argc, char* argv[])
 	}
 	else if (outputType == OutputType::HLSL)
 	{
-		transpiler = std::make_shared<LLGI::SPIRVToHLSLTranspiler>(shaderModel != 0 ? shaderModel : 40);
+		transpiler = std::make_shared<LLGI::SPIRVToHLSLTranspiler>(shaderModel != 0 ? shaderModel : 40, isDX12);
 	}
 
 	if (!transpiler->Transpile(spirv))

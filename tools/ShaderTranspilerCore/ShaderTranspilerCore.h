@@ -65,9 +65,10 @@ public:
 class SPIRVToHLSLTranspiler : public SPIRVTranspiler
 {
 	int32_t shaderModel_ = 30;
+	bool isDX12_ = false;
 
 public:
-	SPIRVToHLSLTranspiler(int32_t shaderModel = 40);
+	SPIRVToHLSLTranspiler(int32_t shaderModel = 40, bool isDX12 =false);
 	bool Transpile(const std::shared_ptr<SPIRV>& spirv) override;
 };
 
