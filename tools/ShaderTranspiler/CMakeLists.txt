@@ -6,6 +6,8 @@ add_executable(
   main.cpp
 )
 
+target_compile_features(ShaderTranspiler PUBLIC cxx_std_11)
+
 target_include_directories(
   ShaderTranspiler
   PUBLIC
