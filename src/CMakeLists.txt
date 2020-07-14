@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.0.0)
 project(LLGI)
 
 file(GLOB files *.h *.cpp)
@@ -33,34 +33,34 @@ if(APPLE)
   list(APPEND files ${files_metal})
 endif()
 
-foreach(FILE ${files}) 
-    # Get the directory of the source file
-    get_filename_component(PARENT_DIR "${FILE}" DIRECTORY)
+foreach(FILE ${files})
+  # Get the directory of the source file
+  get_filename_component(PARENT_DIR "${FILE}" DIRECTORY)
 
-    # Remove common directory prefix to make the group
-    string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}" "" GROUP "${PARENT_DIR}")
+  # Remove common directory prefix to make the group
+  string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}" "" GROUP "${PARENT_DIR}")
 
-    # Make sure we are using windows slashes
-    string(REPLACE "/" "\\" GROUP "${GROUP}")
-    
-    if("${GROUP}" STREQUAL "")
-        set(GROUP "Base")
-    endif()
-    
-    # Group into "Source Files" and "Header Files"
-    if ("${FILE}" MATCHES ".*\\.cpp")
-       set(GROUP "${GROUP}")
-    elseif("${FILE}" MATCHES ".*\\.c")
-       set(GROUP "${GROUP}")
-    elseif("${FILE}" MATCHES ".*\\.cxx")
-       set(GROUP "${GROUP}")
-    elseif("${FILE}" MATCHES ".*\\.h")
-       set(GROUP "${GROUP}")
-    elseif("${FILE}" MATCHES ".*\\.mm")
-       set(GROUP "${GROUP}")
-    endif()
+  # Make sure we are using windows slashes
+  string(REPLACE "/" "\\" GROUP "${GROUP}")
 
-    source_group("${GROUP}" FILES "${FILE}")
+  if("${GROUP}" STREQUAL "")
+    set(GROUP "Base")
+  endif()
+
+  # Group into "Source Files" and "Header Files"
+  if("${FILE}" MATCHES ".*\\.cpp")
+    set(GROUP "${GROUP}")
+  elseif("${FILE}" MATCHES ".*\\.c")
+    set(GROUP "${GROUP}")
+  elseif("${FILE}" MATCHES ".*\\.cxx")
+    set(GROUP "${GROUP}")
+  elseif("${FILE}" MATCHES ".*\\.h")
+    set(GROUP "${GROUP}")
+  elseif("${FILE}" MATCHES ".*\\.mm")
+    set(GROUP "${GROUP}")
+  endif()
+
+  source_group("${GROUP}" FILES "${FILE}")
 endforeach()
 
 add_library(LLGI STATIC ${files})
@@ -83,24 +83,26 @@ endif()
 if(WIN32)
 elseif(APPLE)
 else()
-  set_property(TARGET LLGI PROPERTY POSITION_INDEPENDENT_CODE TRUE) 
+  set_property(TARGET LLGI PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 endif()
 
 #--------------------
 # Install
 
 install(
-    TARGETS ${PROJECT_NAME}
-    EXPORT ${PROJECT_NAME}-export
-    INCLUDES DESTINATION include/LLGI
-    PUBLIC_HEADER DESTINATION include/LLGI
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib)
+  TARGETS ${PROJECT_NAME}
+  EXPORT ${PROJECT_NAME}-export
+  INCLUDES DESTINATION include/LLGI
+  PUBLIC_HEADER DESTINATION include/LLGI
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+)
 
 install(
-    EXPORT ${PROJECT_NAME}-export
-    FILE ${PROJECT_NAME}-config.cmake
-    DESTINATION lib/cmake
-    EXPORT_LINK_INTERFACE_LIBRARIES)
+  EXPORT ${PROJECT_NAME}-export
+  FILE ${PROJECT_NAME}-config.cmake
+  DESTINATION lib/cmake
+  EXPORT_LINK_INTERFACE_LIBRARIES
+)
 
 clang_format(LLGI)
