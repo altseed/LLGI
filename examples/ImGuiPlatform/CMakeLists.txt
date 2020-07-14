@@ -33,6 +33,8 @@ add_library(
   ${srcs}
 )
 
+target_compile_features(ImGuiPlatform PUBLIC cxx_std_11)
+
 target_include_directories(
   ImGuiPlatform
   PRIVATE
