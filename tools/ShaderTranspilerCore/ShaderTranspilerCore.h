@@ -68,7 +68,7 @@ class SPIRVToHLSLTranspiler : public SPIRVTranspiler
 	bool isDX12_ = false;
 
 public:
-	SPIRVToHLSLTranspiler(int32_t shaderModel = 40, bool isDX12 =false);
+	SPIRVToHLSLTranspiler(int32_t shaderModel = 40, bool isDX12 = false);
 	bool Transpile(const std::shared_ptr<SPIRV>& spirv) override;
 };
 
@@ -104,6 +104,17 @@ public:
 	std::vector<ShaderReflectionTexture> Textures;
 };
 
+class SPIRVGeneratorMacro
+{
+public:
+	std::string Name;
+	std::string Content;
+
+	SPIRVGeneratorMacro() {}
+
+	SPIRVGeneratorMacro(const char* name, const char* content) : Name(name), Content(content) {}
+};
+
 class SPIRVGenerator
 {
 private:
@@ -114,7 +125,7 @@ public:
 
 	~SPIRVGenerator();
 
-	std::shared_ptr<SPIRV> Generate(const char* path, const char* code, ShaderStageType shaderStageType, bool isYInverted);
+	std::shared_ptr<SPIRV> Generate(const char* path, const char* code, std::vector<SPIRVGeneratorMacro> macros, ShaderStageType shaderStageType, bool isYInverted);
 };
 
 } // namespace LLGI

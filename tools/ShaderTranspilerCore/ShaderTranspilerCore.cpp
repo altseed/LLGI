@@ -179,6 +179,24 @@ bool SPIRVToHLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 			}
 		}
 	}
+	else
+	{
+		spirv_cross::ShaderResources resources = compiler.get_shader_resources();
+
+		for (auto& resource : resources.uniform_buffers)
+		{
+			if (spirv->GetStage() == ShaderStageType::Vertex)
+			{
+
+				compiler.set_decoration(resource.id, spv::DecorationBinding, 0);
+			}
+			else if (spirv->GetStage() == ShaderStageType::Pixel)
+			{
+
+				compiler.set_decoration(resource.id, spv::DecorationBinding, 0);
+			}
+		}
+	}
 
 	spirv_cross::CompilerGLSL::Options options;
 	options.separate_shader_objects = true;
@@ -352,7 +370,8 @@ SPIRVGenerator::SPIRVGenerator(const std::function<std::vector<std::uint8_t>(std
 
 SPIRVGenerator::~SPIRVGenerator() { glslang::FinalizeProcess(); }
 
-std::shared_ptr<SPIRV> SPIRVGenerator::Generate(const char* path, const char* code, ShaderStageType shaderStageType, bool isYInverted)
+std::shared_ptr<SPIRV> SPIRVGenerator::Generate(
+	const char* path, const char* code, std::vector<SPIRVGeneratorMacro> macros, ShaderStageType shaderStageType, bool isYInverted)
 {
 	std::string codeStr(code);
 	glslang::TProgram program;
@@ -372,6 +391,15 @@ std::shared_ptr<SPIRV> SPIRVGenerator::Generate(const char* path, const char* co
 	const char* shaderStrings[1];
 	shaderStrings[0] = codeStr.c_str();
 	shader.setEntryPoint("main");
+
+	std::string macro;
+
+	for (auto& m : macros)
+	{
+		macro += "#define " + m.Name + " " + m.Content + "\n";
+	}
+
+	shader.setPreamble(macro.c_str());
 	// shader->setAutoMapBindings(true);
 	// shader->setAutoMapLocations(true);
 

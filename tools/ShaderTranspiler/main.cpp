@@ -32,6 +32,7 @@ int main(int argc, char* argv[])
 	bool isES = false;
 	bool isDX12 = false;
 	bool shaderModel = 0;
+	std::vector<LLGI::SPIRVGeneratorMacro> macros;
 
 	for (size_t i = 0; i < args.size();)
 	{
@@ -64,6 +65,11 @@ int main(int argc, char* argv[])
 		{
 			outputType = OutputType::VULKAN_GLSL;
 			i += 1;
+		}
+		else if (args[i] == "-D")
+		{
+			macros.push_back(LLGI::SPIRVGeneratorMacro(args[i + 1].c_str(), args[i + 2].c_str()));
+			i += 3;
 		}
 		else if (args[i] == "--sm")
 		{
@@ -150,7 +156,7 @@ int main(int argc, char* argv[])
 
 	auto generator = std::make_shared<LLGI::SPIRVGenerator>(loadFunc);
 
-	auto spirv = generator->Generate(inputPath.c_str(), code.c_str(), shaderStage, outputType == OutputType::VULKAN_GLSL);
+	auto spirv = generator->Generate(inputPath.c_str(), code.c_str(), macros, shaderStage, outputType == OutputType::VULKAN_GLSL);
 
 	if (spirv->GetData().size() == 0)
 	{
