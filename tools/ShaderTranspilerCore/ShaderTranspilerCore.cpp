@@ -17,6 +17,19 @@
 namespace LLGI
 {
 
+std::string Replace(std::string target, std::string from_, std::string to_)
+{
+	std::string::size_type Pos(target.find(from_));
+
+	while (Pos != std::string::npos)
+	{
+		target.replace(Pos, from_.length(), to_);
+		Pos = target.find(from_, Pos + to_.length());
+	}
+
+	return target;
+}
+
 // https://stackoverflow.com/questions/8518743/get-directory-from-file-path-c/14631366
 std::string dirnameOf(const std::string& fname)
 {
@@ -149,6 +162,8 @@ bool SPIRVToHLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 {
 	spirv_cross::CompilerHLSL compiler(spirv->GetData());
 
+	std::vector<std::pair<std::string, int>> remapping;
+
 	if (shaderModel_ <= 30 && !isDX12_)
 	{
 		compiler.build_combined_image_samplers();
@@ -157,7 +172,12 @@ bool SPIRVToHLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 
 		for (auto& remap : compiler.get_combined_image_samplers())
 		{
-			compiler.set_name(remap.combined_id, spirv_cross::join("Sampler_", compiler.get_name(remap.sampler_id)));
+			auto name = spirv_cross::join("Sampler_", compiler.get_name(remap.sampler_id));
+			compiler.set_name(remap.combined_id, name);
+
+			auto location = compiler.get_decoration(remap.sampler_id, spv::DecorationBinding);
+
+			remapping.push_back(std::make_pair(name, location));
 		}
 	}
 
@@ -207,6 +227,16 @@ bool SPIRVToHLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 	compiler.set_hlsl_options(targetOptions);
 
 	code_ = compiler.compile();
+
+	if (shaderModel_ <= 30)
+	{
+		for (auto nr : remapping)
+		{
+			auto src = "uniform sampler2D " + nr.first;
+			auto dst = src + " : register(s" + std::to_string(nr.second) + ")";
+			code_ = Replace(code_, src, dst);
+		}
+	}
 
 	return true;
 }

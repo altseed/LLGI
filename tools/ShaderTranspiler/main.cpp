@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
 	std::string outputPath;
 	bool isES = false;
 	bool isDX12 = false;
-	bool shaderModel = 0;
+	int shaderModel = 0;
 	std::vector<LLGI::SPIRVGeneratorMacro> macros;
 
 	for (size_t i = 0; i < args.size();)
@@ -183,6 +183,7 @@ int main(int argc, char* argv[])
 		transpiler = std::make_shared<LLGI::SPIRVToHLSLTranspiler>(shaderModel != 0 ? shaderModel : 40, isDX12);
 	}
 
+	std::cout << inputPath << " -> " << outputPath << " ShaderModel=" << shaderModel << std::endl;
 	if (!transpiler->Transpile(spirv))
 	{
 		std::cout << transpiler->GetErrorCode() << std::endl;
