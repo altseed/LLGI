@@ -236,6 +236,8 @@ bool SPIRVToHLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 			auto dst = src + " : register(s" + std::to_string(nr.second) + ")";
 			code_ = Replace(code_, src, dst);
 		}
+
+		code_ = Replace(code_, "packoffset", "register");
 	}
 
 	return true;
