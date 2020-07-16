@@ -339,7 +339,7 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 									 indexType:indexType
 								   indexBuffer:ib->GetImpl()->buffer
 							 indexBufferOffset:ib_.offset
-                            instanceCount:instanceCount];
+								 instanceCount:instanceCount];
 
 	CommandList::Draw(primitiveCount, instanceCount);
 }
