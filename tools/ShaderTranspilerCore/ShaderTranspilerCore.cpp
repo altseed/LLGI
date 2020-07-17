@@ -274,7 +274,7 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 		binding_offset += 1;
 	}
 
-	if (shaderModel_ <= 330 && !isVulkanMode_)
+	if (shaderModel_ <= 330 || isVulkanMode_)
 	{
 		for (auto& remap : compiler.get_combined_image_samplers())
 		{
@@ -286,6 +286,7 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 
 	for (auto& resource : resources.sampled_images)
 	{
+		auto b = compiler.get_decoration(resource.id, spv::DecorationBinding);
 		auto i = compiler.get_decoration(resource.id, spv::DecorationLocation);
 		compiler.set_decoration(resource.id, spv::DecorationBinding, binding_offset + i);
 
