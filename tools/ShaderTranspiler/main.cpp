@@ -31,6 +31,7 @@ int main(int argc, char* argv[])
 	std::string outputPath;
 	bool isES = false;
 	bool isDX12 = false;
+	bool plain = false;
 	int shaderModel = 0;
 	std::vector<LLGI::SPIRVGeneratorMacro> macros;
 
@@ -79,6 +80,11 @@ int main(int argc, char* argv[])
 		else if (args[i] == "--es")
 		{
 			isES = true;
+			i += 1;
+		}
+		else if (args[i] == "--plain")
+		{
+			plain = true;
 			i += 1;
 		}
 		else if (args[i] == "--dx12")
@@ -168,7 +174,7 @@ int main(int argc, char* argv[])
 
 	if (outputType == OutputType::GLSL)
 	{
-		transpiler = std::make_shared<LLGI::SPIRVToGLSLTranspiler>(false, shaderModel != 0 ? shaderModel : 420, isES);
+		transpiler = std::make_shared<LLGI::SPIRVToGLSLTranspiler>(false, shaderModel != 0 ? shaderModel : 420, isES, plain);
 	}
 	else if (outputType == OutputType::VULKAN_GLSL)
 	{

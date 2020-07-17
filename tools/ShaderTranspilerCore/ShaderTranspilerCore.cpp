@@ -274,11 +274,13 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 		binding_offset += 1;
 	}
 
-	if (shaderModel_ < 320)
+	if (shaderModel_ <= 330 && !isVulkanMode_)
 	{
 		for (auto& remap : compiler.get_combined_image_samplers())
 		{
 			compiler.set_name(remap.combined_id, spirv_cross::join("Sampler_", compiler.get_name(remap.sampler_id)));
+			auto location = compiler.get_decoration(remap.sampler_id, spv::DecorationBinding);
+			compiler.set_decoration(remap.combined_id, spv::DecorationLocation, location);
 		}
 	}
 
@@ -303,8 +305,22 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 		}
 	}
 
+	int cb_ind = 0;
+
 	for (auto& resource : resources.uniform_buffers)
 	{
+		if (!isVulkanMode_)
+		{
+			if (spirv->GetStage() == ShaderStageType::Vertex)
+			{
+				compiler.set_name(resource.id, "CBVS" + std::to_string(cb_ind));
+			}
+			else if (spirv->GetStage() == ShaderStageType::Pixel)
+			{
+				compiler.set_name(resource.id, "CBPS" + std::to_string(cb_ind));
+			}
+		}
+
 		if (spirv->GetStage() == ShaderStageType::Vertex)
 		{
 			if (isVulkanMode_)
@@ -321,6 +337,8 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 				compiler.set_decoration(resource.id, spv::DecorationDescriptorSet, 1);
 			}
 		}
+
+		cb_ind++;
 	}
 
 	spirv_cross::CompilerGLSL::Options options;
@@ -330,12 +348,25 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 		options.enable_420pack_extension = true;
 	}
 
+	options.emit_uniform_buffer_as_plain_uniforms = plain_;
 	options.vulkan_semantics = isVulkanMode_;
 	options.es = isES_;
 
 	compiler.set_common_options(options);
 
 	code_ = compiler.compile();
+
+	if (!isVulkanMode_ && shaderModel_ <= 330)
+	{
+		if (spirv->GetStage() == ShaderStageType::Vertex)
+		{
+			code_ = Replace(code_, "_entryPointOutput_", "_VSPS_");
+		}
+		else if (spirv->GetStage() == ShaderStageType::Pixel)
+		{
+			code_ = Replace(code_, "Input_", "_VSPS_");
+		}
+	}
 
 	return true;
 }
