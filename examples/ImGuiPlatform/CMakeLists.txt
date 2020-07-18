@@ -1,53 +1,59 @@
-
-set(srcs
-    ImGuiPlatform.h
+set(
+  srcs
+  ImGuiPlatform.h
 )
 
 if(WIN32)
-    list(APPEND
-        srcs
-        ImGuiPlatformDX12.cpp)
+  list(
+    APPEND
+    srcs
+    ImGuiPlatformDX12.cpp
+  )
 endif()
 
 if(APPLE)
-    list(APPEND
-        srcs
-        ImGuiPlatformMetal.mm)
+  list(
+    APPEND
+    srcs
+    ImGuiPlatformMetal.mm
+  )
 endif()
 
 if(BUILD_VULKAN)
-    list(APPEND
-        srcs
-        ImGuiPlatformVulkan.cpp)
+  list(
+    APPEND
+    srcs
+    ImGuiPlatformVulkan.cpp
+  )
 endif()
 
 add_library(
-    ImGuiPlatform
-    STATIC
-    ${srcs}
+  ImGuiPlatform
+  STATIC
+  ${srcs}
 )
 
 target_include_directories(
-    ImGuiPlatform
-    PRIVATE
-    ../../src/
-    ../thirdparty/imgui/
+  ImGuiPlatform
+  PRIVATE
+  ../../src/
+  ../thirdparty/imgui/
 )
 
 target_include_directories(
-    ImGuiPlatform
-    PUBLIC
-    ./
+  ImGuiPlatform
+  PUBLIC
+  ./
 )
 
 target_link_libraries(
-    ImGuiPlatform
-    PRIVATE
-    LLGI
-    imgui
+  ImGuiPlatform
+  PRIVATE
+  LLGI
+  imgui
 )
 
 if(BUILD_VULKAN)
-    find_package(Vulkan REQUIRED)
-    target_include_directories(ImGuiPlatform PRIVATE ${Vulkan_INCLUDE_DIRS})
+  find_package(Vulkan REQUIRED)
+  target_include_directories(ImGuiPlatform PRIVATE ${Vulkan_INCLUDE_DIRS})
 endif()

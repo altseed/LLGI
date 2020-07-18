@@ -11,7 +11,7 @@ function(clang_format target)
       "${target}_format-with-clang-format"
       COMMAND "${CLANG_FORMAT_EXE}" -i -style=file ${MY_SOURCES}
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      )
+    )
     add_dependencies(${target} "${target}_format-with-clang-format")
   endif()
 endfunction()

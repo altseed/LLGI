@@ -1,4 +1,3 @@
-
 file(GLOB files *.h *.cpp)
 
 add_executable(LLGI_Test ${files})
@@ -19,9 +18,9 @@ endif()
 target_include_directories(LLGI_Test PUBLIC ../src/)
 
 target_link_libraries(
-	LLGI_Test
+  LLGI_Test
   PRIVATE
-	LLGI
+  LLGI
 )
 
 target_link_directories(LLGI_Test PRIVATE ${LLGI_THIRDPARTY_LIBRARY_DIRECTORIES})
@@ -29,22 +28,24 @@ target_link_libraries(LLGI_Test PRIVATE ${LLGI_THIRDPARTY_LIBRARIES})
 
 if(MSVC)
   target_link_libraries(
-	  LLGI_Test
+    LLGI_Test
     PRIVATE
   )
 elseif(APPLE)
   target_link_libraries(
-    LLGI_Test 
-    PRIVATE)
+    LLGI_Test
+    PRIVATE
+  )
 else()
-	find_package(Threads REQUIRED)
-	target_link_libraries(
-    LLGI_Test 
-    PRIVATE 
+  find_package(Threads REQUIRED)
+  target_link_libraries(
+    LLGI_Test
+    PRIVATE
     ${CMAKE_THREAD_LIBS_INIT}
     pthread
     X11
-    X11-xcb)
+    X11-xcb
+  )
 endif()
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)

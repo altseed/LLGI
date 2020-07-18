@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.0.0)
 project(ShaderTranspilerCore)
 
 add_library(
@@ -15,14 +15,15 @@ target_link_libraries(ShaderTranspilerCore PUBLIC ${LLGI_THIRDPARTY_LIBRARIES})
 target_link_directories(ShaderTranspilerCore PUBLIC ${LLGI_THIRDPARTY_LIBRARY_DIRECTORIES})
 
 if(WIN32)
-# None
+  # None
 else()
   find_package(Threads REQUIRED)
   target_link_libraries(
     ShaderTranspilerCore
     PUBLIC
     ${CMAKE_THREAD_LIBS_INIT}
-    pthread)
+    pthread
+  )
 
 endif()
 
