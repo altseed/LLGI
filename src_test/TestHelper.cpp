@@ -122,7 +122,7 @@ std::vector<uint8_t> TestHelper::CreateDummyTextureData(LLGI::Vec2I size, LLGI::
 void TestHelper::WriteDummyTexture(LLGI::Texture* texture)
 {
 	auto dummyData = CreateDummyTextureData(texture->GetSizeAs2D(), texture->GetFormat());
-	
+
 	auto data = texture->Lock();
 	memcpy(data, dummyData.data(), dummyData.size());
 	texture->Unlock();

@@ -28,8 +28,8 @@ void test_simple_rectangle(LLGI::DeviceType deviceType, SingleRectangleTestMode 
 	{
 		if (deviceType == LLGI::DeviceType::Default)
 			return;
-        if (deviceType == LLGI::DeviceType::Vulkan)
-            return;
+		if (deviceType == LLGI::DeviceType::Vulkan)
+			return;
 	}
 
 	int count = 0;
@@ -768,7 +768,7 @@ void main()
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
 		commandList->BeginRenderPass(renderPass);
-		//commandList->SetConstantBuffer(dummy_cb.get(), LLGI::ShaderStageType::Vertex);
+		// commandList->SetConstantBuffer(dummy_cb.get(), LLGI::ShaderStageType::Vertex);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get());
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());

@@ -46,15 +46,15 @@ public:
 
 		return (HINSTANCE)GetModuleHandle(0);
 #endif
-        
+
 #ifdef __APPLE__
-        return glfwGetCocoaWindow(window_);
+		return glfwGetCocoaWindow(window_);
 #endif
 
 #ifdef __linux__
 		if (index == 0)
 		{
-        	return glfwGetX11Display();
+			return glfwGetX11Display();
 		}
 
 		return reinterpret_cast<void*>(glfwGetX11Window(window_));
