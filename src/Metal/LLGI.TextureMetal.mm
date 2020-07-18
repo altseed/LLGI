@@ -194,6 +194,21 @@ bool TextureMetal::Initialize(GraphicsMetal* owner, const DepthTextureInitializa
 	return true;
 }
 
+bool TextureMetal::Initialize(GraphicsMetal* owner, id<MTLTexture> externalTexture)
+{
+    if(externalTexture == nullptr)
+    {
+        return false;
+    }
+    
+    type_ = TextureType::Color;
+    impl->Reset(externalTexture);
+
+    format_ = ConvertFormat(impl->texture.pixelFormat);
+    
+    return true;
+}
+
 void TextureMetal::Reset(id<MTLTexture> nativeTexture)
 {
 	type_ = TextureType::Screen;

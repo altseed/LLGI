@@ -281,7 +281,17 @@ Texture* GraphicsMetal::CreateDepthTexture(const DepthTextureInitializationParam
 	return nullptr;
 }
 
-Texture* GraphicsMetal::CreateTexture(uint64_t id) { throw "Not inplemented"; }
+Texture* GraphicsMetal::CreateTexture(uint64_t texid) {
+
+    auto o = new TextureMetal();
+    if (o->Initialize(this,id<MTLTexture>(texid)))
+    {
+        return o;
+    }
+
+    SafeRelease(o);
+    return nullptr;
+}
 
 RenderPassPipelineState* GraphicsMetal::CreateRenderPassPipelineState(RenderPass* renderPass)
 {
