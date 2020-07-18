@@ -66,7 +66,8 @@ endforeach()
 add_library(LLGI STATIC ${files})
 
 file(GLOB LOCAL_HEADERS *.h)
-set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${LOCAL_HEADERS}")
+set_target_properties(LLGI PROPERTIES PUBLIC_HEADER "${LOCAL_HEADERS}")
+target_compile_features(LLGI PUBLIC cxx_std_11)
 
 if(BUILD_VULKAN)
   find_package(Vulkan REQUIRED)
@@ -90,8 +91,8 @@ endif()
 # Install
 
 install(
-  TARGETS ${PROJECT_NAME}
-  EXPORT ${PROJECT_NAME}-export
+  TARGETS LLGI
+  EXPORT LLGI-export
   INCLUDES DESTINATION include/LLGI
   PUBLIC_HEADER DESTINATION include/LLGI
   ARCHIVE DESTINATION lib
@@ -99,8 +100,8 @@ install(
 )
 
 install(
-  EXPORT ${PROJECT_NAME}-export
-  FILE ${PROJECT_NAME}-config.cmake
+  EXPORT LLGI-export
+  FILE LLGI-config.cmake
   DESTINATION lib/cmake
   EXPORT_LINK_INTERFACE_LIBRARIES
 )
