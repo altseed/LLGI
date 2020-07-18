@@ -321,16 +321,25 @@ RenderPassPipelineState* GraphicsMetal::CreateRenderPassPipelineState(const Rend
 
 std::vector<uint8_t> GraphicsMetal::CaptureRenderTarget(Texture* renderTarget)
 {
-	auto metalTexture = static_cast<TextureMetal*>(renderTarget);
-	auto width = metalTexture->GetSizeAs2D().X;
-	auto height = metalTexture->GetSizeAs2D().Y;
-	auto impl = metalTexture->GetImpl();
+    auto metalTexture = static_cast<TextureMetal*>(renderTarget);
+    auto width = metalTexture->GetSizeAs2D().X;
+    auto height = metalTexture->GetSizeAs2D().Y;
+    auto impl = metalTexture->GetImpl();
 
+    id<MTLCommandQueue> queue             = [this->impl->device newCommandQueue];
+    id<MTLCommandBuffer> commandBuffer    = [queue commandBuffer];
+    id<MTLBlitCommandEncoder> blitEncoder = [commandBuffer blitCommandEncoder];
+    [blitEncoder synchronizeTexture:impl->texture slice:0 level:0];
+    [blitEncoder endEncoding];
+    
+    [commandBuffer commit];
+    [commandBuffer waitUntilCompleted];
+    
     NSUInteger bytesPerPixel = GetTextureMemorySize(renderTarget->GetFormat(), renderTarget->GetSizeAs2D()) / width / height;
     NSUInteger imageByteCount = width * height * bytesPerPixel;
 	NSUInteger bytesPerRow = width * bytesPerPixel;
 	MTLRegion region = MTLRegionMake2D(0, 0, width, height);
-
+    
 	std::vector<uint8_t> data;
 	data.resize(imageByteCount);
 	[impl->texture getBytes:data.data() bytesPerRow:bytesPerRow fromRegion:region mipmapLevel:0];
