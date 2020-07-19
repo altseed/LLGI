@@ -10,44 +10,31 @@ if(APPLE)
   find_library(METALKIT_LIBRARY MetalKit)
   find_library(QUARTZ_CORE_LIBRARY QuartzCore)
 
-  set(EXTRA_LIBS ${COCOA_LIBRARY} ${APPKIT_LIBRARY} ${METAL_LIBRARY} ${METALKIT_LIBRARY} ${QUARTZ_CORE_LIBRARY})
+  set(EXTRA_LIBS ${COCOA_LIBRARY} ${APPKIT_LIBRARY} ${METAL_LIBRARY}
+                 ${METALKIT_LIBRARY} ${QUARTZ_CORE_LIBRARY})
   target_link_libraries(LLGI_Test PRIVATE ${EXTRA_LIBS})
 
 endif()
 
 target_include_directories(LLGI_Test PUBLIC ../src/)
 
-target_link_libraries(
-  LLGI_Test
-  PRIVATE
-  LLGI
-)
+target_link_libraries(LLGI_Test PRIVATE LLGI)
 
-target_link_directories(LLGI_Test PRIVATE ${LLGI_THIRDPARTY_LIBRARY_DIRECTORIES})
+target_link_directories(LLGI_Test PRIVATE
+                        ${LLGI_THIRDPARTY_LIBRARY_DIRECTORIES})
 target_link_libraries(LLGI_Test PRIVATE ${LLGI_THIRDPARTY_LIBRARIES})
 
 if(MSVC)
-  target_link_libraries(
-    LLGI_Test
-    PRIVATE
-  )
+  target_link_libraries(LLGI_Test PRIVATE)
 elseif(APPLE)
-  target_link_libraries(
-    LLGI_Test
-    PRIVATE
-  )
+  target_link_libraries(LLGI_Test PRIVATE)
 else()
   find_package(Threads REQUIRED)
-  target_link_libraries(
-    LLGI_Test
-    PRIVATE
-    ${CMAKE_THREAD_LIBS_INIT}
-    pthread
-    X11
-    X11-xcb
-  )
+  target_link_libraries(LLGI_Test PRIVATE ${CMAKE_THREAD_LIBS_INIT} pthread X11
+                                          X11-xcb)
 endif()
 
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)
 
 clang_format(LLGI_Test)

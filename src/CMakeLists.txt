@@ -82,28 +82,29 @@ if(BUILD_VULKAN)
 endif()
 
 if(WIN32)
+
 elseif(APPLE)
+
 else()
   set_property(TARGET LLGI PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 endif()
 
-#--------------------
+# --------------------
 # Install
 
 install(
   TARGETS LLGI
   EXPORT LLGI-export
-  INCLUDES DESTINATION include/LLGI
+  INCLUDES
+  DESTINATION include/LLGI
   PUBLIC_HEADER DESTINATION include/LLGI
   ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-)
+  LIBRARY DESTINATION lib)
 
 install(
   EXPORT LLGI-export
   FILE LLGI-config.cmake
   DESTINATION lib/cmake
-  EXPORT_LINK_INTERFACE_LIBRARIES
-)
+  EXPORT_LINK_INTERFACE_LIBRARIES)
 
 clang_format(LLGI)
