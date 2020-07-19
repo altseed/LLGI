@@ -8,9 +8,13 @@ add_library(
 target_compile_features(ShaderTranspilerCore PUBLIC cxx_std_11)
 target_include_directories(ShaderTranspilerCore
                            PUBLIC ${LLGI_THIRDPARTY_INCLUDES})
-target_link_libraries(ShaderTranspilerCore PUBLIC ${LLGI_THIRDPARTY_LIBRARIES})
-target_link_directories(ShaderTranspilerCore PUBLIC
-                        ${LLGI_THIRDPARTY_LIBRARY_DIRECTORIES})
+
+if(USE_THIRDPARTY_DIRECTORY)
+  target_link_libraries(ShaderTranspilerCore
+                        PUBLIC ${LLGI_THIRDPARTY_LIBRARIES})
+  target_link_directories(ShaderTranspilerCore PUBLIC
+                          ${LLGI_THIRDPARTY_LIBRARY_DIRECTORIES})
+endif()
 
 if(WIN32)
   # None

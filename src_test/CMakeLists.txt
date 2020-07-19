@@ -20,9 +20,13 @@ target_include_directories(LLGI_Test PUBLIC ../src/)
 
 target_link_libraries(LLGI_Test PRIVATE LLGI)
 
-target_link_directories(LLGI_Test PRIVATE
-                        ${LLGI_THIRDPARTY_LIBRARY_DIRECTORIES})
-target_link_libraries(LLGI_Test PRIVATE ${LLGI_THIRDPARTY_LIBRARIES})
+if(USE_THIRDPARTY_DIRECTORY)
+
+  target_link_directories(LLGI_Test PRIVATE
+                          ${LLGI_THIRDPARTY_LIBRARY_DIRECTORIES})
+  target_link_libraries(LLGI_Test PRIVATE ${LLGI_THIRDPARTY_LIBRARIES})
+
+endif()
 
 if(MSVC)
   target_link_libraries(LLGI_Test PRIVATE)

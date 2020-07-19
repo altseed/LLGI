@@ -18,6 +18,11 @@ option(BUILD_TOOL "build tools" OFF)
 option(USE_THIRDPARTY_DIRECTORY
        "Whether do it compile with third party directory" ON)
 
+option(GLSLANG_INCLUDE_DIR "A directory which contains glslang includes" "")
+option(SPIRVCROSS_INCLUDE_DIR "A directory which contains SPIRV-Cross includes"
+       "")
+option(USE_CREATE_COMPILER_FUNCTION "Whether LLGI::CreateCompiler is used." ON)
+
 if(LINUX)
   set(BUILD_VULKAN TRUE)
 endif()
@@ -42,103 +47,112 @@ if(MSVC)
   endif()
 endif()
 
-if((BUILD_VULKAN_COMPILER OR BUILD_TOOL) AND USE_THIRDPARTY_DIRECTORY)
-  ExternalProject_Add(
-    EP_glslang
-    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/glslang
-    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/EP/Build/glslang
-    INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang
-    CMAKE_ARGS
-      -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang
-      -DCMAKE_USER_MAKE_RULES_OVERRIDE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/CFlagOverrides.cmake
-      -DUSE_MSVC_RUNTIME_LIBRARY_DLL=${USE_MSVC_RUNTIME_LIBRARY_DLL}
-      -DCMAKE_DEBUG_POSTFIX=d
-      -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-      -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
-  list(APPEND LLGI_THIRDPARTY_INCLUDES
-       ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang/include)
-  list(APPEND LLGI_THIRDPARTY_LIBRARY_DIRECTORIES
-       ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang/lib)
-  list(
-    APPEND
-    LLGI_THIRDPARTY_LIBRARIES
-    debug
-    glslangd
-    debug
-    SPIRVd
-    debug
-    OGLCompilerd
-    debug
-    OSDependentd
-    debug
-    HLSLd
-    optimized
-    glslang
-    optimized
-    SPIRV
-    optimized
-    OGLCompiler
-    optimized
-    OSDependent
-    optimized
-    HLSL)
+if(BUILD_VULKAN_COMPILER OR BUILD_TOOL)
+  if(USE_THIRDPARTY_DIRECTORY)
 
-  ExternalProject_Add(
-    EP_SPIRV-Cross
-    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/SPIRV-Cross
-    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/EP/Build/SPIRV-Cross
-    INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/SPIRV-Cross
-    CMAKE_ARGS
-      -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/EP/Install/SPIRV-Cross
-      -DCMAKE_USER_MAKE_RULES_OVERRIDE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/CFlagOverrides.cmake
-      -DUSE_MSVC_RUNTIME_LIBRARY_DLL=${USE_MSVC_RUNTIME_LIBRARY_DLL}
-      -DCMAKE_DEBUG_POSTFIX=d
-      -DBUILD_SHARED_LIBS=OFF
-      -DSPIRV_CROSS_ENABLE_TESTS=OFF
-      -DSPIRV_CROSS_FORCE_PIC=ON
-      -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-      -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
+    ExternalProject_Add(
+      EP_glslang
+      SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/glslang
+      PREFIX ${CMAKE_CURRENT_BINARY_DIR}/EP/Build/glslang
+      INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang
+      CMAKE_ARGS
+        -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang
+        -DCMAKE_USER_MAKE_RULES_OVERRIDE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/CFlagOverrides.cmake
+        -DUSE_MSVC_RUNTIME_LIBRARY_DLL=${USE_MSVC_RUNTIME_LIBRARY_DLL}
+        -DCMAKE_DEBUG_POSTFIX=d
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
+    list(APPEND LLGI_THIRDPARTY_INCLUDES
+         ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang/include)
+    list(APPEND LLGI_THIRDPARTY_LIBRARY_DIRECTORIES
+         ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang/lib)
+    list(
+      APPEND
+      LLGI_THIRDPARTY_LIBRARIES
+      debug
+      glslangd
+      debug
+      SPIRVd
+      debug
+      OGLCompilerd
+      debug
+      OSDependentd
+      debug
+      HLSLd
+      optimized
+      glslang
+      optimized
+      SPIRV
+      optimized
+      OGLCompiler
+      optimized
+      OSDependent
+      optimized
+      HLSL)
 
-  list(APPEND LLGI_THIRDPARTY_INCLUDES
-       ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/SPIRV-Cross/include)
-  list(APPEND LLGI_THIRDPARTY_LIBRARY_DIRECTORIES
-       ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/SPIRV-Cross/lib)
+    ExternalProject_Add(
+      EP_SPIRV-Cross
+      SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/SPIRV-Cross
+      PREFIX ${CMAKE_CURRENT_BINARY_DIR}/EP/Build/SPIRV-Cross
+      INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/SPIRV-Cross
+      CMAKE_ARGS
+        -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/EP/Install/SPIRV-Cross
+        -DCMAKE_USER_MAKE_RULES_OVERRIDE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/CFlagOverrides.cmake
+        -DUSE_MSVC_RUNTIME_LIBRARY_DLL=${USE_MSVC_RUNTIME_LIBRARY_DLL}
+        -DCMAKE_DEBUG_POSTFIX=d
+        -DBUILD_SHARED_LIBS=OFF
+        -DSPIRV_CROSS_ENABLE_TESTS=OFF
+        -DSPIRV_CROSS_FORCE_PIC=ON
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
 
-  list(
-    APPEND
-    LLGI_THIRDPARTY_LIBRARIES
-    debug
-    spirv-cross-cored
-    debug
-    spirv-cross-cd
-    debug
-    spirv-cross-cppd
-    debug
-    spirv-cross-hlsld
-    debug
-    spirv-cross-glsld
-    debug
-    spirv-cross-msld
-    debug
-    spirv-cross-reflectd
-    debug
-    spirv-cross-utild
-    optimized
-    spirv-cross-core
-    optimized
-    spirv-cross-c
-    optimized
-    spirv-cross-cpp
-    optimized
-    spirv-cross-hlsl
-    optimized
-    spirv-cross-glsl
-    optimized
-    spirv-cross-msl
-    optimized
-    spirv-cross-reflect
-    optimized
-    spirv-cross-util)
+    list(APPEND LLGI_THIRDPARTY_INCLUDES
+         ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/SPIRV-Cross/include)
+    list(APPEND LLGI_THIRDPARTY_LIBRARY_DIRECTORIES
+         ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/SPIRV-Cross/lib)
+
+    list(
+      APPEND
+      LLGI_THIRDPARTY_LIBRARIES
+      debug
+      spirv-cross-cored
+      debug
+      spirv-cross-cd
+      debug
+      spirv-cross-cppd
+      debug
+      spirv-cross-hlsld
+      debug
+      spirv-cross-glsld
+      debug
+      spirv-cross-msld
+      debug
+      spirv-cross-reflectd
+      debug
+      spirv-cross-utild
+      optimized
+      spirv-cross-core
+      optimized
+      spirv-cross-c
+      optimized
+      spirv-cross-cpp
+      optimized
+      spirv-cross-hlsl
+      optimized
+      spirv-cross-glsl
+      optimized
+      spirv-cross-msl
+      optimized
+      spirv-cross-reflect
+      optimized
+      spirv-cross-util)
+
+  else()
+    list(APPEND LLGI_THIRDPARTY_INCLUDES ${GLSLANG_INCLUDE_DIR}
+         ${SPIRVCROSS_INCLUDE_DIR})
+
+  endif()
+
 endif()
 
 if(BUILD_VULKAN)
@@ -164,4 +178,8 @@ endif()
 
 if(BUILD_TOOL)
   add_subdirectory("tools")
+endif()
+
+if(USE_CREATE_COMPILER_FUNCTION)
+  target_compile_definitions(LLGI PRIVATE ENABLE_CREATE_COMPILER)
 endif()
