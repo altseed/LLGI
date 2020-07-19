@@ -179,7 +179,7 @@ bool PlatformVulkan::CreateDepthBuffer(Vec2I windowSize)
 
 void PlatformVulkan::CreateRenderPass()
 {
-	renderPasses.clear();
+	renderPasses_.clear();
 	for (size_t i = 0; i < swapBuffers.size(); i++)
 	{
 		auto renderPass = new RenderPassVulkan(renderPassPipelineStateCache_, vkDevice_, nullptr);
@@ -189,7 +189,7 @@ void PlatformVulkan::CreateRenderPass()
 
 		renderPass->Initialize(const_cast<const TextureVulkan**>(textures.data()), 1, depthStencilTexture_, nullptr, nullptr);
 
-		renderPasses.emplace_back(CreateSharedPtr(renderPass));
+		renderPasses_.emplace_back(CreateSharedPtr(renderPass));
 	}
 }
 
@@ -267,7 +267,7 @@ void PlatformVulkan::Reset()
 			swapchain_ = nullptr;
 		}
 
-		renderPasses.clear();
+		renderPasses_.clear();
 
 		if (vkPipelineCache_)
 		{
@@ -739,7 +739,7 @@ Graphics* PlatformVulkan::CreateGraphics()
 
 RenderPass* PlatformVulkan::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared)
 {
-	auto currentRenderPass = renderPasses[frameIndex];
+	auto currentRenderPass = renderPasses_[frameIndex];
 
 	currentRenderPass->SetClearColor(clearColor);
 	currentRenderPass->SetIsColorCleared(isColorCleared);
