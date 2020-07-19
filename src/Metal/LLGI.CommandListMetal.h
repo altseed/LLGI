@@ -11,7 +11,7 @@ class IndexBuffer;
 
 struct CommandListMetalPlatformRenderPassContext
 {
-    id<MTLRenderCommandEncoder> RenderEncoder = nullptr;
+	id<MTLRenderCommandEncoder> RenderEncoder = nullptr;
 };
 
 class CommandListMetal : public CommandList
@@ -38,12 +38,12 @@ public:
 
 	void WaitUntilCompleted() override;
 
-    bool BeginWithPlatform(void* platformContextPtr) override;
-    void EndWithPlatform() override;
-    
-    bool BeginRenderPassWithPlatformPtr(void* platformPtr) override;
-    bool EndRenderPassWithPlatformPtr() override;
-    
+	bool BeginWithPlatform(void* platformContextPtr) override;
+	void EndWithPlatform() override;
+
+	bool BeginRenderPassWithPlatformPtr(void* platformPtr) override;
+	bool EndRenderPassWithPlatformPtr() override;
+
 	CommandList_Impl* GetImpl();
 };
 

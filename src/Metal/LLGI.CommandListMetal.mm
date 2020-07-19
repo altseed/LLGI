@@ -119,23 +119,23 @@ void CommandList_Impl::EndRenderPass()
 
 void CommandList_Impl::BeginRenderPassWithPlatform(id<MTLRenderCommandEncoder> renderEncoder)
 {
-    this->renderEncoder = renderEncoder;
+	this->renderEncoder = renderEncoder;
 
-    if (this->renderEncoder)
-    {
-        [this->renderEncoder retain];
-        [this->renderEncoder waitForFence:fence beforeStages:MTLRenderStageVertex];
-    }
+	if (this->renderEncoder)
+	{
+		[this->renderEncoder retain];
+		[this->renderEncoder waitForFence:fence beforeStages:MTLRenderStageVertex];
+	}
 }
 
 void CommandList_Impl::EndRenderPassWithPlatform()
 {
-    if (renderEncoder)
-    {
-        [renderEncoder updateFence:fence afterStages:MTLRenderStageFragment];
-        [renderEncoder release];
-        renderEncoder = nullptr;
-    }
+	if (renderEncoder)
+	{
+		[renderEncoder updateFence:fence afterStages:MTLRenderStageFragment];
+		[renderEncoder release];
+		renderEncoder = nullptr;
+	}
 }
 
 void CommandList_Impl::SetScissor(int32_t x, int32_t y, int32_t width, int32_t height)
@@ -360,7 +360,7 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 									 indexType:indexType
 								   indexBuffer:ib->GetImpl()->buffer
 							 indexBufferOffset:ib_.offset
-                            instanceCount:instanceCount];
+								 instanceCount:instanceCount];
 
 	CommandList::Draw(primitiveCount, instanceCount);
 }
@@ -425,28 +425,22 @@ void CommandListMetal::WaitUntilCompleted()
 	}
 }
 
-bool CommandListMetal::BeginWithPlatform(void* platformContextPtr)
-{
-    return CommandList::BeginWithPlatform(platformContextPtr);
-}
+bool CommandListMetal::BeginWithPlatform(void* platformContextPtr) { return CommandList::BeginWithPlatform(platformContextPtr); }
 
-void CommandListMetal::EndWithPlatform()
-{
-    CommandList::EndWithPlatform();
-}
+void CommandListMetal::EndWithPlatform() { CommandList::EndWithPlatform(); }
 
 bool CommandListMetal::BeginRenderPassWithPlatformPtr(void* platformPtr)
 {
-    auto pp = reinterpret_cast<CommandListMetalPlatformRenderPassContext*>(platformPtr);
-    
-    impl->BeginRenderPassWithPlatform(pp->RenderEncoder);
-    return CommandList::BeginRenderPassWithPlatformPtr(platformPtr);
+	auto pp = reinterpret_cast<CommandListMetalPlatformRenderPassContext*>(platformPtr);
+
+	impl->BeginRenderPassWithPlatform(pp->RenderEncoder);
+	return CommandList::BeginRenderPassWithPlatformPtr(platformPtr);
 }
 
 bool CommandListMetal::EndRenderPassWithPlatformPtr()
 {
-    impl->EndRenderPassWithPlatform();
-    return CommandList::EndRenderPassWithPlatformPtr();
+	impl->EndRenderPassWithPlatform();
+	return CommandList::EndRenderPassWithPlatformPtr();
 }
 
 CommandList_Impl* CommandListMetal::GetImpl() { return impl; }

@@ -273,12 +273,13 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 			{
 				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save("RenderPass.CopyTexture.png");
 			}
-            
-            if (mode == RenderPassTestMode::None)
-            {
-                auto data2 = graphics->CaptureRenderTarget(renderTexture);
-                Bitmap2D(data2, renderTexture->GetSizeAs2D().X, renderTexture->GetSizeAs2D().Y, renderTexture->GetFormat()).Save("RenderPass.Basic.2.png");
-            }
+
+			if (mode == RenderPassTestMode::None)
+			{
+				auto data2 = graphics->CaptureRenderTarget(renderTexture);
+				Bitmap2D(data2, renderTexture->GetSizeAs2D().X, renderTexture->GetSizeAs2D().Y, renderTexture->GetFormat())
+					.Save("RenderPass.Basic.2.png");
+			}
 		}
 	}
 

@@ -126,7 +126,8 @@ public:
 
 	~SPIRVGenerator();
 
-	std::shared_ptr<SPIRV> Generate(const char* path, const char* code, std::vector<SPIRVGeneratorMacro> macros, ShaderStageType shaderStageType, bool isYInverted);
+	std::shared_ptr<SPIRV> Generate(
+		const char* path, const char* code, std::vector<SPIRVGeneratorMacro> macros, ShaderStageType shaderStageType, bool isYInverted);
 };
 
 } // namespace LLGI
