@@ -14,7 +14,7 @@ class ImguiPlatformMetal : public ImguiPlatform
 public:
 	ImguiPlatformMetal(LLGI::Graphics* g);
 
-	virtual ~ImguiPlatformMetal();
+	~ImguiPlatformMetal() override;
 
 	void NewFrame(LLGI::RenderPass* renderPass) override;
 
