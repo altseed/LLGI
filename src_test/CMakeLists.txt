@@ -20,7 +20,7 @@ target_include_directories(LLGI_Test PUBLIC ../src/)
 
 target_link_libraries(LLGI_Test PRIVATE LLGI)
 
-if(USE_THIRDPARTY_DIRECTORY)
+if(BUILD_VULKAN_COMPILER AND USE_THIRDPARTY_DIRECTORY)
 
   target_link_directories(LLGI_Test PRIVATE
                           ${LLGI_THIRDPARTY_LIBRARY_DIRECTORIES})

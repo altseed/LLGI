@@ -16,10 +16,10 @@ struct InternalTestHelper
 	std::map<std::string, std::function<void(LLGI::DeviceType)>> tests;
 };
 
-std::shared_ptr<InternalTestHelper> internalTestHelper = std::shared_ptr<InternalTestHelper>(new InternalTestHelper());
-
 std::shared_ptr<InternalTestHelper> TestHelper::Get()
 {
+	// HACK for initializing order in some platforms
+	static std::shared_ptr<InternalTestHelper> internalTestHelper;
 
 	if (internalTestHelper == nullptr)
 	{
@@ -178,7 +178,11 @@ std::vector<uint8_t> TestHelper::LoadDataWithoutRoot(const char* path)
 	return ret;
 }
 
-void TestHelper::SetRoot(const char* root) { Get()->Root = root; }
+void TestHelper::SetRoot(const char* root)
+{
+	auto helper = Get();
+	helper->Root = root;
+}
 
 void TestHelper::CreateRectangle(LLGI::Graphics* graphics,
 								 const LLGI::Vec3F& ul,
@@ -300,9 +304,11 @@ void TestHelper::CreateShader(LLGI::Graphics* graphics,
 
 void TestHelper::Run(const ParsedArgs& args)
 {
+	auto helper = Get();
+
 	if (args.Filter == "")
 	{
-		for (auto& f : Get()->tests)
+		for (auto& f : helper->tests)
 		{
 			std::cout << "Start : " << f.first << std::endl;
 			f.second(args.Device);
@@ -323,13 +329,20 @@ void TestHelper::Run(const ParsedArgs& args)
 	}
 }
 
-void TestHelper::RegisterTest(const char* name, std::function<void(LLGI::DeviceType)> func) { Get()->tests[name] = func; }
+void TestHelper::RegisterTest(const char* name, std::function<void(LLGI::DeviceType)> func)
+{
+	auto helper = Get();
+	helper->tests[name] = func;
+}
 
 bool TestHelper::GetIsCaptureRequired() { return Get()->IsCaptureRequired; }
 
 void TestHelper::SetIsCaptureRequired(bool required) { Get()->IsCaptureRequired = required; }
 
-void TestHelper::Dispose() { internalTestHelper.reset(); }
+void TestHelper::Dispose()
+{
+	//	internalTestHelper.reset();
+}
 
 Bitmap2D::Bitmap2D(const std::vector<uint8_t>& data, int width, int height, LLGI::TextureFormatType format)
 	: data_(data), width_(width), height_(height)
