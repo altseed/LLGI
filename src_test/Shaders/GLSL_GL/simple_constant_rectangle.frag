@@ -7,7 +7,10 @@ struct PS_INPUT
     vec4 Color;
 };
 
-layout(set = 1, binding = 1) uniform sampler2D Sampler_smp;
+layout(binding = 1, std140) uniform CB
+{
+    vec4 offset;
+} CBPS0;
 
 layout(location = 0) in vec2 input_UV;
 layout(location = 1) in vec4 input_Color;
@@ -15,8 +18,8 @@ layout(location = 0) out vec4 _entryPointOutput;
 
 vec4 _main(PS_INPUT _input)
 {
-    vec4 c = texture(Sampler_smp, _input.UV);
-    c.w = 255.0;
+    vec4 c = _input.Color + CBPS0.offset;
+    c.w = 1.0;
     return c;
 }
 

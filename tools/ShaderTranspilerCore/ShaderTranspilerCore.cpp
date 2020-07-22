@@ -347,6 +347,11 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 	if (shaderModel_ >= 420)
 	{
 		options.enable_420pack_extension = true;
+
+		if (!isVulkanMode_)
+		{
+			options.separate_shader_objects = true;
+		}
 	}
 
 	options.emit_uniform_buffer_as_plain_uniforms = plain_;

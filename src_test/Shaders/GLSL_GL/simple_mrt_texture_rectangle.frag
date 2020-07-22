@@ -13,7 +13,7 @@ struct PS_OUTPUT
     vec4 Color1;
 };
 
-layout(set = 1, binding = 1) uniform sampler2D Sampler_smp;
+layout(binding = 0) uniform sampler2D _90;
 
 layout(location = 0) in vec2 input_UV;
 layout(location = 1) in vec4 input_Color;
@@ -22,7 +22,7 @@ layout(location = 1) out vec4 _entryPointOutput_Color1;
 
 PS_OUTPUT _main(PS_INPUT _input)
 {
-    vec4 c = texture(Sampler_smp, _input.UV);
+    vec4 c = texture(_90, _input.UV);
     c.w = 255.0;
     PS_OUTPUT _output;
     _output.Color0 = c;
