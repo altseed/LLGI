@@ -16,7 +16,7 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 {
 	if (mode == DepthStencilTestMode::DepthAsTexture)
 	{
-		if (deviceType != LLGI::DeviceType::DirectX12)
+		if (deviceType != LLGI::DeviceType::DirectX12 && deviceType != LLGI::DeviceType::Default)
 			return;
 	}
 
