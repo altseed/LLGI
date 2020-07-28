@@ -404,7 +404,12 @@ bool PipelineStateVulkan::Compile()
 	graphicsPipelineInfo.layout = pipelineLayout_;
 
 	// setup a pipeline
-	pipeline_ = static_cast<vk::Pipeline>(graphics_->GetDevice().createGraphicsPipeline(nullptr, graphicsPipelineInfo));
+	const auto pipeline = graphics_->GetDevice().createGraphicsPipeline(nullptr, graphicsPipelineInfo);
+	if (pipeline.result != vk::Result::eSuccess)
+	{
+		throw std::runtime_error("Cannnot create graphicPipeline: " + std::to_string(static_cast<int>(pipeline.result)));
+	}
+	pipeline_ = pipeline.value;
 
 	return true;
 }
