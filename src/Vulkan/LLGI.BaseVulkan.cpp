@@ -314,7 +314,7 @@ uint32_t GetMemoryTypeIndex(vk::PhysicalDevice& phDevice, uint32_t bits, const v
 		bits >>= 1;
 	}
 
-	assert(!"NOT found memory type.\n");
+	assert(false); //"NOT found memory type.\n"
 	return 0xffffffff;
 }
 
