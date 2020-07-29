@@ -300,7 +300,6 @@ void SetImageLayout(vk::CommandBuffer cmdbuffer,
 
 uint32_t GetMemoryTypeIndex(vk::PhysicalDevice& phDevice, uint32_t bits, const vk::MemoryPropertyFlags& properties)
 {
-	uint32_t result = 0;
 	vk::PhysicalDeviceMemoryProperties deviceMemoryProperties = phDevice.getMemoryProperties();
 	for (uint32_t i = 0; i < 32; i++)
 	{
