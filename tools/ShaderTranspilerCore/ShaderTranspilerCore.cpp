@@ -136,6 +136,8 @@ protected:
 	}
 };
 
+namespace
+{
 EShLanguage GetGlslangShaderStage(ShaderStageType type)
 {
 	if (type == ShaderStageType::Vertex)
@@ -144,6 +146,7 @@ EShLanguage GetGlslangShaderStage(ShaderStageType type)
 		return EShLanguage::EShLangFragment;
 	throw std::string("Unimplemented ShaderStage");
 }
+} // namespace
 
 SPIRV::SPIRV(const std::vector<uint32_t>& data, ShaderStageType shaderStage) : data_(data), shaderStage_(shaderStage) {}
 
