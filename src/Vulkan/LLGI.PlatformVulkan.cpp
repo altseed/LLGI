@@ -444,7 +444,7 @@ bool PlatformVulkan::Initialize(Window* window, bool waitVSync)
 		vk::PhysicalDeviceProperties deviceProperties = vkPhysicalDevice.getProperties();
 		memcpy(&_version, &deviceProperties.apiVersion, sizeof(uint32_t));
 		vk::PhysicalDeviceFeatures deviceFeatures = vkPhysicalDevice.getFeatures();
-		vk::PhysicalDeviceMemoryProperties deviceMemoryProperties = vkPhysicalDevice.getMemoryProperties();
+		// vk::PhysicalDeviceMemoryProperties deviceMemoryProperties = vkPhysicalDevice.getMemoryProperties();
 
 		// create surface
 #ifdef _WIN32
@@ -629,7 +629,7 @@ void PlatformVulkan::Present()
 	if (executedCommandCount == 0)
 	{
 		vk::ClearColorValue clearColor(std::array<float, 4>{0, 0, 0, 0});
-		vk::ClearDepthStencilValue clearDepth(1.0f, 0);
+		// vk::ClearDepthStencilValue clearDepth(1.0f, 0);
 
 		vk::ImageSubresourceRange colorSubRange;
 		colorSubRange.aspectMask = vk::ImageAspectFlagBits::eColor;
