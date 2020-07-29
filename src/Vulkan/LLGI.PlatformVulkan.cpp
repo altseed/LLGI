@@ -235,7 +235,7 @@ vk::Result PlatformVulkan::Present(vk::Semaphore semaphore)
 	{
 		return vkQueue.presentKHR(presentInfo);
 	}
-	catch (const vk::OutOfDateKHRError& e)
+	catch (const vk::OutOfDateKHRError&)
 	{
 		return vk::Result::eErrorOutOfDateKHR;
 	}
