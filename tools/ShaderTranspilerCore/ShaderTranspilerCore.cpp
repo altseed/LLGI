@@ -423,7 +423,7 @@ bool SPIRVReflection::Transpile(const std::shared_ptr<SPIRV>& spirv)
 		auto count = compiler.get_member_count(resource.base_type_id);
 		auto spirvType = compiler.get_type(resource.type_id);
 
-		for (auto i = 0; i < count; i++)
+		for (size_t i = 0; i < count; i++)
 		{
 			ShaderReflectionUniform u;
 			auto memberType = compiler.get_member_type(spirvType, i);
