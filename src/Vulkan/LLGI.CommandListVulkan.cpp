@@ -13,8 +13,7 @@
 namespace LLGI
 {
 
-DescriptorPoolVulkan::DescriptorPoolVulkan(std::shared_ptr<GraphicsVulkan> graphics, int32_t size, int stage)
-	: graphics_(graphics), size_(size), stage_(stage)
+DescriptorPoolVulkan::DescriptorPoolVulkan(std::shared_ptr<GraphicsVulkan> graphics, int32_t size, int stage) : graphics_(graphics)
 {
 	std::array<vk::DescriptorPoolSize, 3> poolSizes;
 	poolSizes[0].type = vk::DescriptorType::eUniformBufferDynamic;
