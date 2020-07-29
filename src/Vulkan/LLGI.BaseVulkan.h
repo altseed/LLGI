@@ -17,6 +17,7 @@
 #include <vulkan/vulkan.hpp>
 
 #define LLGI_VK_CHECK(f)                                                                                                                   \
+	do                                                                                                                                     \
 	{                                                                                                                                      \
 		VkResult r = (f);                                                                                                                  \
 		if (r != VK_SUCCESS)                                                                                                               \
@@ -24,7 +25,7 @@
 			std::cerr << #f << "; VkResult:" << r << "(" << VulkanHelper::getResultName(r) << ")" << std::endl;                            \
 			return false;                                                                                                                  \
 		}                                                                                                                                  \
-	}
+	} while (true)
 
 namespace std
 {
