@@ -52,8 +52,7 @@ ImTextureID ImguiPlatformMetal::GetTextureIDToRender(LLGI::Texture* texture, LLG
 	textures_.insert(texturePtr);
 
 	auto t = static_cast<LLGI::TextureMetal*>(texture);
-	auto impl = t->GetImpl();
-	return (__bridge void*)(impl->texture);
+	return (__bridge void*)(t->GetImpl()->texture);
 }
 
 void ImguiPlatformMetal::CreateFont() { ImGui_ImplMetal_CreateFontsTexture(impl->g_->GetImpl()->device); }
