@@ -49,7 +49,7 @@ class DirStackFileIncluder : public glslang::TShader::Includer
 {
 public:
 	DirStackFileIncluder(const std::function<std::vector<std::uint8_t>(std::string)>& onLoad)
-		: onLoad_(onLoad), externalLocalDirectoryCount(0)
+		: externalLocalDirectoryCount(0), onLoad_(onLoad)
 	{
 	}
 
