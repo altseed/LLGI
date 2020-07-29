@@ -17,6 +17,8 @@
 namespace LLGI
 {
 
+namespace
+{
 std::string Replace(std::string target, std::string from_, std::string to_)
 {
 	std::string::size_type Pos(target.find(from_));
@@ -36,6 +38,7 @@ std::string dirnameOf(const std::string& fname)
 	size_t pos = fname.find_last_of("\\/");
 	return (std::string::npos == pos) ? "" : fname.substr(0, pos);
 }
+} // namespace
 
 // Based on https://github.com/KhronosGroup/glslang/blob/master/StandAlone/DirStackFileIncluder.h
 
