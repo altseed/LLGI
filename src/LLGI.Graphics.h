@@ -112,7 +112,7 @@ struct RenderPassPipelineStateKey
 
 			for (size_t i = 0; i < key.RenderTargetFormats.size(); i++)
 			{
-				ret += std::hash<uint64_t>()((uint64_t)key.RenderTargetFormats.at(i));
+				ret += std::hash<uint64_t>()(static_cast<uint64_t>(key.RenderTargetFormats.at(i)));
 			}
 
 			return ret;

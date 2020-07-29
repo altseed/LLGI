@@ -55,7 +55,7 @@ public:
 
 	virtual IncludeResult* includeLocal(const char* headerName, const char* includerName, size_t inclusionDepth) override
 	{
-		return readLocalPath(headerName, includerName, (int)inclusionDepth);
+		return readLocalPath(headerName, includerName, static_cast<int>(inclusionDepth));
 	}
 
 	virtual IncludeResult* includeSystem(const char* headerName, const char* /*includerName*/, size_t /*inclusionDepth*/) override
@@ -72,7 +72,7 @@ public:
 	virtual void pushExternalLocalDirectory(const std::string& dir)
 	{
 		directoryStack.push_back(dir);
-		externalLocalDirectoryCount = (int)directoryStack.size();
+		externalLocalDirectoryCount = static_cast<int>(directoryStack.size());
 	}
 
 	virtual void releaseInclude(IncludeResult* result) override
@@ -478,9 +478,7 @@ std::shared_ptr<SPIRV> SPIRVGenerator::Generate(
 	// shader->setAutoMapLocations(true);
 
 	shader.setStrings(shaderStrings, 1);
-	EShMessages messages = (EShMessages)(EShMsgSpvRules | EShMsgVulkanRules);
-	messages = (EShMessages)(messages | EShMsgReadHlsl);
-	messages = (EShMessages)(messages | EShOptFull);
+	const auto messages = static_cast<EShMessages>(EShMsgSpvRules | EShMsgVulkanRules | EShMsgReadHlsl | EShOptFull);
 
 	DirStackFileIncluder includer(onLoad_);
 	includer.pushExternalLocalDirectory(dirnameOf(path));
