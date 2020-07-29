@@ -19,7 +19,7 @@ public:
 
 	void NewFrame(LLGI::RenderPass* renderPass)
 	{
-		auto rp = (LLGI::RenderPassMetal*)renderPass;
+		auto rp = static_cast<LLGI::RenderPassMetal*>(renderPass);
 		ImGui_ImplMetal_NewFrame(rp->GetImpl()->renderPassDescriptor);
 	}
 
