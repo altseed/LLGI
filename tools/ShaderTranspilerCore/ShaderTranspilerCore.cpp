@@ -1,8 +1,8 @@
 #include "ShaderTranspilerCore.h"
 
+#include <SPIRV/GlslangToSpv.h>
 #include <glslang/Include/ResourceLimits.h>
 #include <glslang/Public/ShaderLang.h>
-#include <glslang/SPIRV/GlslangToSpv.h>
 
 #include <functional>
 #include <iostream>
