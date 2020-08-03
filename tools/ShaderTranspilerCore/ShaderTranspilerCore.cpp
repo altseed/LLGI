@@ -1,8 +1,8 @@
 #include "ShaderTranspilerCore.h"
 
+#include <SPIRV/GlslangToSpv.h>
 #include <glslang/Include/ResourceLimits.h>
 #include <glslang/Public/ShaderLang.h>
-#include <glslang/SPIRV/GlslangToSpv.h>
 
 #include <functional>
 #include <iostream>
@@ -17,6 +17,8 @@
 namespace LLGI
 {
 
+namespace
+{
 std::string Replace(std::string target, std::string from_, std::string to_)
 {
 	std::string::size_type Pos(target.find(from_));
@@ -36,6 +38,7 @@ std::string dirnameOf(const std::string& fname)
 	size_t pos = fname.find_last_of("\\/");
 	return (std::string::npos == pos) ? "" : fname.substr(0, pos);
 }
+} // namespace
 
 // Based on https://github.com/KhronosGroup/glslang/blob/master/StandAlone/DirStackFileIncluder.h
 
@@ -46,13 +49,13 @@ class DirStackFileIncluder : public glslang::TShader::Includer
 {
 public:
 	DirStackFileIncluder(const std::function<std::vector<std::uint8_t>(std::string)>& onLoad)
-		: onLoad_(onLoad), externalLocalDirectoryCount(0)
+		: externalLocalDirectoryCount(0), onLoad_(onLoad)
 	{
 	}
 
 	virtual IncludeResult* includeLocal(const char* headerName, const char* includerName, size_t inclusionDepth) override
 	{
-		return readLocalPath(headerName, includerName, (int)inclusionDepth);
+		return readLocalPath(headerName, includerName, static_cast<int>(inclusionDepth));
 	}
 
 	virtual IncludeResult* includeSystem(const char* headerName, const char* /*includerName*/, size_t /*inclusionDepth*/) override
@@ -69,7 +72,7 @@ public:
 	virtual void pushExternalLocalDirectory(const std::string& dir)
 	{
 		directoryStack.push_back(dir);
-		externalLocalDirectoryCount = (int)directoryStack.size();
+		externalLocalDirectoryCount = static_cast<int>(directoryStack.size());
 	}
 
 	virtual void releaseInclude(IncludeResult* result) override
@@ -133,6 +136,8 @@ protected:
 	}
 };
 
+namespace
+{
 EShLanguage GetGlslangShaderStage(ShaderStageType type)
 {
 	if (type == ShaderStageType::Vertex)
@@ -141,6 +146,7 @@ EShLanguage GetGlslangShaderStage(ShaderStageType type)
 		return EShLanguage::EShLangFragment;
 	throw std::string("Unimplemented ShaderStage");
 }
+} // namespace
 
 SPIRV::SPIRV(const std::vector<uint32_t>& data, ShaderStageType shaderStage) : data_(data), shaderStage_(shaderStage) {}
 
@@ -286,7 +292,6 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 
 	for (auto& resource : resources.sampled_images)
 	{
-		auto b = compiler.get_decoration(resource.id, spv::DecorationBinding);
 		auto i = compiler.get_decoration(resource.id, spv::DecorationLocation);
 		compiler.set_decoration(resource.id, spv::DecorationBinding, binding_offset + i);
 
@@ -418,7 +423,7 @@ bool SPIRVReflection::Transpile(const std::shared_ptr<SPIRV>& spirv)
 		auto count = compiler.get_member_count(resource.base_type_id);
 		auto spirvType = compiler.get_type(resource.type_id);
 
-		for (auto i = 0; i < count; i++)
+		for (size_t i = 0; i < count; i++)
 		{
 			ShaderReflectionUniform u;
 			auto memberType = compiler.get_member_type(spirvType, i);
@@ -473,9 +478,7 @@ std::shared_ptr<SPIRV> SPIRVGenerator::Generate(
 	// shader->setAutoMapLocations(true);
 
 	shader.setStrings(shaderStrings, 1);
-	EShMessages messages = (EShMessages)(EShMsgSpvRules | EShMsgVulkanRules);
-	messages = (EShMessages)(messages | EShMsgReadHlsl);
-	messages = (EShMessages)(messages | EShOptFull);
+	const auto messages = static_cast<EShMessages>(EShMsgSpvRules | EShMsgVulkanRules | EShMsgReadHlsl | EShOptFull);
 
 	DirStackFileIncluder includer(onLoad_);
 	includer.pushExternalLocalDirectory(dirnameOf(path));

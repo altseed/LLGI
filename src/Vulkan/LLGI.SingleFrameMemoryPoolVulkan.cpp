@@ -95,7 +95,7 @@ ConstantBuffer* SingleFrameMemoryPoolVulkan::ReinitializeConstantBuffer(Constant
 
 SingleFrameMemoryPoolVulkan::SingleFrameMemoryPoolVulkan(
 	GraphicsVulkan* graphics, bool isStrongRef, int32_t swapBufferCount, int32_t constantBufferPoolSize, int32_t drawingCount)
-	: SingleFrameMemoryPool(swapBufferCount), graphics_(graphics), isStrongRef_(isStrongRef), drawingCount_(drawingCount), currentSwap_(-1)
+	: SingleFrameMemoryPool(swapBufferCount), graphics_(graphics), isStrongRef_(isStrongRef), currentSwap_(-1), drawingCount_(drawingCount)
 {
 	if (isStrongRef)
 	{

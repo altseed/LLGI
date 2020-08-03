@@ -299,11 +299,6 @@ RenderPassPipelineStateKey RenderPass::GetKey() const
 		key.DepthFormat = TextureFormatType::Unknown;
 	}
 
-	if (key.RenderTargetFormats.at(0) == TextureFormatType::Unknown)
-	{
-		printf("");
-	}
-
 	return key;
 }
 

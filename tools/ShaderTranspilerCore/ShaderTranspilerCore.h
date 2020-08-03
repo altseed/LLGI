@@ -88,7 +88,7 @@ private:
 
 public:
 	SPIRVToGLSLTranspiler(bool isVulkanMode, int32_t shaderModel = 420, bool isES = false, bool plain = false)
-		: isVulkanMode_(isVulkanMode), shaderModel_(shaderModel), isES_(isES), plain_(plain)
+		: isVulkanMode_(isVulkanMode), isES_(isES), shaderModel_(shaderModel), plain_(plain)
 	{
 	}
 

@@ -44,7 +44,7 @@ private:
 public:
 	ImguiPlatformVulkan(LLGI::Graphics* g, LLGI::Platform* p);
 
-	virtual ~ImguiPlatformVulkan();
+	~ImguiPlatformVulkan() override;
 
 	void NewFrame(LLGI::RenderPass* renderPass) override;
 
