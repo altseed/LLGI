@@ -11,11 +11,6 @@
 #include <Windows.h>
 #endif
 
-#ifdef __linux__
-#include <X11/Xlib-xcb.h>
-#undef Always
-#endif
-
 namespace LLGI
 {
 
