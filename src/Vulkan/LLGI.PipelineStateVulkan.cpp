@@ -107,6 +107,11 @@ bool PipelineStateVulkan::Compile()
 			attribDesc.format = vk::Format::eR32G32B32Sfloat;
 			vertexOffset += sizeof(float) * 3;
 		}
+		else if (VertexLayouts[i] == VertexLayoutFormat::R32G32B32A32_FLOAT)
+		{
+			attribDesc.format = vk::Format::eR32G32B32A32Sfloat;
+			vertexOffset += sizeof(float) * 3;
+		}
 		else if (VertexLayouts[i] == VertexLayoutFormat::R32_FLOAT)
 		{
 			attribDesc.format = vk::Format::eR32Sfloat;
