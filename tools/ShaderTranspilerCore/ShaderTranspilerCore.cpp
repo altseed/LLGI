@@ -426,10 +426,10 @@ bool SPIRVReflection::Transpile(const std::shared_ptr<SPIRV>& spirv)
 		for (size_t i = 0; i < count; i++)
 		{
 			ShaderReflectionUniform u;
-			auto memberType = compiler.get_member_type(spirvType, i);
-			u.Name = compiler.get_member_name(resource.base_type_id, i);
-			u.Size = static_cast<int32_t>(compiler.get_declared_struct_member_size(spirvType, i));
-			u.Offset = compiler.get_member_decoration(resource.base_type_id, i, spv::DecorationOffset);
+			auto memberType = compiler.get_member_type(spirvType, static_cast<uint32_t>(i));
+			u.Name = compiler.get_member_name(resource.base_type_id,  static_cast<uint32_t>(i));
+			u.Size = static_cast<int32_t>(compiler.get_declared_struct_member_size(spirvType,  static_cast<uint32_t>(i)));
+			u.Offset = compiler.get_member_decoration(resource.base_type_id,  static_cast<uint32_t>(i), spv::DecorationOffset);
 			Uniforms.push_back(u);
 		}
 	}
