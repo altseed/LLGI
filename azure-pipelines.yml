@@ -72,18 +72,18 @@ jobs:
 
   - job: Linux
     pool:
-      vmImage: 'ubuntu-16.04'
+      vmImage: 'ubuntu-18.04'
 
     steps:
       - task: Bash@3
         inputs:
           targetType: 'inline'
           script: |
-            wget -qO - http://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
-            sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.1.121-xenial.list http://packages.lunarg.com/vulkan/1.1.121/lunarg-vulkan-1.1.121-xenial.list
-            sudo apt-get update
-            sudo apt-get -y install vulkan-sdk
-            
+            wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
+            sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.1.126-bionic.list https://packages.lunarg.com/vulkan/1.1.126/lunarg-vulkan-1.1.126-bionic.list
+            sudo apt update
+            sudo apt install vulkan-sdk
+
       - task: Bash@3
         inputs:
           targetType: 'inline'
