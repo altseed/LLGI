@@ -5,7 +5,7 @@
 #include "LLGI.PlatformVulkan.h"
 #include "LLGI.GraphicsVulkan.h"
 #include "LLGI.TextureVulkan.h"
-#include <iostream>
+#include <sstream>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -24,23 +24,22 @@ VkBool32 PlatformVulkan::DebugMessageCallback(VkDebugReportFlagsEXT flags,
 											  const char* pMsg,
 											  void* pUserData)
 {
+
+	std::stringstream ss;
+	ss << "[" << pLayerPrefix << "] Code " << msgCode << " : " << pMsg;
+
 	if (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT)
 	{
-		std::cout << "ERROR: ";
+		Log(LogType::Error, ss.str());
 	}
 	else if (flags & VK_DEBUG_REPORT_WARNING_BIT_EXT)
 	{
-		std::cout << "WARNING: ";
+		Log(LogType::Warning, ss.str());
 	}
 	else if (flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT)
 	{
-		std::cout << "PERF: ";
+		Log(LogType::Info, ss.str());
 	}
-	else
-	{
-		return false;
-	}
-	std::cout << "[" << pLayerPrefix << "] Code " << msgCode << " : " << pMsg << std::endl;
 
 	return false;
 }
@@ -591,8 +590,10 @@ bool PlatformVulkan::Initialize(Window* window, bool waitVSync)
 	}
 	catch (const std::exception& e)
 	{
-		std::cout << "Initialize Failed : " << e.what() << std::endl;
-		std::cout << "Please install Vulkan client driver." << std::endl;
+		std::stringstream ss;
+		ss << "Initialize Failed : " << e.what() << std::endl;
+		Log(LogType::Error, ss.str());
+		Log(LogType::Error, "Please install Vulkan client driver.");
 		exitWithError();
 		return false;
 	}
