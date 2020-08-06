@@ -12,7 +12,7 @@ RenderPassDX12::RenderPassDX12(ID3D12Device* device) : device_(device) { SafeAdd
 
 RenderPassDX12 ::~RenderPassDX12()
 {
-	for (size_t i = 0; i < numRenderTarget_; i++)
+	for (int32_t i = 0; i < numRenderTarget_; i++)
 	{
 		if (renderTargets_[i].texture_ != nullptr)
 			SafeRelease(renderTargets_[i].texture_);
