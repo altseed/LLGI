@@ -19,6 +19,7 @@ endif()
 target_include_directories(LLGI_Test PUBLIC ../src/)
 
 target_link_libraries(LLGI_Test PRIVATE LLGI)
+target_compile_features(LLGI_Test PUBLIC cxx_std_14)
 
 if(BUILD_VULKAN_COMPILER AND USE_THIRDPARTY_DIRECTORY)
 
@@ -42,3 +43,9 @@ file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders
      DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)
 
 clang_format(LLGI_Test)
+
+if(MSVC)
+  target_compile_options(LLGI_Test PRIVATE /W4 /WX /wd"4100")
+else()
+  target_compile_options(LLGI_Test PRIVATE -Wall -Werror)
+endif()

@@ -315,9 +315,9 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 	}
 
 	// Assign textures
-	for (int stage_ind = 0; stage_ind < (int32_t)ShaderStageType::Max; stage_ind++)
+	for (int stage_ind = 0; stage_ind < static_cast<int32_t>(ShaderStageType::Max); stage_ind++)
 	{
-		for (int unit_ind = 0; unit_ind < currentTextures[stage_ind].size(); unit_ind++)
+		for (int unit_ind = 0; unit_ind < static_cast<int32_t>(currentTextures[stage_ind].size()); unit_ind++)
 		{
 			if (currentTextures[stage_ind][unit_ind].texture == nullptr)
 				continue;
@@ -505,9 +505,9 @@ void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
 	cmdBuffer.setScissor(0, scissor);
 
 	auto layoutOffset = 0;
-	for (size_t i = 0; i < renderPass_->GetRenderTextureCount(); i++)
+	for (int32_t i = 0; i < renderPass_->GetRenderTextureCount(); i++)
 	{
-		auto t = static_cast<TextureVulkan*>(renderPass_->GetRenderTexture(static_cast<int32_t>(i)));
+		auto t = static_cast<TextureVulkan*>(renderPass_->GetRenderTexture(i));
 		t->ChangeImageLayout(renderPass_->renderPassPipelineState->finalLayouts_.at(i));
 	}
 

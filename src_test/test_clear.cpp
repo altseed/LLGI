@@ -16,7 +16,7 @@ void test_clear_update(LLGI::DeviceType deviceType)
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
 
 	std::array<LLGI::CommandList*, 3> commandLists;
-	for (int i = 0; i < commandLists.size(); i++)
+	for (size_t i = 0; i < commandLists.size(); i++)
 		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
 
 	while (count < 60)
@@ -60,7 +60,7 @@ void test_clear_update(LLGI::DeviceType deviceType)
 	graphics->WaitFinish();
 
 	LLGI::SafeRelease(sfMemoryPool);
-	for (int i = 0; i < commandLists.size(); i++)
+	for (size_t i = 0; i < commandLists.size(); i++)
 		LLGI::SafeRelease(commandLists[i]);
 	LLGI::SafeRelease(graphics);
 	LLGI::SafeRelease(platform);
@@ -80,7 +80,7 @@ void test_clear(LLGI::DeviceType deviceType)
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
 
 	std::array<LLGI::CommandList*, 3> commandLists;
-	for (int i = 0; i < commandLists.size(); i++)
+	for (size_t i = 0; i < commandLists.size(); i++)
 		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
 
 	LLGI::Color8 color;
@@ -126,7 +126,7 @@ void test_clear(LLGI::DeviceType deviceType)
 	graphics->WaitFinish();
 
 	LLGI::SafeRelease(sfMemoryPool);
-	for (int i = 0; i < commandLists.size(); i++)
+	for (size_t i = 0; i < commandLists.size(); i++)
 		LLGI::SafeRelease(commandLists[i]);
 	LLGI::SafeRelease(graphics);
 	LLGI::SafeRelease(platform);

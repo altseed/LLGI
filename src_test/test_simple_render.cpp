@@ -178,7 +178,7 @@ void test_index_offset(LLGI::DeviceType deviceType)
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
 
 	std::array<LLGI::CommandList*, 3> commandLists;
-	for (int i = 0; i < commandLists.size(); i++)
+	for (size_t i = 0; i < commandLists.size(); i++)
 		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
 
 	std::shared_ptr<LLGI::Shader> shader_vs = nullptr;
@@ -263,7 +263,7 @@ void test_index_offset(LLGI::DeviceType deviceType)
 	graphics->WaitFinish();
 
 	LLGI::SafeRelease(sfMemoryPool);
-	for (int i = 0; i < commandLists.size(); i++)
+	for (size_t i = 0; i < commandLists.size(); i++)
 		LLGI::SafeRelease(commandLists[i]);
 	LLGI::SafeRelease(graphics);
 	LLGI::SafeRelease(platform);
@@ -338,7 +338,7 @@ void main()
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
 
 	std::array<LLGI::CommandList*, 3> commandLists;
-	for (int i = 0; i < commandLists.size(); i++)
+	for (size_t i = 0; i < commandLists.size(); i++)
 		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
 
 	LLGI::ConstantBuffer* cb_vs = nullptr;
@@ -554,7 +554,7 @@ void main()
 	LLGI::SafeRelease(cb_ps);
 	LLGI::SafeRelease(shader_vs);
 	LLGI::SafeRelease(shader_ps);
-	for (int i = 0; i < commandLists.size(); i++)
+	for (size_t i = 0; i < commandLists.size(); i++)
 		LLGI::SafeRelease(commandLists[i]);
 	LLGI::SafeRelease(graphics);
 	LLGI::SafeRelease(platform);
@@ -622,7 +622,7 @@ void main()
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
 
 	std::array<LLGI::CommandList*, 3> commandLists;
-	for (int i = 0; i < commandLists.size(); i++)
+	for (size_t i = 0; i < commandLists.size(); i++)
 		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
 
 	LLGI::TextureInitializationParameter texParam;
@@ -642,10 +642,10 @@ void main()
 
 	texParam.Size = LLGI::Vec2I(256, 256);
 
-	auto texture = graphics->CreateTexture(texParam);
-	assert(texture->GetType() == LLGI::TextureType::Color);
+	auto textureDrawn = graphics->CreateTexture(texParam);
+	assert(textureDrawn->GetType() == LLGI::TextureType::Color);
 
-	TestHelper::WriteDummyTexture(texture);
+	TestHelper::WriteDummyTexture(textureDrawn);
 
 	LLGI::Shader* shader_vs = nullptr;
 	LLGI::Shader* shader_ps = nullptr;
@@ -773,7 +773,7 @@ void main()
 		commandList->SetIndexBuffer(ib.get());
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
 		commandList->SetTexture(
-			texture, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+			textureDrawn, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 		commandList->EndRenderPass();
 		commandList->End();
@@ -814,10 +814,10 @@ void main()
 	graphics->WaitFinish();
 
 	LLGI::SafeRelease(sfMemoryPool);
-	LLGI::SafeRelease(texture);
+	LLGI::SafeRelease(textureDrawn);
 	LLGI::SafeRelease(shader_vs);
 	LLGI::SafeRelease(shader_ps);
-	for (int i = 0; i < commandLists.size(); i++)
+	for (size_t i = 0; i < commandLists.size(); i++)
 		LLGI::SafeRelease(commandLists[i]);
 	LLGI::SafeRelease(graphics);
 	LLGI::SafeRelease(platform);
@@ -848,8 +848,8 @@ void test_instancing(LLGI::DeviceType deviceType)
 	std::shared_ptr<LLGI::VertexBuffer> vb;
 	std::shared_ptr<LLGI::IndexBuffer> ib;
 	TestHelper::CreateRectangle(graphics.get(),
-								LLGI::Vec3F(-0.2, 0.2, 0.5),
-								LLGI::Vec3F(0.2, -0.2, 0.5),
+								LLGI::Vec3F(-0.2f, 0.2f, 0.5f),
+								LLGI::Vec3F(0.2f, -0.2f, 0.5f),
 								LLGI::Color8(255, 255, 255, 255),
 								LLGI::Color8(0, 255, 0, 255),
 								vb,
@@ -960,9 +960,9 @@ void test_vtf(LLGI::DeviceType deviceType)
 	LLGI::TextureInitializationParameter texParam;
 	texParam.Size = LLGI::Vec2I(16, 16);
 	texParam.Format = LLGI::TextureFormatType::R8G8B8A8_UNORM;
-	auto texture = LLGI::CreateSharedPtr(graphics->CreateTexture(texParam));
+	auto textureDrawn = LLGI::CreateSharedPtr(graphics->CreateTexture(texParam));
 
-	auto texBuf = static_cast<LLGI::Color8*>(texture->Lock());
+	auto texBuf = static_cast<LLGI::Color8*>(textureDrawn->Lock());
 	for (size_t i = 0; i < 16 * 16; i++)
 	{
 		texBuf[i].R = 127;
@@ -970,13 +970,13 @@ void test_vtf(LLGI::DeviceType deviceType)
 		texBuf[i].B = 127;
 		texBuf[i].A = 127;
 	}
-	texture->Unlock();
+	textureDrawn->Unlock();
 
 	std::shared_ptr<LLGI::VertexBuffer> vb;
 	std::shared_ptr<LLGI::IndexBuffer> ib;
 	TestHelper::CreateRectangle(graphics.get(),
-								LLGI::Vec3F(-0.2, 0.2, 0.5),
-								LLGI::Vec3F(0.2, -0.2, 0.5),
+								LLGI::Vec3F(-0.2f, 0.2f, 0.5f),
+								LLGI::Vec3F(0.2f, -0.2f, 0.5f),
 								LLGI::Color8(255, 255, 255, 255),
 								LLGI::Color8(255, 255, 255, 255),
 								vb,
@@ -1025,7 +1025,7 @@ void test_vtf(LLGI::DeviceType deviceType)
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get());
 		commandList->SetTexture(
-			texture.get(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Linear, 0, LLGI::ShaderStageType::Vertex);
+			textureDrawn.get(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Linear, 0, LLGI::ShaderStageType::Vertex);
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
 		commandList->Draw(2, 5);
 		commandList->EndRenderPass();
