@@ -413,9 +413,27 @@ bool PlatformVulkan::Initialize(Window* window, bool waitVSync)
 
 		uint32_t layerCount;
 		vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+
+		std::vector<VkLayerProperties> availableLayers(layerCount);
+		vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+
+		bool validationLayerFound = false;
+		for (const auto& layerProperties : availableLayers)
+		{
+			std::stringstream ss;
+			ss << "layer " << layerProperties.layerName << " is avalable";
+			Log(LogType::Debug, ss.str());
+			if (strcmp(layerProperties.layerName, "VK_LAYER_LUNARG_standard_validation") == 0)
+			{
+				validationLayerFound = true;
+			}
+		}
+
 		const std::vector<const char*> validationLayers = {"VK_LAYER_LUNARG_standard_validation"};
 
-		if (layerCount > 0)
+		Log(LogType::Warning, "Failed to activate validation layer");
+
+		if (validationLayerFound)
 		{
 			instanceCreateInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
 			instanceCreateInfo.ppEnabledLayerNames = validationLayers.data();
@@ -497,10 +515,14 @@ bool PlatformVulkan::Initialize(Window* window, bool waitVSync)
 		deviceCreateInfo.ppEnabledExtensionNames = enabledExtensions.data();
 
 #if !defined(NDEBUG)
-		if (layerCount > 0)
+		if (validationLayerFound)
 		{
 			deviceCreateInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
 			deviceCreateInfo.ppEnabledLayerNames = validationLayers.data();
+		}
+		else
+		{
+			deviceCreateInfo.enabledLayerCount = 0;
 		}
 #else
 		deviceCreateInfo.enabledLayerCount = 0;
