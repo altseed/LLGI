@@ -61,7 +61,7 @@ bool RenderPassDX12::Initialize(
 	renderTargets_.resize(numTextures);
 	numRenderTarget_ = numTextures;
 
-	for (size_t i = 0; i < numTextures; i++)
+	for (int32_t i = 0; i < numTextures; i++)
 	{
 		renderTargets_[i].texture_ = textures[i];
 		renderTargets_[i].renderPass_ = textures[i]->Get();
