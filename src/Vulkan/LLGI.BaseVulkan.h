@@ -25,8 +25,7 @@
 			std::cerr << #f << "; VkResult:" << r << "(" << VulkanHelper::getResultName(r) << ")" << std::endl;                            \
 			return false;                                                                                                                  \
 		}                                                                                                                                  \
-		return true;                                                                                                                       \
-	} while (true)
+	} while (false)
 
 namespace std
 {
