@@ -45,9 +45,10 @@ const char* VulkanHelper::getResultName(VkResult result)
 		VK_RESULT_VALUE(VK_RESULT_RANGE_SIZE);
 #endif
 		VK_RESULT_VALUE(VK_RESULT_MAX_ENUM);
+	default:
+		return "<Unkonwn VkResult>";
 	}
 #undef VK_RESULT_VALUE
-	return "<Unkonwn VkResult>";
 }
 
 struct FormatConversionItem

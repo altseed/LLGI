@@ -34,7 +34,7 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
 
 	std::array<LLGI::CommandList*, 3> commandLists;
-	for (int i = 0; i < commandLists.size(); i++)
+	for (size_t i = 0; i < commandLists.size(); i++)
 		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
 
 	LLGI::RenderTextureInitializationParameter params;
@@ -265,20 +265,20 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 		if (TestHelper::GetIsCaptureRequired() && count == 30)
 		{
 			commandList->WaitUntilCompleted();
-			auto texture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
-			auto data = graphics->CaptureRenderTarget(texture);
+			auto screenTex = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
+			auto data = graphics->CaptureRenderTarget(screenTex);
 
 			if (mode == RenderPassTestMode::MSAA)
 			{
-				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save("RenderPass.MSAA.png");
+				Bitmap2D(data, screenTex->GetSizeAs2D().X, screenTex->GetSizeAs2D().Y, screenTex->GetFormat()).Save("RenderPass.MSAA.png");
 			}
 			else if (mode == RenderPassTestMode::None)
 			{
-				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save("RenderPass.Basic.png");
+				Bitmap2D(data, screenTex->GetSizeAs2D().X, screenTex->GetSizeAs2D().Y, screenTex->GetFormat()).Save("RenderPass.Basic.png");
 			}
 			else
 			{
-				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save("RenderPass.CopyTexture.png");
+				Bitmap2D(data, screenTex->GetSizeAs2D().X, screenTex->GetSizeAs2D().Y, screenTex->GetFormat()).Save("RenderPass.CopyTexture.png");
 			}
 
 			if (mode == RenderPassTestMode::None)
@@ -301,7 +301,7 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 	LLGI::SafeRelease(depthTextureDst);
 	LLGI::SafeRelease(renderPass);
 	LLGI::SafeRelease(texture);
-	for (int i = 0; i < commandLists.size(); i++)
+	for (size_t i = 0; i < commandLists.size(); i++)
 		LLGI::SafeRelease(commandLists[i]);
 	LLGI::SafeRelease(graphics);
 	LLGI::SafeRelease(platform);
@@ -324,7 +324,7 @@ void test_copyTextureToScreen(LLGI::DeviceType deviceType)
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
 
 	std::array<LLGI::CommandList*, 3> commandLists;
-	for (int i = 0; i < commandLists.size(); i++)
+	for (size_t i = 0; i < commandLists.size(); i++)
 		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
 
 	LLGI::RenderTextureInitializationParameter params;
@@ -390,7 +390,7 @@ void test_copyTextureToScreen(LLGI::DeviceType deviceType)
 	LLGI::SafeRelease(sfMemoryPool);
 	LLGI::SafeRelease(renderTexture);
 	LLGI::SafeRelease(renderPass);
-	for (int i = 0; i < commandLists.size(); i++)
+	for (size_t i = 0; i < commandLists.size(); i++)
 		LLGI::SafeRelease(commandLists[i]);
 	LLGI::SafeRelease(graphics);
 	LLGI::SafeRelease(platform);
@@ -412,7 +412,7 @@ void test_multiRenderPass(LLGI::DeviceType deviceType)
 	auto sfMemoryPool = graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128);
 
 	std::array<LLGI::CommandList*, 3> commandLists;
-	for (int i = 0; i < commandLists.size(); i++)
+	for (size_t i = 0; i < commandLists.size(); i++)
 		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
 
 	LLGI::TextureInitializationParameter texParam;
@@ -585,9 +585,9 @@ void test_multiRenderPass(LLGI::DeviceType deviceType)
 		if (TestHelper::GetIsCaptureRequired() && count == 30)
 		{
 			commandList->WaitUntilCompleted();
-			auto texture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
-			auto data = graphics->CaptureRenderTarget(texture);
-			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save("RenderPass.MRT.png");
+			auto screenTexture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
+			auto data = graphics->CaptureRenderTarget(screenTexture);
+			Bitmap2D(data, screenTexture->GetSizeAs2D().X, screenTexture->GetSizeAs2D().Y, screenTexture->GetFormat()).Save("RenderPass.MRT.png");
 		}
 	}
 
@@ -600,7 +600,7 @@ void test_multiRenderPass(LLGI::DeviceType deviceType)
 	LLGI::SafeRelease(renderTexture2);
 	LLGI::SafeRelease(renderPass);
 	LLGI::SafeRelease(texture);
-	for (int i = 0; i < commandLists.size(); i++)
+	for (size_t i = 0; i < commandLists.size(); i++)
 		LLGI::SafeRelease(commandLists[i]);
 
 	LLGI::SafeRelease(compiler);

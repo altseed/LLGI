@@ -79,9 +79,9 @@ std::vector<uint8_t> TestHelper::CreateDummyTextureData(LLGI::Vec2I size, LLGI::
 		{
 			for (int x = 0; x < size.X; x++)
 			{
-				data[x + y * size.X].R = x;
-				data[x + y * size.X].G = y;
-				data[x + y * size.X].B = (x % 16 > 8 || y % 16 > 8) ? 128 : 0;
+				data[x + y * size.X].R = static_cast<int>(x % 256);
+				data[x + y * size.X].G = static_cast<int>(y % 256);
+				data[x + y * size.X].B = static_cast<int>((x % 16 > 8 || y % 16 > 8) ? 128 : 0);
 				data[x + y * size.X].A = 255;
 			}
 		}
@@ -134,9 +134,9 @@ void TestHelper::WriteDummyTexture(LLGI::Color8* data, LLGI::Vec2I size)
 	{
 		for (int x = 0; x < size.X; x++)
 		{
-			data[x + y * 256].R = x;
-			data[x + y * 256].G = y;
-			data[x + y * 256].B = (x % 16 > 8 || y % 16 > 8) ? 128 : 0;
+			data[x + y * 256].R = static_cast<uint8_t>(x % 256);
+			data[x + y * 256].G = static_cast<uint8_t>(y % 256);
+			data[x + y * 256].B = static_cast<uint8_t>((x % 16 > 8 || y % 16 > 8) ? 128 : 0);
 			data[x + y * 256].A = 255;
 		}
 	}

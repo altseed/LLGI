@@ -10,7 +10,7 @@ namespace LLGI
 PipelineStateVulkan::PipelineStateVulkan()
 {
 	shaders.fill(0);
-	for (auto i = 0; i < descriptorSetLayouts.size(); i++)
+	for (size_t i = 0; i < descriptorSetLayouts.size(); i++)
 	{
 		descriptorSetLayouts[i] = nullptr;
 	}
@@ -23,7 +23,7 @@ PipelineStateVulkan ::~PipelineStateVulkan()
 		SafeRelease(shader);
 	}
 
-	for (auto i = 0; i < descriptorSetLayouts.size(); i++)
+	for (size_t i = 0; i < descriptorSetLayouts.size(); i++)
 	{
 		graphics_->GetDevice().destroyDescriptorSetLayout(descriptorSetLayouts[i]);
 		descriptorSetLayouts[i] = nullptr;
@@ -385,7 +385,7 @@ bool PipelineStateVulkan::Compile()
 
 	for (size_t i = 1; i < uboLayoutBindings.size(); i++)
 	{
-		uboLayoutBindings[i].binding = i;
+		uboLayoutBindings[i].binding = static_cast<uint32_t>(i);
 		uboLayoutBindings[i].descriptorType = vk::DescriptorType::eCombinedImageSampler;
 		uboLayoutBindings[i].descriptorCount = 1;
 		uboLayoutBindings[i].stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;

@@ -314,8 +314,6 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 		currentCommandList_->SetGraphicsRootDescriptorTable(1, gpuDescriptorHandleSampler[0]);
 	}
 
-	int increment = NumTexture * static_cast<int>(ShaderStageType::Max);
-
 	// constant buffer
 	{
 		for (int stage_ind = 0; stage_ind < static_cast<int>(ShaderStageType::Max); stage_ind++)
