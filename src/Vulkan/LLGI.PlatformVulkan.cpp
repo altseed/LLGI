@@ -1,7 +1,3 @@
-#ifdef _WIN32
-#define NOMINMAX
-#endif
-
 #include "LLGI.PlatformVulkan.h"
 #include "LLGI.GraphicsVulkan.h"
 #include "LLGI.TextureVulkan.h"
