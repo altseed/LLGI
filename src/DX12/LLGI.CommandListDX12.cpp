@@ -273,7 +273,7 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 		{
 			if (currentTextures[stage_ind][unit_ind].texture != nullptr)
 			{
-				requiredSamplerDescriptorCount = max(requiredSamplerDescriptorCount, static_cast<int32_t>(unit_ind) + 1);
+				requiredSamplerDescriptorCount = std::max(requiredSamplerDescriptorCount, static_cast<int32_t>(unit_ind) + 1);
 			}
 		}
 	}
@@ -382,7 +382,8 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 						srvDesc.Texture2D.MipLevels = 1;
 						srvDesc.Texture2D.MostDetailedMip = 0;
 
-						auto cpuHandle = cpuDescriptorHandleConstant[static_cast<int32_t>(ShaderStageType::Max) + static_cast<int32_t>(unit_ind)];
+						auto cpuHandle =
+							cpuDescriptorHandleConstant[static_cast<int32_t>(ShaderStageType::Max) + static_cast<int32_t>(unit_ind)];
 						graphics_->GetDevice()->CreateShaderResourceView(texture->Get(), &srvDesc, cpuHandle);
 					}
 

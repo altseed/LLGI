@@ -6,11 +6,11 @@ namespace LLGI
 {
 
 //! TODO should be moved
-static std::function<void(LogType, const char*)> g_logger;
+static std::function<void(LogType, const std::string&)> g_logger;
 
-void SetLogger(const std::function<void(LogType, const char*)>& logger) { g_logger = logger; }
+void SetLogger(const std::function<void(LogType, const std::string&)>& logger) { g_logger = logger; }
 
-void Log(LogType logType, const char* message)
+void Log(LogType logType, const std::string& message)
 {
 	if (g_logger != nullptr)
 	{

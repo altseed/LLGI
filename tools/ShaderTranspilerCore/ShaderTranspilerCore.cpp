@@ -1,11 +1,10 @@
 #include "ShaderTranspilerCore.h"
 
-#include <glslang/SPIRV/GlslangToSpv.h>
 #include <glslang/Include/ResourceLimits.h>
 #include <glslang/Public/ShaderLang.h>
+#include <glslang/SPIRV/GlslangToSpv.h>
 
 #include <functional>
-#include <iostream>
 #include <spirv_cross/spirv_cross.hpp>
 #include <spirv_cross/spirv_glsl.hpp>
 #include <spirv_cross/spirv_hlsl.hpp>
@@ -427,9 +426,9 @@ bool SPIRVReflection::Transpile(const std::shared_ptr<SPIRV>& spirv)
 		{
 			ShaderReflectionUniform u;
 			auto memberType = compiler.get_member_type(spirvType, static_cast<uint32_t>(i));
-			u.Name = compiler.get_member_name(resource.base_type_id,  static_cast<uint32_t>(i));
-			u.Size = static_cast<int32_t>(compiler.get_declared_struct_member_size(spirvType,  static_cast<uint32_t>(i)));
-			u.Offset = compiler.get_member_decoration(resource.base_type_id,  static_cast<uint32_t>(i), spv::DecorationOffset);
+			u.Name = compiler.get_member_name(resource.base_type_id, static_cast<uint32_t>(i));
+			u.Size = static_cast<int32_t>(compiler.get_declared_struct_member_size(spirvType, static_cast<uint32_t>(i)));
+			u.Offset = compiler.get_member_decoration(resource.base_type_id, static_cast<uint32_t>(i), spv::DecorationOffset);
 			Uniforms.push_back(u);
 		}
 	}

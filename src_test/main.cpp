@@ -1,6 +1,7 @@
 
 #include "TestHelper.h"
 #include "test.h"
+#include <iostream>
 #include <string>
 
 #ifdef _WIN32
@@ -53,7 +54,7 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	LLGI::SetLogger([](LLGI::LogType logType, const char* message) { printf("%s\n", message); });
+	LLGI::SetLogger([](LLGI::LogType logType, const std::string& message) { std::cerr << message << std::endl; });
 
 	TestHelper::SetIsCaptureRequired(true);
 
