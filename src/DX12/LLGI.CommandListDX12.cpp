@@ -273,7 +273,7 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 		{
 			if (currentTextures[stage_ind][unit_ind].texture != nullptr)
 			{
-				requiredSamplerDescriptorCount = max(requiredSamplerDescriptorCount, static_cast<int32_t>(unit_ind) + 1);
+				requiredSamplerDescriptorCount = std::max(requiredSamplerDescriptorCount, static_cast<int32_t>(unit_ind) + 1);
 			}
 		}
 	}
