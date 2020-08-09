@@ -1,5 +1,7 @@
 add_executable(
   example_GPUParticle
+  GPUParticle.h
+  GPUParticle.cpp
   Main.cpp
 )
 

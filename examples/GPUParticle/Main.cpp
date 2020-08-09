@@ -9,131 +9,19 @@
 #include <LLGI.VertexBuffer.h>
 #include <LLGI.IndexBuffer.h>
 #include <LLGI.PipelineState.h>
+#include "GPUParticle.h"
 
 #ifdef _WIN32
 #pragma comment(lib, "d3dcompiler.lib")
 #endif
 
-class Shader
+
+
+class GPUParticleBuffer
 {
 public:
-	Shader(
-		LLGI::Graphics* graphics,
-		LLGI::DeviceType deviceType,
-		const char* vsBinaryPath,
-		const char* psBinaryPath)
-	{
 
-		auto compiler = LLGI::CreateSharedPtr(LLGI::CreateCompiler(deviceType));
-
-		std::vector<LLGI::DataStructure> data_vs;
-		std::vector<LLGI::DataStructure> data_ps;
-
-		if (compiler == nullptr)
-		{
-			auto vsBinaryPath_ = std::string(vsBinaryPath);
-			auto psBinaryPath_ = std::string(psBinaryPath);
-
-			// if (deviceType == LLGI::DeviceType::Vulkan)
-			{
-				vsBinaryPath_ += ".spv";
-				psBinaryPath_ += ".spv";
-			}
-
-			auto binary_vs = LoadData(vsBinaryPath_.c_str());
-			auto binary_ps = LoadData(psBinaryPath_.c_str());
-
-			LLGI::DataStructure d_vs;
-			LLGI::DataStructure d_ps;
-
-			d_vs.Data = binary_vs.data();
-			d_vs.Size = static_cast<int32_t>(binary_vs.size());
-			d_ps.Data = binary_ps.data();
-			d_ps.Size = static_cast<int32_t>(binary_ps.size());
-
-			data_vs.push_back(d_vs);
-			data_ps.push_back(d_ps);
-
-			m_vs = LLGI::CreateSharedPtr(graphics->CreateShader(data_vs.data(), static_cast<int32_t>(data_vs.size())));
-			m_ps = LLGI::CreateSharedPtr(graphics->CreateShader(data_ps.data(), static_cast<int32_t>(data_ps.size())));
-		}
-		else
-		{
-			LLGI::CompilerResult result_vs;
-			LLGI::CompilerResult result_ps;
-
-			auto vsBinaryPath_ = std::string(vsBinaryPath);
-			auto psBinaryPath_ = std::string(psBinaryPath);
-
-			auto code_vs = LoadData(vsBinaryPath_.c_str());
-			auto code_ps = LoadData(psBinaryPath_.c_str());
-			code_vs.push_back(0);
-			code_ps.push_back(0);
-
-			compiler->Compile(result_vs, (const char*)code_vs.data(), LLGI::ShaderStageType::Vertex);
-			compiler->Compile(result_ps, (const char*)code_ps.data(), LLGI::ShaderStageType::Pixel);
-
-			std::cout << result_vs.Message.c_str() << std::endl;
-			std::cout << result_ps.Message.c_str() << std::endl;
-
-			for (auto& b : result_vs.Binary)
-			{
-				LLGI::DataStructure d;
-				d.Data = b.data();
-				d.Size = static_cast<int32_t>(b.size());
-				data_vs.push_back(d);
-			}
-
-			for (auto& b : result_ps.Binary)
-			{
-				LLGI::DataStructure d;
-				d.Data = b.data();
-				d.Size = static_cast<int32_t>(b.size());
-				data_ps.push_back(d);
-			}
-
-			m_vs = LLGI::CreateSharedPtr(graphics->CreateShader(data_vs.data(), static_cast<int32_t>(data_vs.size())));
-			m_ps = LLGI::CreateSharedPtr(graphics->CreateShader(data_ps.data(), static_cast<int32_t>(data_ps.size())));
-		}
-	}
-
-	LLGI::Shader* vertexShader() const { return m_vs.get(); }
-	LLGI::Shader* pixelShader() const { return m_ps.get(); }
-
-private:
-	std::vector<uint8_t> LoadData(const char* path)
-	{
-		std::vector<uint8_t> ret;
-
-#ifdef _WIN32
-		FILE* fp = nullptr;
-		fopen_s(&fp, path, "rb");
-
-#else
-		FILE* fp = fopen(path, "rb");
-#endif
-
-		if (fp == nullptr)
-		{
-			std::cout << "Not found : " << path << std::endl;
-			return ret;
-		}
-
-		fseek(fp, 0, SEEK_END);
-		auto size = ftell(fp);
-		fseek(fp, 0, SEEK_SET);
-
-		ret.resize(size);
-		fread(ret.data(), 1, size, fp);
-		fclose(fp);
-
-		return ret;
-	}
-
-	std::shared_ptr<LLGI::Shader> m_vs;
-	std::shared_ptr<LLGI::Shader> m_ps;
 };
-
 
 class GPUParticleRenderPass
 {
@@ -145,9 +33,7 @@ public:
 		LLGI::Color8 Color;
 	};
 
-
-
-	GPUParticleRenderPass(LLGI::Graphics* graphics, LLGI::DeviceType deviceType)
+	GPUParticleRenderPass(LLGI::Graphics* graphics, LLGI::DeviceType deviceType, int frameCount)
 		: graphcis_(graphics)
 		, shader_(std::make_unique<Shader>(graphics, deviceType,
 			"C:/Proj/LN/Lumino/build/ExternalSource/Effekseer/Dev/Cpp/3rdParty/LLGI/examples/GPUParticle/Shaders/HLSL_DX12/perticle-update.vert",
@@ -226,14 +112,23 @@ private:
 	std::unique_ptr<Shader> shader_;
 	std::shared_ptr<LLGI::VertexBuffer> vb_;
 	std::shared_ptr<LLGI::IndexBuffer> ib_;
-	//std::shared_ptr<LLGI::PipelineState> pileline_;
 	std::unordered_map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pipelineCache_;
 
 };
 
+class GPUParticleContext;
+
+
+namespace LLGI {
+	void SetIsGPUDebugEnabled(bool value);
+}
+
+
 int main()
 {
 	int count = 0;
+
+	LLGI::SetIsGPUDebugEnabled(true);
 
 	LLGI::PlatformParameter pp;
 	pp.Device = LLGI::DeviceType::Default;
@@ -249,20 +144,30 @@ int main()
 		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
 
 
+	auto particleContext = std::make_unique<GPUParticleContext>(graphics, pp.Device, platform->GetMaxFrameCount(), 512);
 
 
-	GPUParticleRenderPass gpuParticleRenderPass(graphics, pp.Device);
+	//GPUParticleRenderPass gpuParticleRenderPass(graphics, pp.Device, platform->GetMaxFrameCount());
 
 
-
+	particleContext->Emit(10, LLGI::Vec3F(0, 0, 0), LLGI::Vec3F(0.1, 0, 0));
+	particleContext->Emit(10, LLGI::Vec3F(0, 0, 0), LLGI::Vec3F(0, 0.1, 0));
+	particleContext->Emit(10, LLGI::Vec3F(0, 0, 0), LLGI::Vec3F(-0.1, 0, 0));
+	particleContext->Emit(10, LLGI::Vec3F(0, 0, 0), LLGI::Vec3F(0, -0.1, 0));
 
 
 	while (true)
 	{
+
+
+
+
 		if (!platform->NewFrame())
 			break;
 
 		sfMemoryPool->NewFrame();
+
+		particleContext->NewFrame();
 
 		LLGI::Color8 color;
 		color.R = (count + 200) % 255;
@@ -276,10 +181,18 @@ int main()
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->WaitUntilCompleted();
 
+
+
+
+
 		commandList->Begin();
+
+
+		particleContext->Render(renderPass, commandList);
+
 		commandList->BeginRenderPass(renderPass);
 
-		gpuParticleRenderPass.draw(renderPass, commandList);
+		//gpuParticleRenderPass.draw();
 
 		commandList->EndRenderPass();
 		commandList->End();
