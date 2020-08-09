@@ -16,13 +16,6 @@
 #endif
 
 
-
-class GPUParticleBuffer
-{
-public:
-
-};
-
 class GPUParticleRenderPass
 {
 public:

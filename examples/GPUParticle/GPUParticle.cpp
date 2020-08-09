@@ -12,6 +12,22 @@
 #include "GPUParticle.h"
 
 //==============================================================================
+// GPUParticleBuffer
+
+GPUParticleBuffer::GPUParticleBuffer(GPUParticleContext* context)
+{
+	LLGI::RenderTextureInitializationParameter params;
+	params.Size = LLGI::Vec2I(context->GetBufferTextureWidth(), context->GetBufferTextureWidth());
+	params.Format = LLGI::TextureFormatType::R32G32B32A32_FLOAT;
+
+	positionTexture_ = LLGI::CreateSharedPtr(context->GetGraphcis()->CreateRenderTexture(params));
+	velocityTexture_ = LLGI::CreateSharedPtr(context->GetGraphcis()->CreateRenderTexture(params));
+
+	LLGI::Texture* textures[] = { positionTexture_.get(), velocityTexture_.get() };
+	renderPass_ = LLGI::CreateSharedPtr(context->GetGraphcis()->CreateRenderPass(textures, 2, nullptr));
+}
+
+//==============================================================================
 // GPUParticleEmitPass
 
 Shader::Shader(
@@ -20,7 +36,6 @@ Shader::Shader(
 	const char* vsBinaryPath,
 	const char* psBinaryPath)
 {
-
 	auto compiler = LLGI::CreateSharedPtr(LLGI::CreateCompiler(deviceType));
 
 	std::vector<LLGI::DataStructure> data_vs;
@@ -133,7 +148,6 @@ GPUParticleEmitPass::GPUParticleEmitPass(GPUParticleContext* context)
 		"C:/Proj/LN/Lumino/build/ExternalSource/Effekseer/Dev/Cpp/3rdParty/LLGI/examples/GPUParticle/Shaders/HLSL_DX12/perticle-emit.vert",
 		"C:/Proj/LN/Lumino/build/ExternalSource/Effekseer/Dev/Cpp/3rdParty/LLGI/examples/GPUParticle/Shaders/HLSL_DX12/perticle-emit.frag");
 
-
 	for (int i = 0; i < context_->GetMaxFrameCount(); i++) {
 		auto vb = LLGI::CreateSharedPtr(context_->GetGraphcis()->CreateVertexBuffer(sizeof(EmitDataVertex) * context_->GetMaxParticles()));
 		emitDataVertexBuffer_.push_back(vb);
@@ -146,22 +160,28 @@ GPUParticleEmitPass::GPUParticleEmitPass(GPUParticleContext* context)
 	}
 	emitDataIndexBuffer_->Unlock();
 
-	LLGI::Texture* textures[] = { context_->GetPositionTexture(), context_->GetVelocityTexture() };
-	emitParticleRenderPass_ = LLGI::CreateSharedPtr(context_->GetGraphcis()->CreateRenderPass(textures, 2, nullptr));
+	for (int i = 0; i < 2; i++) {
+		auto particleBuffer = context_->GetParticleBuffer(i);
 
-	pipelineState_ = LLGI::CreateSharedPtr(context_->GetGraphcis()->CreatePiplineState());
-	pipelineState_->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
-	pipelineState_->VertexLayouts[1] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
-	pipelineState_->VertexLayouts[2] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
-	pipelineState_->VertexLayoutNames[0] = "UV";
-	pipelineState_->VertexLayoutNames[1] = "POSITION";
-	pipelineState_->VertexLayoutNames[2] = "COLOR";
-	pipelineState_->VertexLayoutCount = 3;
-	pipelineState_->Topology = LLGI::TopologyType::Point;
-	pipelineState_->SetShader(LLGI::ShaderStageType::Vertex, shader_->vertexShader());
-	pipelineState_->SetShader(LLGI::ShaderStageType::Pixel, shader_->pixelShader());
-	pipelineState_->SetRenderPassPipelineState(context_->GetGraphcis()->CreateRenderPassPipelineState(emitParticleRenderPass_.get()));
-	pipelineState_->Compile();
+		LLGI::Texture* textures[] = { particleBuffer->GetPositionTexture(), particleBuffer->GetVelocityTexture() };
+		emitParticleRenderPass_[i] = LLGI::CreateSharedPtr(context_->GetGraphcis()->CreateRenderPass(textures, 2, nullptr));
+
+		auto pipelineState = LLGI::CreateSharedPtr(context_->GetGraphcis()->CreatePiplineState());
+		pipelineState->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
+		pipelineState->VertexLayouts[1] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
+		pipelineState->VertexLayouts[2] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
+		pipelineState->VertexLayoutNames[0] = "UV";
+		pipelineState->VertexLayoutNames[1] = "POSITION";
+		pipelineState->VertexLayoutNames[2] = "COLOR";
+		pipelineState->VertexLayoutCount = 3;
+		pipelineState->Topology = LLGI::TopologyType::Point;
+		pipelineState->SetShader(LLGI::ShaderStageType::Vertex, shader_->vertexShader());
+		pipelineState->SetShader(LLGI::ShaderStageType::Pixel, shader_->pixelShader());
+		pipelineState->SetRenderPassPipelineState(context_->GetGraphcis()->CreateRenderPassPipelineState(emitParticleRenderPass_[i].get()));
+		pipelineState->Compile();
+
+		pipelineState_[i] = pipelineState;
+	}
 
 	textureInfoConstantBuffer_ = LLGI::CreateSharedPtr(context_->GetGraphcis()->CreateConstantBuffer(sizeof(GPUParticleTextureInfo)));
 	auto info = (GPUParticleTextureInfo*)textureInfoConstantBuffer_->Lock();
@@ -174,6 +194,8 @@ GPUParticleEmitPass::GPUParticleEmitPass(GPUParticleContext* context)
 
 void GPUParticleEmitPass::Render(LLGI::CommandList* commandList, const std::vector<EmitDataVertex>& emitData, int particleDataCount)
 {
+	if (particleDataCount <= 0) return;
+
 	// Apply new particles
 	auto currentVB = emitDataVertexBuffer_[context_->GetFrameIndex()].get();
 	{
@@ -183,13 +205,84 @@ void GPUParticleEmitPass::Render(LLGI::CommandList* commandList, const std::vect
 	}
 
 
-	commandList->BeginRenderPass(emitParticleRenderPass_.get());
+	int bufferIndex = context_->GetPrimaryParticleBufferIndex();
+
+	commandList->BeginRenderPass(emitParticleRenderPass_[bufferIndex].get());
 
 	commandList->SetConstantBuffer(textureInfoConstantBuffer_.get(), LLGI::ShaderStageType::Vertex);
 	commandList->SetVertexBuffer(currentVB, sizeof(EmitDataVertex), 0);
 	commandList->SetIndexBuffer(emitDataIndexBuffer_.get());
-	commandList->SetPipelineState(pipelineState_.get());
+	commandList->SetPipelineState(pipelineState_[bufferIndex].get());
 	commandList->Draw(particleDataCount);
+
+	commandList->EndRenderPass();
+}
+
+//==============================================================================
+// GPUParticleUpdatePass
+
+GPUParticleUpdatePass::GPUParticleUpdatePass(GPUParticleContext* context)
+	: context_(context)
+{
+	shader_ = std::make_unique<Shader>(context_->GetGraphcis(), context_->GetDeviceType(),
+		"C:/Proj/LN/Lumino/build/ExternalSource/Effekseer/Dev/Cpp/3rdParty/LLGI/examples/GPUParticle/Shaders/HLSL_DX12/perticle-update.vert",
+		"C:/Proj/LN/Lumino/build/ExternalSource/Effekseer/Dev/Cpp/3rdParty/LLGI/examples/GPUParticle/Shaders/HLSL_DX12/perticle-update.frag");
+
+	vertexBuffer_ = LLGI::CreateSharedPtr(context_->GetGraphcis()->CreateVertexBuffer(sizeof(RectangleVertex) * 4));
+	auto vb_buf = (RectangleVertex*)vertexBuffer_->Lock();
+	vb_buf[0].Position = LLGI::Vec3F(-1.0f, 1.0f, 0.0f);	// Upper-Left
+	vb_buf[1].Position = LLGI::Vec3F(1.0f, 1.0f, 0.0f);		// Upper-Right
+	vb_buf[2].Position = LLGI::Vec3F(-1.0f, -1.0f, 0.0f);	// Lower-Left
+	vb_buf[3].Position = LLGI::Vec3F(1.0f, -1.0f, 0.0f);	// Lower-Right
+	vb_buf[0].UV = LLGI::Vec2F(0.0f, 0.0f);
+	vb_buf[1].UV = LLGI::Vec2F(1.0f, 0.0f);
+	vb_buf[2].UV = LLGI::Vec2F(0.0f, 1.0f);
+	vb_buf[3].UV = LLGI::Vec2F(1.0f, 1.0f);
+	vertexBuffer_->Unlock();
+
+	indexBuffer_ = LLGI::CreateSharedPtr(context_->GetGraphcis()->CreateIndexBuffer(2, 6));
+	auto ib_buf = (uint16_t*)indexBuffer_->Lock();
+	ib_buf[0] = 0;
+	ib_buf[1] = 1;
+	ib_buf[2] = 2;
+	ib_buf[3] = 2;
+	ib_buf[4] = 1;
+	ib_buf[5] = 3;
+	indexBuffer_->Unlock();
+
+	for (int i = 0; i < 2; i++) {
+		auto particleBuffer = context_->GetParticleBuffer(i);
+
+		auto pipelineState = LLGI::CreateSharedPtr(context_->GetGraphcis()->CreatePiplineState());
+		pipelineState->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
+		pipelineState->VertexLayouts[1] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
+		pipelineState->VertexLayoutNames[0] = "POSITION";
+		pipelineState->VertexLayoutNames[1] = "UV";
+		pipelineState->VertexLayoutCount = 2;
+		pipelineState->Topology = LLGI::TopologyType::Triangle;
+		pipelineState->SetShader(LLGI::ShaderStageType::Vertex, shader_->vertexShader());
+		pipelineState->SetShader(LLGI::ShaderStageType::Pixel, shader_->pixelShader());
+		pipelineState->SetRenderPassPipelineState(context_->GetGraphcis()->CreateRenderPassPipelineState(particleBuffer->GetRenderPass()));
+		pipelineState->Compile();
+
+		pipelineState_[i] = pipelineState;
+	}
+}
+
+void GPUParticleUpdatePass::Render(LLGI::CommandList* commandList)
+{
+	int srcBufferIndex = context_->GetTargetParticleBufferIndex();
+	GPUParticleBuffer* srcBuffer = context_->GetPrimaryParticleBuffer();
+	GPUParticleBuffer* dstBuffer = context_->GetTargetParticleBuffer();
+
+	commandList->BeginRenderPass(dstBuffer->GetRenderPass());
+
+	commandList->SetVertexBuffer(vertexBuffer_.get(), sizeof(RectangleVertex), 0);
+	commandList->SetIndexBuffer(indexBuffer_.get());
+	commandList->SetTexture(srcBuffer->GetPositionTexture(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+	commandList->SetTexture(srcBuffer->GetPositionTexture(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Nearest, 1, LLGI::ShaderStageType::Pixel);
+	commandList->SetPipelineState(pipelineState_[srcBufferIndex].get());
+	commandList->Draw(2);
 
 	commandList->EndRenderPass();
 }
@@ -206,16 +299,16 @@ GPUParticleContext::GPUParticleContext(LLGI::Graphics* graphics, LLGI::DeviceTyp
 	, maxFrameCount_(frameCount)
 	, emitedCount_(0)
 	, newParticleCountInFrame_(0)
+	, primaryParticleBufferIndex_(-1)
 {
 	emitData_.resize(kMaxOneFrameEmitCount);
 
-	LLGI::RenderTextureInitializationParameter params;
-	params.Size = LLGI::Vec2I(textureSize, textureSize);
-	params.Format = LLGI::TextureFormatType::R32G32B32A32_FLOAT;
-	positionTexture_ = LLGI::CreateSharedPtr(graphics->CreateRenderTexture(params));
-	velocityTexture_ = LLGI::CreateSharedPtr(graphics->CreateRenderTexture(params));
+
+	particleBuffers_[0] = std::make_unique<GPUParticleBuffer>(this);
+	particleBuffers_[1] = std::make_unique<GPUParticleBuffer>(this);
 
 	particleEmitPass_ = std::make_unique<GPUParticleEmitPass>(this);
+	particleUpdatePass_ = std::make_unique<GPUParticleUpdatePass>(this);
 }
 
 void GPUParticleContext::Emit(float lifeTime, LLGI::Vec3F position, LLGI::Vec3F velocity)
@@ -230,9 +323,13 @@ void GPUParticleContext::Emit(float lifeTime, LLGI::Vec3F position, LLGI::Vec3F 
 void GPUParticleContext::NewFrame()
 {
 	frameIndex_ = (frameIndex_ + 1) % maxFrameCount_;
+	primaryParticleBufferIndex_ = (primaryParticleBufferIndex_ + 1) % static_cast<int>(particleBuffers_.size());
 }
 
 void GPUParticleContext::Render(LLGI::RenderPass* renderPass, LLGI::CommandList* commandList)
 {
 	particleEmitPass_->Render(commandList, emitData_, newParticleCountInFrame_);
+	newParticleCountInFrame_ = 0;
+
+	particleUpdatePass_->Render(commandList);
 }

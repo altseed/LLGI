@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <memory>
 #include <iostream>
 #include <unordered_map>
@@ -13,6 +13,12 @@ struct EmitDataVertex
 	LLGI::Vec2F ParticleIdAndLifeTime;
 	LLGI::Vec3F Position;
 	LLGI::Vec3F Velocity;
+};
+
+struct RectangleVertex
+{
+	LLGI::Vec3F Position;
+	LLGI::Vec2F UV;
 };
 
 struct alignas(16) GPUParticleTextureInfo
@@ -39,6 +45,21 @@ private:
 	std::shared_ptr<LLGI::Shader> m_ps;
 };
 
+class GPUParticleBuffer
+{
+public:
+	GPUParticleBuffer(GPUParticleContext* context);
+
+	LLGI::Texture* GetPositionTexture() const { return positionTexture_.get(); }
+	LLGI::Texture* GetVelocityTexture() const { return velocityTexture_.get(); }
+	LLGI::RenderPass* GetRenderPass() const { return renderPass_.get(); }
+
+private:
+	std::shared_ptr<LLGI::Texture> positionTexture_;
+	std::shared_ptr<LLGI::Texture> velocityTexture_;
+	std::shared_ptr<LLGI::RenderPass> renderPass_;
+};
+
 class GPUParticleEmitPass
 {
 public:
@@ -48,20 +69,37 @@ public:
 
 private:
 	GPUParticleContext* context_;
+
 	std::unique_ptr<Shader> shader_;
 
-	std::vector<std::shared_ptr<LLGI::VertexBuffer>> emitDataVertexBuffer_;	// LLGI::CommandList::SetData() が未対応なので、Lock/Unlock で対応することになるが、そのため FrameCount 分必要
+	// LLGI::CommandList::SetData() が未対応なので、Lock/Unlock で対応することになるが、そのため FrameCount 分必要/
+	std::vector<std::shared_ptr<LLGI::VertexBuffer>> emitDataVertexBuffer_;
 
 	// いまは DX12 バックエンドが IndexBuffer 必須となっているので用意する必要がある
 	std::shared_ptr<LLGI::IndexBuffer> emitDataIndexBuffer_;
 
+	std::array<std::shared_ptr<LLGI::RenderPass>, 2> emitParticleRenderPass_;
 
-	std::shared_ptr<LLGI::RenderPass> emitParticleRenderPass_;
-	std::shared_ptr<LLGI::PipelineState> pipelineState_;
+	std::array<std::shared_ptr<LLGI::PipelineState>, 2> pipelineState_;
+
 	std::shared_ptr<LLGI::ConstantBuffer> textureInfoConstantBuffer_;
 
-
 	std::unordered_map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pipelineCache_;
+};
+
+class GPUParticleUpdatePass
+{
+public:
+	GPUParticleUpdatePass(GPUParticleContext* context);
+
+	void Render(LLGI::CommandList* commandList);
+
+private:
+	GPUParticleContext* context_;
+	std::unique_ptr<Shader> shader_;
+	std::shared_ptr<LLGI::VertexBuffer> vertexBuffer_;
+	std::shared_ptr<LLGI::IndexBuffer> indexBuffer_;
+	std::array<std::shared_ptr<LLGI::PipelineState>, 2> pipelineState_;
 };
 
 class GPUParticleContext
@@ -83,9 +121,16 @@ public:
 
 	int GetBufferTextureWidth() const { return bufferTextureWidth_; }
 
-	LLGI::Texture* GetPositionTexture() const { return positionTexture_.get(); }
+	/* Emit を書き込むところ & 今フレームの計算に使う情報の Fetch 元 */
+	GPUParticleBuffer* GetPrimaryParticleBuffer() const { return particleBuffers_[primaryParticleBufferIndex_].get(); }
 
-	LLGI::Texture* GetVelocityTexture() const { return velocityTexture_.get(); }
+	GPUParticleBuffer* GetTargetParticleBuffer() const { return particleBuffers_[(primaryParticleBufferIndex_ + 1) % 2].get(); }
+
+
+	int GetPrimaryParticleBufferIndex() const { return primaryParticleBufferIndex_; }
+	int GetTargetParticleBufferIndex() const { return (primaryParticleBufferIndex_ + 1) % 2; }
+
+	GPUParticleBuffer* GetParticleBuffer(int index) const { return particleBuffers_[index].get(); }
 
 	void Emit(float lifeTime, LLGI::Vec3F position, LLGI::Vec3F velocity);
 
@@ -105,10 +150,12 @@ private:
 	int emitedCount_;
 	int newParticleCountInFrame_;
 
-	std::shared_ptr<LLGI::Texture> positionTexture_;
-	std::shared_ptr<LLGI::Texture> velocityTexture_;
+	std::array<std::unique_ptr<GPUParticleBuffer>, 2> particleBuffers_;
+	int primaryParticleBufferIndex_;
 
 	std::unique_ptr<GPUParticleEmitPass> particleEmitPass_;
+	std::unique_ptr<GPUParticleUpdatePass> particleUpdatePass_;
+
 };
 
 
