@@ -8,6 +8,19 @@ class GPUParticleEmitPass;
 class GPUParticleRenderPass;
 class GPUParticleContext;
 
+struct Matrix44
+{
+public:
+	float Values[4][4];
+
+
+	Matrix44& LookAtRH(const LLGI::Vec3F& eye, const LLGI::Vec3F& at, const LLGI::Vec3F& up);
+
+	Matrix44& PerspectiveFovRH(float ovY, float aspect, float zn, float zf);
+
+	static Matrix44& Mul(Matrix44& o, const Matrix44& in1, const Matrix44& in2);
+};
+
 struct EmitDataVertex
 {
 	LLGI::Vec2F ParticleIdAndLifeTime;
@@ -24,6 +37,7 @@ struct RectangleVertex
 struct alignas(16) GPUParticleTextureInfo
 {
 	float TextureSize[4];
+	Matrix44 viewProjMatrix;
 };
 
 class Shader
@@ -82,7 +96,6 @@ private:
 
 	std::array<std::shared_ptr<LLGI::PipelineState>, 2> pipelineState_;
 
-	std::shared_ptr<LLGI::ConstantBuffer> textureInfoConstantBuffer_;
 
 	std::unordered_map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pipelineCache_;
 };
@@ -102,6 +115,29 @@ private:
 	std::array<std::shared_ptr<LLGI::PipelineState>, 2> pipelineState_;
 };
 
+
+class GPUParticleRenderPass
+{
+public:
+	struct SimpleVertex
+	{
+		LLGI::Vec3F Position;
+		LLGI::Vec2F UV;
+	};
+
+	GPUParticleRenderPass(GPUParticleContext* context);
+
+	void Render(LLGI::RenderPass* renderPass, LLGI::CommandList* commandList);
+
+private:
+	GPUParticleContext* context_;
+	std::unique_ptr<Shader> shader_;
+	std::shared_ptr<LLGI::VertexBuffer> vb_;
+	std::shared_ptr<LLGI::IndexBuffer> ib_;
+	std::unordered_map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pipelineCache_;
+
+};
+
 class GPUParticleContext
 {
 public:
@@ -117,6 +153,8 @@ public:
 
 	int GetMaxFrameCount() const { return maxFrameCount_; }
 
+	int GetParticleCount() const { return emitedCount_; }
+
 	int GetMaxParticles() const { return maxTexels_; }
 
 	int GetBufferTextureWidth() const { return bufferTextureWidth_; }
@@ -126,6 +164,7 @@ public:
 
 	GPUParticleBuffer* GetTargetParticleBuffer() const { return particleBuffers_[(primaryParticleBufferIndex_ + 1) % 2].get(); }
 
+	LLGI::ConstantBuffer* GetTextureInfoConstantBuffer() const { return textureInfoConstantBuffer_.get(); }
 
 	int GetPrimaryParticleBufferIndex() const { return primaryParticleBufferIndex_; }
 	int GetTargetParticleBufferIndex() const { return (primaryParticleBufferIndex_ + 1) % 2; }
@@ -151,11 +190,12 @@ private:
 	int newParticleCountInFrame_;
 
 	std::array<std::unique_ptr<GPUParticleBuffer>, 2> particleBuffers_;
+	std::shared_ptr<LLGI::ConstantBuffer> textureInfoConstantBuffer_;
 	int primaryParticleBufferIndex_;
 
 	std::unique_ptr<GPUParticleEmitPass> particleEmitPass_;
 	std::unique_ptr<GPUParticleUpdatePass> particleUpdatePass_;
-
+	std::unique_ptr<GPUParticleRenderPass> particleRenderPass_;
 };
 
 

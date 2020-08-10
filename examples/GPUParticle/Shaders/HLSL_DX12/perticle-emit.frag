@@ -14,12 +14,13 @@ struct VS_OUTPUT
 VS_OUTPUT main(PS_INPUT input)
 {
     VS_OUTPUT output;
-    output.Position = input.PositionData;//float4(1, 0, 0, 1);//
-    output.VelocityAndLifeTime = input.VelocityAndLifeTimeData;// float4(0, 1, 0, 1);//
+    output.Position = input.PositionData;
+    output.VelocityAndLifeTime = input.VelocityAndLifeTimeData;
 
     // Debug
-    output.Position = float4(1, 0, 0, 1);
-    output.VelocityAndLifeTime = float4(0, 1, 0, 1);
+    //output.Position = float4(1, 0, 0, 1);
+    //output.VelocityAndLifeTime = float4(0, 1, 0, 1);
+    //output.Position.a = 1.0;
 
     return output;
 }

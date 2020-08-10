@@ -15,6 +15,7 @@ struct VS_OUTPUT
 cbuffer GPUParticleTextureInfo : register(b0)
 {
     float4 TextureSize;
+    float4x4 ViewProjMatrix;
 };
 
 

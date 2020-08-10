@@ -13,6 +13,7 @@
 #include <queue>
 #include <string>
 #include <vector>
+#include <cmath>
 
 namespace LLGI
 {
@@ -174,6 +175,31 @@ struct Vec3F
 	Vec3F() : X(0), Y(0), Z(0) {}
 
 	Vec3F(float x, float y, float z) : X(x), Y(y), Z(z) {}
+
+	static Vec3F Normalize(const Vec3F& in)
+	{
+		float inv = 1.0f /  std::sqrtf(in.X * in.X + in.Y * in.Y + in.Z * in.Z);
+		return Vec3F(in.X * inv, in.Y * inv, in.Z * inv);
+	}
+
+	static Vec3F Cross(const Vec3F& in1, const Vec3F& in2)
+	{
+		float x = in1.Y * in2.Z - in1.Z * in2.Y;
+		float y = in1.Z * in2.X - in1.X * in2.Z;
+		float z = in1.X * in2.Y - in1.Y * in2.X;
+		return Vec3F(x, y, z);
+	}
+
+	static Vec3F Sub(const Vec3F& in1, const Vec3F& in2)
+	{
+		return Vec3F(in1.X - in2.X, in1.Y - in2.Y, in1.Z - in2.Z);
+	}
+
+	static float Dot(const Vec3F& in1, const Vec3F& in2)
+	{
+		return in1.X * in2.X + in1.Y * in2.Y + in1.Z * in2.Z;
+	}
+
 };
 
 struct Color8

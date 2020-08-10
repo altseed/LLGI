@@ -18,11 +18,13 @@ struct PS_OUTPUT
 
 PS_OUTPUT main(PS_INPUT input) : SV_TARGET 
 {
-    
-    float4 c = PositionTexture_.Sample(PositionSamplerState_, input.UV);
+    float3 position = PositionTexture_.Sample(PositionSamplerState_, input.UV).xyz;
+    float3 velocity = VelocityTexture_.Sample(VelocitySamplerState_, input.UV).xyz;
+
+    position += velocity;
 
     PS_OUTPUT output;
-    output.Position = c;//float4(input.UV, 1, 1);
-    output.Velocity = float4(0, 1, 1, 1);
+    output.Position = float4(position, 1);
+    output.Velocity = float4(velocity, 1);
     return output;
 }

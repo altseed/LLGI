@@ -1,4 +1,6 @@
 
+// Note: Copy screen only.
+
 struct VS_INPUT
 {
     float3 Position : POSITION0;
