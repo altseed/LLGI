@@ -12,19 +12,20 @@ struct PS_INPUT
 
 struct PS_OUTPUT
 {
-    float4 Position : SV_TARGET0;
-    float4 Velocity : SV_TARGET1;
+    float4 PositionAndLocalTime : SV_TARGET0;
+    float4 VelocityAndLifeTime : SV_TARGET1;
 };
 
-PS_OUTPUT main(PS_INPUT input) : SV_TARGET 
+PS_OUTPUT main(PS_INPUT input) : SV_TARGET
 {
-    float3 position = PositionTexture_.Sample(PositionSamplerState_, input.UV).xyz;
-    float3 velocity = VelocityTexture_.Sample(VelocitySamplerState_, input.UV).xyz;
+    float4 positionAndLocalTime = PositionTexture_.Sample(PositionSamplerState_, input.UV);
+    float4 velocityAndLifeTime = VelocityTexture_.Sample(VelocitySamplerState_, input.UV);
 
-    position += velocity;
+    float3 position = positionAndLocalTime.xyz + velocityAndLifeTime.xyz;
+    float localTime = positionAndLocalTime.w + 0.016;
 
     PS_OUTPUT output;
-    output.Position = float4(position, 1);
-    output.Velocity = float4(velocity, 1);
+    output.PositionAndLocalTime = float4(position, localTime);
+    output.VelocityAndLifeTime = velocityAndLifeTime;
     return output;
 }

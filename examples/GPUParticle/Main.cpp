@@ -92,10 +92,10 @@ int main()
 	//localFront.z = makeRandom(particle, -1.0, 1.0, ParticleRandomSource::Self);
 	//localFront = Vector3::safeNormalize(localFront, Vector3::UnitZ);
 
-	//particleContext->Emit(10, LLGI::Vec3F(0, 0, 0), LLGI::Vec3F(0.0001, 0, 0));
-	//particleContext->Emit(10, LLGI::Vec3F(0.1, 0.1, 0), LLGI::Vec3F(0, 0.0001, 0));
-	//particleContext->Emit(10, LLGI::Vec3F(0.2, 0.2, 0), LLGI::Vec3F(-0.0001, 0, 0));
-	//particleContext->Emit(10, LLGI::Vec3F(0.3, 0.3, 0), LLGI::Vec3F(0, -0.0001, 0));
+	//particleContext->Emit(1, LLGI::Vec3F(0, 0, 0), LLGI::Vec3F(0, 0, 0));
+	//particleContext->Emit(1, LLGI::Vec3F(1, 1, 0), LLGI::Vec3F(0.1, 0, 0));
+	//particleContext->Emit(1, LLGI::Vec3F(10, 20, 0), LLGI::Vec3F(0, 0, 0));
+	//particleContext->Emit(1, LLGI::Vec3F(3, 3, 0), LLGI::Vec3F(0, 0, 0));
 
 
 
@@ -103,13 +103,14 @@ int main()
 	while (true)
 	{
 
-		const float radius = 10.0f;
-		const float minVelocity = 0.1f;
-		const float velocityScale = 0.5f;
-		for (int i = 0; i < 1000; i++) {
+		const float radius = 100.0f;
+		const float minVelocity = 0.001f;
+		const float velocityScale = 0.05f;
+		for (int i = 0; i < 100; i++) {
 			auto dir = LLGI::Vec3F::Normalize(LLGI::Vec3F(randFloat(), randFloat(), randFloat()));
 			auto pos = LLGI::Vec3F(dir.X * radius, dir.Y * radius, dir.Z * radius);
-			auto vel = LLGI::Vec3F(randFloat(minVelocity), randFloat(minVelocity), randFloat(minVelocity));
+			//auto vel = LLGI::Vec3F(randFloat(minVelocity) * velocityScale, randFloat(minVelocity) * velocityScale, randFloat(minVelocity) * velocityScale);//LLGI::Vec3F(0, 0, 0);//
+			auto vel = dir * (randFloat(minVelocity) + 1.0f) * velocityScale;
 			particleContext->Emit(5, pos, vel);
 		}
 
@@ -124,9 +125,9 @@ int main()
 		particleContext->NewFrame();
 
 		LLGI::Color8 color;
-		color.R = 64;
-		color.G = 64;
-		color.B = 64;
+		color.R = 0;
+		color.G = 0;
+		color.B = 0;
 		color.A = 255;
 
 
@@ -150,6 +151,7 @@ int main()
 
 		platform->Present();
 		count++;
+		//std::cout << count << std::endl;
 	}
 
 	graphics->WaitFinish();

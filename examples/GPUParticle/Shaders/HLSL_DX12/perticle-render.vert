@@ -15,6 +15,7 @@ struct VS_INPUT
 struct VS_OUTPUT
 {
     float2 UV : UV0;
+    float4 Color: COLOR0;
     float4 Position : SV_POSITION;
 };
 
@@ -28,14 +29,17 @@ VS_OUTPUT main(VS_INPUT input)
 {
     float2 texelPos = float2(fmod(input.InstanceId, TextureResolution.x), input.InstanceId / TextureResolution.x);
     float2 fetchUV = texelPos * TextureResolution.zw;
-    float3 posOffset = PositionTexture_.SampleLevel(PositionSamplerState_, fetchUV, 0).xyz;
+    float4 positionAndLocalTime = PositionTexture_.SampleLevel(PositionSamplerState_, fetchUV, 0);
+    float4 velocityAndLifeTime = VelocityTexture_.SampleLevel(VelocitySamplerState_, fetchUV, 0);
+
+    float3 posOffset = positionAndLocalTime.xyz;
 
     float3 worldPos = input.Position + posOffset;
 
     VS_OUTPUT output;
     output.Position = mul(ViewProjMatrix, float4(worldPos, 1.0f));
-    //output.Position = float4(worldPos, 1.0f);
     output.UV = input.UV;
+    output.Color = float4(1, 1, 1, 1.0f - (positionAndLocalTime.w / (velocityAndLifeTime.w + 0.00001)));
 
     return output;
 }

@@ -202,6 +202,14 @@ struct Vec3F
 
 };
 
+inline Vec3F operator*(const Vec3F& v1, float v2)
+{
+	return Vec3F(
+		v1.X * v2,
+		v1.Y * v2,
+		v1.Z * v2);
+}
+
 struct Color8
 {
 	uint8_t R;

@@ -257,6 +257,7 @@ GPUParticleEmitPass::GPUParticleEmitPass(GPUParticleContext* context)
 		pipelineState->VertexLayoutNames[1] = "POSITION";
 		pipelineState->VertexLayoutNames[2] = "COLOR";
 		pipelineState->VertexLayoutCount = 3;
+		pipelineState->IsBlendEnabled = false;
 		pipelineState->Topology = LLGI::TopologyType::Point;
 		pipelineState->SetShader(LLGI::ShaderStageType::Vertex, shader_->vertexShader());
 		pipelineState->SetShader(LLGI::ShaderStageType::Pixel, shader_->pixelShader());
@@ -334,6 +335,7 @@ GPUParticleUpdatePass::GPUParticleUpdatePass(GPUParticleContext* context)
 		pipelineState->VertexLayoutNames[0] = "POSITION";
 		pipelineState->VertexLayoutNames[1] = "UV";
 		pipelineState->VertexLayoutCount = 2;
+		pipelineState->IsBlendEnabled = false;
 		pipelineState->Topology = LLGI::TopologyType::Triangle;
 		pipelineState->SetShader(LLGI::ShaderStageType::Vertex, shader_->vertexShader());
 		pipelineState->SetShader(LLGI::ShaderStageType::Pixel, shader_->pixelShader());
@@ -440,9 +442,9 @@ void GPUParticleRenderPass::Render(LLGI::RenderPass* renderPass, LLGI::CommandLi
 	commandList->SetConstantBuffer(context_->GetTextureInfoConstantBuffer(), LLGI::ShaderStageType::Vertex);
 	commandList->SetTexture(particleDataBuffer->GetPositionTexture(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Vertex);
 	commandList->SetTexture(particleDataBuffer->GetVelocityTexture(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Nearest, 1, LLGI::ShaderStageType::Vertex);
-	commandList->SetTexture(context_->GetParticleTexture(), LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Linear, 2, LLGI::ShaderStageType::Pixel);
+	commandList->SetTexture(context_->GetParticleTexture(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Linear, 2, LLGI::ShaderStageType::Pixel);
 	commandList->SetPipelineState(pipeline.get());
-	commandList->Draw(2, context_->GetParticleCount());
+	commandList->Draw(2, context_->GetMaxParticles());
 	commandList->EndRenderPass();
 }
 
@@ -472,7 +474,7 @@ GPUParticleContext::GPUParticleContext(
 	particleBuffers_[1] = std::make_unique<GPUParticleBuffer>(this);
 
 	Matrix44 view, proj;
-	view.LookAtRH(LLGI::Vec3F(0, 0, 100), LLGI::Vec3F(0, 0, 0), LLGI::Vec3F(0, 1, 0));
+	view.LookAtRH(LLGI::Vec3F(0, 0, 800), LLGI::Vec3F(0, 0, 0), LLGI::Vec3F(0, 1, 0));
 	proj.PerspectiveFovRH(0.3, 1280.0 / 720.0, 0.1, 1000.0);
 
 	textureInfoConstantBuffer_ = LLGI::CreateSharedPtr(graphcis_->CreateConstantBuffer(sizeof(GPUParticleTextureInfo)));
@@ -507,10 +509,13 @@ void GPUParticleContext::NewFrame()
 void GPUParticleContext::Render(LLGI::RenderPass* renderPass, LLGI::CommandList* commandList)
 {
 	particleEmitPass_->Render(commandList, emitData_, newParticleCountInFrame_);
-	emitedCount_ += newParticleCountInFrame_;
+	emitedCount_ = std::min(emitedCount_ + newParticleCountInFrame_, GetMaxParticles());
 	newParticleCountInFrame_ = 0;
 
 	particleUpdatePass_->Render(commandList);
 
 	particleRenderPass_->Render(renderPass, commandList);
+
+
+	std::cout << "emitedCount_: " << emitedCount_ << std::endl;
 }

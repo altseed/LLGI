@@ -18,7 +18,7 @@ VS_OUTPUT main(PS_INPUT input)
     output.VelocityAndLifeTime = input.VelocityAndLifeTimeData;
 
     // Debug
-    //output.Position = float4(1, 0, 0, 1);
+    //output.Position = float4(1, 0, 0, 0);
     //output.VelocityAndLifeTime = float4(0, 1, 0, 1);
     //output.Position.a = 1.0;
 
