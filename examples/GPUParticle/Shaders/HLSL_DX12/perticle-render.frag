@@ -1,4 +1,7 @@
 
+Texture2D ParticleTexture_ : register(t2);
+SamplerState ParticleSamplerState_ : register(s2);
+
 struct PS_INPUT
 {
     float2  UV : UV0;
@@ -6,5 +9,6 @@ struct PS_INPUT
 
 float4 main(PS_INPUT input) : SV_TARGET
 {
-    return float4(input.UV, 0, 1);
+    float4 color = ParticleTexture_.Sample(ParticleSamplerState_, input.UV);
+    return color;
 }

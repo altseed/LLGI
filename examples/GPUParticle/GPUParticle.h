@@ -143,7 +143,12 @@ class GPUParticleContext
 public:
 	static const int kMaxOneFrameEmitCount = 1024;
 
-	GPUParticleContext(LLGI::Graphics* graphics, LLGI::DeviceType deviceType, int frameCount, int textureSize);
+	GPUParticleContext(
+		LLGI::Graphics* graphics,
+		LLGI::DeviceType deviceType,
+		int frameCount,
+		int textureSize,
+		LLGI::Texture* particleTexture);
 
 	LLGI::Graphics* GetGraphcis() const { return graphcis_; }
 
@@ -158,6 +163,8 @@ public:
 	int GetMaxParticles() const { return maxTexels_; }
 
 	int GetBufferTextureWidth() const { return bufferTextureWidth_; }
+
+	LLGI::Texture* GetParticleTexture() const { return particleTexture_; }
 
 	/* Emit を書き込むところ & 今フレームの計算に使う情報の Fetch 元 */
 	GPUParticleBuffer* GetPrimaryParticleBuffer() const { return particleBuffers_[primaryParticleBufferIndex_].get(); }
@@ -184,6 +191,7 @@ private:
 	int maxFrameCount_;
 	int bufferTextureWidth_;
 	int maxTexels_;
+	LLGI::Texture* particleTexture_;
 
 	std::vector<EmitDataVertex> emitData_;
 	int emitedCount_;

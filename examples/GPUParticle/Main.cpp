@@ -1,6 +1,11 @@
 
 #include <iostream>
 #include <unordered_map>
+
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "../../src_test/thirdparty/stb/stb_image.h"
+
 #include <LLGI.CommandList.h>
 #include <LLGI.Graphics.h>
 #include <LLGI.Platform.h>
@@ -9,6 +14,7 @@
 #include <LLGI.VertexBuffer.h>
 #include <LLGI.IndexBuffer.h>
 #include <LLGI.PipelineState.h>
+#include <LLGI.Texture.h>
 #include "GPUParticle.h"
 
 #ifdef _WIN32
@@ -22,6 +28,14 @@ class GPUParticleContext;
 
 namespace LLGI {
 	void SetIsGPUDebugEnabled(bool value);
+}
+
+// -1.0 ~ 1.0
+float randFloat(float minAbs = 0.0f)
+{
+	float r = (static_cast<float>(rand()) / static_cast<float>(RAND_MAX));
+	if (r < minAbs) r = minAbs;
+	return r * 2.0f - 1.0f;
 }
 
 
@@ -45,22 +59,59 @@ int main()
 		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
 
 
-	auto particleContext = std::make_unique<GPUParticleContext>(graphics, pp.Device, platform->GetMaxFrameCount(), 512);
 
 
 	//GPUParticleRenderPass gpuParticleRenderPass(graphics, pp.Device, platform->GetMaxFrameCount());
 
 
-	particleContext->Emit(10, LLGI::Vec3F(0, 0, 0), LLGI::Vec3F(0.0001, 0, 0));
-	particleContext->Emit(10, LLGI::Vec3F(0.1, 0.1, 0), LLGI::Vec3F(0, 0.0001, 0));
-	particleContext->Emit(10, LLGI::Vec3F(0.2, 0.2, 0), LLGI::Vec3F(-0.0001, 0, 0));
-	particleContext->Emit(10, LLGI::Vec3F(0.3, 0.3, 0), LLGI::Vec3F(0, -0.0001, 0));
+	std::shared_ptr<LLGI::Texture> particleTexture;
+	{
+		int w, h, comp;
+		stbi_uc* data = stbi_load(
+			"C:/Proj/LN/Lumino/build/ExternalSource/Effekseer/Dev/Cpp/3rdParty/LLGI/examples/GPUParticle/Textures/Particle01.png",
+			&w, &h, &comp, 4);
+
+		LLGI::TextureInitializationParameter texParam;
+		texParam.Size = LLGI::Vec2I(w, h);
+		texParam.Format = LLGI::TextureFormatType::R8G8B8A8_UNORM;
+
+		particleTexture = LLGI::CreateSharedPtr(graphics->CreateTexture(texParam));
+		auto texture_buf = (LLGI::Color8*)particleTexture->Lock();
+		memcpy(texture_buf, data, w * h * comp);
+		particleTexture->Unlock();
+	}
+
+	auto particleContext = std::make_unique<GPUParticleContext>(graphics, pp.Device, platform->GetMaxFrameCount(), 512, particleTexture.get());
+
+
+	//"C:/Proj/LN/Lumino/build/ExternalSource/Effekseer/Dev/Cpp/3rdParty/LLGI/examples/GPUParticle/Textures/Particle01.png"
+
+
+	//localFront.x = makeRandom(particle, -1.0, 1.0, ParticleRandomSource::Self);
+	//localFront.y = makeRandom(particle, -1.0, 1.0, ParticleRandomSource::Self);
+	//localFront.z = makeRandom(particle, -1.0, 1.0, ParticleRandomSource::Self);
+	//localFront = Vector3::safeNormalize(localFront, Vector3::UnitZ);
+
+	//particleContext->Emit(10, LLGI::Vec3F(0, 0, 0), LLGI::Vec3F(0.0001, 0, 0));
+	//particleContext->Emit(10, LLGI::Vec3F(0.1, 0.1, 0), LLGI::Vec3F(0, 0.0001, 0));
+	//particleContext->Emit(10, LLGI::Vec3F(0.2, 0.2, 0), LLGI::Vec3F(-0.0001, 0, 0));
+	//particleContext->Emit(10, LLGI::Vec3F(0.3, 0.3, 0), LLGI::Vec3F(0, -0.0001, 0));
 
 
 
 
 	while (true)
 	{
+
+		const float radius = 10.0f;
+		const float minVelocity = 0.1f;
+		const float velocityScale = 0.5f;
+		for (int i = 0; i < 1000; i++) {
+			auto dir = LLGI::Vec3F::Normalize(LLGI::Vec3F(randFloat(), randFloat(), randFloat()));
+			auto pos = LLGI::Vec3F(dir.X * radius, dir.Y * radius, dir.Z * radius);
+			auto vel = LLGI::Vec3F(randFloat(minVelocity), randFloat(minVelocity), randFloat(minVelocity));
+			particleContext->Emit(5, pos, vel);
+		}
 
 
 
@@ -73,9 +124,9 @@ int main()
 		particleContext->NewFrame();
 
 		LLGI::Color8 color;
-		color.R = (count + 200) % 255;
-		color.G = 0;
-		color.B = 0;
+		color.R = 64;
+		color.G = 64;
+		color.B = 64;
 		color.A = 255;
 
 

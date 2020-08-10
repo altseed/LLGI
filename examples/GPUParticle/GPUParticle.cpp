@@ -413,6 +413,14 @@ void GPUParticleRenderPass::Render(LLGI::RenderPass* renderPass, LLGI::CommandLi
 		pip->VertexLayoutCount = 2;
 		pip->Topology = LLGI::TopologyType::Triangle;
 
+		// Additional Blend
+		pip->BlendSrcFunc = LLGI::BlendFuncType::SrcAlpha;
+		pip->BlendDstFunc = LLGI::BlendFuncType::One;
+		pip->BlendEquationRGB = LLGI::BlendEquationType::Add;
+		pip->BlendSrcFuncAlpha = LLGI::BlendFuncType::SrcAlpha;
+		pip->BlendDstFuncAlpha = LLGI::BlendFuncType::One;
+		pip->BlendEquationAlpha = LLGI::BlendEquationType::Add;
+
 		pip->SetShader(LLGI::ShaderStageType::Vertex, shader_->vertexShader());
 		pip->SetShader(LLGI::ShaderStageType::Pixel, shader_->pixelShader());
 		pip->SetRenderPassPipelineState(renderPassState.get());
@@ -430,8 +438,9 @@ void GPUParticleRenderPass::Render(LLGI::RenderPass* renderPass, LLGI::CommandLi
 	commandList->SetVertexBuffer(vb_.get(), sizeof(SimpleVertex), 0);
 	commandList->SetIndexBuffer(ib_.get());
 	commandList->SetConstantBuffer(context_->GetTextureInfoConstantBuffer(), LLGI::ShaderStageType::Vertex);
-	commandList->SetTexture(particleDataBuffer->GetPositionTexture(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
-	commandList->SetTexture(particleDataBuffer->GetVelocityTexture(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Nearest, 1, LLGI::ShaderStageType::Pixel);
+	commandList->SetTexture(particleDataBuffer->GetPositionTexture(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Vertex);
+	commandList->SetTexture(particleDataBuffer->GetVelocityTexture(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Nearest, 1, LLGI::ShaderStageType::Vertex);
+	commandList->SetTexture(context_->GetParticleTexture(), LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Linear, 2, LLGI::ShaderStageType::Pixel);
 	commandList->SetPipelineState(pipeline.get());
 	commandList->Draw(2, context_->GetParticleCount());
 	commandList->EndRenderPass();
@@ -440,11 +449,17 @@ void GPUParticleRenderPass::Render(LLGI::RenderPass* renderPass, LLGI::CommandLi
 //==============================================================================
 // GPUParticleContext
 
-GPUParticleContext::GPUParticleContext(LLGI::Graphics* graphics, LLGI::DeviceType deviceType, int frameCount, int textureSize)
+GPUParticleContext::GPUParticleContext(
+	LLGI::Graphics* graphics,
+	LLGI::DeviceType deviceType,
+	int frameCount,
+	int textureSize,
+	LLGI::Texture* particleTexture)
 	: graphcis_(graphics)
 	, deviceType_(deviceType)
 	, bufferTextureWidth_(textureSize)
 	, maxTexels_(textureSize* textureSize)
+	, particleTexture_(particleTexture)
 	, frameIndex_(-1)
 	, maxFrameCount_(frameCount)
 	, emitedCount_(0)
