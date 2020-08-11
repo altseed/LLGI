@@ -20,7 +20,7 @@ target_link_libraries(
 
 target_link_directories(example_GPUParticle PRIVATE ${THIRDPARTY_LIBRARY_DIRECTORIES})
 target_link_libraries(example_GPUParticle PRIVATE ${THIRDPARTY_LIBRARIES})
-
+target_compile_definitions(example_GPUParticle PRIVATE EXAMPLE_ASSET_DIR="${CMAKE_CURRENT_LIST_DIR}")
 
 if(BUILD_VULKAN)
   find_package(Vulkan REQUIRED)

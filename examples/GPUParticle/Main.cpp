@@ -68,7 +68,7 @@ int main()
 	{
 		int w, h, comp;
 		stbi_uc* data = stbi_load(
-			"C:/Proj/LN/Lumino/build/ExternalSource/Effekseer/Dev/Cpp/3rdParty/LLGI/examples/GPUParticle/Textures/Particle01.png",
+			EXAMPLE_ASSET_DIR "/Textures/Particle01.png",
 			&w, &h, &comp, 4);
 
 		LLGI::TextureInitializationParameter texParam;

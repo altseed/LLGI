@@ -228,8 +228,8 @@ GPUParticleEmitPass::GPUParticleEmitPass(GPUParticleContext* context)
 	: context_(context)
 {
 	shader_ = std::make_unique<Shader>(context_->GetGraphcis(), context_->GetDeviceType(),
-		"C:/Proj/LN/Lumino/build/ExternalSource/Effekseer/Dev/Cpp/3rdParty/LLGI/examples/GPUParticle/Shaders/HLSL_DX12/perticle-emit.vert",
-		"C:/Proj/LN/Lumino/build/ExternalSource/Effekseer/Dev/Cpp/3rdParty/LLGI/examples/GPUParticle/Shaders/HLSL_DX12/perticle-emit.frag");
+		EXAMPLE_ASSET_DIR "/Shaders/HLSL_DX12/perticle-emit.vert",
+		EXAMPLE_ASSET_DIR "/Shaders/HLSL_DX12/perticle-emit.frag");
 
 	for (int i = 0; i < context_->GetMaxFrameCount(); i++) {
 		auto vb = LLGI::CreateSharedPtr(context_->GetGraphcis()->CreateVertexBuffer(sizeof(EmitDataVertex) * context_->GetMaxParticles()));
@@ -301,8 +301,8 @@ GPUParticleUpdatePass::GPUParticleUpdatePass(GPUParticleContext* context)
 	: context_(context)
 {
 	shader_ = std::make_unique<Shader>(context_->GetGraphcis(), context_->GetDeviceType(),
-		"C:/Proj/LN/Lumino/build/ExternalSource/Effekseer/Dev/Cpp/3rdParty/LLGI/examples/GPUParticle/Shaders/HLSL_DX12/perticle-update.vert",
-		"C:/Proj/LN/Lumino/build/ExternalSource/Effekseer/Dev/Cpp/3rdParty/LLGI/examples/GPUParticle/Shaders/HLSL_DX12/perticle-update.frag");
+		EXAMPLE_ASSET_DIR "/Shaders/HLSL_DX12/perticle-update.vert",
+		EXAMPLE_ASSET_DIR "/Shaders/HLSL_DX12/perticle-update.frag");
 
 	vertexBuffer_ = LLGI::CreateSharedPtr(context_->GetGraphcis()->CreateVertexBuffer(sizeof(RectangleVertex) * 4));
 	auto vb_buf = (RectangleVertex*)vertexBuffer_->Lock();
@@ -371,8 +371,8 @@ GPUParticleRenderPass::GPUParticleRenderPass(GPUParticleContext* context)
 	: context_(context)
 {
 	shader_ = std::make_unique<Shader>(context_->GetGraphcis(), context_->GetDeviceType(),
-		"C:/Proj/LN/Lumino/build/ExternalSource/Effekseer/Dev/Cpp/3rdParty/LLGI/examples/GPUParticle/Shaders/HLSL_DX12/perticle-render.vert",
-		"C:/Proj/LN/Lumino/build/ExternalSource/Effekseer/Dev/Cpp/3rdParty/LLGI/examples/GPUParticle/Shaders/HLSL_DX12/perticle-render.frag");
+		EXAMPLE_ASSET_DIR "/Shaders/HLSL_DX12/perticle-render.vert",
+		EXAMPLE_ASSET_DIR "/Shaders/HLSL_DX12/perticle-render.frag");
 
 	const LLGI::Vec3F ul = LLGI::Vec3F(-0.5, 0.5, 0.5);
 	const LLGI::Vec3F lr = LLGI::Vec3F(0.5, -0.5, 0.5);
@@ -517,5 +517,5 @@ void GPUParticleContext::Render(LLGI::RenderPass* renderPass, LLGI::CommandList*
 	particleRenderPass_->Render(renderPass, commandList);
 
 
-	std::cout << "emitedCount_: " << emitedCount_ << std::endl;
+	//std::cout << "emitedCount_: " << emitedCount_ << std::endl;
 }
