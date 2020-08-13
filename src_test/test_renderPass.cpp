@@ -278,7 +278,8 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 			}
 			else
 			{
-				Bitmap2D(data, screenTex->GetSizeAs2D().X, screenTex->GetSizeAs2D().Y, screenTex->GetFormat()).Save("RenderPass.CopyTexture.png");
+				Bitmap2D(data, screenTex->GetSizeAs2D().X, screenTex->GetSizeAs2D().Y, screenTex->GetFormat())
+					.Save("RenderPass.CopyTexture.png");
 			}
 
 			if (mode == RenderPassTestMode::None)
@@ -587,7 +588,8 @@ void test_multiRenderPass(LLGI::DeviceType deviceType)
 			commandList->WaitUntilCompleted();
 			auto screenTexture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
 			auto data = graphics->CaptureRenderTarget(screenTexture);
-			Bitmap2D(data, screenTexture->GetSizeAs2D().X, screenTexture->GetSizeAs2D().Y, screenTexture->GetFormat()).Save("RenderPass.MRT.png");
+			Bitmap2D(data, screenTexture->GetSizeAs2D().X, screenTexture->GetSizeAs2D().Y, screenTexture->GetFormat())
+				.Save("RenderPass.MRT.png");
 		}
 	}
 
