@@ -30,8 +30,20 @@ public:
 
 	bool IsDepthTestEnabled = false;
 	bool IsDepthWriteEnabled = false;
-	bool IsStencilTestEnabled = false;
 	DepthFuncType DepthFunc = DepthFuncType::Less;
+
+	uint8_t StencilRef = 0xff;
+	uint8_t StencilReadMask = 0xff;
+	uint8_t StencilWriteMask = 0xff;
+
+	StencilOperatorType StencilDepthFailOp = StencilOperatorType::Keep;
+	StencilOperatorType StencilFailOp = StencilOperatorType::Keep;
+	StencilOperatorType StencilPassOp = StencilOperatorType::Keep;
+
+	CompareFuncType StencilCompareFunc = CompareFuncType::Always;
+
+	bool IsStencilTestEnabled = false;
+	bool IsStencilWriteEnabled = false;
 
 	std::array<std::string, VertexLayoutMax> VertexLayoutNames;
 	std::array<VertexLayoutFormat, VertexLayoutMax> VertexLayouts;

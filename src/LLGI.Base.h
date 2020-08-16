@@ -113,6 +113,30 @@ enum class DepthFuncType
 	Always,
 };
 
+enum class CompareFuncType
+{
+	Never,
+	Less,
+	Equal,
+	LessEqual,
+	Greater,
+	NotEqual,
+	GreaterEqual,
+	Always,
+};
+
+enum class StencilOperatorType
+{
+	Keep,
+	Zero,
+	Replace,
+	IncClamp,
+	DecClamp,
+	Invert,
+	IncRepeat,
+	DecRepeat,
+};
+
 enum class ConstantBufferType
 {
 	LongTime,  //! this constant buffer is not almost changed
