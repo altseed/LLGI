@@ -43,7 +43,6 @@ public:
 	CompareFuncType StencilCompareFunc = CompareFuncType::Always;
 
 	bool IsStencilTestEnabled = false;
-	bool IsStencilWriteEnabled = false;
 
 	std::array<std::string, VertexLayoutMax> VertexLayoutNames;
 	std::array<VertexLayoutFormat, VertexLayoutMax> VertexLayouts;
