@@ -70,6 +70,26 @@ jobs:
     #      ArtifactName: 'MacOS'
     #      publishLocation: 'Container'
 
+  - job: MacOS_iOS
+    pool:
+      vmImage: 'macOS-10.14'
+    steps:
+      - task: PowerShell@2
+        inputs:
+          targetType: 'inline'
+          script: |
+            git submodule update --init
+            git lfs install
+            git lfs pull
+
+      - task: CMake@1
+        inputs:
+          cmakeArgs: '.. -DCMAKE_SYSTEM_NAME=iOS -DIPHONEOS_DEPLOYMENT_TARGET=12.0 "-DCMAKE_OSX_ARCHITECTURES=armv7;armv7s;arm64;i386;x86_64"'
+
+      - task: CMake@1
+        inputs:
+          cmakeArgs: '--build . --config Release'
+
   - job: Linux
     pool:
       vmImage: 'ubuntu-18.04'
