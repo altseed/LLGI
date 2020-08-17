@@ -34,5 +34,6 @@
 /msvc/*.user
 **/Debug
 /build
+/build_clangformat
 
 .DS_Store
