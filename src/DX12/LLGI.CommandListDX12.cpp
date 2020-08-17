@@ -260,7 +260,7 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 		currentCommandList_->SetGraphicsRootSignature(pip->GetRootSignature());
 		auto p = pip->GetPipelineState();
 		currentCommandList_->SetPipelineState(p);
-		currentCommandList_->OMSetStencilRef(0xff);
+		currentCommandList_->OMSetStencilRef(pip->StencilRef);
 	}
 
 	// count descriptor
