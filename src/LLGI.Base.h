@@ -450,7 +450,6 @@ inline int32_t GetTextureMemorySize(TextureFormatType format, Vec2I size)
 		Log(LogType::Error, str + " : GetTextureMemorySize is not supported");
 		return 0;
 	}
-	return 0;
 }
 
 /**
