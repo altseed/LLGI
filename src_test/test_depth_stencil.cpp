@@ -81,7 +81,7 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 	struct PipelineStateSet
 	{
 		std::shared_ptr<LLGI::PipelineState> writeState; // write depth or stencil
-		std::shared_ptr<LLGI::PipelineState> testState;  // depth-test or stencil-test
+		std::shared_ptr<LLGI::PipelineState> testState;	 // depth-test or stencil-test
 	};
 	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, PipelineStateSet> pips;
 
@@ -155,6 +155,11 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 				writepip->IsDepthWriteEnabled = true;
 			}
 
+			if (mode == DepthStencilTestMode::Stencil)
+			{
+				writepip->IsDepthWriteEnabled = true;
+			}
+
 			writepip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs.get());
 			writepip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps.get());
 			writepip->SetRenderPassPipelineState(renderPassPipelineState.get());
@@ -174,11 +179,16 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 			if (mode == DepthStencilTestMode::Depth || mode == DepthStencilTestMode::DepthAsTexture)
 			{
 				testpip->IsDepthTestEnabled = true;
+				testpip->DepthFunc = LLGI::DepthFuncType::Always;
 			}
 
 			if (mode == DepthStencilTestMode::Stencil)
 			{
 				testpip->IsStencilTestEnabled = true;
+				testpip->StencilRef = 0x7f;
+				testpip->StencilFailOp = LLGI::StencilOperatorType::Zero;
+				testpip->StencilPassOp = LLGI::StencilOperatorType::Keep;
+				testpip->StencilCompareFunc = LLGI::CompareFuncType::Greater;
 			}
 
 			testpip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs.get());
