@@ -233,12 +233,12 @@ bool PipelineStateDX12::Compile()
 		depthStencilDesc.DepthFunc = compareOps[static_cast<int>(DepthFunc)];
 		depthStencilDesc.DepthWriteMask = IsDepthWriteEnabled ? D3D12_DEPTH_WRITE_MASK_ALL : D3D12_DEPTH_WRITE_MASK_ZERO;
 		depthStencilDesc.DepthEnable = IsDepthTestEnabled | IsDepthWriteEnabled;
+		depthStencilDesc.StencilEnable = IsStencilTestEnabled;
+
 		if (!IsDepthTestEnabled)
 		{
 			depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
 		}
-
-		depthStencilDesc.StencilEnable = true;
 
 		std::array<D3D12_STENCIL_OP, 8> stencilOps;
 		stencilOps[static_cast<int>(StencilOperatorType::DecClamp)] = D3D12_STENCIL_OP::D3D12_STENCIL_OP_DECR_SAT;

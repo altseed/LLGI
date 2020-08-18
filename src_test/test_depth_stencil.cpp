@@ -157,7 +157,11 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 
 			if (mode == DepthStencilTestMode::Stencil)
 			{
-				writepip->IsDepthWriteEnabled = true;
+				writepip->IsStencilTestEnabled = true;
+				writepip->StencilFailOp = LLGI::StencilOperatorType::Keep;
+				writepip->StencilDepthFailOp = LLGI::StencilOperatorType::Replace;
+				writepip->StencilPassOp = LLGI::StencilOperatorType::Replace;
+				writepip->StencilCompareFunc = LLGI::CompareFuncType::Always;
 			}
 
 			writepip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs.get());
@@ -186,9 +190,12 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 			{
 				testpip->IsStencilTestEnabled = true;
 				testpip->StencilRef = 0x7f;
-				testpip->StencilFailOp = LLGI::StencilOperatorType::Zero;
+				testpip->StencilFailOp = LLGI::StencilOperatorType::Keep;
+				testpip->StencilDepthFailOp = LLGI::StencilOperatorType::Keep;
 				testpip->StencilPassOp = LLGI::StencilOperatorType::Keep;
 				testpip->StencilCompareFunc = LLGI::CompareFuncType::Greater;
+				testpip->StencilReadMask = 0xff;
+				testpip->StencilWriteMask = 0xff;
 			}
 
 			testpip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs.get());
