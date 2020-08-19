@@ -53,6 +53,9 @@ public:
 
 	bool Initialize(Window* window, bool waitVSync);
 
+	int GetCurrentFrameIndex() const override;
+	int GetMaxFrameCount() const override;
+
 	bool NewFrame() override;
 	void Present() override;
 	Graphics* CreateGraphics() override;
