@@ -43,7 +43,7 @@ int main()
 {
 	int count = 0;
 
-	LLGI::SetIsGPUDebugEnabled(true);
+	//LLGI::SetIsGPUDebugEnabled(true);
 
 	LLGI::PlatformParameter pp;
 	pp.Device = LLGI::DeviceType::Default;

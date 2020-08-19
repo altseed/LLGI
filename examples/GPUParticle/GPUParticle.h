@@ -1,4 +1,5 @@
 #pragma once
+#include <string.h>
 #include <memory>
 #include <iostream>
 #include <unordered_map>

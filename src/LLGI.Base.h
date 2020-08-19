@@ -178,7 +178,7 @@ struct Vec3F
 
 	static Vec3F Normalize(const Vec3F& in)
 	{
-		float inv = 1.0f /  std::sqrtf(in.X * in.X + in.Y * in.Y + in.Z * in.Z);
+		float inv = 1.0f /  std::sqrt(in.X * in.X + in.Y * in.Y + in.Z * in.Z);
 		return Vec3F(in.X * inv, in.Y * inv, in.Z * inv);
 	}
 
