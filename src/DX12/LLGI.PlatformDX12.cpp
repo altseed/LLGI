@@ -41,9 +41,14 @@ PlatformDX12::PlatformDX12()
 
 	renderTargets_.fill(nullptr);
 
+	D3D12_CPU_DESCRIPTOR_HANDLE h;
+	h.ptr = static_cast<SIZE_T>(0);
+	handleRTV.fill(h);
+
 	renderResources_.fill(nullptr);
 	renderTargets_.fill(nullptr);
 	renderPasses_.fill(nullptr);
+	commandAllocators.fill(nullptr);
 }
 
 PlatformDX12::~PlatformDX12()

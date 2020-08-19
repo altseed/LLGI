@@ -23,7 +23,17 @@ void CommandListDX12::BeginInternal()
 	samplerDescriptorHeap_->Reset();
 }
 
-CommandListDX12::CommandListDX12() {}
+CommandListDX12::CommandListDX12()
+	: samplerDescriptorHeap_(nullptr)
+	, cbDescriptorHeap_(nullptr)
+	, rtDescriptorHeap_(nullptr)
+	, dtDescriptorHeap_(nullptr)
+	, commandList_(nullptr)
+	, commandAllocator_(nullptr)
+	, graphics_(nullptr)
+	, renderPass_(nullptr)
+{
+}
 
 CommandListDX12::~CommandListDX12()
 {
