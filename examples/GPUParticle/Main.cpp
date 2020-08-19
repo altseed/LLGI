@@ -47,8 +47,9 @@ int main()
 
 	LLGI::PlatformParameter pp;
 	pp.Device = LLGI::DeviceType::Default;
+	//pp.Device = LLGI::DeviceType::Vulkan;
 	pp.WaitVSync = true;
-	auto window = std::unique_ptr<LLGI::Window>(LLGI::CreateWindow("ClearUpdate", LLGI::Vec2I(1280, 720)));
+	auto window = std::unique_ptr<LLGI::Window>(LLGI::CreateWindow("GPUParticle", LLGI::Vec2I(1280, 720)));
 	auto platform = LLGI::CreatePlatform(pp, window.get());
 
 	auto graphics = platform->CreateGraphics();
@@ -81,11 +82,38 @@ int main()
 		particleTexture->Unlock();
 	}
 
-	auto particleContext = std::make_unique<GPUParticleContext>(graphics, pp.Device, platform->GetMaxFrameCount(), 512, particleTexture.get());
+	GPUParticleShaders shaders;
+	if (pp.Device == LLGI::DeviceType::Vulkan) {
+		shaders.emitShader = std::make_shared<Shader>(
+			graphics, pp.Device,
+			EXAMPLE_ASSET_DIR "/Shaders/SPIRV/perticle-emit.vert.spv",
+			EXAMPLE_ASSET_DIR "/Shaders/SPIRV/perticle-emit.frag.spv");
+		shaders.updateShader = std::make_shared<Shader>(
+			graphics, pp.Device,
+			EXAMPLE_ASSET_DIR "/Shaders/SPIRV/perticle-update.vert.spv",
+			EXAMPLE_ASSET_DIR "/Shaders/SPIRV/perticle-update.frag.spv");
+		shaders.renderShader = std::make_shared<Shader>(
+			graphics, pp.Device,
+			EXAMPLE_ASSET_DIR "/Shaders/SPIRV/perticle-render.vert.spv",
+			EXAMPLE_ASSET_DIR "/Shaders/SPIRV/perticle-render.frag.spv");
+	}
+	else {
+		shaders.emitShader = std::make_shared<Shader>(
+			graphics, pp.Device,
+			EXAMPLE_ASSET_DIR "/Shaders/HLSL_DX12/perticle-emit.vert",
+			EXAMPLE_ASSET_DIR "/Shaders/HLSL_DX12/perticle-emit.frag");
+		shaders.updateShader = std::make_shared<Shader>(
+			graphics, pp.Device,
+			EXAMPLE_ASSET_DIR "/Shaders/HLSL_DX12/perticle-update.vert",
+			EXAMPLE_ASSET_DIR "/Shaders/HLSL_DX12/perticle-update.frag");
+		shaders.renderShader = std::make_shared<Shader>(
+			graphics, pp.Device,
+			EXAMPLE_ASSET_DIR "/Shaders/HLSL_DX12/perticle-render.vert",
+			EXAMPLE_ASSET_DIR "/Shaders/HLSL_DX12/perticle-render.frag");
+	}
 
-
-	//"C:/Proj/LN/Lumino/build/ExternalSource/Effekseer/Dev/Cpp/3rdParty/LLGI/examples/GPUParticle/Textures/Particle01.png"
-
+	auto particleContext = std::make_unique<GPUParticleContext>(
+		graphics, pp.Device, platform->GetMaxFrameCount(), 512, particleTexture.get(), shaders);
 
 	//localFront.x = makeRandom(particle, -1.0, 1.0, ParticleRandomSource::Self);
 	//localFront.y = makeRandom(particle, -1.0, 1.0, ParticleRandomSource::Self);
@@ -96,8 +124,6 @@ int main()
 	//particleContext->Emit(1, LLGI::Vec3F(1, 1, 0), LLGI::Vec3F(0.1, 0, 0));
 	//particleContext->Emit(1, LLGI::Vec3F(10, 20, 0), LLGI::Vec3F(0, 0, 0));
 	//particleContext->Emit(1, LLGI::Vec3F(3, 3, 0), LLGI::Vec3F(0, 0, 0));
-
-
 
 
 	while (true)

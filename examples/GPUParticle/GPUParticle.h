@@ -59,6 +59,13 @@ private:
 	std::shared_ptr<LLGI::Shader> m_ps;
 };
 
+struct GPUParticleShaders
+{
+	std::shared_ptr<Shader> emitShader;
+	std::shared_ptr<Shader> updateShader;
+	std::shared_ptr<Shader> renderShader;
+};
+
 class GPUParticleBuffer
 {
 public:
@@ -84,7 +91,7 @@ public:
 private:
 	GPUParticleContext* context_;
 
-	std::unique_ptr<Shader> shader_;
+	std::shared_ptr<Shader> shader_;
 
 	// LLGI::CommandList::SetData() が未対応なので、Lock/Unlock で対応することになるが、そのため FrameCount 分必要/
 	std::vector<std::shared_ptr<LLGI::VertexBuffer>> emitDataVertexBuffer_;
@@ -109,7 +116,7 @@ public:
 
 private:
 	GPUParticleContext* context_;
-	std::unique_ptr<Shader> shader_;
+	std::shared_ptr<Shader> shader_;
 	std::shared_ptr<LLGI::VertexBuffer> vertexBuffer_;
 	std::shared_ptr<LLGI::IndexBuffer> indexBuffer_;
 	std::array<std::shared_ptr<LLGI::PipelineState>, 2> pipelineState_;
@@ -131,7 +138,7 @@ public:
 
 private:
 	GPUParticleContext* context_;
-	std::unique_ptr<Shader> shader_;
+	std::shared_ptr<Shader> shader_;
 	std::shared_ptr<LLGI::VertexBuffer> vb_;
 	std::shared_ptr<LLGI::IndexBuffer> ib_;
 	std::unordered_map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pipelineCache_;
@@ -148,7 +155,8 @@ public:
 		LLGI::DeviceType deviceType,
 		int frameCount,
 		int textureSize,
-		LLGI::Texture* particleTexture);
+		LLGI::Texture* particleTexture,
+		GPUParticleShaders shaders);
 
 	LLGI::Graphics* GetGraphcis() const { return graphcis_; }
 
@@ -165,6 +173,8 @@ public:
 	int GetBufferTextureWidth() const { return bufferTextureWidth_; }
 
 	LLGI::Texture* GetParticleTexture() const { return particleTexture_; }
+
+	const GPUParticleShaders& shaders() const { return shaders_; }
 
 	/* Emit を書き込むところ & 今フレームの計算に使う情報の Fetch 元 */
 	GPUParticleBuffer* GetPrimaryParticleBuffer() const { return particleBuffers_[primaryParticleBufferIndex_].get(); }
@@ -192,6 +202,7 @@ private:
 	int bufferTextureWidth_;
 	int maxTexels_;
 	LLGI::Texture* particleTexture_;
+	GPUParticleShaders shaders_;
 
 	std::vector<EmitDataVertex> emitData_;
 	int emitedCount_;

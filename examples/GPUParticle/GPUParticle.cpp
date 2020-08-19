@@ -124,16 +124,12 @@ Shader::Shader(
 	std::vector<LLGI::DataStructure> data_vs;
 	std::vector<LLGI::DataStructure> data_ps;
 
-	if (compiler == nullptr)
+	if (deviceType == LLGI::DeviceType::Vulkan)
 	{
+		// SPIR-V
+
 		auto vsBinaryPath_ = std::string(vsBinaryPath);
 		auto psBinaryPath_ = std::string(psBinaryPath);
-
-		// if (deviceType == LLGI::DeviceType::Vulkan)
-		{
-			vsBinaryPath_ += ".spv";
-			psBinaryPath_ += ".spv";
-		}
 
 		auto binary_vs = LoadData(vsBinaryPath_.c_str());
 		auto binary_ps = LoadData(psBinaryPath_.c_str());
@@ -227,9 +223,7 @@ std::vector<uint8_t> Shader::LoadData(const char* path)
 GPUParticleEmitPass::GPUParticleEmitPass(GPUParticleContext* context)
 	: context_(context)
 {
-	shader_ = std::make_unique<Shader>(context_->GetGraphcis(), context_->GetDeviceType(),
-		EXAMPLE_ASSET_DIR "/Shaders/HLSL_DX12/perticle-emit.vert",
-		EXAMPLE_ASSET_DIR "/Shaders/HLSL_DX12/perticle-emit.frag");
+	shader_ = context_->shaders().emitShader;
 
 	for (int i = 0; i < context_->GetMaxFrameCount(); i++) {
 		auto vb = LLGI::CreateSharedPtr(context_->GetGraphcis()->CreateVertexBuffer(sizeof(EmitDataVertex) * context_->GetMaxParticles()));
@@ -300,9 +294,7 @@ void GPUParticleEmitPass::Render(LLGI::CommandList* commandList, const std::vect
 GPUParticleUpdatePass::GPUParticleUpdatePass(GPUParticleContext* context)
 	: context_(context)
 {
-	shader_ = std::make_unique<Shader>(context_->GetGraphcis(), context_->GetDeviceType(),
-		EXAMPLE_ASSET_DIR "/Shaders/HLSL_DX12/perticle-update.vert",
-		EXAMPLE_ASSET_DIR "/Shaders/HLSL_DX12/perticle-update.frag");
+	shader_ = context_->shaders().updateShader;
 
 	vertexBuffer_ = LLGI::CreateSharedPtr(context_->GetGraphcis()->CreateVertexBuffer(sizeof(RectangleVertex) * 4));
 	auto vb_buf = (RectangleVertex*)vertexBuffer_->Lock();
@@ -370,9 +362,7 @@ void GPUParticleUpdatePass::Render(LLGI::CommandList* commandList)
 GPUParticleRenderPass::GPUParticleRenderPass(GPUParticleContext* context)
 	: context_(context)
 {
-	shader_ = std::make_unique<Shader>(context_->GetGraphcis(), context_->GetDeviceType(),
-		EXAMPLE_ASSET_DIR "/Shaders/HLSL_DX12/perticle-render.vert",
-		EXAMPLE_ASSET_DIR "/Shaders/HLSL_DX12/perticle-render.frag");
+	shader_ = context_->shaders().renderShader;
 
 	const LLGI::Vec3F ul = LLGI::Vec3F(-0.5, 0.5, 0.5);
 	const LLGI::Vec3F lr = LLGI::Vec3F(0.5, -0.5, 0.5);
@@ -456,11 +446,13 @@ GPUParticleContext::GPUParticleContext(
 	LLGI::DeviceType deviceType,
 	int frameCount,
 	int textureSize,
-	LLGI::Texture* particleTexture)
+	LLGI::Texture* particleTexture,
+	GPUParticleShaders shaders)
 	: graphcis_(graphics)
 	, deviceType_(deviceType)
 	, bufferTextureWidth_(textureSize)
 	, maxTexels_(textureSize* textureSize)
+	, shaders_(shaders)
 	, particleTexture_(particleTexture)
 	, frameIndex_(-1)
 	, maxFrameCount_(frameCount)
