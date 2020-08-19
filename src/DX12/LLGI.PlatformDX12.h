@@ -28,7 +28,7 @@ private:
 	IDXGISwapChain3* swapChain = nullptr;
 
 	ID3D12DescriptorHeap* descriptorHeapRTV = nullptr;
-	D3D12_CPU_DESCRIPTOR_HANDLE handleRTV[SwapBufferCount];
+	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, SwapBufferCount> handleRTV;
 	std::array<ID3D12Resource*, SwapBufferCount> renderResources_;
 	std::array<TextureDX12*, SwapBufferCount> renderTargets_;
 	std::array<RenderPassDX12*, SwapBufferCount> renderPasses_;
