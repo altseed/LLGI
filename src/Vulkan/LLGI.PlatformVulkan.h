@@ -119,6 +119,10 @@ private:
 
 	void Reset();
 
+	bool ValidateLayers(std::vector<const char*> requiredLayers, const std::vector<VkLayerProperties>& properties);
+
+	std::vector<const char*> GetOptimalLayers(const std::vector<VkLayerProperties>& properties);
+
 public:
 	PlatformVulkan();
 	~PlatformVulkan() override;
