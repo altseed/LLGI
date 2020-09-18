@@ -187,8 +187,8 @@ void main()
 	std::shared_ptr<LLGI::VertexBuffer> vb3;
 	std::shared_ptr<LLGI::IndexBuffer> ib3;
 	TestHelper::CreateRectangle(graphics,
-								LLGI::Vec3F(0.25, 0.13, 0.5),
-								LLGI::Vec3F(0.38, 0, 0.5),
+								LLGI::Vec3F(0.25, 0.13F, 0.5),
+								LLGI::Vec3F(0.38F, 0, 0.5),
 								LLGI::Color8(255, 255, 255, 255),
 								LLGI::Color8(0, 255, 0, 255),
 								vb3,
