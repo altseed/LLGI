@@ -10,50 +10,6 @@
 
 void test_mipmap(LLGI::DeviceType deviceType)
 {
-	auto code_gl_vs = R"(
-#version 440 core
-layout(location = 0) in vec3 a_position;
-layout(location = 1) in vec2 a_uv;
-layout(location = 2) in vec4 a_color;
-
-out gl_PerVertex
-{
-	vec4 gl_Position;
-};
-
-out vec2 v_uv;
-out vec4 v_color;
-
-void main()
-{
-	gl_Position.x  = a_position.x;
-	gl_Position.y  = a_position.y;
-	gl_Position.z  = a_position.z;
-	gl_Position.w  = 1.0f;
-	gl_Position = gl_Position;
-	v_uv = a_uv;
-	v_color = a_color;
-}
-
-)";
-
-	auto code_gl_ps = R"(
-#version 440 core
-#extension GL_NV_gpu_shader5:require
-
-in vec2 v_uv;
-in vec4 v_color;
-layout(binding = 0) uniform sampler2D mainTexture;
-
-layout(location = 0) out vec4 color;
-
-void main()
-{
-    color = v_color * texture(mainTexture, v_uv);
-}
-
-)";
-
 	auto compiler = LLGI::CreateCompiler(deviceType);
 
 	int count = 0;
@@ -136,11 +92,6 @@ void main()
 
 			compiler->Compile(result_vs, (const char*)code_vs.data(), LLGI::ShaderStageType::Vertex);
 			compiler->Compile(result_ps, (const char*)code_ps.data(), LLGI::ShaderStageType::Pixel);
-		}
-		else
-		{
-			compiler->Compile(result_vs, code_gl_vs, LLGI::ShaderStageType::Vertex);
-			compiler->Compile(result_ps, code_gl_ps, LLGI::ShaderStageType::Pixel);
 		}
 
 		for (auto& b : result_vs.Binary)
