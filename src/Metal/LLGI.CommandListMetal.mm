@@ -404,6 +404,15 @@ void CommandListMetal::CopyTexture(Texture* src, Texture* dst)
 	RegisterReferencedObject(dst);
 }
 
+void CommandListMetal::GenerateMipMap(Texture* src)
+{
+	auto srcTex = static_cast<TextureMetal*>(src);
+
+	id <MTLBlitCommandEncoder> blitEncoder = [impl->commandBuffer blitCommandEncoder];
+	[blitEncoder generateMipmapsForTexture:srcTex->GetImpl()->texture];
+	[blitEncoder endEncoding];
+}
+
 void CommandListMetal::BeginRenderPass(RenderPass* renderPass)
 {
 	auto renderPass_ = static_cast<RenderPassMetal*>(renderPass)->GetImpl();
