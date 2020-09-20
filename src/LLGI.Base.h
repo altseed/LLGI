@@ -8,12 +8,12 @@
 
 #include <array>
 #include <atomic>
+#include <cmath>
 #include <functional>
 #include <memory>
 #include <queue>
 #include <string>
 #include <vector>
-#include <cmath>
 
 namespace LLGI
 {
@@ -178,7 +178,7 @@ struct Vec3F
 
 	static Vec3F Normalize(const Vec3F& in)
 	{
-		float inv = 1.0f /  std::sqrt(in.X * in.X + in.Y * in.Y + in.Z * in.Z);
+		float inv = 1.0f / std::sqrt(in.X * in.X + in.Y * in.Y + in.Z * in.Z);
 		return Vec3F(in.X * inv, in.Y * inv, in.Z * inv);
 	}
 
@@ -190,25 +190,12 @@ struct Vec3F
 		return Vec3F(x, y, z);
 	}
 
-	static Vec3F Sub(const Vec3F& in1, const Vec3F& in2)
-	{
-		return Vec3F(in1.X - in2.X, in1.Y - in2.Y, in1.Z - in2.Z);
-	}
+	static Vec3F Sub(const Vec3F& in1, const Vec3F& in2) { return Vec3F(in1.X - in2.X, in1.Y - in2.Y, in1.Z - in2.Z); }
 
-	static float Dot(const Vec3F& in1, const Vec3F& in2)
-	{
-		return in1.X * in2.X + in1.Y * in2.Y + in1.Z * in2.Z;
-	}
-
+	static float Dot(const Vec3F& in1, const Vec3F& in2) { return in1.X * in2.X + in1.Y * in2.Y + in1.Z * in2.Z; }
 };
 
-inline Vec3F operator*(const Vec3F& v1, float v2)
-{
-	return Vec3F(
-		v1.X * v2,
-		v1.Y * v2,
-		v1.Z * v2);
-}
+inline Vec3F operator*(const Vec3F& v1, float v2) { return Vec3F(v1.X * v2, v1.Y * v2, v1.Z * v2); }
 
 struct Color8
 {

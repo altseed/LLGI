@@ -17,7 +17,7 @@ void test_mipmap(LLGI::DeviceType deviceType)
 	LLGI::PlatformParameter pp;
 	pp.Device = deviceType;
 	pp.WaitVSync = true;
-	auto window = std::unique_ptr<LLGI::Window>(LLGI::CreateWindow("TextureRectangle", LLGI::Vec2I(1280, 720)));
+	auto window = std::unique_ptr<LLGI::Window>(LLGI::CreateWindow("Mipmap", LLGI::Vec2I(1280, 720)));
 	auto platform = LLGI::CreatePlatform(pp, window.get());
 
 	auto graphics = platform->CreateGraphics();
@@ -147,7 +147,7 @@ void test_mipmap(LLGI::DeviceType deviceType)
 
 	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pips;
 
-	while (count < 60)
+	while (count < 600)
 	{
 		if (!platform->NewFrame())
 			break;
