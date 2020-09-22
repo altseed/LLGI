@@ -27,28 +27,21 @@ void test_mipmap(LLGI::DeviceType deviceType)
 	for (size_t i = 0; i < commandLists.size(); i++)
 		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
 
-	LLGI::TextureInitializationParameter texParam;
 	LLGI::TextureInitializationParameter texParam_mipmap;
 
-	texParam.Format = LLGI::TextureFormatType::R8G8B8A8_UNORM;
 	texParam_mipmap.Format = LLGI::TextureFormatType::R8G8B8A8_UNORM;
 
-	texParam.Size = LLGI::Vec2I(256, 256);
 	texParam_mipmap.Size = LLGI::Vec2I(256, 256);
 
-	texParam_mipmap.MipMapCount = 2;
-	auto textureDrawnMipmap2 = graphics->CreateTexture(texParam_mipmap);
-	texParam_mipmap.MipMapCount = 5;
-	auto textureDrawnMipmap5 = graphics->CreateTexture(texParam_mipmap);
-	texParam_mipmap.MipMapCount = 8;
-	auto textureDrawnMipmap8 = graphics->CreateTexture(texParam_mipmap);
-	assert(textureDrawnMipmap2->GetType() == LLGI::TextureType::Color);
-	assert(textureDrawnMipmap5->GetType() == LLGI::TextureType::Color);
-	assert(textureDrawnMipmap8->GetType() == LLGI::TextureType::Color);
+	auto textureDrawn = graphics->CreateTexture(texParam_mipmap);
 
-	TestHelper::WriteDummyTexture(textureDrawnMipmap2);
-	TestHelper::WriteDummyTexture(textureDrawnMipmap5);
-	TestHelper::WriteDummyTexture(textureDrawnMipmap8);
+	texParam_mipmap.MipMapCount = 5;
+	auto textureDrawnMipmap = graphics->CreateTexture(texParam_mipmap);
+	assert(textureDrawn->GetType() == LLGI::TextureType::Color);
+	assert(textureDrawnMipmap->GetType() == LLGI::TextureType::Color);
+
+	TestHelper::WriteDummyTexture(textureDrawn);
+	TestHelper::WriteDummyTexture(textureDrawnMipmap);
 
 	LLGI::Shader* shader_vs = nullptr;
 	LLGI::Shader* shader_ps = nullptr;
@@ -114,12 +107,21 @@ void test_mipmap(LLGI::DeviceType deviceType)
 		shader_ps = graphics->CreateShader(data_ps.data(), static_cast<int32_t>(data_ps.size()));
 	}
 
+	LLGI::Vec3F large_ul = LLGI::Vec3F(-0.5, 0.5, 0.5);
+	LLGI::Vec3F large_lr = LLGI::Vec3F(0, 0, 0.5);
+	LLGI::Vec3F middle_ul = LLGI::Vec3F(0, 0.25, 0.5);
+	LLGI::Vec3F middle_lr = LLGI::Vec3F(0.25, 0.0, 0.5);
+	LLGI::Vec3F small_ul = LLGI::Vec3F(0.25, 0.13F, 0.5);
+	LLGI::Vec3F small_lr = LLGI::Vec3F(0.38F, 0, 0.5);
+	
+	LLGI::Vec3F offset = LLGI::Vec3F(0.0, 0.5F, 0.0);
+
 	// left
 	std::shared_ptr<LLGI::VertexBuffer> vb;
 	std::shared_ptr<LLGI::IndexBuffer> ib;
 	TestHelper::CreateRectangle(graphics,
-								LLGI::Vec3F(-0.5, 0.5, 0.5),
-								LLGI::Vec3F(0, 0, 0.5),
+								large_ul,
+								large_lr,
 								LLGI::Color8(255, 255, 255, 255),
 								LLGI::Color8(0, 255, 0, 255),
 								vb,
@@ -128,8 +130,8 @@ void test_mipmap(LLGI::DeviceType deviceType)
 	std::shared_ptr<LLGI::VertexBuffer> vb2;
 	std::shared_ptr<LLGI::IndexBuffer> ib2;
 	TestHelper::CreateRectangle(graphics,
-								LLGI::Vec3F(0, 0.25, 0.5),
-								LLGI::Vec3F(0.25, 0.0, 0.5),
+								middle_ul,
+								middle_lr,
 								LLGI::Color8(255, 255, 255, 255),
 								LLGI::Color8(0, 255, 0, 255),
 								vb2,
@@ -138,12 +140,42 @@ void test_mipmap(LLGI::DeviceType deviceType)
 	std::shared_ptr<LLGI::VertexBuffer> vb3;
 	std::shared_ptr<LLGI::IndexBuffer> ib3;
 	TestHelper::CreateRectangle(graphics,
-								LLGI::Vec3F(0.25, 0.13F, 0.5),
-								LLGI::Vec3F(0.38F, 0, 0.5),
+								small_ul,
+								small_lr,
 								LLGI::Color8(255, 255, 255, 255),
 								LLGI::Color8(0, 255, 0, 255),
 								vb3,
 								ib3);
+
+	std::shared_ptr<LLGI::VertexBuffer> vb4;
+	std::shared_ptr<LLGI::IndexBuffer> ib4;
+	TestHelper::CreateRectangle(graphics,
+								LLGI::Vec3F::Sub(large_ul, offset),
+								LLGI::Vec3F::Sub(large_lr, offset),
+								LLGI::Color8(255, 255, 255, 255),
+								LLGI::Color8(0, 255, 0, 255),
+								vb4,
+								ib4);
+
+	std::shared_ptr<LLGI::VertexBuffer> vb5;
+	std::shared_ptr<LLGI::IndexBuffer> ib5;
+	TestHelper::CreateRectangle(graphics,
+								LLGI::Vec3F::Sub(middle_ul, offset),
+								LLGI::Vec3F::Sub(middle_lr, offset),
+								LLGI::Color8(255, 255, 255, 255),
+								LLGI::Color8(0, 255, 0, 255),
+								vb5,
+								ib5);
+
+	std::shared_ptr<LLGI::VertexBuffer> vb6;
+	std::shared_ptr<LLGI::IndexBuffer> ib6;
+	TestHelper::CreateRectangle(graphics,
+								LLGI::Vec3F::Sub(small_ul, offset),
+								LLGI::Vec3F::Sub(small_lr, offset),
+								LLGI::Color8(255, 255, 255, 255),
+								LLGI::Color8(0, 255, 0, 255),
+								vb6,
+								ib6);
 
 	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pips;
 
@@ -184,28 +216,45 @@ void test_mipmap(LLGI::DeviceType deviceType)
 
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
-		commandList->GenerateMipMap(textureDrawnMipmap2);
-		commandList->GenerateMipMap(textureDrawnMipmap5);
-		commandList->GenerateMipMap(textureDrawnMipmap8);
+		commandList->GenerateMipMap(textureDrawnMipmap);
 		commandList->BeginRenderPass(renderPass);
 		// commandList->SetConstantBuffer(dummy_cb.get(), LLGI::ShaderStageType::Vertex);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get());
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
 		commandList->SetTexture(
-			textureDrawnMipmap2, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+			textureDrawnMipmap, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 
 		commandList->SetVertexBuffer(vb2.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib2.get());
 		commandList->SetTexture(
-			textureDrawnMipmap5, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+			textureDrawnMipmap, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 
 		commandList->SetVertexBuffer(vb3.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib3.get());
 		commandList->SetTexture(
-			textureDrawnMipmap8, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+			textureDrawnMipmap, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+		commandList->Draw(2);
+
+		commandList->SetVertexBuffer(vb4.get(), sizeof(SimpleVertex), 0);
+		commandList->SetIndexBuffer(ib4.get());
+		commandList->SetPipelineState(pips[renderPassPipelineState].get());
+		commandList->SetTexture(
+			textureDrawn, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+		commandList->Draw(2);
+
+		commandList->SetVertexBuffer(vb5.get(), sizeof(SimpleVertex), 0);
+		commandList->SetIndexBuffer(ib5.get());
+		commandList->SetTexture(
+			textureDrawn, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+		commandList->Draw(2);
+
+		commandList->SetVertexBuffer(vb6.get(), sizeof(SimpleVertex), 0);
+		commandList->SetIndexBuffer(ib6.get());
+		commandList->SetTexture(
+			textureDrawn, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 
 		commandList->EndRenderPass();
@@ -231,9 +280,8 @@ void test_mipmap(LLGI::DeviceType deviceType)
 	graphics->WaitFinish();
 
 	LLGI::SafeRelease(sfMemoryPool);
-	LLGI::SafeRelease(textureDrawnMipmap2);
-	LLGI::SafeRelease(textureDrawnMipmap5);
-	LLGI::SafeRelease(textureDrawnMipmap8);
+	LLGI::SafeRelease(textureDrawn);
+	LLGI::SafeRelease(textureDrawnMipmap);
 	LLGI::SafeRelease(shader_vs);
 	LLGI::SafeRelease(shader_ps);
 	for (size_t i = 0; i < commandLists.size(); i++)
