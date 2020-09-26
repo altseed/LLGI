@@ -19,8 +19,8 @@ class CommandListMetal : public CommandList
 	CommandList_Impl* impl = nullptr;
 	Graphics* graphics_ = nullptr;
 
-	MTLSamplerDescriptor* samplers[2][2];
-	id<MTLSamplerState> samplerStates[2][2];
+	MTLSamplerDescriptor* samplers[2][2][3];
+	id<MTLSamplerState> samplerStates[2][2][3];
 
 public:
 	CommandListMetal();
