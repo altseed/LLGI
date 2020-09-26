@@ -252,6 +252,8 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 	BindingIndexBuffer ib_;
 	PipelineState* pip_ = nullptr;
 
+	const int mipmapFilter = 1;
+
 	bool isVBDirtied = false;
 	bool isIBDirtied = false;
 	bool isPipDirtied = false;
@@ -320,7 +322,7 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 			auto pm = 0;
 			if (texture->GetImpl()->texture.mipmapLevelCount >= 2)
 			{
-				pm = 1;
+				pm = mipmapFilter;
 			}
 
 			if (stage_ind == (int32_t)ShaderStageType::Vertex)
