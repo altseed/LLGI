@@ -103,7 +103,7 @@ bool DescriptorHeapAllocator::Allocate(ID3D12DescriptorHeap*& heap,
 	else
 	{
 		offset_++;
-		if (offset_ < blocks_.size() && blocks_[offset_]->Allocate(cpuDescriptorHandle, gpuDescriptorHandle, requiredHandle))
+		if (offset_ < static_cast<int32_t>(blocks_.size()) && blocks_[offset_]->Allocate(cpuDescriptorHandle, gpuDescriptorHandle, requiredHandle))
 		{
 			heap = blocks_[offset_]->GetHeap();
 			return true;
