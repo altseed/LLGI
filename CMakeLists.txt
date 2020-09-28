@@ -19,6 +19,7 @@ option(USE_THIRDPARTY_DIRECTORY
        "Whether do it compile with third party directory" ON)
 
 option(GLSLANG_INCLUDE_DIR "A directory which contains glslang includes" "")
+option(GLSLANG_WITHOUT_INSTALL "Compile with Glslang without install" OFF)
 option(SPIRVCROSS_INCLUDE_DIR "A directory which contains SPIRV-Cross includes"
        "")
 option(USE_CREATE_COMPILER_FUNCTION "Whether LLGI::CreateCompiler is used." ON)
@@ -159,6 +160,11 @@ endif()
 
 if(BUILD_VULKAN)
   add_definitions(-DENABLE_VULKAN)
+
+  if(GLSLANG_WITHOUT_INSTALL)
+    add_compile_definitions(LLGI ENABLE_GLSLANG_WITHOUT_INSTALL)
+  endif()
+
   if(BUILD_VULKAN_COMPILER)
     add_definitions(-DENABLE_VULKAN_COMPILER)
   endif()

@@ -1,8 +1,13 @@
 #include "ShaderTranspilerCore.h"
 
+#if defined(ENABLE_GLSLANG_WITHOUT_INSTALL)
+#include <SPIRV/GlslangToSpv.h>
+#else
+#include <glslang/SPIRV/GlslangToSpv.h>
+#endif
+
 #include <glslang/Include/ResourceLimits.h>
 #include <glslang/Public/ShaderLang.h>
-#include <glslang/SPIRV/GlslangToSpv.h>
 
 #include <functional>
 #include <spirv_cross/spirv_cross.hpp>

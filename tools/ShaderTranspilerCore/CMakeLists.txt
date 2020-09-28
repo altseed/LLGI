@@ -34,3 +34,7 @@ if(MSVC)
 else()
   target_compile_options(ShaderTranspilerCore PRIVATE -Wall -Werror)
 endif()
+
+if(GLSLANG_WITHOUT_INSTALL)
+  add_compile_definitions(ShaderTranspilerCore ENABLE_GLSLANG_WITHOUT_INSTALL)
+endif()
