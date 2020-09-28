@@ -10,11 +10,20 @@
 #include <glslang/Public/ShaderLang.h>
 
 #include <functional>
+
+#if(ENABLE_SPIRVCROSS_WITHOUT_INSTALL)
+#include <spirv_cross.hpp>
+#include <spirv_glsl.hpp>
+#include <spirv_hlsl.hpp>
+#include <spirv_msl.hpp>
+#include <spirv_reflect.hpp>
+#else
 #include <spirv_cross/spirv_cross.hpp>
 #include <spirv_cross/spirv_glsl.hpp>
 #include <spirv_cross/spirv_hlsl.hpp>
 #include <spirv_cross/spirv_msl.hpp>
 #include <spirv_cross/spirv_reflect.hpp>
+#endif
 
 #include "ResourceLimits.h"
 

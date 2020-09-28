@@ -22,6 +22,7 @@ option(GLSLANG_INCLUDE_DIR "A directory which contains glslang includes" "")
 option(GLSLANG_WITHOUT_INSTALL "Compile with Glslang without install" OFF)
 option(SPIRVCROSS_INCLUDE_DIR "A directory which contains SPIRV-Cross includes"
        "")
+option(SPIRVCROSS_WITHOUT_INSTALL "Compile with spirv-cross without install" OFF)
 option(USE_CREATE_COMPILER_FUNCTION "Whether LLGI::CreateCompiler is used." ON)
 
 if(LINUX)
@@ -162,7 +163,7 @@ if(BUILD_VULKAN)
   add_definitions(-DENABLE_VULKAN)
 
   if(GLSLANG_WITHOUT_INSTALL)
-    add_compile_definitions(LLGI ENABLE_GLSLANG_WITHOUT_INSTALL)
+    add_compile_definitions(LLGI PRIVATE ENABLE_GLSLANG_WITHOUT_INSTALL)
   endif()
 
   if(BUILD_VULKAN_COMPILER)

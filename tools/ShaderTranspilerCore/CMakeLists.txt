@@ -38,3 +38,7 @@ endif()
 if(GLSLANG_WITHOUT_INSTALL)
   add_compile_definitions(ShaderTranspilerCore ENABLE_GLSLANG_WITHOUT_INSTALL)
 endif()
+
+if(SPIRVCROSS_WITHOUT_INSTALL)
+  add_compile_definitions(ShaderTranspilerCore ENABLE_SPIRVCROSS_WITHOUT_INSTALL)
+endif()
