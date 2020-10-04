@@ -53,8 +53,6 @@ public:
 	void Draw(int32_t primitiveCount, int32_t instanceCount) override;
 	void CopyTexture(Texture* src, Texture* dst) override;
 
-	void GenerateMipMap(Texture* src) override;
-
 	void BeginRenderPass(RenderPass* renderPass) override;
 	void EndRenderPass() override;
 	vk::CommandBuffer GetCommandBuffer() const;

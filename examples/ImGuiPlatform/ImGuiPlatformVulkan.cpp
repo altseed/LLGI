@@ -167,7 +167,7 @@ ImTextureID ImguiPlatformVulkan::GetTextureIDToRender(LLGI::Texture* texture, LL
 	}
 
 	auto textureVulkan = static_cast<LLGI::TextureVulkan*>(texture);
-	auto id = ImGui_ImplVulkan_AddTexture(defaultSampler_, textureVulkan->GetView(), (VkImageLayout)textureVulkan->GetImageLayouts()[0]);
+	auto id = ImGui_ImplVulkan_AddTexture(defaultSampler_, textureVulkan->GetView(), (VkImageLayout)textureVulkan->GetImageLayout());
 
 	TextureHolder th;
 	th.texture = LLGI::CreateSharedPtr(texture, true);
