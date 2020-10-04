@@ -113,39 +113,21 @@ void test_mipmap(LLGI::DeviceType deviceType)
 	LLGI::Vec3F middle_lr = LLGI::Vec3F(0.25, 0.0, 0.5);
 	LLGI::Vec3F small_ul = LLGI::Vec3F(0.25, 0.13F, 0.5);
 	LLGI::Vec3F small_lr = LLGI::Vec3F(0.38F, 0, 0.5);
-	
+
 	LLGI::Vec3F offset = LLGI::Vec3F(0.0, 0.5F, 0.0);
 
 	// left
 	std::shared_ptr<LLGI::VertexBuffer> vb;
 	std::shared_ptr<LLGI::IndexBuffer> ib;
-	TestHelper::CreateRectangle(graphics,
-								large_ul,
-								large_lr,
-								LLGI::Color8(255, 255, 255, 255),
-								LLGI::Color8(0, 255, 0, 255),
-								vb,
-								ib);
+	TestHelper::CreateRectangle(graphics, large_ul, large_lr, LLGI::Color8(255, 255, 255, 255), LLGI::Color8(0, 255, 0, 255), vb, ib);
 
 	std::shared_ptr<LLGI::VertexBuffer> vb2;
 	std::shared_ptr<LLGI::IndexBuffer> ib2;
-	TestHelper::CreateRectangle(graphics,
-								middle_ul,
-								middle_lr,
-								LLGI::Color8(255, 255, 255, 255),
-								LLGI::Color8(0, 255, 0, 255),
-								vb2,
-								ib2);
+	TestHelper::CreateRectangle(graphics, middle_ul, middle_lr, LLGI::Color8(255, 255, 255, 255), LLGI::Color8(0, 255, 0, 255), vb2, ib2);
 
 	std::shared_ptr<LLGI::VertexBuffer> vb3;
 	std::shared_ptr<LLGI::IndexBuffer> ib3;
-	TestHelper::CreateRectangle(graphics,
-								small_ul,
-								small_lr,
-								LLGI::Color8(255, 255, 255, 255),
-								LLGI::Color8(0, 255, 0, 255),
-								vb3,
-								ib3);
+	TestHelper::CreateRectangle(graphics, small_ul, small_lr, LLGI::Color8(255, 255, 255, 255), LLGI::Color8(0, 255, 0, 255), vb3, ib3);
 
 	std::shared_ptr<LLGI::VertexBuffer> vb4;
 	std::shared_ptr<LLGI::IndexBuffer> ib4;
