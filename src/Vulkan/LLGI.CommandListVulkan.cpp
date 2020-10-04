@@ -135,7 +135,7 @@ bool CommandListVulkan::Initialize(GraphicsVulkan* graphics, int32_t drawingCoun
 			samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
 			samplerInfo.mipLodBias = 0.0f;
 			samplerInfo.minLod = 0.0f;
-			samplerInfo.maxLod = 0.0f;
+			samplerInfo.maxLod = 8.0f;
 
 			samplers_[w][f] = graphics_->GetDevice().createSampler(samplerInfo);
 		}
@@ -412,6 +412,18 @@ void CommandListVulkan::CopyTexture(Texture* src, Texture* dst)
 	auto srcTex = static_cast<TextureVulkan*>(src);
 	auto dstTex = static_cast<TextureVulkan*>(dst);
 
+	if (srcTex->GetMipmapCount() != dstTex->GetMipmapCount())
+	{
+		Log(LogType::Error, "CopyTexture : MipLevel is different.");
+		return;
+	}
+
+	if (srcTex->GetMipmapCount() != 1)
+	{
+		Log(LogType::Error, "CopyTexture : MipLevel is not supported.");
+		return;
+	}
+
 	std::array<vk::ImageCopy, 1> imageCopy;
 	imageCopy[0].dstOffset = vk::Offset3D(0, 0, 0);
 	imageCopy[0].srcOffset = vk::Offset3D(0, 0, 0);
@@ -421,19 +433,55 @@ void CommandListVulkan::CopyTexture(Texture* src, Texture* dst)
 	imageCopy[0].srcSubresource.aspectMask = srcTex->GetSubresourceRange().aspectMask;
 	imageCopy[0].srcSubresource.layerCount = 1;
 	imageCopy[0].srcSubresource.baseArrayLayer = 0;
-
 	imageCopy[0].dstSubresource.aspectMask = dstTex->GetSubresourceRange().aspectMask;
 	imageCopy[0].dstSubresource.layerCount = 1;
 	imageCopy[0].dstSubresource.baseArrayLayer = 0;
 
 	srcTex->ResourceBarrior(cmdBuffer, vk::ImageLayout::eTransferSrcOptimal);
 	dstTex->ResourceBarrior(cmdBuffer, vk::ImageLayout::eTransferDstOptimal);
-	cmdBuffer.copyImage(srcTex->GetImage(), srcTex->GetImageLayout(), dstTex->GetImage(), dstTex->GetImageLayout(), imageCopy);
+	cmdBuffer.copyImage(srcTex->GetImage(), srcTex->GetImageLayouts()[0], dstTex->GetImage(), dstTex->GetImageLayouts()[0], imageCopy);
 	dstTex->ResourceBarrior(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
 	srcTex->ResourceBarrior(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 	RegisterReferencedObject(src);
 	RegisterReferencedObject(dst);
+}
+
+void CommandListVulkan::GenerateMipMap(Texture* src)
+{
+	auto& cmdBuffer = commandBuffers[currentSwapBufferIndex_];
+	auto srcTex = static_cast<TextureVulkan*>(src);
+
+	int32_t mipWidth = src->GetSizeAs2D().X;
+	int32_t mipHeight = src->GetSizeAs2D().Y;
+
+	for (int32_t i = 1; i < srcTex->GetMipmapCount(); i++)
+	{
+		srcTex->ResourceBarrior(i - 1, cmdBuffer, vk::ImageLayout::eTransferSrcOptimal);
+		srcTex->ResourceBarrior(i, cmdBuffer, vk::ImageLayout::eTransferDstOptimal);
+
+		vk::ImageBlit blit{};
+		blit.srcOffsets[0] = vk::Offset3D(0, 0, 0);
+		blit.srcOffsets[1] = vk::Offset3D(mipWidth, mipHeight, 1);
+		blit.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+		blit.srcSubresource.mipLevel = i - 1;
+		blit.srcSubresource.baseArrayLayer = 0;
+		blit.srcSubresource.layerCount = 1;
+		blit.dstOffsets[0] = vk::Offset3D(0, 0, 0);
+		blit.dstOffsets[1] = vk::Offset3D(mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1);
+		blit.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+		blit.dstSubresource.mipLevel = i;
+		blit.dstSubresource.baseArrayLayer = 0;
+		blit.dstSubresource.layerCount = 1;
+
+		cmdBuffer.blitImage(srcTex->GetImage(),
+							vk::ImageLayout::eTransferSrcOptimal,
+							srcTex->GetImage(),
+							vk::ImageLayout::eTransferDstOptimal,
+							1,
+							&blit,
+							vk::Filter::eLinear);
+	}
 }
 
 void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
