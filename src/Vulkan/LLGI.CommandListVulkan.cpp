@@ -251,13 +251,13 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 	std::vector<vk::DescriptorSet> descriptorSets = graphics_->GetDevice().allocateDescriptorSets(allocateInfo);
 	*/
 
-	std::array<vk::WriteDescriptorSet, 16> writeDescriptorSets;
+	std::array<vk::WriteDescriptorSet, NumTexture * 2 + 2> writeDescriptorSets;
 	int writeDescriptorIndex = 0;
 
-	std::array<vk::DescriptorBufferInfo, 16> descriptorBufferInfos;
+	std::array<vk::DescriptorBufferInfo, NumTexture * 2 + 2> descriptorBufferInfos;
 	int descriptorBufferIndex = 0;
 
-	std::array<vk::DescriptorImageInfo, 16> descriptorImageInfos;
+	std::array<vk::DescriptorImageInfo, NumTexture * 2 + 2> descriptorImageInfos;
 	int descriptorImageIndex = 0;
 
 	std::array<bool, static_cast<int>(ShaderStageType::Max)> stages;
