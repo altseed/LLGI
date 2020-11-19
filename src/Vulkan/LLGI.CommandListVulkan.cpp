@@ -93,6 +93,7 @@ bool CommandListVulkan::Initialize(GraphicsVulkan* graphics, int32_t drawingCoun
 
 	vk::CommandBufferAllocateInfo allocInfo;
 	allocInfo.commandPool = graphics->GetCommandPool();
+	allocInfo.level = vk::CommandBufferLevel::ePrimary;
 	allocInfo.commandBufferCount = graphics->GetSwapBufferCount();
 	commandBuffers_ = graphics->GetDevice().allocateCommandBuffers(allocInfo);
 
@@ -211,6 +212,7 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 	{
 		vk::DeviceSize vertexOffsets = vb_.offset;
 		vk::Buffer vkBuf = vb->GetBuffer();
+		vb->SendMemoryToGPU(currentCommandBuffer_);
 		currentCommandBuffer_.bindVertexBuffers(0, 1, &(vkBuf), &vertexOffsets);
 	}
 
