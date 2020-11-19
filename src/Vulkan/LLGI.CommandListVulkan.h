@@ -5,11 +5,6 @@
 
 namespace LLGI
 {
-enum class CommandListPreCondition
-{
-	Standalone,
-	External,
-};
 
 class DescriptorPoolVulkan
 {
@@ -30,7 +25,8 @@ class CommandListVulkan : public CommandList
 {
 private:
 	std::shared_ptr<GraphicsVulkan> graphics_;
-	std::vector<vk::CommandBuffer> commandBuffers;
+	vk::CommandBuffer currentCommandBuffer_;
+	std::vector<vk::CommandBuffer> commandBuffers_;
 	std::vector<std::shared_ptr<DescriptorPoolVulkan>> descriptorPools;
 	int32_t currentSwapBufferIndex_;
 	std::vector<vk::Fence> fences_;
@@ -40,8 +36,7 @@ public:
 	CommandListVulkan();
 	~CommandListVulkan() override;
 
-	bool
-	Initialize(GraphicsVulkan* graphics, int32_t drawingCount, CommandListPreCondition precondition = CommandListPreCondition::Standalone);
+	bool Initialize(GraphicsVulkan* graphics, int32_t drawingCount);
 
 	void Begin() override;
 	void End() override;
