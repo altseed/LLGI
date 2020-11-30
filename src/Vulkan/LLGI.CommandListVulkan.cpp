@@ -212,7 +212,6 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 	{
 		vk::DeviceSize vertexOffsets = vb_.offset;
 		vk::Buffer vkBuf = vb->GetBuffer();
-		vb->SendMemoryToGPU(currentCommandBuffer_);
 		currentCommandBuffer_.bindVertexBuffers(0, 1, &(vkBuf), &vertexOffsets);
 	}
 

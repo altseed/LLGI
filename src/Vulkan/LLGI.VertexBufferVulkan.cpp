@@ -73,6 +73,13 @@ void VertexBufferVulkan::Unlock()
 {
 	isMemoryDirtied_ = true;
 	graphics_->GetDevice().unmapMemory(cpuBuf->devMem());
+
+	VkCommandBuffer commandBuffer = graphics_->BeginSingleTimeCommands();
+	vk::CommandBuffer commandBufferCpp = static_cast<vk::CommandBuffer>(commandBuffer);
+
+	SendMemoryToGPU(commandBufferCpp);
+
+	graphics_->EndSingleTimeCommands(commandBuffer);
 }
 
 void VertexBufferVulkan::SendMemoryToGPU(vk::CommandBuffer& commandBuffer)
