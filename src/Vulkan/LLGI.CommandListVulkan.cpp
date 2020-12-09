@@ -186,7 +186,7 @@ bool CommandListVulkan::BeginWithPlatform(void* platformContextPtr)
 void CommandListVulkan::EndWithPlatform()
 {
 	currentCommandBuffer_ = vk::CommandBuffer();
-	CommandListVulkan::EndWithPlatform();
+	CommandList::EndWithPlatform();
 }
 
 void CommandListVulkan::SetScissor(int32_t x, int32_t y, int32_t width, int32_t height)
