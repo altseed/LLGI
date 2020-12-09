@@ -180,7 +180,7 @@ bool CommandListVulkan::BeginWithPlatform(void* platformContextPtr)
 	auto& dp = descriptorPools[currentSwapBufferIndex_];
 	dp->Reset();
 
-	return CommandList::BeginRenderPassWithPlatformPtr(platformContextPtr);
+	return CommandList::BeginWithPlatform(platformContextPtr);
 }
 
 void CommandListVulkan::EndWithPlatform()
