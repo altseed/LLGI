@@ -101,6 +101,35 @@ void main()
 
 )";
 
+	auto code_glsl_vulkan_vs = R"(
+#version 440 core
+layout(location = 0) in vec3 a_position;
+layout(location = 1) in vec2 a_uv;
+layout(location = 0) out vec2 v_uv;
+
+void main()
+{
+	gl_Position.x  = a_position.x;
+	gl_Position.y  = a_position.y;
+	gl_Position.z  = a_position.z;
+	gl_Position.w  = 1.0f;
+	v_uv  = a_uv;
+}
+
+)";
+
+	auto code_glsl_vulkan_ps = R"(
+#version 440 core
+layout(location = 0) in vec2 v_uv;
+layout(location = 0) out vec4 color;
+
+void main()
+{
+   color  = vec4(1.0, 1.0, 1.0, 1.0);
+}
+
+)";
+
 	auto code_metal_vs = R"(
 
     struct VertexIn {
@@ -146,6 +175,11 @@ void main()
 	{
 		compiler->Compile(result_vs, code_metal_vs, LLGI::ShaderStageType::Vertex);
 		compiler->Compile(result_ps, code_metal_ps, LLGI::ShaderStageType::Pixel);
+	}
+	else if (compiler->GetDeviceType() == LLGI::DeviceType::Vulkan)
+	{
+		compiler->Compile(result_vs, code_glsl_vulkan_vs, LLGI::ShaderStageType::Vertex);
+		compiler->Compile(result_ps, code_glsl_vulkan_ps, LLGI::ShaderStageType::Pixel);
 	}
 	else
 	{
