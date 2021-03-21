@@ -333,7 +333,7 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 		binding_offset += 1;
 	}
 
-	if (shaderModel_ <= 330 || isVulkanMode_)
+	if (shaderModel_ <= 420 || isVulkanMode_)
 	{
 		for (auto& remap : compiler.get_combined_image_samplers())
 		{
