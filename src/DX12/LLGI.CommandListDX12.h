@@ -18,6 +18,16 @@ struct PlatformContextDX12
 
 class CommandListDX12 : public CommandList
 {
+public:
+	struct EventChangeResourceState
+	{
+		//! A pointer of resource. You need not to release it
+		ID3D12Resource* Resource = nullptr;
+
+		D3D12_RESOURCE_STATES Before;
+		D3D12_RESOURCE_STATES After;
+	};
+
 private:
 	static const int MaximumRenderTargetChange = 32;
 
@@ -36,6 +46,10 @@ private:
 	std::shared_ptr<RenderPassDX12> renderPass_;
 
 	ID3D12GraphicsCommandList* currentCommandList_ = nullptr;
+
+	std::function<void(EventChangeResourceState)> onChangeResourceState_;
+
+	void ChangeResourceState(TextureDX12& texture, D3D12_RESOURCE_STATES state);
 
 	void BeginInternal();
 
@@ -64,6 +78,13 @@ public:
 	UINT64 GetAndIncFenceValue();
 
 	void WaitUntilCompleted() override;
+
+	/**
+		@brief	Specify a callback when a resource state will be changed
+		@note
+		it is called even if before and after are same
+	*/
+	void SetOnChangeResourceState(const std::function<void(EventChangeResourceState)>& onChangeResourceState);
 };
 
 } // namespace LLGI

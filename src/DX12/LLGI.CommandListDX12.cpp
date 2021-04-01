@@ -12,6 +12,20 @@
 namespace LLGI
 {
 
+void CommandListDX12::ChangeResourceState(TextureDX12& texture, D3D12_RESOURCE_STATES state)
+{
+	if (onChangeResourceState_ != nullptr)
+	{
+		EventChangeResourceState e;
+		e.Resource = texture.Get();
+		e.Before = texture.GetState();
+		e.After = state;
+		onChangeResourceState_(e);
+	}
+
+	texture.ResourceBarrior(currentCommandList_, state);
+}
+
 void CommandListDX12::BeginInternal()
 {
 	rtDescriptorHeap_->Reset();
@@ -208,8 +222,8 @@ void CommandListDX12::EndRenderPass()
 		auto src = static_cast<TextureDX12*>(renderPass_->GetRenderTexture(0));
 		auto dst = static_cast<TextureDX12*>(renderPass_->GetResolvedRenderTexture());
 
-		src->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_RESOLVE_SOURCE);
-		dst->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_RESOLVE_DEST);
+		ChangeResourceState(*src, D3D12_RESOURCE_STATE_RESOLVE_SOURCE);
+		ChangeResourceState(*dst, D3D12_RESOURCE_STATE_RESOLVE_DEST);
 
 		currentCommandList_->ResolveSubresource(dst->Get(), 0, src->Get(), 0, dst->GetDXGIFormat());
 	}
@@ -219,8 +233,8 @@ void CommandListDX12::EndRenderPass()
 		auto src = static_cast<TextureDX12*>(renderPass_->GetDepthTexture());
 		auto dst = static_cast<TextureDX12*>(renderPass_->GetResolvedDepthTexture());
 
-		src->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_RESOLVE_SOURCE);
-		dst->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_RESOLVE_DEST);
+		ChangeResourceState(*src, D3D12_RESOURCE_STATE_RESOLVE_SOURCE);
+		ChangeResourceState(*dst, D3D12_RESOURCE_STATE_RESOLVE_DEST);
 
 		currentCommandList_->ResolveSubresource(dst->Get(), 0, src->Get(), 0, DirectX12::GetShaderResourceViewFormat(dst->GetDXGIFormat()));
 	}
@@ -375,11 +389,11 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 					{
 						if (stage_ind == static_cast<int>(ShaderStageType::Pixel))
 						{
-							texture->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+							ChangeResourceState(*texture, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 						}
 						else
 						{
-							texture->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+							ChangeResourceState(*texture, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 						}
 					}
 
@@ -497,13 +511,13 @@ void CommandListDX12::CopyTexture(Texture* src, Texture* dst)
 
 	auto srcState = srcTex->GetState();
 
-	srcTex->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_COPY_SOURCE);
-	dstTex->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_COPY_DEST);
+	ChangeResourceState(*srcTex, D3D12_RESOURCE_STATE_COPY_SOURCE);
+	ChangeResourceState(*dstTex, D3D12_RESOURCE_STATE_COPY_DEST);
 
 	currentCommandList_->CopyTextureRegion(&dstLoc, 0, 0, 0, &srcLoc, nullptr);
 
-	dstTex->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_GENERIC_READ);
-	srcTex->ResourceBarrior(currentCommandList_, srcState);
+	ChangeResourceState(*dstTex, D3D12_RESOURCE_STATE_GENERIC_READ);
+	ChangeResourceState(*srcTex, srcState);
 
 	RegisterReferencedObject(src);
 	RegisterReferencedObject(dst);
@@ -569,6 +583,11 @@ void CommandListDX12::WaitUntilCompleted()
 		}
 		WaitForSingleObject(fenceEvent_, INFINITE);
 	}
+}
+
+void CommandListDX12::SetOnChangeResourceState(const std::function<void(EventChangeResourceState)>& onChangeResourceState)
+{
+	onChangeResourceState_ = onChangeResourceState;
 }
 
 } // namespace LLGI
