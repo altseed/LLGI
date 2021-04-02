@@ -185,6 +185,9 @@ DXGI_FORMAT ConvertFormat(TextureFormatType format)
 	if (format == TextureFormatType::D24S8)
 		return DXGI_FORMAT_D24_UNORM_S8_UINT;
 
+	if (format == TextureFormatType::D32S8)
+		return DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+
 	if (format == TextureFormatType::Unknown)
 		return DXGI_FORMAT_UNKNOWN;
 
@@ -234,6 +237,9 @@ TextureFormatType ConvertFormat(DXGI_FORMAT format)
 
 	if (format == DXGI_FORMAT_D24_UNORM_S8_UINT)
 		return TextureFormatType::D24S8;
+
+	if (format == DXGI_FORMAT_D32_FLOAT_S8X24_UINT)
+		return TextureFormatType::D32S8;
 
 	if (format == DXGI_FORMAT_UNKNOWN)
 		return TextureFormatType::Unknown;
