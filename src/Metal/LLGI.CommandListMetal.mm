@@ -46,13 +46,13 @@ CommandListMetal::CommandListMetal(Graphics* graphics)
                 samplerDescriptor.sAddressMode = ws[w];
                 samplerDescriptor.tAddressMode = ws[w];
 
-                samplers[w][f][m] = samplerDescriptor;
-                samplerStates[w][f][m] = [g->GetDevice() newSamplerStateWithDescriptor:samplerDescriptor];
+                samplers_[w][f][m] = samplerDescriptor;
+                samplerStates_[w][f][m] = [g->GetDevice() newSamplerStateWithDescriptor:samplerDescriptor];
             }
         }
     }
 
-    fence = [g->GetDevice() newFence];
+    fence_ = [g->GetDevice() newFence];
 }
 
 CommandListMetal::~CommandListMetal()
@@ -75,26 +75,26 @@ CommandListMetal::~CommandListMetal()
 		{
 			for (int m = 0; m < 2; m++)
 			{
-				[samplers[w][f][m] release];
-				[samplerStates[w][f][m] release];
+				[samplers_[w][f][m] release];
+				[samplerStates_[w][f][m] release];
 			}
 		}
 	}
     
-    if (commandBuffer != nullptr)
+    if (commandBuffer_ != nullptr)
     {
-        [commandBuffer release];
-        commandBuffer = nullptr;
+        [commandBuffer_ release];
+        commandBuffer_ = nullptr;
     }
 
-    if (renderEncoder != nullptr)
+    if (renderEncoder_ != nullptr)
     {
-        [renderEncoder release];
+        [renderEncoder_ release];
     }
 
-    if (fence != nullptr)
+    if (fence_ != nullptr)
     {
-        [fence release];
+        [fence_ release];
     }
 
 	SafeRelease(graphics_);
@@ -102,19 +102,19 @@ CommandListMetal::~CommandListMetal()
 
 void CommandListMetal::Begin()
 {
-    if (commandBuffer != nullptr)
+    if (commandBuffer_ != nullptr)
     {
-        [commandBuffer release];
-        commandBuffer = nullptr;
+        [commandBuffer_ release];
+        commandBuffer_ = nullptr;
     }
 
-    commandBuffer = [graphics_->GetCommandQueue() commandBuffer];
-    [commandBuffer retain];
+    commandBuffer_ = [graphics_->GetCommandQueue() commandBuffer];
+    [commandBuffer_ retain];
 
     auto t = this;
 
-    [commandBuffer addCompletedHandler:^(id buffer) {
-      t->isCompleted = true;
+    [commandBuffer_ addCompletedHandler:^(id buffer) {
+      t->isCompleted_ = true;
     }];
     
 	CommandList::Begin();
@@ -131,7 +131,7 @@ void CommandListMetal::SetScissor(int32_t x, int32_t y, int32_t width, int32_t h
     rect.y = y;
     rect.width = width;
     rect.height = height;
-    [renderEncoder setScissorRect:rect];
+    [renderEncoder_ setScissorRect:rect];
 }
 
 void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
@@ -161,22 +161,22 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 	// set cull mode
 	if (pip->Culling == LLGI::CullingMode::Clockwise)
 	{
-		[renderEncoder setCullMode:MTLCullModeFront];
+		[renderEncoder_ setCullMode:MTLCullModeFront];
 	}
 	else if (pip->Culling == LLGI::CullingMode::CounterClockwise)
 	{
-		[renderEncoder setCullMode:MTLCullModeBack];
+		[renderEncoder_ setCullMode:MTLCullModeBack];
 	}
 	else
 	{
-		[renderEncoder setCullMode:MTLCullModeNone];
+		[renderEncoder_ setCullMode:MTLCullModeNone];
 	}
 
-	[renderEncoder setFrontFacingWinding:MTLWindingCounterClockwise];
+	[renderEncoder_ setFrontFacingWinding:MTLWindingCounterClockwise];
 
 	if (isVBDirtied)
 	{
-        [renderEncoder setVertexBuffer:vb->GetBuffer().GetBuffer() offset:vb_.offset atIndex:VertexBufferIndex];
+        [renderEncoder_ setVertexBuffer:vb->GetBuffer().GetBuffer() offset:vb_.offset atIndex:VertexBufferIndex];
 	}
 
 	// assign constant buffer
@@ -185,7 +185,7 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 	if (vcb != nullptr)
 	{
 		auto vcb_ = static_cast<ConstantBufferMetal*>(vcb);
-		[renderEncoder setVertexBuffer:vcb_->GetBuffer().GetBuffer() offset:vcb_->GetOffset() atIndex:0];
+		[renderEncoder_ setVertexBuffer:vcb_->GetBuffer().GetBuffer() offset:vcb_->GetOffset() atIndex:0];
 	}
 
 	ConstantBuffer* pcb = nullptr;
@@ -193,7 +193,7 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 	if (pcb != nullptr)
 	{
 		auto pcb_ = static_cast<ConstantBufferMetal*>(pcb);
-		[renderEncoder setFragmentBuffer:pcb_->GetBuffer().GetBuffer() offset:pcb_->GetOffset() atIndex:0];
+		[renderEncoder_ setFragmentBuffer:pcb_->GetBuffer().GetBuffer() offset:pcb_->GetOffset() atIndex:0];
 	}
 
 	// Assign textures
@@ -215,28 +215,28 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 
 			if (stage_ind == (int32_t)ShaderStageType::Vertex)
 			{
-				[renderEncoder setVertexTexture:texture->GetTexture() atIndex:unit_ind];
-				[renderEncoder setVertexSamplerState:samplerStates[wm][mm][pm] atIndex:unit_ind];
+				[renderEncoder_ setVertexTexture:texture->GetTexture() atIndex:unit_ind];
+				[renderEncoder_ setVertexSamplerState:samplerStates_[wm][mm][pm] atIndex:unit_ind];
 			}
 
 			if (stage_ind == (int32_t)ShaderStageType::Pixel)
 			{
-				[renderEncoder setFragmentTexture:texture->GetTexture() atIndex:unit_ind];
-				[renderEncoder setFragmentSamplerState:samplerStates[wm][mm][pm] atIndex:unit_ind];
+				[renderEncoder_ setFragmentTexture:texture->GetTexture() atIndex:unit_ind];
+				[renderEncoder_ setFragmentSamplerState:samplerStates_[wm][mm][pm] atIndex:unit_ind];
 			}
 		}
 	}
 
 	if (isPipDirtied)
 	{
-		[renderEncoder setRenderPipelineState:pip->GetRenderPipelineState()];
+		[renderEncoder_ setRenderPipelineState:pip->GetRenderPipelineState()];
 
 		if (pip->GetDepthStencilState() != nullptr)
 		{
-			[renderEncoder setDepthStencilState:pip->GetDepthStencilState()];
+			[renderEncoder_ setDepthStencilState:pip->GetDepthStencilState()];
 		}
 
-		[renderEncoder setStencilReferenceValue:pip->StencilRef];
+		[renderEncoder_ setStencilReferenceValue:pip->StencilRef];
 	}
 
 	// draw
@@ -269,7 +269,7 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 		indexType = MTLIndexTypeUInt16;
 	}
 
-	[renderEncoder drawIndexedPrimitives:topology
+	[renderEncoder_ drawIndexedPrimitives:topology
 									indexCount:primitiveCount * indexPerPrim
 									 indexType:indexType
 								   indexBuffer:ib->GetBuffer().GetBuffer()
@@ -290,7 +290,7 @@ void CommandListMetal::CopyTexture(Texture* src, Texture* dst)
 	auto srcTex = static_cast<TextureMetal*>(src);
 	auto dstTex = static_cast<TextureMetal*>(dst);
 
-	id<MTLBlitCommandEncoder> blitEncoder = [commandBuffer blitCommandEncoder];
+	id<MTLBlitCommandEncoder> blitEncoder = [commandBuffer_ blitCommandEncoder];
 
 	auto regionSize = srcTex->GetSizeAs2D();
 
@@ -315,7 +315,7 @@ void CommandListMetal::GenerateMipMap(Texture* src)
 {
 	auto srcTex = static_cast<TextureMetal*>(src);
 
-	id<MTLBlitCommandEncoder> blitEncoder = [commandBuffer blitCommandEncoder];
+	id<MTLBlitCommandEncoder> blitEncoder = [commandBuffer_ blitCommandEncoder];
 	[blitEncoder generateMipmapsForTexture:srcTex->GetTexture()];
 	[blitEncoder endEncoding];
 }
@@ -364,20 +364,20 @@ void CommandListMetal::BeginRenderPass(RenderPass* renderPass)
         rpd.stencilAttachment.loadAction = MTLLoadActionDontCare;
     }
 
-    renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:rpd];
+    renderEncoder_ = [commandBuffer_ renderCommandEncoderWithDescriptor:rpd];
 
-    [renderEncoder waitForFence:fence beforeStages:MTLRenderStageVertex];
+    [renderEncoder_ waitForFence:fence_ beforeStages:MTLRenderStageVertex];
     
 	CommandList::BeginRenderPass(renderPass);
 }
 
 void CommandListMetal::EndRenderPass()
 {
-    if (renderEncoder)
+    if (renderEncoder_)
     {
-        [renderEncoder updateFence:fence afterStages:MTLRenderStageFragment];
-        [renderEncoder endEncoding];
-        renderEncoder = nullptr;
+        [renderEncoder_ updateFence:fence_ afterStages:MTLRenderStageFragment];
+        [renderEncoder_ endEncoding];
+        renderEncoder_ = nullptr;
     }
     
 	CommandList::EndRenderPass();
@@ -385,15 +385,15 @@ void CommandListMetal::EndRenderPass()
 
 void CommandListMetal::WaitUntilCompleted()
 {
-	if (commandBuffer != nullptr)
+	if (commandBuffer_ != nullptr)
 	{
-		auto status = [commandBuffer status];
+		auto status = [commandBuffer_ status];
 		if (status == MTLCommandBufferStatusNotEnqueued)
 		{
 			return;
 		}
 
-		[commandBuffer waitUntilCompleted];
+		[commandBuffer_ waitUntilCompleted];
 	}
 }
 
@@ -405,11 +405,11 @@ bool CommandListMetal::BeginRenderPassWithPlatformPtr(void* platformPtr)
 {
 	auto pp = reinterpret_cast<CommandListMetalPlatformRenderPassContext*>(platformPtr);
 
-    this->renderEncoder = pp->RenderEncoder;
+    this->renderEncoder_ = pp->RenderEncoder;
 
-    if (this->renderEncoder)
+    if (this->renderEncoder_)
     {
-        [this->renderEncoder retain];
+        [this->renderEncoder_ retain];
         // TODO : make correct. wait can do only once per encorder
         // [this->renderEncoder waitForFence:fence beforeStages:MTLRenderStageVertex];
     }
@@ -419,12 +419,12 @@ bool CommandListMetal::BeginRenderPassWithPlatformPtr(void* platformPtr)
 
 bool CommandListMetal::EndRenderPassWithPlatformPtr()
 {
-    if (renderEncoder)
+    if (renderEncoder_)
     {
         // TODO : make correct. wait can do only once per encorder
         // [renderEncoder updateFence:fence afterStages:MTLRenderStageFragment];
-        [renderEncoder release];
-        renderEncoder = nullptr;
+        [renderEncoder_ release];
+        renderEncoder_ = nullptr;
     }
     
     return CommandList::EndRenderPassWithPlatformPtr();

@@ -20,13 +20,13 @@ class CommandListMetal : public CommandList
 {
 	GraphicsMetal* graphics_ = nullptr;
 
-	MTLSamplerDescriptor* samplers[2][2][3];
-	id<MTLSamplerState> samplerStates[2][2][3];
+	MTLSamplerDescriptor* samplers_[2][2][3];
+	id<MTLSamplerState> samplerStates_[2][2][3];
 
-    id<MTLCommandBuffer> commandBuffer = nullptr;
-    id<MTLRenderCommandEncoder> renderEncoder = nullptr;
-    id<MTLFence> fence = nullptr;
-    bool isCompleted = true;
+    id<MTLCommandBuffer> commandBuffer_ = nullptr;
+    id<MTLRenderCommandEncoder> renderEncoder_ = nullptr;
+    id<MTLFence> fence_ = nullptr;
+    bool isCompleted_ = true;
 
 public:
 	CommandListMetal(Graphics* graphics);
@@ -49,11 +49,12 @@ public:
 	bool BeginRenderPassWithPlatformPtr(void* platformPtr) override;
 	bool EndRenderPassWithPlatformPtr() override;
     
-    bool GetIsCompleted() { return isCompleted; }
+    bool GetIsCompleted() { return isCompleted_; }
     
-    void ResetCompleted() { isCompleted = false; }
+    void ResetCompleted() { isCompleted_ = false; }
     
-    id<MTLCommandBuffer>& GetCommandBuffer() { return commandBuffer; }
+    id<MTLCommandBuffer>& GetCommandBuffer() { return commandBuffer_; }
+    id<MTLRenderCommandEncoder>& GetRenderCommandEncorder() { return renderEncoder_; }
 };
 
 } // namespace LLGI

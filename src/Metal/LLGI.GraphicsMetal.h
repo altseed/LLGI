@@ -35,7 +35,7 @@ class GraphicsMetal : public Graphics
 	std::function<GraphicsView()> getGraphicsView_;
 	std::vector<CommandList*> executingCommandList_;
 
-    id<MTLDevice> device = nullptr;
+    id<MTLDevice> device_ = nullptr;
     id<MTLCommandQueue> commandQueue = nullptr;
     int maxMultiSamplingCount = 0;
 

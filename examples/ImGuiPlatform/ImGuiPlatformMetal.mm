@@ -13,20 +13,20 @@ class ImguiPlatformMetal_Impl
 public:
 	LLGI::GraphicsMetal* g_ = nullptr;
 
-	ImguiPlatformMetal_Impl(LLGI::Graphics* g) : g_(static_cast<LLGI::GraphicsMetal*>(g)) { ImGui_ImplMetal_Init(g_->GetImpl()->device); }
+	ImguiPlatformMetal_Impl(LLGI::Graphics* g) : g_(static_cast<LLGI::GraphicsMetal*>(g)) { ImGui_ImplMetal_Init(g_->GetDevice()); }
 
 	virtual ~ImguiPlatformMetal_Impl() { ImGui_ImplMetal_Shutdown(); }
 
 	void NewFrame(LLGI::RenderPass* renderPass)
 	{
 		auto rp = static_cast<LLGI::RenderPassMetal*>(renderPass);
-		ImGui_ImplMetal_NewFrame(rp->GetImpl()->renderPassDescriptor);
+		ImGui_ImplMetal_NewFrame(rp->GetRenderPassDescriptor());
 	}
 
 	void RenderDrawData(ImDrawData* draw_data, LLGI::CommandList* commandList)
 	{
 		auto cl = static_cast<LLGI::CommandListMetal*>(commandList);
-		ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), cl->GetImpl()->commandBuffer, cl->GetImpl()->renderEncoder);
+		ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), cl->GetCommandBuffer(), cl->GetRenderCommandEncorder());
 	}
 };
 
@@ -52,9 +52,9 @@ ImTextureID ImguiPlatformMetal::GetTextureIDToRender(LLGI::Texture* texture, LLG
 	textures_.insert(texturePtr);
 
 	auto t = static_cast<LLGI::TextureMetal*>(texture);
-	return (__bridge void*)(t->GetImpl()->texture);
+	return (__bridge void*)(t->GetTexture());
 }
 
-void ImguiPlatformMetal::CreateFont() { ImGui_ImplMetal_CreateFontsTexture(impl->g_->GetImpl()->device); }
+void ImguiPlatformMetal::CreateFont() { ImGui_ImplMetal_CreateFontsTexture(impl->g_->GetDevice()); }
 
 void ImguiPlatformMetal::DisposeFont() { ImGui_ImplMetal_DestroyFontsTexture(); }

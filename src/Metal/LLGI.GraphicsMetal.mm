@@ -33,9 +33,9 @@ GraphicsMetal::~GraphicsMetal()
         [commandQueue release];
     }
 
-    if (device != nullptr)
+    if (device_ != nullptr)
     {
-        [device release];
+        [device_ release];
     }
 }
 
@@ -43,14 +43,14 @@ bool GraphicsMetal::Initialize(std::function<GraphicsView()> getGraphicsView)
 {
 	getGraphicsView_ = getGraphicsView;
 
-    device = MTLCreateSystemDefaultDevice();
-    commandQueue = [device newCommandQueue];
+    device_ = MTLCreateSystemDefaultDevice();
+    commandQueue = [device_ newCommandQueue];
 
     maxMultiSamplingCount = 0;
     int testSampleCounts[] = {8, 4, 2, 1};
     for (int count : testSampleCounts)
     {
-        bool supported = [device supportsTextureSampleCount:count];
+        bool supported = [device_ supportsTextureSampleCount:count];
         if (supported)
         {
             maxMultiSamplingCount = count;
@@ -301,7 +301,7 @@ std::vector<uint8_t> GraphicsMetal::CaptureRenderTarget(Texture* renderTarget)
 	auto height = metalTexture->GetSizeAs2D().Y;
     auto& texture = metalTexture->GetTexture();
 
-	id<MTLCommandQueue> queue = [this->device newCommandQueue];
+	id<MTLCommandQueue> queue = [this->device_ newCommandQueue];
 	id<MTLCommandBuffer> commandBuffer = [queue commandBuffer];
 	id<MTLBlitCommandEncoder> blitEncoder = [commandBuffer blitCommandEncoder];
 
@@ -329,7 +329,7 @@ Graphics_Impl* GraphicsMetal::GetImpl() const { return impl; }
 
 id<MTLDevice>& GraphicsMetal::GetDevice()
 {
-    return device;
+    return device_;
 }
 
 id<MTLCommandQueue>& GraphicsMetal::GetCommandQueue()

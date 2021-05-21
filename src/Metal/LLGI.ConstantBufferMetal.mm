@@ -16,6 +16,7 @@ bool ConstantBufferMetal::Initialize(Graphics* graphics, int32_t size)
 	auto buffer = new BufferMetal(graphics, size);
 	{
         SafeAssign(buffer_, buffer);
+        SafeRelease(buffer);
 		size_ = size;
 		offset_ = 0;
 		return true;
