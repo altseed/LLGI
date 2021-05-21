@@ -15,87 +15,64 @@
 namespace LLGI
 {
 
-void RenderPassPipelineState_Impl::SetKey(RenderPassPipelineStateKey key)
-{
-	pixelFormats.resize(key.RenderTargetFormats.size());
-
-	for (size_t i = 0; i < pixelFormats.size(); i++)
-	{
-		pixelFormats.at(i) = ConvertFormat(key.RenderTargetFormats.at(i));
-	}
-
-	depthStencilFormat = ConvertFormat(key.DepthFormat);
-}
-
-RenderPass_Impl::RenderPass_Impl() {}
-
-RenderPass_Impl::~RenderPass_Impl()
-{
-	if (renderPassDescriptor != nullptr)
-	{
-		[renderPassDescriptor release];
-		renderPassDescriptor = nullptr;
-	}
-}
-
-bool RenderPass_Impl::Initialize()
-{
-	renderPassDescriptor = [[MTLRenderPassDescriptor alloc] init];
-	return true;
-}
-
-void RenderPass_Impl::UpdateTarget(Texture_Impl** textures,
+void RenderPassMetal::UpdateTarget(TextureMetal** textures,
 								   int32_t textureCount,
-								   Texture_Impl* depthTexture,
-								   Texture_Impl* resolvedTexture,
-								   Texture_Impl* resolvedDepthTexture)
+								   TextureMetal* depthTexture,
+								   TextureMetal* resolvedTexture,
+								   TextureMetal* resolvedDepthTexture)
 {
 	pixelFormats.resize(textureCount);
 
 	for (int i = 0; i < textureCount; i++)
 	{
-		renderPassDescriptor.colorAttachments[i].texture = textures[i]->texture;
-		pixelFormats.at(i) = textures[i]->texture.pixelFormat;
+		renderPassDescriptor.colorAttachments[i].texture = textures[i]->GetTexture();
+		pixelFormats.at(i) = textures[i]->GetTexture().pixelFormat;
 
 		if (resolvedTexture != nullptr)
 		{
-			renderPassDescriptor.colorAttachments[i].resolveTexture = resolvedTexture->texture;
+			renderPassDescriptor.colorAttachments[i].resolveTexture = resolvedTexture->GetTexture();
 			renderPassDescriptor.colorAttachments[i].storeAction = MTLStoreActionMultisampleResolve;
 		}
 	}
 
 	if (depthTexture != nullptr)
 	{
-		renderPassDescriptor.depthAttachment.texture = depthTexture->texture;
+		renderPassDescriptor.depthAttachment.texture = depthTexture->GetTexture();
 
 		if (resolvedDepthTexture != nullptr)
 		{
-			renderPassDescriptor.depthAttachment.resolveTexture = resolvedDepthTexture->texture;
+			renderPassDescriptor.depthAttachment.resolveTexture = resolvedDepthTexture->GetTexture();
 			renderPassDescriptor.depthAttachment.storeAction = MTLStoreActionMultisampleResolve;
 		}
 
-		if (HasStencil(ConvertFormat(depthTexture->texture.pixelFormat)))
+		if (HasStencil(ConvertFormat(depthTexture->GetTexture().pixelFormat)))
 		{
-			renderPassDescriptor.stencilAttachment.texture = depthTexture->texture;
+			renderPassDescriptor.stencilAttachment.texture = depthTexture->GetTexture();
 
 			if (resolvedDepthTexture != nullptr)
 			{
-				renderPassDescriptor.stencilAttachment.resolveTexture = resolvedDepthTexture->texture;
+				renderPassDescriptor.stencilAttachment.resolveTexture = resolvedDepthTexture->GetTexture();
 				renderPassDescriptor.stencilAttachment.storeAction = MTLStoreActionMultisampleResolve;
 			}
 		}
 
-		depthStencilFormat = depthTexture->texture.pixelFormat;
+		depthStencilFormat = depthTexture->GetTexture().pixelFormat;
 	}
 }
 
 RenderPassMetal::RenderPassMetal()
 {
-	impl = new RenderPass_Impl();
-	impl->Initialize();
+    renderPassDescriptor = [[MTLRenderPassDescriptor alloc] init];
 }
 
-RenderPassMetal::~RenderPassMetal() { SafeDelete(impl); }
+RenderPassMetal::~RenderPassMetal()
+{
+    if (renderPassDescriptor != nullptr)
+    {
+        [renderPassDescriptor release];
+        renderPassDescriptor = nullptr;
+    }
+}
 
 bool RenderPassMetal::UpdateRenderTarget(
 	Texture** textures, int32_t textureCount, Texture* depthTexture, Texture* resolvedTexture, Texture* resolvedDepthTexture)
@@ -125,71 +102,72 @@ bool RenderPassMetal::UpdateRenderTarget(
 		return false;
 	}
 
-	std::array<Texture_Impl*, RenderTargetMax> texturesImpl;
+	std::array<TextureMetal*, RenderTargetMax> texturesImpl;
 	texturesImpl.fill(nullptr);
-	Texture_Impl* depthTextureImpl = nullptr;
+	TextureMetal* depthTextureImpl = nullptr;
 
 	for (int32_t i = 0; i < textureCount; i++)
 	{
 		if (textures[i] == nullptr)
 			continue;
 
-		texturesImpl.at(i) = reinterpret_cast<TextureMetal*>(textures[i])->GetImpl();
+		texturesImpl.at(i) = reinterpret_cast<TextureMetal*>(textures[i]);
 	}
 
 	if (depthTexture != nullptr)
 	{
-		depthTextureImpl = reinterpret_cast<const TextureMetal*>(depthTexture)->GetImpl();
+		depthTextureImpl = reinterpret_cast<TextureMetal*>(depthTexture);
 	}
 
-	Texture_Impl* resolvedTextureImpl = nullptr;
-	Texture_Impl* resolvedDepthTextureImpl = nullptr;
+	TextureMetal* resolvedTextureImpl = nullptr;
+	TextureMetal* resolvedDepthTextureImpl = nullptr;
 
 	if (resolvedTexture != nullptr)
 	{
-		resolvedTextureImpl = reinterpret_cast<TextureMetal*>(resolvedTexture)->GetImpl();
+		resolvedTextureImpl = reinterpret_cast<TextureMetal*>(resolvedTexture);
 	}
 
 	if (resolvedDepthTexture != nullptr)
 	{
-		resolvedDepthTextureImpl = reinterpret_cast<TextureMetal*>(resolvedDepthTexture)->GetImpl();
+		resolvedDepthTextureImpl = reinterpret_cast<TextureMetal*>(resolvedDepthTexture);
 	}
 
-	impl->UpdateTarget(texturesImpl.data(), textureCount, depthTextureImpl, resolvedTextureImpl, resolvedDepthTextureImpl);
+	UpdateTarget(texturesImpl.data(), textureCount, depthTextureImpl, resolvedTextureImpl, resolvedDepthTextureImpl);
 
 	return true;
 }
 
 void RenderPassMetal::SetIsColorCleared(bool isColorCleared)
 {
-	impl->isColorCleared = isColorCleared;
+	this->isColorCleared = isColorCleared;
 	RenderPass::SetIsColorCleared(isColorCleared);
 }
 
 void RenderPassMetal::SetIsDepthCleared(bool isDepthCleared)
 {
-	impl->isDepthCleared = isDepthCleared;
+	this->isDepthCleared = isDepthCleared;
 	RenderPass::SetIsDepthCleared(isDepthCleared);
 }
 
 void RenderPassMetal::SetClearColor(const Color8& color)
 {
-	impl->clearColor = color;
+	this->clearColor = color;
 	RenderPass::SetClearColor(color);
 }
 
-RenderPass_Impl* RenderPassMetal::GetImpl() const { return impl; }
-
-RenderPassPipelineStateMetal::RenderPassPipelineStateMetal() { impl = new RenderPassPipelineState_Impl(); }
-
-RenderPassPipelineStateMetal::~RenderPassPipelineStateMetal() { SafeDelete(impl); }
+RenderPassPipelineStateMetal::RenderPassPipelineStateMetal() {}
 
 void RenderPassPipelineStateMetal::SetKey(const RenderPassPipelineStateKey& key)
 {
 	Key = key;
-	impl->SetKey(key);
-}
+    pixelFormats.resize(key.RenderTargetFormats.size());
 
-RenderPassPipelineState_Impl* RenderPassPipelineStateMetal::GetImpl() const { return impl; }
+    for (size_t i = 0; i < pixelFormats.size(); i++)
+    {
+        pixelFormats.at(i) = ConvertFormat(key.RenderTargetFormats.at(i));
+    }
+
+    depthStencilFormat = ConvertFormat(key.DepthFormat);
+}
 
 }

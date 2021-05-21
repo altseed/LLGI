@@ -4,26 +4,32 @@
 #import <MetalKit/MetalKit.h>
 #include <functional>
 #include <unordered_map>
+#include <memory>
 
 namespace LLGI
 {
 
-struct Buffer_Impl;
-
 class BufferMetal : public ReferenceObject
 {
 private:
-	Buffer_Impl* impl = nullptr;
-
+    id<MTLBuffer> buffer_ = nullptr;
+    int32_t size_;
+    
 public:
-	BufferMetal();
-	~BufferMetal() override;
+	BufferMetal(Graphics* graphics, int32_t size);
+    ~BufferMetal() override;
+    
+	void* GetData()
+    {
+        return buffer_.contents;
+    }
 
-	bool Initialize(Graphics* graphics, int32_t size);
-
-	void* GetBuffer();
-
-	Buffer_Impl* GetImpl() const;
+    id<MTLBuffer>& GetBuffer()
+    {
+        return buffer_;
+    }
+    
+    int32_t GetSize() const { return size_; }
 };
 
 } // namespace LLGI

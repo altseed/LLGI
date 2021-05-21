@@ -3,10 +3,12 @@
 #include "../LLGI.CommandList.h"
 #import <MetalKit/MetalKit.h>
 
+#include <memory>
+
 namespace LLGI
 {
 
-struct CommandList_Impl;
+class GraphicsMetal;
 class IndexBuffer;
 
 struct CommandListMetalPlatformRenderPassContext
@@ -16,17 +18,19 @@ struct CommandListMetalPlatformRenderPassContext
 
 class CommandListMetal : public CommandList
 {
-	CommandList_Impl* impl = nullptr;
-	Graphics* graphics_ = nullptr;
+	GraphicsMetal* graphics_ = nullptr;
 
 	MTLSamplerDescriptor* samplers[2][2][3];
 	id<MTLSamplerState> samplerStates[2][2][3];
 
-public:
-	CommandListMetal();
-	~CommandListMetal() override;
+    id<MTLCommandBuffer> commandBuffer = nullptr;
+    id<MTLRenderCommandEncoder> renderEncoder = nullptr;
+    id<MTLFence> fence = nullptr;
+    bool isCompleted = true;
 
-	bool Initialize(Graphics* graphics);
+public:
+	CommandListMetal(Graphics* graphics);
+	~CommandListMetal() override;
 
 	void Begin() override;
 	void End() override;
@@ -44,8 +48,12 @@ public:
 
 	bool BeginRenderPassWithPlatformPtr(void* platformPtr) override;
 	bool EndRenderPassWithPlatformPtr() override;
-
-	CommandList_Impl* GetImpl();
+    
+    bool GetIsCompleted() { return isCompleted; }
+    
+    void ResetCompleted() { isCompleted = false; }
+    
+    id<MTLCommandBuffer>& GetCommandBuffer() { return commandBuffer; }
 };
 
 } // namespace LLGI

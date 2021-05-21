@@ -16,43 +16,19 @@
 namespace LLGI
 {
 
-Buffer_Impl::Buffer_Impl() {}
-
-Buffer_Impl::~Buffer_Impl()
-{
-	if (buffer != nullptr)
-	{
-		[buffer release];
-		buffer = nullptr;
-	}
+BufferMetal::BufferMetal(Graphics* graphics, int32_t size) {
+    auto g = static_cast<GraphicsMetal*>(graphics);
+    buffer_ = [g->GetDevice() newBufferWithLength:size options:MTLResourceOptionCPUCacheModeDefault];
+    size_ = size;
 }
 
-bool Buffer_Impl::Initialize(Graphics_Impl* graphics, int32_t size)
+BufferMetal::~BufferMetal()
 {
-	buffer = [graphics->device newBufferWithLength:size options:MTLResourceOptionCPUCacheModeDefault];
-
-	size_ = size;
-
-	return true;
+    if (buffer_ != nullptr)
+    {
+        [buffer_ release];
+        buffer_ = nullptr;
+    }
 }
 
-void* Buffer_Impl::GetBuffer() { return buffer.contents; }
-
-BufferMetal::BufferMetal() { impl = new Buffer_Impl(); }
-
-BufferMetal::~BufferMetal() { SafeDelete(impl); }
-
-bool BufferMetal::Initialize(Graphics* graphics, int32_t size)
-{
-	auto graphics_ = static_cast<GraphicsMetal*>(graphics);
-	return impl->Initialize(graphics_->GetImpl(), size);
-}
-
-void* BufferMetal::GetBuffer()
-{
-	assert(impl != nullptr);
-	return impl->GetBuffer();
-}
-
-Buffer_Impl* BufferMetal::GetImpl() const { return impl; }
 }

@@ -35,6 +35,10 @@ class GraphicsMetal : public Graphics
 	std::function<GraphicsView()> getGraphicsView_;
 	std::vector<CommandList*> executingCommandList_;
 
+    id<MTLDevice> device = nullptr;
+    id<MTLCommandQueue> commandQueue = nullptr;
+    int maxMultiSamplingCount = 0;
+
 public:
 	GraphicsMetal();
 	~GraphicsMetal() override;
@@ -82,6 +86,10 @@ public:
 	Graphics_Impl* GetImpl() const;
 
 	RenderPassMetal* GetRenderPass() const { return renderPass_.get(); }
+    
+    id<MTLDevice>& GetDevice();
+    
+    id<MTLCommandQueue>& GetCommandQueue();
 };
 
 } // namespace LLGI

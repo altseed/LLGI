@@ -19,8 +19,16 @@ class TextureMetal;
 
 class RenderPassMetal : public RenderPass
 {
-	RenderPass_Impl* impl = nullptr;
+    MTLRenderPassDescriptor* renderPassDescriptor;
 
+    bool Initialize();
+
+    void UpdateTarget(TextureMetal** textures,
+                      int32_t textureCount,
+                      TextureMetal* depthTexture,
+                      TextureMetal* resolvedTexture,
+                      TextureMetal* resolvedDepthTexture);
+    
 public:
 	RenderPassMetal();
 
@@ -34,22 +42,30 @@ public:
 	void SetIsDepthCleared(bool isDepthCleared) override;
 
 	void SetClearColor(const Color8& color) override;
-
-	RenderPass_Impl* GetImpl() const;
+    
+    MTLRenderPassDescriptor* GetRenderPassDescriptor() { return renderPassDescriptor; }
+    
+    Color8 clearColor;
+    bool isColorCleared;
+    bool isDepthCleared;
+    FixedSizeVector<MTLPixelFormat, RenderTargetMax> pixelFormats;
+    MTLPixelFormat depthStencilFormat = MTLPixelFormatInvalid;
 };
 
 class RenderPassPipelineStateMetal : public RenderPassPipelineState
 {
 private:
-	RenderPassPipelineState_Impl* impl = nullptr;
-
+    FixedSizeVector<MTLPixelFormat, RenderTargetMax> pixelFormats;
+    MTLPixelFormat depthStencilFormat = MTLPixelFormatInvalid;
+    
 public:
 	RenderPassPipelineStateMetal();
-	~RenderPassPipelineStateMetal() override;
+    ~RenderPassPipelineStateMetal() override = default;
 
 	void SetKey(const RenderPassPipelineStateKey& key);
-
-	RenderPassPipelineState_Impl* GetImpl() const;
+    
+    const FixedSizeVector<MTLPixelFormat, RenderTargetMax>& GetPixelFormats() const { return  pixelFormats; }
+    const MTLPixelFormat& GetDepthStencilFormat() const { return depthStencilFormat; }
 };
 
 } // namespace LLGI

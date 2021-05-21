@@ -1,22 +1,26 @@
 #pragma once
 
 #include "../LLGI.PipelineState.h"
+#include <memory>
+#import <MetalKit/MetalKit.h>
 
 namespace LLGI
 {
 
 class GraphicsMetal;
-struct PipelineState_Impl;
 
 class PipelineStateMetal : public PipelineState
 {
-	friend struct PipelineState_Impl;
-
 private:
 	GraphicsMetal* graphics_ = nullptr;
-	PipelineState_Impl* impl = nullptr;
 	std::array<Shader*, static_cast<int>(ShaderStageType::Max)> shaders;
 
+    id<MTLRenderPipelineState> pipelineState;
+    id<MTLDepthStencilState> depthStencilState = nullptr;
+    MTLRenderPipelineDescriptor* pipelineStateDescriptor = nullptr;
+
+    bool Compile(PipelineState* self, Graphics* graphics);
+    
 public:
 	PipelineStateMetal();
 	~PipelineStateMetal() override;
@@ -28,8 +32,10 @@ public:
 	std::array<Shader*, static_cast<int>(ShaderStageType::Max)> GetShaders() const { return shaders; }
 
 	RenderPassPipelineState* GetRenderPassPipelineState() const { return renderPassPipelineState_.get(); }
-
-	PipelineState_Impl* GetImpl() { return impl; }
+    
+    id<MTLRenderPipelineState>& GetRenderPipelineState() { return pipelineState; }
+    
+    id<MTLDepthStencilState>& GetDepthStencilState() { return depthStencilState; }
 };
 
 } // namespace LLGI
