@@ -14,10 +14,10 @@ ShaderMetal::ShaderMetal() {
 
 ShaderMetal::~ShaderMetal()
 {
-    if (library != nullptr)
+    if (library_ != nullptr)
     {
-        [library release];
-        library = nullptr;
+        [library_ release];
+        library_ = nullptr;
     }
 	SafeRelease(graphics_);
 }
@@ -62,7 +62,7 @@ bool ShaderMetal::Initialize(GraphicsMetal* graphics, DataStructure* data, int32
             return false;
         }
 
-        this->library = lib;
+        this->library_ = lib;
     }
     else
     {
@@ -79,7 +79,7 @@ bool ShaderMetal::Initialize(GraphicsMetal* graphics, DataStructure* data, int32
             return false;
         }
 
-        this->library = lib;
+        this->library_ = lib;
     }
 
     return true;

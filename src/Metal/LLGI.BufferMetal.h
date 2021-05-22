@@ -13,7 +13,6 @@ class BufferMetal : public ReferenceObject
 {
 private:
     id<MTLBuffer> buffer_ = nullptr;
-    int32_t size_;
     
 public:
 	BufferMetal(Graphics* graphics, int32_t size);
@@ -29,7 +28,7 @@ public:
         return buffer_;
     }
     
-    int32_t GetSize() const { return size_; }
+    int32_t GetSize() const { return buffer_.length; }
 };
 
 } // namespace LLGI

@@ -13,7 +13,7 @@ private:
 	ReferenceObject* owner_ = nullptr;
 	std::vector<uint8_t> data;
 
-    id<MTLTexture> texture = nullptr;
+    id<MTLTexture> texture_ = nullptr;
     Vec2I size_;
     bool fromExternal_ = false;
 
@@ -33,7 +33,7 @@ public:
 	void Unlock() override;
 	Vec2I GetSizeAs2D() const override;
 
-    id<MTLTexture>& GetTexture() { return texture; }
+    id<MTLTexture>& GetTexture() { return texture_; }
 };
 
 } // namespace LLGI

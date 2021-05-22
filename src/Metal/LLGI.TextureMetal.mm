@@ -41,7 +41,7 @@ bool TextureMetal::Initialize(id<MTLDevice> device, const Vec2I& size, TextureFo
 		textureDescriptor.mipmapLevelCount = MipMapCount;
 	}
 
-	texture = [device newTextureWithDescriptor:textureDescriptor];
+	texture_ = [device newTextureWithDescriptor:textureDescriptor];
 
 	size_ = size;
 
@@ -54,19 +54,19 @@ void TextureMetal::Write(const uint8_t* data)
 {
 	MTLRegion region = {{0, 0, 0}, {static_cast<uint32_t>(size_.X), static_cast<uint32_t>(size_.Y), 1}};
 
-	auto allSize = GetTextureMemorySize(ConvertFormat(texture.pixelFormat), size_);
+	auto allSize = GetTextureMemorySize(ConvertFormat(texture_.pixelFormat), size_);
 
-	[texture replaceRegion:region mipmapLevel:0 withBytes:data bytesPerRow:allSize / size_.Y];
+	[texture_ replaceRegion:region mipmapLevel:0 withBytes:data bytesPerRow:allSize / size_.Y];
 }
 
 TextureMetal::TextureMetal() {}
 
 TextureMetal::~TextureMetal()
 {
-    if (texture != nullptr)
+    if (texture_ != nullptr)
     {
-        [texture release];
-        texture = nullptr;
+        [texture_ release];
+        texture_ = nullptr;
     }
     
 	SafeRelease(owner_);
@@ -83,7 +83,7 @@ bool TextureMetal::Initialize(GraphicsMetal* owner, const TextureInitializationP
 		return false;
 	}
 
-	format_ = ConvertFormat(texture.pixelFormat);
+	format_ = ConvertFormat(texture_.pixelFormat);
 	data.resize(GetTextureMemorySize(format_, size_));
 
 	return true;
@@ -125,13 +125,13 @@ bool TextureMetal::Initialize(GraphicsMetal* owner, const RenderTextureInitializ
 
     textureDescriptor.sampleCount = parameter.SamplingCount;
 
-    texture = [device newTextureWithDescriptor:textureDescriptor];
+    texture_ = [device newTextureWithDescriptor:textureDescriptor];
 
     size_ = parameter.Size;
 
     fromExternal_ = false;
 
-	format_ = ConvertFormat(texture.pixelFormat);
+	format_ = ConvertFormat(texture_.pixelFormat);
 	data.resize(GetTextureMemorySize(format_, size_));
 
 	return true;
@@ -171,7 +171,7 @@ bool TextureMetal::Initialize(GraphicsMetal* owner, const DepthTextureInitializa
 		return false;
 	}
 
-	format_ = ConvertFormat(texture.pixelFormat);
+	format_ = ConvertFormat(texture_.pixelFormat);
 	data.resize(GetTextureMemorySize(format_, size_));
 
 	return true;
@@ -187,7 +187,7 @@ bool TextureMetal::Initialize(GraphicsMetal* owner, id<MTLTexture> externalTextu
 	Reset(externalTexture);
     type_ = TextureType::Color;
 
-	format_ = ConvertFormat(texture.pixelFormat);
+	format_ = ConvertFormat(texture_.pixelFormat);
 
 	return true;
 }
@@ -201,17 +201,17 @@ void TextureMetal::Reset(id<MTLTexture> nativeTexture)
         [nativeTexture retain];
     }
 
-    if (texture != nullptr)
+    if (texture_ != nullptr)
     {
-        [texture release];
+        [texture_ release];
     }
 
-    texture = nativeTexture;
+    texture_ = nativeTexture;
 
-    if (texture != nullptr)
+    if (texture_ != nullptr)
     {
-        size_.X = static_cast<int32_t>(texture.width);
-        size_.Y = static_cast<int32_t>(texture.height);
+        size_.X = static_cast<int32_t>(texture_.width);
+        size_.Y = static_cast<int32_t>(texture_.height);
     }
     else
     {
@@ -221,7 +221,7 @@ void TextureMetal::Reset(id<MTLTexture> nativeTexture)
 
     fromExternal_ = true;
 
-	format_ = ConvertFormat(texture.pixelFormat);
+	format_ = ConvertFormat(texture_.pixelFormat);
 }
 
 void* TextureMetal::Lock() { return data.data(); }

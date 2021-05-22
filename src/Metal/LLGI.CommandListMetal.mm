@@ -136,9 +136,9 @@ void CommandListMetal::SetScissor(int32_t x, int32_t y, int32_t width, int32_t h
 
 void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 {
-	BindingVertexBuffer vb_;
-	BindingIndexBuffer ib_;
-	PipelineState* pip_ = nullptr;
+	BindingVertexBuffer bvb;
+	BindingIndexBuffer bib;
+	PipelineState* bpip = nullptr;
 
 	const int mipmapFilter = 1;
 
@@ -146,17 +146,17 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 	bool isIBDirtied = false;
 	bool isPipDirtied = false;
 
-	GetCurrentVertexBuffer(vb_, isVBDirtied);
-	GetCurrentIndexBuffer(ib_, isIBDirtied);
-	GetCurrentPipelineState(pip_, isPipDirtied);
+	GetCurrentVertexBuffer(bvb, isVBDirtied);
+	GetCurrentIndexBuffer(bib, isIBDirtied);
+	GetCurrentPipelineState(bpip, isPipDirtied);
 
-	assert(vb_.vertexBuffer != nullptr);
-	assert(ib_.indexBuffer != nullptr);
-	assert(pip_ != nullptr);
+	assert(bvb.vertexBuffer != nullptr);
+	assert(bib.indexBuffer != nullptr);
+	assert(bpip != nullptr);
 
-	auto vb = static_cast<VertexBufferMetal*>(vb_.vertexBuffer);
-	auto ib = static_cast<IndexBufferMetal*>(ib_.indexBuffer);
-	auto pip = static_cast<PipelineStateMetal*>(pip_);
+	auto vb = static_cast<VertexBufferMetal*>(bvb.vertexBuffer);
+	auto ib = static_cast<IndexBufferMetal*>(bib.indexBuffer);
+	auto pip = static_cast<PipelineStateMetal*>(bpip);
 
 	// set cull mode
 	if (pip->Culling == LLGI::CullingMode::Clockwise)
@@ -176,7 +176,7 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 
 	if (isVBDirtied)
 	{
-        [renderEncoder_ setVertexBuffer:vb->GetBuffer().GetBuffer() offset:vb_.offset atIndex:VertexBufferIndex];
+        [renderEncoder_ setVertexBuffer:vb->GetBuffer().GetBuffer() offset:bvb.offset atIndex:VertexBufferIndex];
 	}
 
 	// assign constant buffer
@@ -244,17 +244,17 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 	MTLIndexType indexType = MTLIndexTypeUInt32;
 	int indexPerPrim = 0;
 
-	if (pip_->Topology == TopologyType::Triangle)
+	if (bpip->Topology == TopologyType::Triangle)
 	{
 		indexPerPrim = 3;
 		topology = MTLPrimitiveTypeTriangle;
 	}
-	else if (pip_->Topology == TopologyType::Line)
+	else if (bpip->Topology == TopologyType::Line)
 	{
 		indexPerPrim = 2;
 		topology = MTLPrimitiveTypeLine;
 	}
-	else if (pip_->Topology == TopologyType::Point)
+	else if (bpip->Topology == TopologyType::Point)
 	{
 		indexPerPrim = 1;
 		topology = MTLPrimitiveTypePoint;
@@ -273,7 +273,7 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 									indexCount:primitiveCount * indexPerPrim
 									 indexType:indexType
 								   indexBuffer:ib->GetBuffer().GetBuffer()
-							 indexBufferOffset:ib_.offset
+							 indexBufferOffset:bib.offset
 								 instanceCount:instanceCount];
 
 	CommandList::Draw(primitiveCount, instanceCount);

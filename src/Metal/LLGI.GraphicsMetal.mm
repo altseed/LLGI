@@ -28,9 +28,9 @@ GraphicsMetal::~GraphicsMetal()
 
 	renderPassPipelineStates_.clear();
     
-    if (commandQueue != nullptr)
+    if (commandQueue_ != nullptr)
     {
-        [commandQueue release];
+        [commandQueue_ release];
     }
 
     if (device_ != nullptr)
@@ -44,7 +44,7 @@ bool GraphicsMetal::Initialize(std::function<GraphicsView()> getGraphicsView)
 	getGraphicsView_ = getGraphicsView;
 
     device_ = MTLCreateSystemDefaultDevice();
-    commandQueue = [device_ newCommandQueue];
+    commandQueue_ = [device_ newCommandQueue];
 
     maxMultiSamplingCount = 0;
     int testSampleCounts[] = {8, 4, 2, 1};
@@ -325,8 +325,6 @@ std::vector<uint8_t> GraphicsMetal::CaptureRenderTarget(Texture* renderTarget)
 	return data;
 }
 
-Graphics_Impl* GraphicsMetal::GetImpl() const { return impl; }
-
 id<MTLDevice>& GraphicsMetal::GetDevice()
 {
     return device_;
@@ -334,7 +332,7 @@ id<MTLDevice>& GraphicsMetal::GetDevice()
 
 id<MTLCommandQueue>& GraphicsMetal::GetCommandQueue()
 {
-    return  commandQueue;
+    return  commandQueue_;
 }
 
 }

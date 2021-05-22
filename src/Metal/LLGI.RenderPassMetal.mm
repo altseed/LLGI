@@ -25,34 +25,34 @@ void RenderPassMetal::UpdateTarget(TextureMetal** textures,
 
 	for (int i = 0; i < textureCount; i++)
 	{
-		renderPassDescriptor.colorAttachments[i].texture = textures[i]->GetTexture();
+		renderPassDescriptor_.colorAttachments[i].texture = textures[i]->GetTexture();
 		pixelFormats.at(i) = textures[i]->GetTexture().pixelFormat;
 
 		if (resolvedTexture != nullptr)
 		{
-			renderPassDescriptor.colorAttachments[i].resolveTexture = resolvedTexture->GetTexture();
-			renderPassDescriptor.colorAttachments[i].storeAction = MTLStoreActionMultisampleResolve;
+			renderPassDescriptor_.colorAttachments[i].resolveTexture = resolvedTexture->GetTexture();
+			renderPassDescriptor_.colorAttachments[i].storeAction = MTLStoreActionMultisampleResolve;
 		}
 	}
 
 	if (depthTexture != nullptr)
 	{
-		renderPassDescriptor.depthAttachment.texture = depthTexture->GetTexture();
+		renderPassDescriptor_.depthAttachment.texture = depthTexture->GetTexture();
 
 		if (resolvedDepthTexture != nullptr)
 		{
-			renderPassDescriptor.depthAttachment.resolveTexture = resolvedDepthTexture->GetTexture();
-			renderPassDescriptor.depthAttachment.storeAction = MTLStoreActionMultisampleResolve;
+			renderPassDescriptor_.depthAttachment.resolveTexture = resolvedDepthTexture->GetTexture();
+			renderPassDescriptor_.depthAttachment.storeAction = MTLStoreActionMultisampleResolve;
 		}
 
 		if (HasStencil(ConvertFormat(depthTexture->GetTexture().pixelFormat)))
 		{
-			renderPassDescriptor.stencilAttachment.texture = depthTexture->GetTexture();
+			renderPassDescriptor_.stencilAttachment.texture = depthTexture->GetTexture();
 
 			if (resolvedDepthTexture != nullptr)
 			{
-				renderPassDescriptor.stencilAttachment.resolveTexture = resolvedDepthTexture->GetTexture();
-				renderPassDescriptor.stencilAttachment.storeAction = MTLStoreActionMultisampleResolve;
+				renderPassDescriptor_.stencilAttachment.resolveTexture = resolvedDepthTexture->GetTexture();
+				renderPassDescriptor_.stencilAttachment.storeAction = MTLStoreActionMultisampleResolve;
 			}
 		}
 
@@ -62,15 +62,15 @@ void RenderPassMetal::UpdateTarget(TextureMetal** textures,
 
 RenderPassMetal::RenderPassMetal()
 {
-    renderPassDescriptor = [[MTLRenderPassDescriptor alloc] init];
+    renderPassDescriptor_ = [[MTLRenderPassDescriptor alloc] init];
 }
 
 RenderPassMetal::~RenderPassMetal()
 {
-    if (renderPassDescriptor != nullptr)
+    if (renderPassDescriptor_ != nullptr)
     {
-        [renderPassDescriptor release];
-        renderPassDescriptor = nullptr;
+        [renderPassDescriptor_ release];
+        renderPassDescriptor_ = nullptr;
     }
 }
 
@@ -160,14 +160,14 @@ RenderPassPipelineStateMetal::RenderPassPipelineStateMetal() {}
 void RenderPassPipelineStateMetal::SetKey(const RenderPassPipelineStateKey& key)
 {
 	Key = key;
-    pixelFormats.resize(key.RenderTargetFormats.size());
+    pixelFormats_.resize(key.RenderTargetFormats.size());
 
-    for (size_t i = 0; i < pixelFormats.size(); i++)
+    for (size_t i = 0; i < pixelFormats_.size(); i++)
     {
-        pixelFormats.at(i) = ConvertFormat(key.RenderTargetFormats.at(i));
+        pixelFormats_.at(i) = ConvertFormat(key.RenderTargetFormats.at(i));
     }
 
-    depthStencilFormat = ConvertFormat(key.DepthFormat);
+    depthStencilFormat_ = ConvertFormat(key.DepthFormat);
 }
 
 }

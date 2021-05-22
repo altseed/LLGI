@@ -13,50 +13,50 @@ bool PipelineStateMetal::Compile(PipelineState* self, Graphics* graphics)
 {
     auto g = static_cast<GraphicsMetal*>(graphics);
 
-	auto self_ = static_cast<PipelineStateMetal*>(self);
-	auto renderPassPipelineStateMetal_ = static_cast<RenderPassPipelineStateMetal*>(self_->GetRenderPassPipelineState());
+	auto pipstate = static_cast<PipelineStateMetal*>(self);
+	auto renderPassPipelineState = static_cast<RenderPassPipelineStateMetal*>(pipstate->GetRenderPassPipelineState());
 
-	pipelineStateDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
+	pipelineStateDescriptor_ = [[MTLRenderPipelineDescriptor alloc] init];
 
 	// vertex layout
 	MTLVertexDescriptor* vertexDescriptor = [MTLVertexDescriptor vertexDescriptor];
 
 	int vertexOffset = 0;
-	for (int i = 0; i < self_->VertexLayoutCount; i++)
+	for (int i = 0; i < pipstate->VertexLayoutCount; i++)
 	{
 		vertexDescriptor.attributes[i].offset = vertexOffset;
 
-		if (self_->VertexLayouts[i] == VertexLayoutFormat::R32G32B32_FLOAT)
+		if (pipstate->VertexLayouts[i] == VertexLayoutFormat::R32G32B32_FLOAT)
 		{
 			vertexDescriptor.attributes[i].format = MTLVertexFormatFloat3;
 			vertexDescriptor.attributes[i].bufferIndex = VertexBufferIndex;
 			vertexOffset += sizeof(float) * 3;
 		}
-		else if (self_->VertexLayouts[i] == VertexLayoutFormat::R32G32B32A32_FLOAT)
+		else if (pipstate->VertexLayouts[i] == VertexLayoutFormat::R32G32B32A32_FLOAT)
 		{
 			vertexDescriptor.attributes[i].format = MTLVertexFormatFloat4;
 			vertexDescriptor.attributes[i].bufferIndex = VertexBufferIndex;
 			vertexOffset += sizeof(float) * 4;
 		}
-		else if (self_->VertexLayouts[i] == VertexLayoutFormat::R32G32_FLOAT)
+		else if (pipstate->VertexLayouts[i] == VertexLayoutFormat::R32G32_FLOAT)
 		{
 			vertexDescriptor.attributes[i].format = MTLVertexFormatFloat2;
 			vertexDescriptor.attributes[i].bufferIndex = VertexBufferIndex;
 			vertexOffset += sizeof(float) * 2;
 		}
-		else if (self_->VertexLayouts[i] == VertexLayoutFormat::R32_FLOAT)
+		else if (pipstate->VertexLayouts[i] == VertexLayoutFormat::R32_FLOAT)
 		{
 			vertexDescriptor.attributes[i].format = MTLVertexFormatFloat;
 			vertexDescriptor.attributes[i].bufferIndex = VertexBufferIndex;
 			vertexOffset += sizeof(float) * 1;
 		}
-		else if (self_->VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UINT)
+		else if (pipstate->VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UINT)
 		{
 			vertexDescriptor.attributes[i].format = MTLVertexFormatUChar4;
 			vertexDescriptor.attributes[i].bufferIndex = VertexBufferIndex;
 			vertexOffset += sizeof(float);
 		}
-		else if (self_->VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UNORM)
+		else if (pipstate->VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UNORM)
 		{
 			vertexDescriptor.attributes[i].format = MTLVertexFormatUChar4Normalized;
 			vertexDescriptor.attributes[i].bufferIndex = VertexBufferIndex;
@@ -73,25 +73,25 @@ bool PipelineStateMetal::Compile(PipelineState* self, Graphics* graphics)
 	vertexDescriptor.layouts[VertexBufferIndex].stepFunction = MTLVertexStepFunctionPerVertex;
 	vertexDescriptor.layouts[VertexBufferIndex].stride = vertexOffset;
 
-	pipelineStateDescriptor.vertexDescriptor = vertexDescriptor;
+	pipelineStateDescriptor_.vertexDescriptor = vertexDescriptor;
 
 	// setup shaders
-	auto vs = static_cast<ShaderMetal*>(self_->GetShaders()[static_cast<int>(ShaderStageType::Vertex)]);
-	auto ps = static_cast<ShaderMetal*>(self_->GetShaders()[static_cast<int>(ShaderStageType::Pixel)]);
+	auto vs = static_cast<ShaderMetal*>(pipstate->GetShaders()[static_cast<int>(ShaderStageType::Vertex)]);
+	auto ps = static_cast<ShaderMetal*>(pipstate->GetShaders()[static_cast<int>(ShaderStageType::Pixel)]);
 
 	id<MTLFunction> vf = [vs->GetLibrary() newFunctionWithName:@"main0"];
 	id<MTLFunction> pf = [ps->GetLibrary() newFunctionWithName:@"main0"];
-	pipelineStateDescriptor.vertexFunction = vf;
-	pipelineStateDescriptor.fragmentFunction = pf;
+	pipelineStateDescriptor_.vertexFunction = vf;
+	pipelineStateDescriptor_.fragmentFunction = pf;
 
 	// setup a depth
-	if (renderPassPipelineStateMetal_->GetDepthStencilFormat() != MTLPixelFormatInvalid)
+	if (renderPassPipelineState->GetDepthStencilFormat() != MTLPixelFormatInvalid)
 	{
 
 		MTLDepthStencilDescriptor* depthStencilDescriptor = [[MTLDepthStencilDescriptor alloc] init];
-		depthStencilDescriptor.depthWriteEnabled = self_->IsDepthWriteEnabled;
+		depthStencilDescriptor.depthWriteEnabled = pipstate->IsDepthWriteEnabled;
 
-		if (self_->IsDepthTestEnabled)
+		if (pipstate->IsDepthTestEnabled)
 		{
 			std::array<MTLCompareFunction, 10> depthCompareOps;
 			depthCompareOps[static_cast<int>(DepthFuncType::Never)] = MTLCompareFunctionNever;
@@ -102,19 +102,19 @@ bool PipelineStateMetal::Compile(PipelineState* self, Graphics* graphics)
 			depthCompareOps[static_cast<int>(DepthFuncType::NotEqual)] = MTLCompareFunctionNotEqual;
 			depthCompareOps[static_cast<int>(DepthFuncType::GreaterEqual)] = MTLCompareFunctionGreaterEqual;
 			depthCompareOps[static_cast<int>(DepthFuncType::Always)] = MTLCompareFunctionAlways;
-			depthStencilDescriptor.depthCompareFunction = depthCompareOps[static_cast<int>(self_->DepthFunc)];
+			depthStencilDescriptor.depthCompareFunction = depthCompareOps[static_cast<int>(pipstate->DepthFunc)];
 		}
 		else
 		{
 			depthStencilDescriptor.depthCompareFunction = MTLCompareFunctionAlways;
 		}
 
-		if (renderPassPipelineStateMetal_->Key.DepthFormat == TextureFormatType::D24S8 ||
-			renderPassPipelineStateMetal_->Key.DepthFormat == TextureFormatType::D32S8)
+		if (renderPassPipelineState->Key.DepthFormat == TextureFormatType::D24S8 ||
+			renderPassPipelineState->Key.DepthFormat == TextureFormatType::D32S8)
 		{
 			MTLStencilDescriptor* stencilDescriptor = [[MTLStencilDescriptor alloc] init];
 
-			if (self_->IsStencilTestEnabled)
+			if (pipstate->IsStencilTestEnabled)
 			{
 				std::array<MTLStencilOperation, 8> stencilOps;
 				stencilOps[static_cast<int>(StencilOperatorType::Keep)] = MTLStencilOperationKeep;
@@ -136,12 +136,12 @@ bool PipelineStateMetal::Compile(PipelineState* self, Graphics* graphics)
 				stencilCompareFuncs[static_cast<int>(CompareFuncType::GreaterEqual)] = MTLCompareFunctionGreaterEqual;
 				stencilCompareFuncs[static_cast<int>(CompareFuncType::Always)] = MTLCompareFunctionAlways;
 
-				stencilDescriptor.depthFailureOperation = stencilOps[static_cast<int>(self_->StencilDepthFailOp)];
-				stencilDescriptor.stencilFailureOperation = stencilOps[static_cast<int>(self_->StencilFailOp)];
-				stencilDescriptor.depthStencilPassOperation = stencilOps[static_cast<int>(self_->StencilPassOp)];
-				stencilDescriptor.stencilCompareFunction = stencilCompareFuncs[static_cast<int>(self_->StencilCompareFunc)];
-				stencilDescriptor.readMask = self_->StencilReadMask;
-				stencilDescriptor.writeMask = self_->StencilWriteMask;
+				stencilDescriptor.depthFailureOperation = stencilOps[static_cast<int>(pipstate->StencilDepthFailOp)];
+				stencilDescriptor.stencilFailureOperation = stencilOps[static_cast<int>(pipstate->StencilFailOp)];
+				stencilDescriptor.depthStencilPassOperation = stencilOps[static_cast<int>(pipstate->StencilPassOp)];
+				stencilDescriptor.stencilCompareFunction = stencilCompareFuncs[static_cast<int>(pipstate->StencilCompareFunc)];
+				stencilDescriptor.readMask = pipstate->StencilReadMask;
+				stencilDescriptor.writeMask = pipstate->StencilWriteMask;
 			}
 			else
 			{
@@ -159,27 +159,27 @@ bool PipelineStateMetal::Compile(PipelineState* self, Graphics* graphics)
 			[stencilDescriptor release];
 		}
 
-		depthStencilState = [g->GetDevice() newDepthStencilStateWithDescriptor:depthStencilDescriptor];
+		depthStencilState_ = [g->GetDevice() newDepthStencilStateWithDescriptor:depthStencilDescriptor];
 		[depthStencilDescriptor release];
 	}
 
 	// topology
-	if (self_->Topology == TopologyType::Triangle)
+	if (pipstate->Topology == TopologyType::Triangle)
 	{
 		if (@available(iOS 12.0, *))
 		{
-			pipelineStateDescriptor.inputPrimitiveTopology = MTLPrimitiveTopologyClassTriangle;
+			pipelineStateDescriptor_.inputPrimitiveTopology = MTLPrimitiveTopologyClassTriangle;
 		}
 		else
 		{
 			// Fallback on earlier versions
 		}
 	}
-	else if (self_->Topology == TopologyType::Line)
+	else if (pipstate->Topology == TopologyType::Line)
 	{
 		if (@available(iOS 12.0, *))
 		{
-			pipelineStateDescriptor.inputPrimitiveTopology = MTLPrimitiveTopologyClassLine;
+			pipelineStateDescriptor_.inputPrimitiveTopology = MTLPrimitiveTopologyClassLine;
 		}
 		else
 		{
@@ -187,11 +187,11 @@ bool PipelineStateMetal::Compile(PipelineState* self, Graphics* graphics)
 			return false;
 		}
 	}
-	else if (self_->Topology == TopologyType::Point)
+	else if (pipstate->Topology == TopologyType::Point)
 	{
 		if (@available(iOS 12.0, *))
 		{
-			pipelineStateDescriptor.inputPrimitiveTopology = MTLPrimitiveTopologyClassPoint;
+			pipelineStateDescriptor_.inputPrimitiveTopology = MTLPrimitiveTopologyClassPoint;
 		}
 		else
 		{
@@ -209,9 +209,9 @@ bool PipelineStateMetal::Compile(PipelineState* self, Graphics* graphics)
 
 	// setup a blend
 
-	MTLRenderPipelineColorAttachmentDescriptor* colorAttachment = pipelineStateDescriptor.colorAttachments[0];
+	MTLRenderPipelineColorAttachmentDescriptor* colorAttachment = pipelineStateDescriptor_.colorAttachments[0];
 
-	if (self_->IsBlendEnabled)
+	if (pipstate->IsBlendEnabled)
 	{
 		colorAttachment.blendingEnabled = true;
 
@@ -234,39 +234,39 @@ bool PipelineStateMetal::Compile(PipelineState* self, Graphics* graphics)
 		blendFuncs[static_cast<int>(BlendFuncType::DstAlpha)] = MTLBlendFactorDestinationAlpha;
 		blendFuncs[static_cast<int>(BlendFuncType::OneMinusDstAlpha)] = MTLBlendFactorOneMinusDestinationAlpha;
 
-		colorAttachment.sourceRGBBlendFactor = blendFuncs[static_cast<int>(self_->BlendSrcFunc)];
-		colorAttachment.destinationRGBBlendFactor = blendFuncs[static_cast<int>(self_->BlendDstFunc)];
-		colorAttachment.sourceAlphaBlendFactor = blendFuncs[static_cast<int>(self_->BlendSrcFuncAlpha)];
-		colorAttachment.destinationAlphaBlendFactor = blendFuncs[static_cast<int>(self_->BlendDstFuncAlpha)];
-		colorAttachment.rgbBlendOperation = blendOps[static_cast<int>(self_->BlendEquationRGB)];
-		colorAttachment.alphaBlendOperation = blendOps[static_cast<int>(self_->BlendEquationAlpha)];
+		colorAttachment.sourceRGBBlendFactor = blendFuncs[static_cast<int>(pipstate->BlendSrcFunc)];
+		colorAttachment.destinationRGBBlendFactor = blendFuncs[static_cast<int>(pipstate->BlendDstFunc)];
+		colorAttachment.sourceAlphaBlendFactor = blendFuncs[static_cast<int>(pipstate->BlendSrcFuncAlpha)];
+		colorAttachment.destinationAlphaBlendFactor = blendFuncs[static_cast<int>(pipstate->BlendDstFuncAlpha)];
+		colorAttachment.rgbBlendOperation = blendOps[static_cast<int>(pipstate->BlendEquationRGB)];
+		colorAttachment.alphaBlendOperation = blendOps[static_cast<int>(pipstate->BlendEquationAlpha)];
 	}
 	else
 	{
 		colorAttachment.blendingEnabled = false;
 	}
 
-	for (size_t i = 0; i < renderPassPipelineStateMetal_->GetPixelFormats().size(); i++)
+	for (size_t i = 0; i < renderPassPipelineState->GetPixelFormats().size(); i++)
 	{
-		[pipelineStateDescriptor.colorAttachments objectAtIndexedSubscript:i].pixelFormat =
-			renderPassPipelineStateMetal_->GetPixelFormats().at(i);
+		[pipelineStateDescriptor_.colorAttachments objectAtIndexedSubscript:i].pixelFormat =
+			renderPassPipelineState->GetPixelFormats().at(i);
 	}
 
-	if (renderPassPipelineStateMetal_->GetDepthStencilFormat() != MTLPixelFormatInvalid)
+	if (renderPassPipelineState->GetDepthStencilFormat() != MTLPixelFormatInvalid)
 	{
-		pipelineStateDescriptor.depthAttachmentPixelFormat = renderPassPipelineStateMetal_->GetDepthStencilFormat();
+		pipelineStateDescriptor_.depthAttachmentPixelFormat = renderPassPipelineState->GetDepthStencilFormat();
 
-		if (renderPassPipelineStateMetal_->Key.DepthFormat == TextureFormatType::D24S8 ||
-			renderPassPipelineStateMetal_->Key.DepthFormat == TextureFormatType::D32S8)
+		if (renderPassPipelineState->Key.DepthFormat == TextureFormatType::D24S8 ||
+			renderPassPipelineState->Key.DepthFormat == TextureFormatType::D32S8)
 		{
-			pipelineStateDescriptor.stencilAttachmentPixelFormat = renderPassPipelineStateMetal_->GetDepthStencilFormat();
+			pipelineStateDescriptor_.stencilAttachmentPixelFormat = renderPassPipelineState->GetDepthStencilFormat();
 		}
 	}
 
-	pipelineStateDescriptor.sampleCount = renderPassPipelineStateMetal_->Key.SamplingCount;
+	pipelineStateDescriptor_.sampleCount = renderPassPipelineState->Key.SamplingCount;
 
 	NSError* pipelineError = nil;
-	pipelineState = [g->GetDevice() newRenderPipelineStateWithDescriptor:pipelineStateDescriptor error:&pipelineError];
+	pipelineState_ = [g->GetDevice() newRenderPipelineStateWithDescriptor:pipelineStateDescriptor_ error:&pipelineError];
 
 	return true;
 }
@@ -283,22 +283,22 @@ PipelineStateMetal::~PipelineStateMetal()
 		SafeRelease(shader);
 	}
 
-    if (pipelineStateDescriptor != nullptr)
+    if (pipelineStateDescriptor_ != nullptr)
     {
-        [pipelineStateDescriptor release];
-        pipelineStateDescriptor = nullptr;
+        [pipelineStateDescriptor_ release];
+        pipelineStateDescriptor_ = nullptr;
     }
 
-    if (depthStencilState != nullptr)
+    if (depthStencilState_ != nullptr)
     {
-        [depthStencilState release];
-        depthStencilState = nullptr;
+        [depthStencilState_ release];
+        depthStencilState_ = nullptr;
     }
 
-    if (pipelineState != nullptr)
+    if (pipelineState_ != nullptr)
     {
-        [pipelineState release];
-        pipelineState = nullptr;
+        [pipelineState_ release];
+        pipelineState_ = nullptr;
     }
     
 	SafeRelease(graphics_);

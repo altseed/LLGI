@@ -19,7 +19,7 @@ class TextureMetal;
 
 class RenderPassMetal : public RenderPass
 {
-    MTLRenderPassDescriptor* renderPassDescriptor;
+    MTLRenderPassDescriptor* renderPassDescriptor_;
 
     bool Initialize();
 
@@ -43,7 +43,7 @@ public:
 
 	void SetClearColor(const Color8& color) override;
     
-    MTLRenderPassDescriptor* GetRenderPassDescriptor() { return renderPassDescriptor; }
+    MTLRenderPassDescriptor* GetRenderPassDescriptor() { return renderPassDescriptor_; }
     
     Color8 clearColor;
     bool isColorCleared;
@@ -55,8 +55,8 @@ public:
 class RenderPassPipelineStateMetal : public RenderPassPipelineState
 {
 private:
-    FixedSizeVector<MTLPixelFormat, RenderTargetMax> pixelFormats;
-    MTLPixelFormat depthStencilFormat = MTLPixelFormatInvalid;
+    FixedSizeVector<MTLPixelFormat, RenderTargetMax> pixelFormats_;
+    MTLPixelFormat depthStencilFormat_ = MTLPixelFormatInvalid;
     
 public:
 	RenderPassPipelineStateMetal();
@@ -64,8 +64,8 @@ public:
 
 	void SetKey(const RenderPassPipelineStateKey& key);
     
-    const FixedSizeVector<MTLPixelFormat, RenderTargetMax>& GetPixelFormats() const { return  pixelFormats; }
-    const MTLPixelFormat& GetDepthStencilFormat() const { return depthStencilFormat; }
+    const FixedSizeVector<MTLPixelFormat, RenderTargetMax>& GetPixelFormats() const { return  pixelFormats_; }
+    const MTLPixelFormat& GetDepthStencilFormat() const { return depthStencilFormat_; }
 };
 
 } // namespace LLGI
