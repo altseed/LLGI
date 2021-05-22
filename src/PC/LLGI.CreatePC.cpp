@@ -96,7 +96,7 @@ Platform* CreatePlatform(const PlatformParameter& parameter, Window* window)
 	}
 
 #elif defined(__APPLE__)
-	auto obj = new PlatformMetal(window, parameter.WaitVSync);
+	auto obj = new PlatformMetal(window, parameter.WaitVSync, parameter.EnableGC);
 	return obj;
 
 #endif
