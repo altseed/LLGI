@@ -102,22 +102,25 @@ CommandListMetal::~CommandListMetal()
 
 void CommandListMetal::Begin()
 {
-	if (commandBuffer_ != nullptr)
+	@autoreleasepool
 	{
-		[commandBuffer_ release];
-		commandBuffer_ = nullptr;
+		if (commandBuffer_ != nullptr)
+		{
+			[commandBuffer_ release];
+			commandBuffer_ = nullptr;
+		}
+
+		commandBuffer_ = [graphics_->GetCommandQueue() commandBuffer];
+		[commandBuffer_ retain];
+
+		auto t = this;
+
+		[commandBuffer_ addCompletedHandler:^(id buffer) {
+		  t->isCompleted_ = true;
+		}];
+
+		CommandList::Begin();
 	}
-
-	commandBuffer_ = [graphics_->GetCommandQueue() commandBuffer];
-	[commandBuffer_ retain];
-
-	auto t = this;
-
-	[commandBuffer_ addCompletedHandler:^(id buffer) {
-	  t->isCompleted_ = true;
-	}];
-
-	CommandList::Begin();
 }
 
 void CommandListMetal::End() { CommandList::End(); }
@@ -279,34 +282,37 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 
 void CommandListMetal::CopyTexture(Texture* src, Texture* dst)
 {
-	if (isInRenderPass_)
+	@autoreleasepool
 	{
-		Log(LogType::Error, "Please call CopyTexture outside of RenderPass");
-		return;
+		if (isInRenderPass_)
+		{
+			Log(LogType::Error, "Please call CopyTexture outside of RenderPass");
+			return;
+		}
+
+		auto srcTex = static_cast<TextureMetal*>(src);
+		auto dstTex = static_cast<TextureMetal*>(dst);
+
+		id<MTLBlitCommandEncoder> blitEncoder = [commandBuffer_ blitCommandEncoder];
+
+		auto regionSize = srcTex->GetSizeAs2D();
+
+		MTLRegion region = {{0, 0, 0}, {(uint32_t)regionSize.X, (uint32_t)regionSize.Y, 1}};
+
+		[blitEncoder copyFromTexture:srcTex->GetTexture()
+						 sourceSlice:0
+						 sourceLevel:0
+						sourceOrigin:region.origin
+						  sourceSize:region.size
+						   toTexture:dstTex->GetTexture()
+					destinationSlice:0
+					destinationLevel:0
+				   destinationOrigin:{0, 0, 0}];
+		[blitEncoder endEncoding];
+
+		RegisterReferencedObject(src);
+		RegisterReferencedObject(dst);
 	}
-
-	auto srcTex = static_cast<TextureMetal*>(src);
-	auto dstTex = static_cast<TextureMetal*>(dst);
-
-	id<MTLBlitCommandEncoder> blitEncoder = [commandBuffer_ blitCommandEncoder];
-
-	auto regionSize = srcTex->GetSizeAs2D();
-
-	MTLRegion region = {{0, 0, 0}, {(uint32_t)regionSize.X, (uint32_t)regionSize.Y, 1}};
-
-	[blitEncoder copyFromTexture:srcTex->GetTexture()
-					 sourceSlice:0
-					 sourceLevel:0
-					sourceOrigin:region.origin
-					  sourceSize:region.size
-					   toTexture:dstTex->GetTexture()
-				destinationSlice:0
-				destinationLevel:0
-			   destinationOrigin:{0, 0, 0}];
-	[blitEncoder endEncoding];
-
-	RegisterReferencedObject(src);
-	RegisterReferencedObject(dst);
 }
 
 void CommandListMetal::GenerateMipMap(Texture* src)
@@ -320,53 +326,56 @@ void CommandListMetal::GenerateMipMap(Texture* src)
 
 void CommandListMetal::BeginRenderPass(RenderPass* renderPass)
 {
-	auto rp = static_cast<RenderPassMetal*>(renderPass);
-	auto rpd = rp->GetRenderPassDescriptor();
-
-	for (size_t i = 0; i < rp->pixelFormats.size(); i++)
+	@autoreleasepool
 	{
-		if (rp->isColorCleared)
-		{
-			auto r_ = rp->clearColor.R / 255.0;
-			auto g_ = rp->clearColor.G / 255.0;
-			auto b_ = rp->clearColor.B / 255.0;
-			auto a_ = rp->clearColor.A / 255.0;
+		auto rp = static_cast<RenderPassMetal*>(renderPass);
+		auto rpd = rp->GetRenderPassDescriptor();
 
-			rpd.colorAttachments[i].loadAction = MTLLoadActionClear;
-			rpd.colorAttachments[i].clearColor = MTLClearColorMake(r_, g_, b_, a_);
+		for (size_t i = 0; i < rp->pixelFormats.size(); i++)
+		{
+			if (rp->isColorCleared)
+			{
+				auto r_ = rp->clearColor.R / 255.0;
+				auto g_ = rp->clearColor.G / 255.0;
+				auto b_ = rp->clearColor.B / 255.0;
+				auto a_ = rp->clearColor.A / 255.0;
+
+				rpd.colorAttachments[i].loadAction = MTLLoadActionClear;
+				rpd.colorAttachments[i].clearColor = MTLClearColorMake(r_, g_, b_, a_);
+			}
+			else
+			{
+				rpd.colorAttachments[i].loadAction = MTLLoadActionDontCare;
+			}
+		}
+
+		if (rp->isDepthCleared)
+		{
+			rpd.depthAttachment.loadAction = MTLLoadActionClear;
+			rpd.depthAttachment.clearDepth = 1.0;
+
+			if (rp->depthStencilFormat != MTLPixelFormatDepth32Float_Stencil8
+#if TARGET_OS_MACOS
+				&& rp->depthStencilFormat != MTLPixelFormatDepth24Unorm_Stencil8
+#endif
+			)
+			{
+				rpd.stencilAttachment.loadAction = MTLLoadActionClear;
+				rpd.stencilAttachment.clearStencil = 0;
+			}
 		}
 		else
 		{
-			rpd.colorAttachments[i].loadAction = MTLLoadActionDontCare;
+			rpd.depthAttachment.loadAction = MTLLoadActionDontCare;
+			rpd.stencilAttachment.loadAction = MTLLoadActionDontCare;
 		}
+
+		renderEncoder_ = [commandBuffer_ renderCommandEncoderWithDescriptor:rpd];
+		[renderEncoder_ retain];
+		[renderEncoder_ waitForFence:fence_ beforeStages:MTLRenderStageVertex];
+
+		CommandList::BeginRenderPass(renderPass);
 	}
-
-	if (rp->isDepthCleared)
-	{
-		rpd.depthAttachment.loadAction = MTLLoadActionClear;
-		rpd.depthAttachment.clearDepth = 1.0;
-
-		if (rp->depthStencilFormat != MTLPixelFormatDepth32Float_Stencil8
-#if TARGET_OS_MACOS
-			&& rp->depthStencilFormat != MTLPixelFormatDepth24Unorm_Stencil8
-#endif
-		)
-		{
-			rpd.stencilAttachment.loadAction = MTLLoadActionClear;
-			rpd.stencilAttachment.clearStencil = 0;
-		}
-	}
-	else
-	{
-		rpd.depthAttachment.loadAction = MTLLoadActionDontCare;
-		rpd.stencilAttachment.loadAction = MTLLoadActionDontCare;
-	}
-
-	renderEncoder_ = [commandBuffer_ renderCommandEncoderWithDescriptor:rpd];
-
-	[renderEncoder_ waitForFence:fence_ beforeStages:MTLRenderStageVertex];
-
-	CommandList::BeginRenderPass(renderPass);
 }
 
 void CommandListMetal::EndRenderPass()
@@ -375,6 +384,7 @@ void CommandListMetal::EndRenderPass()
 	{
 		[renderEncoder_ updateFence:fence_ afterStages:MTLRenderStageFragment];
 		[renderEncoder_ endEncoding];
+		[renderEncoder_ release];
 		renderEncoder_ = nullptr;
 	}
 

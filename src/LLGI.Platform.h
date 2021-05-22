@@ -14,8 +14,6 @@ struct PlatformParameter
 {
 	DeviceType Device = DeviceType::Default;
 	bool WaitVSync = true;
-	//! for macOS
-	bool EnableGC = true;
 };
 
 Window* CreateWindow(const char* title, Vec2I windowSize);

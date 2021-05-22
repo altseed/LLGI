@@ -36,25 +36,35 @@ ImguiPlatformMetal::~ImguiPlatformMetal() { delete impl; }
 
 void ImguiPlatformMetal::NewFrame(LLGI::RenderPass* renderPass)
 {
-	textures_.clear();
-	impl->NewFrame(renderPass);
+    @autoreleasepool
+    {
+        textures_.clear();
+        impl->NewFrame(renderPass);
+    }
 }
 
 void ImguiPlatformMetal::RenderDrawData(ImDrawData* draw_data, LLGI::CommandList* commandList)
 {
+    @autoreleasepool
+    {
 	impl->RenderDrawData(draw_data, commandList);
+    }
 }
 
 ImTextureID ImguiPlatformMetal::GetTextureIDToRender(LLGI::Texture* texture, LLGI::CommandList* commandList)
 {
+    @autoreleasepool
+    {
 	LLGI::SafeAddRef(texture);
 	auto texturePtr = LLGI::CreateSharedPtr(texture);
 	textures_.insert(texturePtr);
 
 	auto t = static_cast<LLGI::TextureMetal*>(texture);
 	return (__bridge void*)(t->GetTexture());
+    }
 }
 
-void ImguiPlatformMetal::CreateFont() { ImGui_ImplMetal_CreateFontsTexture(impl->g_->GetDevice()); }
+void ImguiPlatformMetal::CreateFont() {
+    ImGui_ImplMetal_CreateFontsTexture(impl->g_->GetDevice()); }
 
 void ImguiPlatformMetal::DisposeFont() { ImGui_ImplMetal_DestroyFontsTexture(); }

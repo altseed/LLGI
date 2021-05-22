@@ -28,7 +28,7 @@ class PlatformMetal : public Platform
 	std::vector<RingBuffer> ringBuffers_;
 
 public:
-	PlatformMetal(Window* window, bool waitVSync, bool enableGC);
+	PlatformMetal(Window* window, bool waitVSync);
 	~PlatformMetal() override;
 	bool NewFrame() override;
 	void Present() override;

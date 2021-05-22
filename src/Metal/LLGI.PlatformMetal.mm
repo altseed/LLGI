@@ -20,16 +20,14 @@ struct PlatformMetal_Impl
 {
 	Window* window_;
 	bool waitVSync_;
-	bool enableGC_;
 
 	id<MTLDevice> device;
 	id<MTLCommandQueue> commandQueue;
-	id<MTLCommandBuffer> commandBuffer;
 	CAMetalLayer* layer;
-	id<CAMetalDrawable> drawable;
+	id<CAMetalDrawable> drawable = nullptr;
 	NSAutoreleasePool* pool;
 
-	PlatformMetal_Impl(Window* window, bool waitVSync, bool enableGC) : window_(window), waitVSync_(waitVSync), enableGC_(enableGC)
+	PlatformMetal_Impl(Window* window, bool waitVSync) : window_(window), waitVSync_(waitVSync)
 	{
 		device = MTLCreateSystemDefaultDevice();
 		window_ = window;
@@ -38,11 +36,6 @@ struct PlatformMetal_Impl
 		generateLayer();
 
 		commandQueue = [device newCommandQueue];
-
-		if (enableGC_)
-		{
-			pool = [[NSAutoreleasePool alloc] init];
-		}
 	}
 
 	~PlatformMetal_Impl()
@@ -53,34 +46,40 @@ struct PlatformMetal_Impl
 			layer = nullptr;
 		}
 
-		if (enableGC_)
+		if (drawable != nullptr)
 		{
-			[pool drain];
+			[drawable release];
 		}
 	}
 
 	bool newFrame()
 	{
-		if (enableGC_)
-		{
-			gc();
-		}
-
 		if (!window_->OnNewFrame())
 		{
 			return false;
 		}
 
-		drawable = layer.nextDrawable;
+		@autoreleasepool
+		{
+			if (drawable != nullptr)
+			{
+				[drawable release];
+			}
 
+			drawable = layer.nextDrawable;
+			[drawable retain];
+		}
 		return true;
 	}
 
 	void preset()
 	{
-		commandBuffer = [commandQueue commandBuffer];
-		[commandBuffer presentDrawable:drawable];
-		[commandBuffer commit];
+		@autoreleasepool
+		{
+			id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
+			[commandBuffer presentDrawable:drawable];
+			[commandBuffer commit];
+		}
 	}
 
 	void resetLayer()
@@ -106,17 +105,11 @@ struct PlatformMetal_Impl
 		layer.drawableSize = CGSizeMake(frameBufferSize.X, frameBufferSize.Y);
 		layer.framebufferOnly = false; // Enable capture (getBytes)
 	}
-
-	void gc()
-	{
-		[pool drain];
-		pool = [[NSAutoreleasePool alloc] init];
-	}
 };
 
-PlatformMetal::PlatformMetal(Window* window, bool waitVSync, bool enableGC)
+PlatformMetal::PlatformMetal(Window* window, bool waitVSync)
 {
-	impl = new PlatformMetal_Impl(window, waitVSync, enableGC);
+	impl = new PlatformMetal_Impl(window, waitVSync);
 
 	ringBuffers_.resize(6);
 	for (size_t i = 0; i < ringBuffers_.size(); i++)
