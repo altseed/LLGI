@@ -46,18 +46,18 @@ bool GraphicsMetal::Initialize(std::function<GraphicsView()> getGraphicsView)
     device_ = MTLCreateSystemDefaultDevice();
     commandQueue_ = [device_ newCommandQueue];
 
-    maxMultiSamplingCount = 0;
+    maxMultiSamplingCount_ = 0;
     int testSampleCounts[] = {8, 4, 2, 1};
     for (int count : testSampleCounts)
     {
         bool supported = [device_ supportsTextureSampleCount:count];
         if (supported)
         {
-            maxMultiSamplingCount = count;
+            maxMultiSamplingCount_ = count;
             break;
         }
     }
-    if (maxMultiSamplingCount == 0)
+    if (maxMultiSamplingCount_ == 0)
         throw "Unsupported.";
     
 	renderPass_ = CreateSharedPtr(new RenderPassMetal());

@@ -31,7 +31,7 @@ class GraphicsMetal : public Graphics
 
     id<MTLDevice> device_ = nullptr;
     id<MTLCommandQueue> commandQueue_ = nullptr;
-    int maxMultiSamplingCount = 0;
+    int maxMultiSamplingCount_ = 0;
 
 public:
 	GraphicsMetal();
