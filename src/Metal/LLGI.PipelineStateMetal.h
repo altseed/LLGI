@@ -17,7 +17,6 @@ private:
 
 	id<MTLRenderPipelineState> pipelineState_;
 	id<MTLDepthStencilState> depthStencilState_ = nullptr;
-	MTLRenderPipelineDescriptor* pipelineStateDescriptor_ = nullptr;
 
 	bool Compile(PipelineState* self, Graphics* graphics);
 

@@ -73,7 +73,7 @@ CommandListMetal::~CommandListMetal()
 	{
 		for (int f = 0; f < 2; f++)
 		{
-			for (int m = 0; m < 2; m++)
+			for (int m = 0; m < 3; m++)
 			{
 				[samplers_[w][f][m] release];
 				[samplerStates_[w][f][m] release];
