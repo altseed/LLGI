@@ -20,19 +20,16 @@ struct PlatformMetal_Impl
 {
 	Window* window_;
 	bool waitVSync_;
-    bool enableGC_;
+	bool enableGC_;
 
 	id<MTLDevice> device;
 	id<MTLCommandQueue> commandQueue;
 	id<MTLCommandBuffer> commandBuffer;
 	CAMetalLayer* layer;
 	id<CAMetalDrawable> drawable;
-    NSAutoreleasePool* pool;
+	NSAutoreleasePool* pool;
 
-	PlatformMetal_Impl(Window* window, bool waitVSync, bool enableGC)
-        : window_(window)
-        , waitVSync_(waitVSync)
-        , enableGC_(enableGC)
+	PlatformMetal_Impl(Window* window, bool waitVSync, bool enableGC) : window_(window), waitVSync_(waitVSync), enableGC_(enableGC)
 	{
 		device = MTLCreateSystemDefaultDevice();
 		window_ = window;
@@ -41,11 +38,11 @@ struct PlatformMetal_Impl
 		generateLayer();
 
 		commandQueue = [device newCommandQueue];
-        
-        if(enableGC_)
-        {
-            pool = [[NSAutoreleasePool alloc] init];
-        }
+
+		if (enableGC_)
+		{
+			pool = [[NSAutoreleasePool alloc] init];
+		}
 	}
 
 	~PlatformMetal_Impl()
@@ -55,20 +52,20 @@ struct PlatformMetal_Impl
 			[layer release];
 			layer = nullptr;
 		}
-        
-        if(enableGC_)
-        {
-            [pool drain];
-        }
+
+		if (enableGC_)
+		{
+			[pool drain];
+		}
 	}
 
 	bool newFrame()
 	{
-        if(enableGC_)
-        {
-            gc();
-        }
-        
+		if (enableGC_)
+		{
+			gc();
+		}
+
 		if (!window_->OnNewFrame())
 		{
 			return false;
@@ -109,12 +106,12 @@ struct PlatformMetal_Impl
 		layer.drawableSize = CGSizeMake(frameBufferSize.X, frameBufferSize.Y);
 		layer.framebufferOnly = false; // Enable capture (getBytes)
 	}
-    
-    void gc()
-    {
-        [pool drain];
-        pool = [[NSAutoreleasePool alloc] init];
-    }
+
+	void gc()
+	{
+		[pool drain];
+		pool = [[NSAutoreleasePool alloc] init];
+	}
 };
 
 PlatformMetal::PlatformMetal(Window* window, bool waitVSync, bool enableGC)

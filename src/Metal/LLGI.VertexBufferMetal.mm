@@ -1,22 +1,16 @@
 #include "LLGI.VertexBufferMetal.h"
+#include "LLGI.BufferMetal.h"
 #include "LLGI.GraphicsMetal.h"
 #include "LLGI.Metal_Impl.h"
-#include "LLGI.BufferMetal.h"
 
 #import <MetalKit/MetalKit.h>
 
 namespace LLGI
 {
 
-VertexBufferMetal::VertexBufferMetal(Graphics* graphics, int32_t size)
-{
-    buffer_ = new BufferMetal(graphics, size);
-}
+VertexBufferMetal::VertexBufferMetal(Graphics* graphics, int32_t size) { buffer_ = new BufferMetal(graphics, size); }
 
-VertexBufferMetal::~VertexBufferMetal()
-{
-    SafeRelease(buffer_);
-}
+VertexBufferMetal::~VertexBufferMetal() { SafeRelease(buffer_); }
 
 void* VertexBufferMetal::Lock() { return buffer_->GetData(); }
 

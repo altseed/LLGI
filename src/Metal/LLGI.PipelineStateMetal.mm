@@ -11,7 +11,7 @@ namespace LLGI
 
 bool PipelineStateMetal::Compile(PipelineState* self, Graphics* graphics)
 {
-    auto g = static_cast<GraphicsMetal*>(graphics);
+	auto g = static_cast<GraphicsMetal*>(graphics);
 
 	auto pipstate = static_cast<PipelineStateMetal*>(self);
 	auto renderPassPipelineState = static_cast<RenderPassPipelineStateMetal*>(pipstate->GetRenderPassPipelineState());
@@ -271,10 +271,7 @@ bool PipelineStateMetal::Compile(PipelineState* self, Graphics* graphics)
 	return true;
 }
 
-PipelineStateMetal::PipelineStateMetal()
-{
-	shaders.fill(nullptr);
-}
+PipelineStateMetal::PipelineStateMetal() { shaders.fill(nullptr); }
 
 PipelineStateMetal::~PipelineStateMetal()
 {
@@ -283,24 +280,24 @@ PipelineStateMetal::~PipelineStateMetal()
 		SafeRelease(shader);
 	}
 
-    if (pipelineStateDescriptor_ != nullptr)
-    {
-        [pipelineStateDescriptor_ release];
-        pipelineStateDescriptor_ = nullptr;
-    }
+	if (pipelineStateDescriptor_ != nullptr)
+	{
+		[pipelineStateDescriptor_ release];
+		pipelineStateDescriptor_ = nullptr;
+	}
 
-    if (depthStencilState_ != nullptr)
-    {
-        [depthStencilState_ release];
-        depthStencilState_ = nullptr;
-    }
+	if (depthStencilState_ != nullptr)
+	{
+		[depthStencilState_ release];
+		depthStencilState_ = nullptr;
+	}
 
-    if (pipelineState_ != nullptr)
-    {
-        [pipelineState_ release];
-        pipelineState_ = nullptr;
-    }
-    
+	if (pipelineState_ != nullptr)
+	{
+		[pipelineState_ release];
+		pipelineState_ = nullptr;
+	}
+
 	SafeRelease(graphics_);
 }
 

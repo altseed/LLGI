@@ -16,18 +16,19 @@
 namespace LLGI
 {
 
-BufferMetal::BufferMetal(Graphics* graphics, int32_t size) {
-    auto g = static_cast<GraphicsMetal*>(graphics);
-    buffer_ = [g->GetDevice() newBufferWithLength:size options:MTLResourceOptionCPUCacheModeDefault];
+BufferMetal::BufferMetal(Graphics* graphics, int32_t size)
+{
+	auto g = static_cast<GraphicsMetal*>(graphics);
+	buffer_ = [g->GetDevice() newBufferWithLength:size options:MTLResourceOptionCPUCacheModeDefault];
 }
 
 BufferMetal::~BufferMetal()
 {
-    if (buffer_ != nullptr)
-    {
-        [buffer_ release];
-        buffer_ = nullptr;
-    }
+	if (buffer_ != nullptr)
+	{
+		[buffer_ release];
+		buffer_ = nullptr;
+	}
 }
 
 }

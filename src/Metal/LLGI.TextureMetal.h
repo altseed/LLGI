@@ -13,13 +13,14 @@ private:
 	ReferenceObject* owner_ = nullptr;
 	std::vector<uint8_t> data;
 
-    id<MTLTexture> texture_ = nullptr;
-    Vec2I size_;
-    bool fromExternal_ = false;
+	id<MTLTexture> texture_ = nullptr;
+	Vec2I size_;
+	bool fromExternal_ = false;
 
-    bool Initialize(id<MTLDevice> device, const Vec2I& size, TextureFormatType format, int samplingCount, TextureType type, int MipMapCount);
-    void Write(const uint8_t* data);
-    
+	bool
+	Initialize(id<MTLDevice> device, const Vec2I& size, TextureFormatType format, int samplingCount, TextureType type, int MipMapCount);
+	void Write(const uint8_t* data);
+
 public:
 	TextureMetal();
 	~TextureMetal() override;
@@ -33,7 +34,7 @@ public:
 	void Unlock() override;
 	Vec2I GetSizeAs2D() const override;
 
-    id<MTLTexture>& GetTexture() { return texture_; }
+	id<MTLTexture>& GetTexture() { return texture_; }
 };
 
 } // namespace LLGI

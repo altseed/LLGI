@@ -8,17 +8,15 @@
 namespace LLGI
 {
 
-ShaderMetal::ShaderMetal() {
-    
-}
+ShaderMetal::ShaderMetal() {}
 
 ShaderMetal::~ShaderMetal()
 {
-    if (library_ != nullptr)
-    {
-        [library_ release];
-        library_ = nullptr;
-    }
+	if (library_ != nullptr)
+	{
+		[library_ release];
+		library_ = nullptr;
+	}
 	SafeRelease(graphics_);
 }
 
@@ -27,62 +25,62 @@ bool ShaderMetal::Initialize(GraphicsMetal* graphics, DataStructure* data, int32
 	SafeAddRef(graphics);
 	SafeRelease(graphics_);
 	graphics_ = graphics;
-    auto g = static_cast<GraphicsMetal*>(graphics);
-        
-    auto device = g->GetDevice();
+	auto g = static_cast<GraphicsMetal*>(graphics);
 
-    if (data[0].Size < 7)
-        return false;
+	auto device = g->GetDevice();
 
-    // check whether binary or code
-    bool isCode = false;
-    const char* code = static_cast<const char*>(data[0].Data);
+	if (data[0].Size < 7)
+		return false;
 
-    if (code[0] == 'm' || code[1] == 't' || code[2] == 'l' || code[3] == 'c' || code[4] == 'o' || code[5] == 'd' || code[6] == 'e')
-    {
-        isCode = true;
-    }
+	// check whether binary or code
+	bool isCode = false;
+	const char* code = static_cast<const char*>(data[0].Data);
 
-    if (isCode)
-    {
-        code += 7;
-        NSString* code_ = [[NSString alloc] initWithUTF8String:code];
+	if (code[0] == 'm' || code[1] == 't' || code[2] == 'l' || code[3] == 'c' || code[4] == 'o' || code[5] == 'd' || code[6] == 'e')
+	{
+		isCode = true;
+	}
 
-        id<MTLDevice> device = MTLCreateSystemDefaultDevice();
+	if (isCode)
+	{
+		code += 7;
+		NSString* code_ = [[NSString alloc] initWithUTF8String:code];
 
-        NSError* libraryError = nil;
-        id<MTLLibrary> lib = [device newLibraryWithSource:code_ options:NULL error:&libraryError];
-        if (libraryError
+		id<MTLDevice> device = MTLCreateSystemDefaultDevice();
+
+		NSError* libraryError = nil;
+		id<MTLLibrary> lib = [device newLibraryWithSource:code_ options:NULL error:&libraryError];
+		if (libraryError
 #ifdef SUPPRESS_COMPILE_WARNINGS
-            && [libraryError.localizedDescription rangeOfString:@"succeeded"].location == NSNotFound
+			&& [libraryError.localizedDescription rangeOfString:@"succeeded"].location == NSNotFound
 #endif
-        )
-        {
-            Log(LogType::Error, libraryError.localizedDescription.UTF8String);
-            return false;
-        }
+		)
+		{
+			Log(LogType::Error, libraryError.localizedDescription.UTF8String);
+			return false;
+		}
 
-        this->library_ = lib;
-    }
-    else
-    {
-        NSError* libraryError = nil;
-        id<MTLLibrary> lib = [device newLibraryWithData:(dispatch_data_t)data error:&libraryError];
+		this->library_ = lib;
+	}
+	else
+	{
+		NSError* libraryError = nil;
+		id<MTLLibrary> lib = [device newLibraryWithData:(dispatch_data_t)data error:&libraryError];
 
-        if (libraryError
+		if (libraryError
 #ifdef SUPPRESS_COMPILE_WARNINGS
-            && [libraryError.localizedDescription rangeOfString:@"succeeded"].location == NSNotFound
+			&& [libraryError.localizedDescription rangeOfString:@"succeeded"].location == NSNotFound
 #endif
-        )
-        {
-            Log(LogType::Error, libraryError.localizedDescription.UTF8String);
-            return false;
-        }
+		)
+		{
+			Log(LogType::Error, libraryError.localizedDescription.UTF8String);
+			return false;
+		}
 
-        this->library_ = lib;
-    }
+		this->library_ = lib;
+	}
 
-    return true;
+	return true;
 }
 
 }

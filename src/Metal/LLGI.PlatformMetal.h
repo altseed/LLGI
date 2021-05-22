@@ -26,7 +26,7 @@ class PlatformMetal : public Platform
 
 	int32_t ringIndex_ = 0;
 	std::vector<RingBuffer> ringBuffers_;
-    
+
 public:
 	PlatformMetal(Window* window, bool waitVSync, bool enableGC);
 	~PlatformMetal() override;

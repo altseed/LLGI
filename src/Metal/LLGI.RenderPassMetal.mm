@@ -60,18 +60,15 @@ void RenderPassMetal::UpdateTarget(TextureMetal** textures,
 	}
 }
 
-RenderPassMetal::RenderPassMetal()
-{
-    renderPassDescriptor_ = [[MTLRenderPassDescriptor alloc] init];
-}
+RenderPassMetal::RenderPassMetal() { renderPassDescriptor_ = [[MTLRenderPassDescriptor alloc] init]; }
 
 RenderPassMetal::~RenderPassMetal()
 {
-    if (renderPassDescriptor_ != nullptr)
-    {
-        [renderPassDescriptor_ release];
-        renderPassDescriptor_ = nullptr;
-    }
+	if (renderPassDescriptor_ != nullptr)
+	{
+		[renderPassDescriptor_ release];
+		renderPassDescriptor_ = nullptr;
+	}
 }
 
 bool RenderPassMetal::UpdateRenderTarget(
@@ -160,14 +157,14 @@ RenderPassPipelineStateMetal::RenderPassPipelineStateMetal() {}
 void RenderPassPipelineStateMetal::SetKey(const RenderPassPipelineStateKey& key)
 {
 	Key = key;
-    pixelFormats_.resize(key.RenderTargetFormats.size());
+	pixelFormats_.resize(key.RenderTargetFormats.size());
 
-    for (size_t i = 0; i < pixelFormats_.size(); i++)
-    {
-        pixelFormats_.at(i) = ConvertFormat(key.RenderTargetFormats.at(i));
-    }
+	for (size_t i = 0; i < pixelFormats_.size(); i++)
+	{
+		pixelFormats_.at(i) = ConvertFormat(key.RenderTargetFormats.at(i));
+	}
 
-    depthStencilFormat_ = ConvertFormat(key.DepthFormat);
+	depthStencilFormat_ = ConvertFormat(key.DepthFormat);
 }
 
 }

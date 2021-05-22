@@ -94,9 +94,9 @@ struct WindowMac_Impl
 
 		NSRect frame = NSMakeRect(0, 0, width, height);
 		window_ = [[NSWindow alloc] initWithContentRect:frame
-											 styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable)
-											   backing:NSBackingStoreBuffered
-												 defer:NO];
+											  styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable)
+												backing:NSBackingStoreBuffered
+												  defer:NO];
 
 		window_.title = [NSString stringWithCString:title encoding:NSUTF8StringEncoding];
 		window_.releasedWhenClosed = false;

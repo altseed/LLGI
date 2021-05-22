@@ -7,16 +7,14 @@
 namespace LLGI
 {
 
-IndexBufferMetal::IndexBufferMetal(Graphics* graphics, int32_t stride, int32_t count) {
-    buffer_ = new BufferMetal(graphics, stride * count);
-    stride_ = stride;
-    count_ = count;
+IndexBufferMetal::IndexBufferMetal(Graphics* graphics, int32_t stride, int32_t count)
+{
+	buffer_ = new BufferMetal(graphics, stride * count);
+	stride_ = stride;
+	count_ = count;
 }
 
-IndexBufferMetal::~IndexBufferMetal()
-{
-    SafeRelease(buffer_);
-}
+IndexBufferMetal::~IndexBufferMetal() { SafeRelease(buffer_); }
 
 void* IndexBufferMetal::Lock() { return buffer_->GetData(); }
 

@@ -16,7 +16,7 @@
 namespace LLGI
 {
 
-GraphicsMetal::GraphicsMetal() { }
+GraphicsMetal::GraphicsMetal() {}
 
 GraphicsMetal::~GraphicsMetal()
 {
@@ -27,39 +27,39 @@ GraphicsMetal::~GraphicsMetal()
 	executingCommandList_.clear();
 
 	renderPassPipelineStates_.clear();
-    
-    if (commandQueue_ != nullptr)
-    {
-        [commandQueue_ release];
-    }
 
-    if (device_ != nullptr)
-    {
-        [device_ release];
-    }
+	if (commandQueue_ != nullptr)
+	{
+		[commandQueue_ release];
+	}
+
+	if (device_ != nullptr)
+	{
+		[device_ release];
+	}
 }
 
 bool GraphicsMetal::Initialize(std::function<GraphicsView()> getGraphicsView)
 {
 	getGraphicsView_ = getGraphicsView;
 
-    device_ = MTLCreateSystemDefaultDevice();
-    commandQueue_ = [device_ newCommandQueue];
+	device_ = MTLCreateSystemDefaultDevice();
+	commandQueue_ = [device_ newCommandQueue];
 
-    maxMultiSamplingCount_ = 0;
-    int testSampleCounts[] = {8, 4, 2, 1};
-    for (int count : testSampleCounts)
-    {
-        bool supported = [device_ supportsTextureSampleCount:count];
-        if (supported)
-        {
-            maxMultiSamplingCount_ = count;
-            break;
-        }
-    }
-    if (maxMultiSamplingCount_ == 0)
-        throw "Unsupported.";
-    
+	maxMultiSamplingCount_ = 0;
+	int testSampleCounts[] = {8, 4, 2, 1};
+	for (int count : testSampleCounts)
+	{
+		bool supported = [device_ supportsTextureSampleCount:count];
+		if (supported)
+		{
+			maxMultiSamplingCount_ = count;
+			break;
+		}
+	}
+	if (maxMultiSamplingCount_ == 0)
+		throw "Unsupported.";
+
 	renderPass_ = CreateSharedPtr(new RenderPassMetal());
 
 	return true;
@@ -83,8 +83,8 @@ void GraphicsMetal::Execute(CommandList* commandList)
 	executingCommandList_.erase(it, executingCommandList_.end());
 
 	auto commandList_ = (CommandListMetal*)commandList;
-    commandList_->ResetCompleted();
-    [commandList_->GetCommandBuffer() commit];
+	commandList_->ResetCompleted();
+	[commandList_->GetCommandBuffer() commit];
 
 	SafeAddRef(commandList);
 	executingCommandList_.push_back(commandList);
@@ -122,15 +122,9 @@ RenderPass* GraphicsMetal::GetCurrentScreen(const Color8& clearColor, bool isCol
 }
 */
 
-VertexBuffer* GraphicsMetal::CreateVertexBuffer(int32_t size)
-{
-    return new VertexBufferMetal(this, size);
-}
+VertexBuffer* GraphicsMetal::CreateVertexBuffer(int32_t size) { return new VertexBufferMetal(this, size); }
 
-IndexBuffer* GraphicsMetal::CreateIndexBuffer(int32_t stride, int32_t count)
-{
-	return new IndexBufferMetal(this, stride, count);
-}
+IndexBuffer* GraphicsMetal::CreateIndexBuffer(int32_t stride, int32_t count) { return new IndexBufferMetal(this, stride, count); }
 
 Shader* GraphicsMetal::CreateShader(DataStructure* data, int32_t count)
 {
@@ -161,10 +155,7 @@ SingleFrameMemoryPool* GraphicsMetal::CreateSingleFrameMemoryPool(int32_t consta
 	return new SingleFrameMemoryPoolMetal(this, false, constantBufferPoolSize, drawingCount);
 }
 
-CommandList* GraphicsMetal::CreateCommandList(SingleFrameMemoryPool* memoryPool)
-{
-    return new CommandListMetal(this);
-}
+CommandList* GraphicsMetal::CreateCommandList(SingleFrameMemoryPool* memoryPool) { return new CommandListMetal(this); }
 
 ConstantBuffer* GraphicsMetal::CreateConstantBuffer(int32_t size)
 {
@@ -299,7 +290,7 @@ std::vector<uint8_t> GraphicsMetal::CaptureRenderTarget(Texture* renderTarget)
 	auto metalTexture = static_cast<TextureMetal*>(renderTarget);
 	auto width = metalTexture->GetSizeAs2D().X;
 	auto height = metalTexture->GetSizeAs2D().Y;
-    auto& texture = metalTexture->GetTexture();
+	auto& texture = metalTexture->GetTexture();
 
 	id<MTLCommandQueue> queue = [this->device_ newCommandQueue];
 	id<MTLCommandBuffer> commandBuffer = [queue commandBuffer];
@@ -325,14 +316,8 @@ std::vector<uint8_t> GraphicsMetal::CaptureRenderTarget(Texture* renderTarget)
 	return data;
 }
 
-id<MTLDevice>& GraphicsMetal::GetDevice()
-{
-    return device_;
-}
+id<MTLDevice>& GraphicsMetal::GetDevice() { return device_; }
 
-id<MTLCommandQueue>& GraphicsMetal::GetCommandQueue()
-{
-    return  commandQueue_;
-}
+id<MTLCommandQueue>& GraphicsMetal::GetCommandQueue() { return commandQueue_; }
 
 }

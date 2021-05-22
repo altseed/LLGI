@@ -19,16 +19,16 @@ class TextureMetal;
 
 class RenderPassMetal : public RenderPass
 {
-    MTLRenderPassDescriptor* renderPassDescriptor_;
+	MTLRenderPassDescriptor* renderPassDescriptor_;
 
-    bool Initialize();
+	bool Initialize();
 
-    void UpdateTarget(TextureMetal** textures,
-                      int32_t textureCount,
-                      TextureMetal* depthTexture,
-                      TextureMetal* resolvedTexture,
-                      TextureMetal* resolvedDepthTexture);
-    
+	void UpdateTarget(TextureMetal** textures,
+					  int32_t textureCount,
+					  TextureMetal* depthTexture,
+					  TextureMetal* resolvedTexture,
+					  TextureMetal* resolvedDepthTexture);
+
 public:
 	RenderPassMetal();
 
@@ -42,30 +42,30 @@ public:
 	void SetIsDepthCleared(bool isDepthCleared) override;
 
 	void SetClearColor(const Color8& color) override;
-    
-    MTLRenderPassDescriptor* GetRenderPassDescriptor() { return renderPassDescriptor_; }
-    
-    Color8 clearColor;
-    bool isColorCleared;
-    bool isDepthCleared;
-    FixedSizeVector<MTLPixelFormat, RenderTargetMax> pixelFormats;
-    MTLPixelFormat depthStencilFormat = MTLPixelFormatInvalid;
+
+	MTLRenderPassDescriptor* GetRenderPassDescriptor() { return renderPassDescriptor_; }
+
+	Color8 clearColor;
+	bool isColorCleared;
+	bool isDepthCleared;
+	FixedSizeVector<MTLPixelFormat, RenderTargetMax> pixelFormats;
+	MTLPixelFormat depthStencilFormat = MTLPixelFormatInvalid;
 };
 
 class RenderPassPipelineStateMetal : public RenderPassPipelineState
 {
 private:
-    FixedSizeVector<MTLPixelFormat, RenderTargetMax> pixelFormats_;
-    MTLPixelFormat depthStencilFormat_ = MTLPixelFormatInvalid;
-    
+	FixedSizeVector<MTLPixelFormat, RenderTargetMax> pixelFormats_;
+	MTLPixelFormat depthStencilFormat_ = MTLPixelFormatInvalid;
+
 public:
 	RenderPassPipelineStateMetal();
-    ~RenderPassPipelineStateMetal() override = default;
+	~RenderPassPipelineStateMetal() override = default;
 
 	void SetKey(const RenderPassPipelineStateKey& key);
-    
-    const FixedSizeVector<MTLPixelFormat, RenderTargetMax>& GetPixelFormats() const { return  pixelFormats_; }
-    const MTLPixelFormat& GetDepthStencilFormat() const { return depthStencilFormat_; }
+
+	const FixedSizeVector<MTLPixelFormat, RenderTargetMax>& GetPixelFormats() const { return pixelFormats_; }
+	const MTLPixelFormat& GetDepthStencilFormat() const { return depthStencilFormat_; }
 };
 
 } // namespace LLGI

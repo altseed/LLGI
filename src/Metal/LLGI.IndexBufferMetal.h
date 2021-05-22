@@ -11,7 +11,7 @@ struct Buffer_Impl;
 class IndexBufferMetal : public IndexBuffer
 {
 private:
-    BufferMetal* buffer_ = nullptr;
+	BufferMetal* buffer_ = nullptr;
 	int32_t stride_ = 0;
 	int32_t count_ = 0;
 
@@ -23,7 +23,7 @@ public:
 	void Unlock() override;
 	int32_t GetStride() override;
 	int32_t GetCount() override;
-    BufferMetal& GetBuffer() { return *buffer_; }
+	BufferMetal& GetBuffer() { return *buffer_; }
 };
 
 } // namespace LLGI

@@ -15,44 +15,44 @@ namespace LLGI
 
 CommandListMetal::CommandListMetal(Graphics* graphics)
 {
-    auto g = static_cast<GraphicsMetal*>(graphics);
-    SafeAddRef(g);
-    graphics_ = g;
+	auto g = static_cast<GraphicsMetal*>(graphics);
+	SafeAddRef(g);
+	graphics_ = g;
 
-    // Sampler
-    for (int w = 0; w < 2; w++)
-    {
-        for (int f = 0; f < 2; f++)
-        {
-            for (int m = 0; m < 3; m++)
-            {
-                MTLSamplerAddressMode ws[2];
-                ws[0] = MTLSamplerAddressModeClampToEdge;
-                ws[1] = MTLSamplerAddressModeRepeat;
+	// Sampler
+	for (int w = 0; w < 2; w++)
+	{
+		for (int f = 0; f < 2; f++)
+		{
+			for (int m = 0; m < 3; m++)
+			{
+				MTLSamplerAddressMode ws[2];
+				ws[0] = MTLSamplerAddressModeClampToEdge;
+				ws[1] = MTLSamplerAddressModeRepeat;
 
-                MTLSamplerMinMagFilter fsmin[2];
-                fsmin[0] = MTLSamplerMinMagFilterNearest;
-                fsmin[1] = MTLSamplerMinMagFilterLinear;
+				MTLSamplerMinMagFilter fsmin[2];
+				fsmin[0] = MTLSamplerMinMagFilterNearest;
+				fsmin[1] = MTLSamplerMinMagFilterLinear;
 
-                MTLSamplerMipFilter msmip[3];
-                msmip[0] = MTLSamplerMipFilterNotMipmapped;
-                msmip[1] = MTLSamplerMipFilterLinear;
-                msmip[2] = MTLSamplerMipFilterNearest;
+				MTLSamplerMipFilter msmip[3];
+				msmip[0] = MTLSamplerMipFilterNotMipmapped;
+				msmip[1] = MTLSamplerMipFilterLinear;
+				msmip[2] = MTLSamplerMipFilterNearest;
 
-                MTLSamplerDescriptor* samplerDescriptor = [MTLSamplerDescriptor new];
-                samplerDescriptor.minFilter = fsmin[f];
-                samplerDescriptor.magFilter = fsmin[f];
-                samplerDescriptor.mipFilter = msmip[m];
-                samplerDescriptor.sAddressMode = ws[w];
-                samplerDescriptor.tAddressMode = ws[w];
+				MTLSamplerDescriptor* samplerDescriptor = [MTLSamplerDescriptor new];
+				samplerDescriptor.minFilter = fsmin[f];
+				samplerDescriptor.magFilter = fsmin[f];
+				samplerDescriptor.mipFilter = msmip[m];
+				samplerDescriptor.sAddressMode = ws[w];
+				samplerDescriptor.tAddressMode = ws[w];
 
-                samplers_[w][f][m] = samplerDescriptor;
-                samplerStates_[w][f][m] = [g->GetDevice() newSamplerStateWithDescriptor:samplerDescriptor];
-            }
-        }
-    }
+				samplers_[w][f][m] = samplerDescriptor;
+				samplerStates_[w][f][m] = [g->GetDevice() newSamplerStateWithDescriptor:samplerDescriptor];
+			}
+		}
+	}
 
-    fence_ = [g->GetDevice() newFence];
+	fence_ = [g->GetDevice() newFence];
 }
 
 CommandListMetal::~CommandListMetal()
@@ -80,58 +80,56 @@ CommandListMetal::~CommandListMetal()
 			}
 		}
 	}
-    
-    if (commandBuffer_ != nullptr)
-    {
-        [commandBuffer_ release];
-        commandBuffer_ = nullptr;
-    }
 
-    if (renderEncoder_ != nullptr)
-    {
-        [renderEncoder_ release];
-    }
+	if (commandBuffer_ != nullptr)
+	{
+		[commandBuffer_ release];
+		commandBuffer_ = nullptr;
+	}
 
-    if (fence_ != nullptr)
-    {
-        [fence_ release];
-    }
+	if (renderEncoder_ != nullptr)
+	{
+		[renderEncoder_ release];
+	}
+
+	if (fence_ != nullptr)
+	{
+		[fence_ release];
+	}
 
 	SafeRelease(graphics_);
 }
 
 void CommandListMetal::Begin()
 {
-    if (commandBuffer_ != nullptr)
-    {
-        [commandBuffer_ release];
-        commandBuffer_ = nullptr;
-    }
+	if (commandBuffer_ != nullptr)
+	{
+		[commandBuffer_ release];
+		commandBuffer_ = nullptr;
+	}
 
-    commandBuffer_ = [graphics_->GetCommandQueue() commandBuffer];
-    [commandBuffer_ retain];
+	commandBuffer_ = [graphics_->GetCommandQueue() commandBuffer];
+	[commandBuffer_ retain];
 
-    auto t = this;
+	auto t = this;
 
-    [commandBuffer_ addCompletedHandler:^(id buffer) {
-      t->isCompleted_ = true;
-    }];
-    
+	[commandBuffer_ addCompletedHandler:^(id buffer) {
+	  t->isCompleted_ = true;
+	}];
+
 	CommandList::Begin();
 }
 
-void CommandListMetal::End()
-{
-	CommandList::End();
-}
+void CommandListMetal::End() { CommandList::End(); }
 
-void CommandListMetal::SetScissor(int32_t x, int32_t y, int32_t width, int32_t height) {
-    MTLScissorRect rect;
-    rect.x = x;
-    rect.y = y;
-    rect.width = width;
-    rect.height = height;
-    [renderEncoder_ setScissorRect:rect];
+void CommandListMetal::SetScissor(int32_t x, int32_t y, int32_t width, int32_t height)
+{
+	MTLScissorRect rect;
+	rect.x = x;
+	rect.y = y;
+	rect.width = width;
+	rect.height = height;
+	[renderEncoder_ setScissorRect:rect];
 }
 
 void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
@@ -176,7 +174,7 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 
 	if (isVBDirtied)
 	{
-        [renderEncoder_ setVertexBuffer:vb->GetBuffer().GetBuffer() offset:bvb.offset atIndex:VertexBufferIndex];
+		[renderEncoder_ setVertexBuffer:vb->GetBuffer().GetBuffer() offset:bvb.offset atIndex:VertexBufferIndex];
 	}
 
 	// assign constant buffer
@@ -270,11 +268,11 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 	}
 
 	[renderEncoder_ drawIndexedPrimitives:topology
-									indexCount:primitiveCount * indexPerPrim
-									 indexType:indexType
-								   indexBuffer:ib->GetBuffer().GetBuffer()
-							 indexBufferOffset:bib.offset
-								 instanceCount:instanceCount];
+							   indexCount:primitiveCount * indexPerPrim
+								indexType:indexType
+							  indexBuffer:ib->GetBuffer().GetBuffer()
+						indexBufferOffset:bib.offset
+							instanceCount:instanceCount];
 
 	CommandList::Draw(primitiveCount, instanceCount);
 }
@@ -323,63 +321,63 @@ void CommandListMetal::GenerateMipMap(Texture* src)
 void CommandListMetal::BeginRenderPass(RenderPass* renderPass)
 {
 	auto rp = static_cast<RenderPassMetal*>(renderPass);
-    auto rpd = rp->GetRenderPassDescriptor();
+	auto rpd = rp->GetRenderPassDescriptor();
 
-    for (size_t i = 0; i < rp->pixelFormats.size(); i++)
-    {
-        if (rp->isColorCleared)
-        {
-            auto r_ = rp->clearColor.R / 255.0;
-            auto g_ = rp->clearColor.G / 255.0;
-            auto b_ = rp->clearColor.B / 255.0;
-            auto a_ = rp->clearColor.A / 255.0;
+	for (size_t i = 0; i < rp->pixelFormats.size(); i++)
+	{
+		if (rp->isColorCleared)
+		{
+			auto r_ = rp->clearColor.R / 255.0;
+			auto g_ = rp->clearColor.G / 255.0;
+			auto b_ = rp->clearColor.B / 255.0;
+			auto a_ = rp->clearColor.A / 255.0;
 
-            rpd.colorAttachments[i].loadAction = MTLLoadActionClear;
-            rpd.colorAttachments[i].clearColor = MTLClearColorMake(r_, g_, b_, a_);
-        }
-        else
-        {
-            rpd.colorAttachments[i].loadAction = MTLLoadActionDontCare;
-        }
-    }
+			rpd.colorAttachments[i].loadAction = MTLLoadActionClear;
+			rpd.colorAttachments[i].clearColor = MTLClearColorMake(r_, g_, b_, a_);
+		}
+		else
+		{
+			rpd.colorAttachments[i].loadAction = MTLLoadActionDontCare;
+		}
+	}
 
-    if (rp->isDepthCleared)
-    {
-        rpd.depthAttachment.loadAction = MTLLoadActionClear;
-        rpd.depthAttachment.clearDepth = 1.0;
+	if (rp->isDepthCleared)
+	{
+		rpd.depthAttachment.loadAction = MTLLoadActionClear;
+		rpd.depthAttachment.clearDepth = 1.0;
 
-        if (rp->depthStencilFormat != MTLPixelFormatDepth32Float_Stencil8
+		if (rp->depthStencilFormat != MTLPixelFormatDepth32Float_Stencil8
 #if TARGET_OS_MACOS
-            && rp->depthStencilFormat != MTLPixelFormatDepth24Unorm_Stencil8
+			&& rp->depthStencilFormat != MTLPixelFormatDepth24Unorm_Stencil8
 #endif
-        )
-        {
-            rpd.stencilAttachment.loadAction = MTLLoadActionClear;
-            rpd.stencilAttachment.clearStencil = 0;
-        }
-    }
-    else
-    {
-        rpd.depthAttachment.loadAction = MTLLoadActionDontCare;
-        rpd.stencilAttachment.loadAction = MTLLoadActionDontCare;
-    }
+		)
+		{
+			rpd.stencilAttachment.loadAction = MTLLoadActionClear;
+			rpd.stencilAttachment.clearStencil = 0;
+		}
+	}
+	else
+	{
+		rpd.depthAttachment.loadAction = MTLLoadActionDontCare;
+		rpd.stencilAttachment.loadAction = MTLLoadActionDontCare;
+	}
 
-    renderEncoder_ = [commandBuffer_ renderCommandEncoderWithDescriptor:rpd];
+	renderEncoder_ = [commandBuffer_ renderCommandEncoderWithDescriptor:rpd];
 
-    [renderEncoder_ waitForFence:fence_ beforeStages:MTLRenderStageVertex];
-    
+	[renderEncoder_ waitForFence:fence_ beforeStages:MTLRenderStageVertex];
+
 	CommandList::BeginRenderPass(renderPass);
 }
 
 void CommandListMetal::EndRenderPass()
 {
-    if (renderEncoder_)
-    {
-        [renderEncoder_ updateFence:fence_ afterStages:MTLRenderStageFragment];
-        [renderEncoder_ endEncoding];
-        renderEncoder_ = nullptr;
-    }
-    
+	if (renderEncoder_)
+	{
+		[renderEncoder_ updateFence:fence_ afterStages:MTLRenderStageFragment];
+		[renderEncoder_ endEncoding];
+		renderEncoder_ = nullptr;
+	}
+
 	CommandList::EndRenderPass();
 }
 
@@ -405,29 +403,29 @@ bool CommandListMetal::BeginRenderPassWithPlatformPtr(void* platformPtr)
 {
 	auto pp = reinterpret_cast<CommandListMetalPlatformRenderPassContext*>(platformPtr);
 
-    this->renderEncoder_ = pp->RenderEncoder;
+	this->renderEncoder_ = pp->RenderEncoder;
 
-    if (this->renderEncoder_)
-    {
-        [this->renderEncoder_ retain];
-        // TODO : make correct. wait can do only once per encorder
-        // [this->renderEncoder waitForFence:fence beforeStages:MTLRenderStageVertex];
-    }
-    
+	if (this->renderEncoder_)
+	{
+		[this->renderEncoder_ retain];
+		// TODO : make correct. wait can do only once per encorder
+		// [this->renderEncoder waitForFence:fence beforeStages:MTLRenderStageVertex];
+	}
+
 	return CommandList::BeginRenderPassWithPlatformPtr(platformPtr);
 }
 
 bool CommandListMetal::EndRenderPassWithPlatformPtr()
 {
-    if (renderEncoder_)
-    {
-        // TODO : make correct. wait can do only once per encorder
-        // [renderEncoder updateFence:fence afterStages:MTLRenderStageFragment];
-        [renderEncoder_ release];
-        renderEncoder_ = nullptr;
-    }
-    
-    return CommandList::EndRenderPassWithPlatformPtr();
+	if (renderEncoder_)
+	{
+		// TODO : make correct. wait can do only once per encorder
+		// [renderEncoder updateFence:fence afterStages:MTLRenderStageFragment];
+		[renderEncoder_ release];
+		renderEncoder_ = nullptr;
+	}
+
+	return CommandList::EndRenderPassWithPlatformPtr();
 }
 
 }
