@@ -231,12 +231,16 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 		commandList->BeginRenderPass(renderPass.get());
 
 		// First, green rectangle.
+		commandList->UpdateData(vb1.get());
+		commandList->UpdateData(ib1.get());
 		commandList->SetVertexBuffer(vb1.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib1.get());
 		commandList->SetPipelineState(pips[renderPassPipelineState].writeState.get());
 		commandList->Draw(2);
 
 		// Next, blue rectangle.
+		commandList->UpdateData(vb2.get());
+		commandList->UpdateData(ib2.get());
 		commandList->SetVertexBuffer(vb2.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib2.get());
 		commandList->SetPipelineState(pips[renderPassPipelineState].testState.get());
@@ -245,6 +249,8 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 		commandList->EndRenderPass();
 
 		// Screen
+		commandList->UpdateData(vb3.get());
+		commandList->UpdateData(ib3.get());
 		commandList->BeginRenderPass(screenRenderPass);
 		commandList->SetVertexBuffer(vb3.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib3.get());
