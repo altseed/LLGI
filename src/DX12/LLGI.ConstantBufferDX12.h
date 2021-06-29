@@ -14,6 +14,7 @@ class ConstantBufferDX12 : public ConstantBuffer
 {
 private:
 	ID3D12Resource* constantBuffer_ = nullptr;
+	ID3D12Resource* cpuConstantBuffer_ = nullptr;
 	int memSize_ = 0;
 	int actualSize_ = 0;
 	int offset_ = 0;
@@ -39,6 +40,7 @@ public:
 	int32_t GetOffset() const;
 
 	ID3D12Resource* Get() { return constantBuffer_; }
+	ID3D12Resource* GetCpu() { return cpuConstantBuffer_; }
 };
 
 } // namespace LLGI
