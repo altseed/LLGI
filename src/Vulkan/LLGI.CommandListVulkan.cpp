@@ -498,6 +498,43 @@ void CommandListVulkan::GenerateMipMap(Texture* src)
 	srcTex->ResourceBarrior(currentCommandBuffer_, vk::ImageLayout::eShaderReadOnlyOptimal);
 }
 
+void CommandListVulkan::UpdateData(VertexBuffer* vertexBuffer) {
+	auto buf = static_cast<VertexBufferVulkan*>(vertexBuffer);
+
+	auto gpuBuf = buf->GetBuffer();
+	auto cpuBuf = buf->GetCpuBuffer();
+
+	
+	vk::BufferCopy copyRegion;
+	copyRegion.size = buf->GetSize();
+	currentCommandBuffer_.copyBuffer(cpuBuf, gpuBuf, copyRegion);
+}
+
+void CommandListVulkan::UpdateData(IndexBuffer* indexBuffer)
+{
+	auto buf = static_cast<IndexBufferVulkan*>(indexBuffer);
+
+	auto gpuBuf = buf->GetBuffer();
+	auto cpuBuf = buf->GetCpuBuffer();
+
+	vk::BufferCopy copyRegion;
+	copyRegion.size = buf->GetStride() * buf->GetCount();
+	currentCommandBuffer_.copyBuffer(cpuBuf, gpuBuf, copyRegion);
+}
+
+void CommandListVulkan::UpdateData(ConstantBuffer* constantBuffer) {
+	auto buf = static_cast<ConstantBufferVulkan*>(constantBuffer);
+
+	auto gpuBuf = buf->GetBuffer();
+	auto cpuBuf = buf->GetCpuBuffer();
+
+	vk::BufferCopy copyRegion;
+	copyRegion.size = buf->GetSize();
+	copyRegion.srcOffset = buf->GetOffset();
+	copyRegion.dstOffset = buf->GetOffset();
+	currentCommandBuffer_.copyBuffer(cpuBuf, gpuBuf, copyRegion);
+}
+
 void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
 {
 	auto renderPass_ = static_cast<RenderPassVulkan*>(renderPass);
