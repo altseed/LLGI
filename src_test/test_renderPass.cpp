@@ -174,6 +174,11 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
+
+		commandList->UpdateData(vb.get());
+		commandList->UpdateData(vb2.get());
+		commandList->UpdateData(ib.get());
+
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb2.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get());
@@ -217,8 +222,6 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 
 		commandList->BeginRenderPass(platform->GetCurrentScreen(color2, true));
 		
-		commandList->UpdateData(vb.get());
-		commandList->UpdateData(ib.get());
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get());
 
@@ -505,9 +508,13 @@ void test_multiRenderPass(LLGI::DeviceType deviceType)
 
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
-		commandList->BeginRenderPass(renderPass);
+
 		commandList->UpdateData(vb.get());
 		commandList->UpdateData(ib.get());
+		commandList->UpdateData(vb2.get());
+		commandList->UpdateData(ib2.get());
+
+		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get());
 
@@ -543,8 +550,6 @@ void test_multiRenderPass(LLGI::DeviceType deviceType)
 		commandList->EndRenderPass();
 
 		commandList->BeginRenderPass(platform->GetCurrentScreen(color2, true));
-		commandList->UpdateData(vb.get());
-		commandList->UpdateData(ib.get());
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get());
 

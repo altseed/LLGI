@@ -198,11 +198,23 @@ void test_mipmap(LLGI::DeviceType deviceType)
 
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
+
+		commandList->UpdateData(vb.get());
+		commandList->UpdateData(ib.get());
+		commandList->UpdateData(vb2.get());
+		commandList->UpdateData(ib2.get());
+		commandList->UpdateData(vb3.get());
+		commandList->UpdateData(ib3.get());
+		commandList->UpdateData(vb4.get());
+		commandList->UpdateData(ib4.get());
+		commandList->UpdateData(vb5.get());
+		commandList->UpdateData(ib5.get());
+		commandList->UpdateData(vb6.get());
+		commandList->UpdateData(ib6.get());
+
 		commandList->GenerateMipMap(textureDrawnMipmap);
 		commandList->BeginRenderPass(renderPass);
 		// commandList->SetConstantBuffer(dummy_cb.get(), LLGI::ShaderStageType::Vertex);
-		commandList->UpdateData(vb.get());
-		commandList->UpdateData(ib.get());
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get());
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
@@ -210,24 +222,18 @@ void test_mipmap(LLGI::DeviceType deviceType)
 			textureDrawnMipmap, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 
-		commandList->UpdateData(vb2.get());
-		commandList->UpdateData(ib2.get());
 		commandList->SetVertexBuffer(vb2.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib2.get());
 		commandList->SetTexture(
 			textureDrawnMipmap, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 
-		commandList->UpdateData(vb3.get());
-		commandList->UpdateData(ib3.get());
 		commandList->SetVertexBuffer(vb3.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib3.get());
 		commandList->SetTexture(
 			textureDrawnMipmap, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 
-		commandList->UpdateData(vb4.get());
-		commandList->UpdateData(ib4.get());
 		commandList->SetVertexBuffer(vb4.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib4.get());
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
@@ -235,16 +241,12 @@ void test_mipmap(LLGI::DeviceType deviceType)
 			textureDrawn, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 
-		commandList->UpdateData(vb5.get());
-		commandList->UpdateData(ib5.get());
 		commandList->SetVertexBuffer(vb5.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib5.get());
 		commandList->SetTexture(
 			textureDrawn, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 
-		commandList->UpdateData(vb6.get());
-		commandList->UpdateData(ib6.get());
 		commandList->SetVertexBuffer(vb6.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib6.get());
 		commandList->SetTexture(

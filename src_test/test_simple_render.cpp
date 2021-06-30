@@ -116,9 +116,9 @@ void test_simple_rectangle(LLGI::DeviceType deviceType, SingleRectangleTestMode 
 
 		auto commandList = commandListPool->Get();
 		commandList->Begin();
-		commandList->BeginRenderPass(renderPass);
 		commandList->UpdateData(vb.get());
 		commandList->UpdateData(ib.get());
+		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get());
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
@@ -237,9 +237,9 @@ void test_index_offset(LLGI::DeviceType deviceType)
 
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
-		commandList->BeginRenderPass(renderPass);
 		commandList->UpdateData(vb.get());
 		commandList->UpdateData(ib.get());
+		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get(), 2 * 3);
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
@@ -506,14 +506,16 @@ void main()
 
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
-		commandList->BeginRenderPass(renderPass);
+
 		commandList->UpdateData(vb.get());
 		commandList->UpdateData(ib.get());
+		commandList->UpdateData(cb_vs);
+		commandList->UpdateData(cb_ps);
+
+		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get());
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
-		commandList->UpdateData(cb_vs);
-		commandList->UpdateData(cb_ps);
 		commandList->SetConstantBuffer(cb_vs, LLGI::ShaderStageType::Vertex);
 		commandList->SetConstantBuffer(cb_ps, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
@@ -775,10 +777,10 @@ void main()
 
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
-		commandList->BeginRenderPass(renderPass);
-		// commandList->SetConstantBuffer(dummy_cb.get(), LLGI::ShaderStageType::Vertex);
 		commandList->UpdateData(vb.get());
 		commandList->UpdateData(ib.get());
+		commandList->BeginRenderPass(renderPass);
+		// commandList->SetConstantBuffer(dummy_cb.get(), LLGI::ShaderStageType::Vertex);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get());
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
@@ -918,13 +920,15 @@ void test_instancing(LLGI::DeviceType deviceType)
 
 		auto commandList = commandListPool->Get();
 		commandList->Begin();
-		commandList->BeginRenderPass(renderPass);
+
 		commandList->UpdateData(vb.get());
 		commandList->UpdateData(ib.get());
+		commandList->UpdateData(cb.get());
+
+		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get());
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
-		commandList->UpdateData(cb.get());
 		commandList->SetConstantBuffer(cb.get(), LLGI::ShaderStageType::Vertex);
 		commandList->Draw(2, 5);
 		commandList->EndRenderPass();
@@ -1034,9 +1038,11 @@ void test_vtf(LLGI::DeviceType deviceType)
 
 		auto commandList = commandListPool->Get();
 		commandList->Begin();
-		commandList->BeginRenderPass(renderPass);
+
 		commandList->UpdateData(vb.get());
 		commandList->UpdateData(ib.get());
+
+		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get());
 		commandList->SetTexture(
