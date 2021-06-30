@@ -32,6 +32,7 @@ public:
 	int32_t GetCount() override;
 
 	vk::Buffer GetBuffer() { return gpuBuf->buffer(); }
+	vk::Buffer GetCpuBuffer() { return cpuBuf->buffer(); }
 };
 
 } // namespace LLGI

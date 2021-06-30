@@ -228,6 +228,14 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 		}
 
 		commandList->Begin();
+
+		commandList->UpdateData(vb1.get());
+		commandList->UpdateData(ib1.get());
+		commandList->UpdateData(vb2.get());
+		commandList->UpdateData(ib2.get());
+		commandList->UpdateData(vb3.get());
+		commandList->UpdateData(ib3.get());
+
 		commandList->BeginRenderPass(renderPass.get());
 
 		// First, green rectangle.

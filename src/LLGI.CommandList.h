@@ -165,6 +165,21 @@ public:
 	virtual void SetData(ConstantBuffer* constantBuffer, int32_t offset, int32_t size, const void* data);
 
 	/**
+		@brief	send a memory in specified VertexBuffer from cpu to gpu
+	*/
+	virtual void UpdateData(VertexBuffer* vertexBuffer) {}
+
+	/**
+		@brief	send a memory in specified IndexBuffer from cpu to gpu
+	*/
+	virtual void UpdateData(IndexBuffer* indexBuffer) {}
+
+	/**
+		@brief	send a memory in specified ConstantBuffer from cpu to gpu
+	*/
+	virtual void UpdateData(ConstantBuffer* constantBuffer) {}
+
+	/**
 		@brief	send a memory in specified texture from cpu to gpu
 	*/
 	virtual void SetImageData2D(Texture* texture, int32_t x, int32_t y, int32_t width, int32_t height, const void* data);

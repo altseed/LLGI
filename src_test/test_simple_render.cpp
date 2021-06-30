@@ -116,6 +116,8 @@ void test_simple_rectangle(LLGI::DeviceType deviceType, SingleRectangleTestMode 
 
 		auto commandList = commandListPool->Get();
 		commandList->Begin();
+		commandList->UpdateData(vb.get());
+		commandList->UpdateData(ib.get());
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get());
@@ -235,6 +237,8 @@ void test_index_offset(LLGI::DeviceType deviceType)
 
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
+		commandList->UpdateData(vb.get());
+		commandList->UpdateData(ib.get());
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get(), 2 * 3);
@@ -502,6 +506,12 @@ void main()
 
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
+
+		commandList->UpdateData(vb.get());
+		commandList->UpdateData(ib.get());
+		commandList->UpdateData(cb_vs);
+		commandList->UpdateData(cb_ps);
+
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get());
@@ -767,6 +777,8 @@ void main()
 
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
+		commandList->UpdateData(vb.get());
+		commandList->UpdateData(ib.get());
 		commandList->BeginRenderPass(renderPass);
 		// commandList->SetConstantBuffer(dummy_cb.get(), LLGI::ShaderStageType::Vertex);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
@@ -908,6 +920,11 @@ void test_instancing(LLGI::DeviceType deviceType)
 
 		auto commandList = commandListPool->Get();
 		commandList->Begin();
+
+		commandList->UpdateData(vb.get());
+		commandList->UpdateData(ib.get());
+		commandList->UpdateData(cb.get());
+
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get());
@@ -1021,6 +1038,10 @@ void test_vtf(LLGI::DeviceType deviceType)
 
 		auto commandList = commandListPool->Get();
 		commandList->Begin();
+
+		commandList->UpdateData(vb.get());
+		commandList->UpdateData(ib.get());
+
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get());

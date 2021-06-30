@@ -13,7 +13,8 @@ class ConstantBufferVulkan : public ConstantBuffer
 {
 private:
 	std::shared_ptr<GraphicsVulkan> graphics_;
-	std::unique_ptr<Buffer> buffer_;
+	std::unique_ptr<Buffer> cpuBuf;
+	std::unique_ptr<Buffer> gpuBuf;
 	int memSize_ = 0;
 	void* data = nullptr;
 	int32_t offset_ = 0;
@@ -30,7 +31,8 @@ public:
 	void Unlock() override;
 	int32_t GetSize() override;
 	int32_t GetOffset() const { return offset_; }
-	vk::Buffer GetBuffer() { return buffer_->buffer(); }
+	vk::Buffer GetBuffer() { return gpuBuf->buffer(); }
+	vk::Buffer GetCpuBuffer() { return cpuBuf->buffer(); }
 };
 
 } // namespace LLGI

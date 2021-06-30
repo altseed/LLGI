@@ -13,56 +13,68 @@ bool InternalSingleFrameMemoryPoolVulkan::Initialize(GraphicsVulkan* graphics, i
 	constantBufferSize_ = (constantBufferPoolSize + 255) & ~255; // buffer size should be multiple of 256
 
 	nativeDevice_ = static_cast<VkDevice>(graphics->GetDevice());
+	cpuBuf = std::unique_ptr<Buffer>(new Buffer(graphics));
+	gpuBuf = std::unique_ptr<Buffer>(new Buffer(graphics));
 
-	VkBufferCreateInfo bufferInfo = {};
-	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	bufferInfo.size = constantBufferSize_;
-	bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT; // for constant buffer
-	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	LLGI_VK_CHECK(vkCreateBuffer(nativeDevice_, &bufferInfo, nullptr, &nativeBuffer_));
+	// create a buffer on gpu
+	{
+		vk::BufferCreateInfo IndexBufferInfo;
+		IndexBufferInfo.size = constantBufferSize_;
+		IndexBufferInfo.usage = vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst;
+		vk::Buffer buffer = graphics->GetDevice().createBuffer(IndexBufferInfo);
 
-	VkMemoryRequirements memRequirements;
-	vkGetBufferMemoryRequirements(nativeDevice_, nativeBuffer_, &memRequirements);
+		vk::MemoryRequirements memReqs = graphics->GetDevice().getBufferMemoryRequirements(buffer);
+		vk::MemoryAllocateInfo memAlloc;
+		memAlloc.allocationSize = memReqs.size;
+		memAlloc.memoryTypeIndex = graphics->GetMemoryTypeIndex(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible);
+		vk::DeviceMemory devMem = graphics->GetDevice().allocateMemory(memAlloc);
+		graphics->GetDevice().bindBufferMemory(buffer, devMem, 0);
 
-	VkMemoryAllocateInfo allocInfo = {};
-	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	allocInfo.allocationSize = memRequirements.size;
-	allocInfo.memoryTypeIndex = graphics->GetMemoryTypeIndex(memRequirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible);
+		gpuBuf->Attach(buffer, devMem);
+	}
 
-	LLGI_VK_CHECK(vkAllocateMemory(nativeDevice_, &allocInfo, nullptr, &nativeBufferMemory_));
+	// create a buffer on cpu
+	{
+		vk::BufferCreateInfo IndexBufferInfo;
+		IndexBufferInfo.size = constantBufferSize_;
+		IndexBufferInfo.usage = vk::BufferUsageFlagBits::eTransferSrc;
+		vk::Buffer buffer = graphics->GetDevice().createBuffer(IndexBufferInfo);
 
-	LLGI_VK_CHECK(vkBindBufferMemory(nativeDevice_, nativeBuffer_, nativeBufferMemory_, 0));
+		vk::MemoryRequirements memReqs = graphics->GetDevice().getBufferMemoryRequirements(buffer);
+		vk::MemoryAllocateInfo memAlloc;
+		memAlloc.allocationSize = memReqs.size;
+		memAlloc.memoryTypeIndex = graphics->GetMemoryTypeIndex(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible);
+		vk::DeviceMemory devMem = graphics->GetDevice().allocateMemory(memAlloc);
+		graphics->GetDevice().bindBufferMemory(buffer, devMem, 0);
+
+		cpuBuf->Attach(buffer, devMem);
+	}
 
 	return true;
 }
 
 void InternalSingleFrameMemoryPoolVulkan::Dispose()
 {
-	if (nativeBufferMemory_)
-	{
-		vkFreeMemory(nativeDevice_, nativeBufferMemory_, nullptr);
-		nativeBufferMemory_ = VK_NULL_HANDLE;
-	}
-
-	if (nativeBuffer_)
-	{
-		vkDestroyBuffer(nativeDevice_, nativeBuffer_, nullptr);
-		nativeBuffer_ = VK_NULL_HANDLE;
-	}
+	gpuBuf = nullptr;
+	cpuBuf = nullptr;
 
 	nativeDevice_ = VK_NULL_HANDLE;
 }
 
 bool InternalSingleFrameMemoryPoolVulkan::GetConstantBuffer(int32_t size,
-															VkBuffer* outResource,
-															VkDeviceMemory* deviceMemory,
+															vk::Buffer* outResource,
+															vk::DeviceMemory* deviceMemory,
+															vk::Buffer* outCpuResource,
+															vk::DeviceMemory* cpuDeviceMemory,
 															int32_t* outOffset)
 {
 	if (constantBufferOffset_ + size > constantBufferSize_)
 		return false;
 
-	*outResource = nativeBuffer_;
-	*deviceMemory = nativeBufferMemory_;
+	*outResource = gpuBuf->buffer();
+	*deviceMemory = gpuBuf->devMem();
+	*outCpuResource = cpuBuf->buffer();
+	*cpuDeviceMemory = cpuBuf->devMem();
 	*outOffset = constantBufferOffset_;
 	constantBufferOffset_ += size;
 	return true;
@@ -127,10 +139,15 @@ SingleFrameMemoryPoolVulkan ::~SingleFrameMemoryPoolVulkan()
 	}
 }
 
-bool SingleFrameMemoryPoolVulkan::GetConstantBuffer(int32_t size, VkBuffer* outResource, VkDeviceMemory* deviceMemory, int32_t* outOffset)
+bool SingleFrameMemoryPoolVulkan::GetConstantBuffer(int32_t size,
+													vk::Buffer* outResource,
+													vk::DeviceMemory* deviceMemory,
+													vk::Buffer* outCpuResource,
+													vk::DeviceMemory* cpuDeviceMemory,
+													int32_t* outOffset)
 {
 	assert(currentSwap_ >= 0);
-	return memoryPools[currentSwap_]->GetConstantBuffer(size, outResource, deviceMemory, outOffset);
+	return memoryPools[currentSwap_]->GetConstantBuffer(size, outResource, deviceMemory, outCpuResource, cpuDeviceMemory, outOffset);
 }
 
 InternalSingleFrameMemoryPoolVulkan* SingleFrameMemoryPoolVulkan::GetInternal() { return memoryPools[currentSwap_].get(); }

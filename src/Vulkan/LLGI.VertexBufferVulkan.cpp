@@ -69,32 +69,7 @@ void* VertexBufferVulkan::Lock(int32_t offset, int32_t size)
 	return data;
 }
 
-void VertexBufferVulkan::Unlock()
-{
-	isMemoryDirtied_ = true;
-	graphics_->GetDevice().unmapMemory(cpuBuf->devMem());
-
-	VkCommandBuffer commandBuffer = graphics_->BeginSingleTimeCommands();
-	vk::CommandBuffer commandBufferCpp = static_cast<vk::CommandBuffer>(commandBuffer);
-
-	SendMemoryToGPU(commandBufferCpp);
-
-	graphics_->EndSingleTimeCommands(commandBuffer);
-}
-
-void VertexBufferVulkan::SendMemoryToGPU(vk::CommandBuffer& commandBuffer)
-{
-	if (!isMemoryDirtied_)
-	{
-		return;
-	}
-
-	vk::BufferCopy copyRegion;
-	copyRegion.size = memSize;
-	commandBuffer.copyBuffer(cpuBuf->buffer(), gpuBuf->buffer(), copyRegion);
-
-	isMemoryDirtied_ = false;
-}
+void VertexBufferVulkan::Unlock() { graphics_->GetDevice().unmapMemory(cpuBuf->devMem()); }
 
 int32_t VertexBufferVulkan::GetSize() { return memSize; }
 

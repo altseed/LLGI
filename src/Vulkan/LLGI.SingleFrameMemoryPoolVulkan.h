@@ -13,16 +13,21 @@ class InternalSingleFrameMemoryPoolVulkan
 private:
 	int32_t constantBufferSize_ = 0;
 	int32_t constantBufferOffset_ = 0;
-	VkDevice nativeDevice_ = VK_NULL_HANDLE;
-	VkBuffer nativeBuffer_ = VK_NULL_HANDLE;
-	VkDeviceMemory nativeBufferMemory_ = VK_NULL_HANDLE;
+	vk::Device nativeDevice_;
+	std::unique_ptr<Buffer> cpuBuf;
+	std::unique_ptr<Buffer> gpuBuf;
 
 public:
 	InternalSingleFrameMemoryPoolVulkan();
 	virtual ~InternalSingleFrameMemoryPoolVulkan();
 	bool Initialize(GraphicsVulkan* graphics, int32_t constantBufferPoolSize, int32_t drawingCount);
 	void Dispose();
-	bool GetConstantBuffer(int32_t size, VkBuffer* outResource, VkDeviceMemory* deviceMemory, int32_t* outOffset);
+	bool GetConstantBuffer(int32_t size,
+						   vk::Buffer* outResource,
+						   vk::DeviceMemory* deviceMemory,
+						   vk::Buffer* outCpuResource,
+						   vk::DeviceMemory* cpuDeviceMemory,
+						   int32_t* outOffset);
 	void Reset();
 };
 
@@ -45,7 +50,12 @@ public:
 		GraphicsVulkan* graphics, bool isStrongRef, int32_t swapBufferCount, int32_t constantBufferPoolSize, int32_t drawingCount);
 	~SingleFrameMemoryPoolVulkan() override;
 
-	bool GetConstantBuffer(int32_t size, VkBuffer* outResource, VkDeviceMemory* deviceMemory, int32_t* outOffset);
+	bool GetConstantBuffer(int32_t size,
+						   vk::Buffer* outResource,
+						   vk::DeviceMemory* deviceMemory,
+						   vk::Buffer* outCpuResource,
+						   vk::DeviceMemory* cpuDeviceMemory,
+						   int32_t* outOffset);
 
 	InternalSingleFrameMemoryPoolVulkan* GetInternal();
 

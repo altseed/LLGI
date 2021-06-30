@@ -509,6 +509,34 @@ void CommandListDX12::CopyTexture(Texture* src, Texture* dst)
 	RegisterReferencedObject(dst);
 }
 
+void CommandListDX12::UpdateData(VertexBuffer* vertexBuffer) {
+	auto buf = static_cast<VertexBufferDX12*>(vertexBuffer);
+
+	auto resource = buf->Get();
+	auto cpuResource = buf->GetCpu();
+
+	currentCommandList_->CopyBufferRegion(resource, 0, cpuResource, 0, buf->GetSize());
+}
+
+void CommandListDX12::UpdateData(IndexBuffer* indexBuffer) {
+	auto buf = static_cast<IndexBufferDX12*>(indexBuffer);
+
+	auto resource = buf->Get();
+	auto cpuResource = buf->GetCpu();
+
+	currentCommandList_->CopyBufferRegion(resource, 0, cpuResource, 0, buf->GetCount() * buf->GetStride());
+}
+
+
+void CommandListDX12::UpdateData(ConstantBuffer* constantBuffer) {
+	auto buf = static_cast<ConstantBufferDX12*>(constantBuffer);
+
+	auto resource = buf->Get();
+	auto cpuResource = buf->GetCpu();
+
+	currentCommandList_->CopyBufferRegion(resource, buf->GetOffset(), cpuResource, buf->GetOffset(), buf->GetActualSize());
+}
+
 void CommandListDX12::Clear(const Color8& color)
 {
 	assert(currentCommandList_ != nullptr);

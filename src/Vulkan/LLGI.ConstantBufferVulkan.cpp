@@ -13,10 +13,30 @@ bool ConstantBufferVulkan::Initialize(GraphicsVulkan* graphics, int32_t size)
 	SafeAddRef(graphics);
 	graphics_ = CreateSharedPtr(graphics);
 
-	buffer_ = std::unique_ptr<Buffer>(new Buffer(graphics));
+	cpuBuf = std::unique_ptr<Buffer>(new Buffer(graphics));
+	gpuBuf = std::unique_ptr<Buffer>(new Buffer(graphics));
 	auto allocatedSize = GetAlignedSize(size, 256);
 
 	memSize_ = size;
+
+	// create a buffer on cpu
+	{
+		vk::BufferCreateInfo IndexBufferInfo;
+		IndexBufferInfo.size = allocatedSize;
+		IndexBufferInfo.usage = vk::BufferUsageFlagBits::eTransferSrc;
+		vk::Buffer buffer = graphics_->GetDevice().createBuffer(IndexBufferInfo);
+
+		vk::MemoryRequirements memReqs = graphics_->GetDevice().getBufferMemoryRequirements(buffer);
+		vk::MemoryAllocateInfo memAlloc;
+		memAlloc.allocationSize = memReqs.size;
+		memAlloc.memoryTypeIndex = graphics_->GetMemoryTypeIndex(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible);
+		vk::DeviceMemory devMem = graphics_->GetDevice().allocateMemory(memAlloc);
+		graphics_->GetDevice().bindBufferMemory(buffer, devMem, 0);
+
+		cpuBuf->Attach(buffer, devMem);
+	}
+
+	// create a buffer on gpu
 	{
 		vk::BufferCreateInfo IndexBufferInfo;
 		IndexBufferInfo.size = allocatedSize;
@@ -30,7 +50,7 @@ bool ConstantBufferVulkan::Initialize(GraphicsVulkan* graphics, int32_t size)
 		vk::DeviceMemory devMem = graphics_->GetDevice().allocateMemory(memAlloc);
 		graphics_->GetDevice().bindBufferMemory(buffer, devMem, 0);
 
-		buffer_->Attach(buffer, devMem);
+		gpuBuf->Attach(buffer, devMem);
 	}
 
 	return true;
@@ -38,20 +58,29 @@ bool ConstantBufferVulkan::Initialize(GraphicsVulkan* graphics, int32_t size)
 
 bool ConstantBufferVulkan::InitializeAsShortTime(GraphicsVulkan* graphics, SingleFrameMemoryPoolVulkan* memoryPool, int32_t size)
 {
-	if (buffer_ == nullptr)
+	if (cpuBuf == nullptr || gpuBuf == nullptr)
 	{
 		SafeAddRef(graphics);
 		graphics_ = CreateSharedPtr(graphics);
-		buffer_ = std::unique_ptr<Buffer>(new Buffer(graphics_.get()));
+
+		if (cpuBuf == nullptr)
+			cpuBuf = std::unique_ptr<Buffer>(new Buffer(graphics_.get()));
+
+		if (gpuBuf == nullptr)
+			gpuBuf = std::unique_ptr<Buffer>(new Buffer(graphics_.get()));
 	}
 
 	auto alignedSize = static_cast<int32_t>(GetAlignedSize(size, 256));
-	VkBuffer buffer;
-	VkDeviceMemory deviceMemory;
-	if (memoryPool->GetConstantBuffer(alignedSize, &buffer, &deviceMemory, &offset_))
+	vk::Buffer buffer;
+	vk::DeviceMemory deviceMemory;
+	vk::Buffer cpuBuffer;
+	vk::DeviceMemory cpuDeviceMemory;
+	if (memoryPool->GetConstantBuffer(alignedSize, &buffer, &deviceMemory, &cpuBuffer, &cpuDeviceMemory, &offset_))
 	{
-		buffer_->Attach(vk::Buffer(buffer), vk::DeviceMemory(deviceMemory), true);
+		gpuBuf->Attach(buffer, deviceMemory, true);
+		cpuBuf->Attach(cpuBuffer, cpuDeviceMemory, true);
 		memSize_ = size;
+
 		return true;
 	}
 	else
@@ -62,17 +91,17 @@ bool ConstantBufferVulkan::InitializeAsShortTime(GraphicsVulkan* graphics, Singl
 
 void* ConstantBufferVulkan::Lock()
 {
-	data = graphics_->GetDevice().mapMemory(buffer_->devMem(), offset_, memSize_, vk::MemoryMapFlags());
+	data = graphics_->GetDevice().mapMemory(cpuBuf->devMem(), offset_, memSize_, vk::MemoryMapFlags());
 	return data;
 }
 
 void* ConstantBufferVulkan::Lock(int32_t offset, int32_t size)
 {
-	data = graphics_->GetDevice().mapMemory(buffer_->devMem(), offset_ + offset, size, vk::MemoryMapFlags());
+	data = graphics_->GetDevice().mapMemory(cpuBuf->devMem(), offset_ + offset, size, vk::MemoryMapFlags());
 	return data;
 }
 
-void ConstantBufferVulkan::Unlock() { graphics_->GetDevice().unmapMemory(buffer_->devMem()); }
+void ConstantBufferVulkan::Unlock() { graphics_->GetDevice().unmapMemory(cpuBuf->devMem()); }
 
 int32_t ConstantBufferVulkan::GetSize() { return memSize_; }
 

@@ -54,6 +54,10 @@ public:
 	void Draw(int32_t primitiveCount, int32_t instanceCount) override;
 	void CopyTexture(Texture* src, Texture* dst) override;
 
+	void UpdateData(VertexBuffer* vertexBuffer) override;
+	void UpdateData(IndexBuffer* indexBuffer) override;
+	void UpdateData(ConstantBuffer* constantBuffer) override;
+
 	void Clear(const Color8& color);
 
 	void ClearDepth();

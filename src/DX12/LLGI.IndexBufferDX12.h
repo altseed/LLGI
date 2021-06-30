@@ -14,6 +14,7 @@ class IndexBufferDX12 : public IndexBuffer
 {
 private:
 	ID3D12Resource* indexBuffer_ = nullptr;
+	ID3D12Resource* cpuIndexBuffer_ = nullptr;
 	uint8_t* mapped_ = nullptr;
 	int32_t stride_ = 0;
 	int32_t count_ = 0;
@@ -30,6 +31,7 @@ public:
 	virtual int32_t GetStride() { return stride_; }
 	virtual int32_t GetCount() { return count_; }
 	ID3D12Resource* Get() { return indexBuffer_; }
+	ID3D12Resource* GetCpu() { return cpuIndexBuffer_; }
 };
 
 } // namespace LLGI
