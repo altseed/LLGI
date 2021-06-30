@@ -46,26 +46,16 @@ bool ConstantBufferDX12::InitializeAsShortTime(SingleFrameMemoryPoolDX12* memory
 	auto oldCpu = cpuConstantBuffer_;
 
 	auto size_ = (size + 255) & ~255; // buffer size should be multiple of 256
-	if (memoryPool->GetConstantBuffer(size_, constantBuffer_, offset_))
+	if (memoryPool->GetConstantBuffer(size_, constantBuffer_, cpuConstantBuffer_, offset_))
 	{
 		SafeAddRef(constantBuffer_);
+		SafeAddRef(cpuConstantBuffer_);
 		SafeRelease(old);
+		SafeRelease(oldCpu);
 		memSize_ = size;
 		actualSize_ = size_;
 
-		if (memoryPool->GetCpuConstantBuffer(size_, cpuConstantBuffer_, offset_))
-		{
-			SafeAddRef(cpuConstantBuffer_);
-			SafeRelease(oldCpu);
-			memSize_ = size;
-			actualSize_ = size_;
-			return true;
-		}
-		else
-		{
-			SafeRelease(constantBuffer_);
-			return false;
-		}
+		return true;
 	}
 	else
 	{

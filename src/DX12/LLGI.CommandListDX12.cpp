@@ -534,7 +534,7 @@ void CommandListDX12::UpdateData(ConstantBuffer* constantBuffer) {
 	auto resource = buf->Get();
 	auto cpuResource = buf->GetCpu();
 
-	currentCommandList_->CopyBufferRegion(resource, 0, cpuResource, buf->GetOffset(), buf->GetActualSize());
+	currentCommandList_->CopyBufferRegion(resource, buf->GetOffset(), cpuResource, buf->GetOffset(), buf->GetActualSize());
 }
 
 void CommandListDX12::Clear(const Color8& color)

@@ -17,31 +17,27 @@ InternalSingleFrameMemoryPoolDX12::InternalSingleFrameMemoryPoolDX12(GraphicsDX1
 											   Vec2I(constantBufferSize_, 1));
 
 	cpuConstantBuffer_ = graphics->CreateResource(D3D12_HEAP_TYPE_UPLOAD,
-											   DXGI_FORMAT_UNKNOWN,
-											   D3D12_RESOURCE_DIMENSION_BUFFER,
-											   D3D12_RESOURCE_STATE_GENERIC_READ,
-											   Vec2I(constantBufferSize_, 1));
+												  DXGI_FORMAT_UNKNOWN,
+												  D3D12_RESOURCE_DIMENSION_BUFFER,
+												  D3D12_RESOURCE_STATE_GENERIC_READ,
+												  Vec2I(constantBufferSize_, 1));
 }
 
-InternalSingleFrameMemoryPoolDX12 ::~InternalSingleFrameMemoryPoolDX12() { SafeRelease(constantBuffer_); }
+InternalSingleFrameMemoryPoolDX12 ::~InternalSingleFrameMemoryPoolDX12() {
+	SafeRelease(constantBuffer_);
+	SafeRelease(cpuConstantBuffer_);
+}
 
-bool InternalSingleFrameMemoryPoolDX12::GetConstantBuffer(int32_t size, ID3D12Resource*& resource, int32_t& offset)
+bool InternalSingleFrameMemoryPoolDX12::GetConstantBuffer(int32_t size,
+														  ID3D12Resource*& resource,
+														  ID3D12Resource*& cpuResource,
+														  int32_t& offset)
 {
 	if (constantBufferOffset_ + size > constantBufferSize_)
 		return false;
 
 	resource = constantBuffer_;
-	offset = constantBufferOffset_;
-	constantBufferOffset_ += size;
-	return true;
-}
-
-bool InternalSingleFrameMemoryPoolDX12::GetCpuConstantBuffer(int32_t size, ID3D12Resource*& resource, int32_t& offset)
-{
-	if (constantBufferOffset_ + size > constantBufferSize_)
-		return false;
-
-	resource = cpuConstantBuffer_;
+	cpuResource = cpuConstantBuffer_;
 	offset = constantBufferOffset_;
 	constantBufferOffset_ += size;
 	return true;
@@ -100,16 +96,10 @@ ConstantBuffer* SingleFrameMemoryPoolDX12::ReinitializeConstantBuffer(ConstantBu
 	return obj;
 }
 
-bool SingleFrameMemoryPoolDX12::GetConstantBuffer(int32_t size, ID3D12Resource*& resource, int32_t& offset)
+bool SingleFrameMemoryPoolDX12::GetConstantBuffer(int32_t size, ID3D12Resource*& resource, ID3D12Resource*& cpuResource, int32_t& offset)
 {
 	assert(currentSwap_ >= 0);
-	return memoryPools[currentSwap_]->GetConstantBuffer(size, resource, offset);
-}
-
-bool SingleFrameMemoryPoolDX12::GetCpuConstantBuffer(int32_t size, ID3D12Resource*& resource, int32_t& offset)
-{
-	assert(currentSwap_ >= 0);
-	return memoryPools[currentSwap_]->GetCpuConstantBuffer(size, resource, offset);
+	return memoryPools[currentSwap_]->GetConstantBuffer(size, resource, cpuResource, offset);
 }
 
 InternalSingleFrameMemoryPoolDX12* SingleFrameMemoryPoolDX12::GetInternal() { return memoryPools[currentSwap_].get(); }
