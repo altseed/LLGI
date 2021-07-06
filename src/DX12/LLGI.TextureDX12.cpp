@@ -74,7 +74,8 @@ bool TextureDX12::Initialize(ID3D12Resource* textureResource)
 	return true;
 }
 
-bool TextureDX12::Initialize(const Vec2I& size, TextureType type, const TextureFormatType formatType, int32_t samplingCount)
+bool TextureDX12::Initialize(
+	const Vec2I& size, TextureType type, const TextureFormatType formatType, int32_t samplingCount, int32_t mipmapCount)
 {
 	type_ = type;
 

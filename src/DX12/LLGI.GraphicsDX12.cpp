@@ -187,7 +187,7 @@ Texture* GraphicsDX12::CreateTexture(uint64_t id)
 Texture* GraphicsDX12::CreateTexture(const TextureInitializationParameter& parameter)
 {
 	auto obj = new TextureDX12(this, true);
-	if (!obj->Initialize(parameter.Size, TextureType::Color, parameter.Format, 1))
+	if (!obj->Initialize(parameter.Size, TextureType::Color, parameter.Format, 1, parameter.MipMapCount))
 	{
 		SafeRelease(obj);
 		return nullptr;
@@ -198,7 +198,7 @@ Texture* GraphicsDX12::CreateTexture(const TextureInitializationParameter& param
 Texture* GraphicsDX12::CreateRenderTexture(const RenderTextureInitializationParameter& parameter)
 {
 	auto obj = new TextureDX12(this, true);
-	if (!obj->Initialize(parameter.Size, TextureType::Render, parameter.Format, parameter.SamplingCount))
+	if (!obj->Initialize(parameter.Size, TextureType::Render, parameter.Format, parameter.SamplingCount, 1))
 	{
 		SafeRelease(obj);
 		return nullptr;
@@ -216,7 +216,7 @@ Texture* GraphicsDX12::CreateDepthTexture(const DepthTextureInitializationParame
 		format = TextureFormatType::D24S8;
 	}
 
-	if (!obj->Initialize(parameter.Size, TextureType::Depth, format, parameter.SamplingCount))
+	if (!obj->Initialize(parameter.Size, TextureType::Depth, format, parameter.SamplingCount, 1))
 	{
 		SafeRelease(obj);
 		return nullptr;
