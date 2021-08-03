@@ -13,7 +13,6 @@ class InternalSingleFrameMemoryPoolVulkan
 private:
 	int32_t constantBufferSize_ = 0;
 	int32_t constantBufferOffset_ = 0;
-	vk::Device nativeDevice_;
 	std::unique_ptr<Buffer> cpuBuf;
 	std::unique_ptr<Buffer> gpuBuf;
 

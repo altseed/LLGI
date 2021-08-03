@@ -11,8 +11,7 @@ InternalSingleFrameMemoryPoolVulkan ::~InternalSingleFrameMemoryPoolVulkan() {}
 bool InternalSingleFrameMemoryPoolVulkan::Initialize(GraphicsVulkan* graphics, int32_t constantBufferPoolSize, int32_t drawingCount)
 {
 	constantBufferSize_ = (constantBufferPoolSize + 255) & ~255; // buffer size should be multiple of 256
-
-	nativeDevice_ = static_cast<VkDevice>(graphics->GetDevice());
+	
 	cpuBuf = std::unique_ptr<Buffer>(new Buffer(graphics));
 	gpuBuf = std::unique_ptr<Buffer>(new Buffer(graphics));
 
@@ -57,8 +56,6 @@ void InternalSingleFrameMemoryPoolVulkan::Dispose()
 {
 	gpuBuf = nullptr;
 	cpuBuf = nullptr;
-
-	nativeDevice_ = VK_NULL_HANDLE;
 }
 
 bool InternalSingleFrameMemoryPoolVulkan::GetConstantBuffer(int32_t size,
