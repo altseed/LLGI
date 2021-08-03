@@ -152,21 +152,6 @@ public:
 	/**
 		@brief	send a memory in specified VertexBuffer from cpu to gpu
 	*/
-	virtual void SetData(VertexBuffer* vertexBuffer, int32_t offset, int32_t size, const void* data);
-
-	/**
-		@brief	send a memory in specified IndexBuffer from cpu to gpu
-	*/
-	virtual void SetData(IndexBuffer* indexBuffer, int32_t offset, int32_t size, const void* data);
-
-	/**
-		@brief	send a memory in specified ConstantBuffer from cpu to gpu
-	*/
-	virtual void SetData(ConstantBuffer* constantBuffer, int32_t offset, int32_t size, const void* data);
-
-	/**
-		@brief	send a memory in specified VertexBuffer from cpu to gpu
-	*/
 	virtual void UpdateData(VertexBuffer* vertexBuffer) {}
 
 	/**
