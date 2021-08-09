@@ -12,6 +12,7 @@ class VertexBufferDX12 : public VertexBuffer
 {
 private:
 	ID3D12Resource* vertexBuffer_ = nullptr;
+	ID3D12Resource* cpuVertexBuffer_ = nullptr;
 	uint8_t* mapped_ = nullptr;
 	int32_t size_ = 0;
 
@@ -26,6 +27,7 @@ public:
 	virtual void Unlock();
 	virtual int32_t GetSize();
 	ID3D12Resource* Get() { return vertexBuffer_; }
+	ID3D12Resource* GetCpu() { return cpuVertexBuffer_; }
 };
 
 } // namespace LLGI

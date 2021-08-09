@@ -239,21 +239,6 @@ bool CommandList::BeginRenderPassWithPlatformPtr(void* platformPtr)
 	return true;
 }
 
-void CommandList::SetData(VertexBuffer* vertexBuffer, int32_t offset, int32_t size, const void* data)
-{
-	assert(0); // TODO: Not implemented.
-}
-
-void CommandList::SetData(IndexBuffer* indexBuffer, int32_t offset, int32_t size, const void* data)
-{
-	assert(0); // TODO: Not implemented.
-}
-
-void CommandList::SetData(ConstantBuffer* constantBuffer, int32_t offset, int32_t size, const void* data)
-{
-	assert(0); // TODO: Not implemented.
-}
-
 void CommandList::SetImageData2D(Texture* texture, int32_t x, int32_t y, int32_t width, int32_t height, const void* data)
 {
 	assert(0); // TODO: Not implemented.

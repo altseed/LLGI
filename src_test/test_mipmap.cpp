@@ -198,6 +198,20 @@ void test_mipmap(LLGI::DeviceType deviceType)
 
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
+
+		commandList->UpdateData(vb.get());
+		commandList->UpdateData(ib.get());
+		commandList->UpdateData(vb2.get());
+		commandList->UpdateData(ib2.get());
+		commandList->UpdateData(vb3.get());
+		commandList->UpdateData(ib3.get());
+		commandList->UpdateData(vb4.get());
+		commandList->UpdateData(ib4.get());
+		commandList->UpdateData(vb5.get());
+		commandList->UpdateData(ib5.get());
+		commandList->UpdateData(vb6.get());
+		commandList->UpdateData(ib6.get());
+
 		commandList->GenerateMipMap(textureDrawnMipmap);
 		commandList->BeginRenderPass(renderPass);
 		// commandList->SetConstantBuffer(dummy_cb.get(), LLGI::ShaderStageType::Vertex);

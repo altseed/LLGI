@@ -12,13 +12,14 @@ class InternalSingleFrameMemoryPoolDX12
 {
 private:
 	ID3D12Resource* constantBuffer_ = nullptr;
+	ID3D12Resource* cpuConstantBuffer_ = nullptr;
 	int32_t constantBufferSize_ = 0;
 	int32_t constantBufferOffset_ = 0;
 
 public:
 	InternalSingleFrameMemoryPoolDX12(GraphicsDX12* graphics, int32_t constantBufferPoolSize, int32_t drawingCount);
 	virtual ~InternalSingleFrameMemoryPoolDX12();
-	bool GetConstantBuffer(int32_t size, ID3D12Resource*& resource, int32_t& offset);
+	bool GetConstantBuffer(int32_t size, ID3D12Resource*& resource, ID3D12Resource*& cpuResource, int32_t& offset);
 	void Reset();
 };
 
@@ -40,7 +41,7 @@ public:
 		GraphicsDX12* graphics, bool isStrongRef, int32_t swapBufferCount, int32_t constantBufferPoolSize, int32_t drawingCount);
 	~SingleFrameMemoryPoolDX12() override;
 
-	bool GetConstantBuffer(int32_t size, ID3D12Resource*& resource, int32_t& offset);
+	bool GetConstantBuffer(int32_t size, ID3D12Resource*& resource, ID3D12Resource*& cpuResource, int32_t& offset);
 
 	InternalSingleFrameMemoryPoolDX12* GetInternal();
 

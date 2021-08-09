@@ -68,38 +68,7 @@ void* IndexBufferVulkan::Lock(int32_t offset, int32_t size)
 	return data;
 }
 
-void IndexBufferVulkan::Unlock()
-{
-
-	graphics_->GetDevice().unmapMemory(cpuBuf->devMem());
-
-	// copy buffer
-	vk::CommandBufferAllocateInfo cmdBufInfo;
-	cmdBufInfo.commandPool = graphics_->GetCommandPool();
-	cmdBufInfo.level = vk::CommandBufferLevel::ePrimary;
-	cmdBufInfo.commandBufferCount = 1;
-	vk::CommandBuffer copyCommandBuffer = graphics_->GetDevice().allocateCommandBuffers(cmdBufInfo)[0];
-
-	vk::CommandBufferBeginInfo cmdBufferBeginInfo;
-
-	copyCommandBuffer.begin(cmdBufferBeginInfo);
-
-	vk::BufferCopy copyRegion;
-	copyRegion.size = memSize;
-	copyCommandBuffer.copyBuffer(cpuBuf->buffer(), gpuBuf->buffer(), copyRegion);
-
-	copyCommandBuffer.end();
-
-	// submit and wait to execute command
-	std::array<vk::SubmitInfo, 1> copySubmitInfos;
-	copySubmitInfos[0].commandBufferCount = 1;
-	copySubmitInfos[0].pCommandBuffers = &copyCommandBuffer;
-
-	graphics_->GetQueue().submit(static_cast<uint32_t>(copySubmitInfos.size()), copySubmitInfos.data(), vk::Fence());
-	graphics_->GetQueue().waitIdle();
-
-	graphics_->GetDevice().freeCommandBuffers(graphics_->GetCommandPool(), copyCommandBuffer);
-}
+void IndexBufferVulkan::Unlock() { graphics_->GetDevice().unmapMemory(cpuBuf->devMem()); }
 
 int32_t IndexBufferVulkan::GetStride() { return stride_; }
 

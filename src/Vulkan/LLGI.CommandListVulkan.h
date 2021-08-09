@@ -57,6 +57,10 @@ public:
 
 	void GenerateMipMap(Texture* src) override;
 
+	void UpdateData(VertexBuffer* vertexBuffer) override;
+	void UpdateData(IndexBuffer* indexBuffer) override;
+	void UpdateData(ConstantBuffer* constantBuffer) override;
+
 	void BeginRenderPass(RenderPass* renderPass) override;
 	void EndRenderPass() override;
 	vk::CommandBuffer GetCommandBuffer() const;

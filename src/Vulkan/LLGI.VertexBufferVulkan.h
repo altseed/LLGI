@@ -31,10 +31,8 @@ public:
 	void Unlock() override;
 	int32_t GetSize() override;
 
-	// TODO : Optimize it
-	void SendMemoryToGPU(vk::CommandBuffer& commandBuffer);
-
 	vk::Buffer GetBuffer() { return gpuBuf->buffer(); }
+	vk::Buffer GetCpuBuffer() { return cpuBuf->buffer(); }
 };
 
 } // namespace LLGI
