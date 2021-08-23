@@ -40,6 +40,7 @@ enum class ShaderStageType
 {
 	Vertex,
 	Pixel,
+	Compute,
 	Max,
 };
 
@@ -384,6 +385,8 @@ class CommandList;
 class Compiler;
 class RenderPass;
 class RenderPassPipelineState;
+class ComputePass;
+class ComputePipeline;
 
 enum class LogType
 {

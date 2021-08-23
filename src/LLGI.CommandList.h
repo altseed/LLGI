@@ -149,6 +149,9 @@ public:
 	*/
 	virtual bool EndRenderPassWithPlatformPtr() { return false; }
 
+	virtual void BeginComputePass(ComputePass* computePass) {}
+	virtual void EndComputePass() {}
+
 	/**
 		@brief	send a memory in specified VertexBuffer from cpu to gpu
 	*/

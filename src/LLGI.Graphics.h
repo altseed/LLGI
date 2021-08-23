@@ -198,6 +198,25 @@ public:
 	RenderPassPipelineStateKey Key;
 };
 
+
+class ComputePipeline : public ReferenceObject
+{
+private:
+public:
+	ComputePipeline() = default;
+	~ComputePipeline() override = default;
+};
+
+class ComputePass : public ReferenceObject
+{
+private:
+public:
+	ComputePass() = default;
+	~ComputePass() override = default;
+
+	virtual void SetComputePipeline(ComputePipeline* computePipeline);
+};
+
 /**
 	@note
 	please call WaitFinish before releasing
@@ -266,6 +285,8 @@ public:
 		return nullptr;
 	}
 
+	virtual ComputePass* CreateComputePass() { return nullptr; }
+
 	virtual Texture* CreateTexture(const TextureInitializationParameter& parameter) { return nullptr; }
 
 	virtual Texture* CreateRenderTexture(const RenderTextureInitializationParameter& parameter) { return nullptr; }
@@ -292,6 +313,8 @@ public:
 		But it is very fast. So it can call it in everyframe.
 	*/
 	virtual RenderPassPipelineState* CreateRenderPassPipelineState(const RenderPassPipelineStateKey& key) { return nullptr; }
+
+	virtual ComputePipeline* CreateComputePipeline(Shader* shader) { return nullptr; }
 
 	/** For testing. Wait for all commands in queue to complete. Then read data from specified render target. */
 	virtual std::vector<uint8_t> CaptureRenderTarget(Texture* renderTarget);
