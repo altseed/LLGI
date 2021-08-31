@@ -23,6 +23,7 @@ private:
 
 	std::shared_ptr<DX12::DescriptorHeapAllocator> samplerDescriptorHeap_;
 	std::shared_ptr<DX12::DescriptorHeapAllocator> cbDescriptorHeap_;
+	std::shared_ptr<DX12::DescriptorHeapAllocator> computeDescriptorHeap_;
 	std::shared_ptr<DX12::DescriptorHeapAllocator> rtDescriptorHeap_;
 	std::shared_ptr<DX12::DescriptorHeapAllocator> dtDescriptorHeap_;
 
@@ -57,6 +58,12 @@ public:
 	void UpdateData(VertexBuffer* vertexBuffer) override;
 	void UpdateData(IndexBuffer* indexBuffer) override;
 	void UpdateData(ConstantBuffer* constantBuffer) override;
+	void UpdateDataToGPU(ComputeBuffer* computeBuffer) override;
+	void UpdateDataToCPU(ComputeBuffer* computeBuffer) override;
+
+	void BeginComputePass() override;
+	void EndComputePass() override;
+	void Dispatch(int32_t x, int32_t y, int32_t z) override;
 
 	void Clear(const Color8& color);
 

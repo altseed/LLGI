@@ -61,22 +61,25 @@ private:
 
 	bool isVertexBufferDirtied = true;
 	bool isCurrentIndexBufferDirtied = true;
+	bool isCurrentComputeBufferDirtied = true;
 	bool isPipelineDirtied = true;
 	bool doesBeginWithPlatform_ = false;
 
 	std::array<ConstantBuffer*, static_cast<int>(ShaderStageType::Max)> constantBuffers;
+	ComputeBuffer* computeBuffer_;
 
 protected:
 	bool isInRenderPass_ = false;
 	bool isInBegin_ = false;
 
-	std::array<std::array<BindingTexture, NumTexture>, static_cast<int>(ShaderStageType::Max)> currentTextures;
+	std::array<std::array<BindingTexture, NumTexture>, 2> currentTextures;
 
 protected:
 	void GetCurrentVertexBuffer(BindingVertexBuffer& buffer, bool& isDirtied);
 	void GetCurrentIndexBuffer(BindingIndexBuffer& buffer, bool& isDirtied);
 	void GetCurrentPipelineState(PipelineState*& pipelineState, bool& isDirtied);
 	void GetCurrentConstantBuffer(ShaderStageType type, ConstantBuffer*& buffer);
+	void GetCurrentComputeBuffer(ComputeBuffer*& buffer, bool& isDirtied);
 	void RegisterReferencedObject(ReferenceObject* referencedObject);
 
 public:
@@ -149,8 +152,9 @@ public:
 	*/
 	virtual bool EndRenderPassWithPlatformPtr() { return false; }
 
-	virtual void BeginComputePass(ComputePass* computePass) {}
+	virtual void BeginComputePass() {}
 	virtual void EndComputePass() {}
+	virtual void Dispatch(int32_t x, int32_t y, int32_t z);
 
 	/**
 		@brief	send a memory in specified VertexBuffer from cpu to gpu
@@ -166,6 +170,16 @@ public:
 		@brief	send a memory in specified ConstantBuffer from cpu to gpu
 	*/
 	virtual void UpdateData(ConstantBuffer* constantBuffer) {}
+
+	/**
+		@brief	send a memory in specified ComputeBuffer from cpu to gpu
+	*/
+	virtual void UpdateDataToGPU(ComputeBuffer* computeBuffer) {}
+
+	/**
+		@brief	send a memory in specified ComputeBuffer from gpu to cpu
+	*/
+	virtual void UpdateDataToCPU(ComputeBuffer* computeBuffer) {}
 
 	/**
 		@brief	send a memory in specified texture from cpu to gpu

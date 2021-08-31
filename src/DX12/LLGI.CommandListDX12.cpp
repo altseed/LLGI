@@ -1,5 +1,6 @@
 
 #include "LLGI.CommandListDX12.h"
+#include "LLGI.ComputeBufferDX12.h"
 #include "LLGI.ConstantBufferDX12.h"
 #include "LLGI.DescriptorHeapDX12.h"
 #include "LLGI.GraphicsDX12.h"
@@ -21,11 +22,14 @@ void CommandListDX12::BeginInternal()
 	cbDescriptorHeap_->Reset();
 
 	samplerDescriptorHeap_->Reset();
+
+	computeDescriptorHeap_->Reset();
 }
 
 CommandListDX12::CommandListDX12()
 	: samplerDescriptorHeap_(nullptr)
 	, cbDescriptorHeap_(nullptr)
+	, computeDescriptorHeap_(nullptr)
 	, rtDescriptorHeap_(nullptr)
 	, dtDescriptorHeap_(nullptr)
 	, commandList_(nullptr)
@@ -91,6 +95,9 @@ bool CommandListDX12::Initialize(GraphicsDX12* graphics, int32_t drawingCount)
 		std::make_shared<DX12::DescriptorHeapAllocator>(graphics_, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 
 	cbDescriptorHeap_ =
+		std::make_shared<DX12::DescriptorHeapAllocator>(graphics_, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+	computeDescriptorHeap_ =
 		std::make_shared<DX12::DescriptorHeapAllocator>(graphics_, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	hr = graphics_->GetDevice()->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence_));
@@ -286,7 +293,7 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 	int32_t requiredCBDescriptorCount = 2;
 	int32_t requiredSamplerDescriptorCount = 1;
 
-	for (int stage_ind = 0; stage_ind < static_cast<int>(ShaderStageType::Max); stage_ind++)
+	for (int stage_ind = 0; stage_ind < 2; stage_ind++)
 	{
 		for (size_t unit_ind = 0; unit_ind < currentTextures[stage_ind].size(); unit_ind++)
 		{
@@ -335,7 +342,7 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 
 	// constant buffer
 	{
-		for (int stage_ind = 0; stage_ind < static_cast<int>(ShaderStageType::Max); stage_ind++)
+		for (int stage_ind = 0; stage_ind < 2; stage_ind++)
 		{
 			GetCurrentConstantBuffer(static_cast<ShaderStageType>(stage_ind), cb);
 			if (cb != nullptr)
@@ -360,7 +367,7 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 	}
 
 	{
-		for (int stage_ind = 0; stage_ind < static_cast<int>(ShaderStageType::Max); stage_ind++)
+		for (int stage_ind = 0; stage_ind < 2; stage_ind++)
 		{
 			for (size_t unit_ind = 0; unit_ind < currentTextures[stage_ind].size(); unit_ind++)
 			{
@@ -509,7 +516,8 @@ void CommandListDX12::CopyTexture(Texture* src, Texture* dst)
 	RegisterReferencedObject(dst);
 }
 
-void CommandListDX12::UpdateData(VertexBuffer* vertexBuffer) {
+void CommandListDX12::UpdateData(VertexBuffer* vertexBuffer)
+{
 	auto buf = static_cast<VertexBufferDX12*>(vertexBuffer);
 
 	auto resource = buf->Get();
@@ -518,7 +526,8 @@ void CommandListDX12::UpdateData(VertexBuffer* vertexBuffer) {
 	currentCommandList_->CopyBufferRegion(resource, 0, cpuResource, 0, buf->GetSize());
 }
 
-void CommandListDX12::UpdateData(IndexBuffer* indexBuffer) {
+void CommandListDX12::UpdateData(IndexBuffer* indexBuffer)
+{
 	auto buf = static_cast<IndexBufferDX12*>(indexBuffer);
 
 	auto resource = buf->Get();
@@ -527,14 +536,142 @@ void CommandListDX12::UpdateData(IndexBuffer* indexBuffer) {
 	currentCommandList_->CopyBufferRegion(resource, 0, cpuResource, 0, buf->GetCount() * buf->GetStride());
 }
 
-
-void CommandListDX12::UpdateData(ConstantBuffer* constantBuffer) {
+void CommandListDX12::UpdateData(ConstantBuffer* constantBuffer)
+{
 	auto buf = static_cast<ConstantBufferDX12*>(constantBuffer);
 
 	auto resource = buf->Get();
 	auto cpuResource = buf->GetCpu();
 
 	currentCommandList_->CopyBufferRegion(resource, buf->GetOffset(), cpuResource, buf->GetOffset(), buf->GetActualSize());
+}
+
+void CommandListDX12::UpdateDataToGPU(ComputeBuffer* computeBuffer)
+{
+	auto buf = static_cast<ComputeBufferDX12*>(computeBuffer);
+
+	auto resource = buf->Get();
+	auto cpuResource = buf->GetCpu();
+
+	currentCommandList_->CopyBufferRegion(resource, buf->GetOffset(), cpuResource, buf->GetOffset(), buf->GetActualSize());
+}
+
+void CommandListDX12::UpdateDataToCPU(ComputeBuffer* computeBuffer)
+{
+	auto buf = static_cast<ComputeBufferDX12*>(computeBuffer);
+
+	auto resource = buf->Get();
+	auto cpuResource = buf->GetCpu();
+
+	currentCommandList_->CopyBufferRegion(cpuResource, buf->GetOffset(), resource, buf->GetOffset(), buf->GetActualSize());
+}
+
+void CommandListDX12::BeginComputePass() {}
+
+void CommandListDX12::EndComputePass() {}
+
+void CommandListDX12::Dispatch(int32_t x, int32_t y, int32_t z)
+{
+	assert(currentCommandList_ != nullptr);
+	PipelineState* pip_ = nullptr;
+	ConstantBuffer* cb = nullptr;
+	ComputeBuffer* compute = nullptr;
+
+	bool isComputeBufferDirtied = false;
+	bool isPipDirtied = false;
+
+	GetCurrentPipelineState(pip_, isPipDirtied);
+	GetCurrentComputeBuffer(compute, isComputeBufferDirtied);
+	assert(pip_ != nullptr);
+
+	auto pip = static_cast<PipelineStateDX12*>(pip_);
+	auto computeBuffer = static_cast<ComputeBufferDX12*>(compute);
+
+	if (pip != nullptr)
+	{
+		currentCommandList_->SetComputeRootSignature(pip->GetComputeRootSignature());
+		auto p = pip->GetComputePipelineState();
+		currentCommandList_->SetPipelineState(p);
+	}
+
+	int32_t requiredCBDescriptorCount = 1;
+	int32_t requiredComputeDescriptorCount = 1;
+
+	ID3D12DescriptorHeap* heapConstant = nullptr;
+	ID3D12DescriptorHeap* heapCompute = nullptr;
+
+	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 16> cpuDescriptorHandleConstant;
+	std::array<D3D12_GPU_DESCRIPTOR_HANDLE, 16> gpuDescriptorHandleConstant;
+	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 16> cpuDescriptorHandleCompute;
+	std::array<D3D12_GPU_DESCRIPTOR_HANDLE, 16> gpuDescriptorHandleCompute;
+
+	if (!cbDescriptorHeap_->Allocate(heapConstant, cpuDescriptorHandleConstant, gpuDescriptorHandleConstant, requiredCBDescriptorCount))
+	{
+		Log(LogType::Error, "Failed to draw because of descriptors.");
+		return;
+	}
+
+	if (!computeDescriptorHeap_->Allocate(heapCompute, cpuDescriptorHandleCompute, gpuDescriptorHandleCompute, requiredComputeDescriptorCount))
+	{
+		Log(LogType::Error, "Failed to draw because of descriptors.");
+		return;
+	}
+	
+	{
+		// set using descriptor heaps
+		ID3D12DescriptorHeap* heaps[] = {
+			heapConstant,
+			heapCompute,
+		};
+		currentCommandList_->SetDescriptorHeaps(2, heaps);
+
+		// set descriptor tables
+		currentCommandList_->SetGraphicsRootDescriptorTable(0, gpuDescriptorHandleConstant[0]);
+		currentCommandList_->SetGraphicsRootDescriptorTable(1, gpuDescriptorHandleCompute[0]);
+	}
+
+	int stage_ind = static_cast<int>(ShaderStageType::Compute);
+
+	// constant buffer
+	{
+		GetCurrentConstantBuffer(static_cast<ShaderStageType>(stage_ind), cb);
+		if (cb != nullptr)
+		{
+			auto _cb = static_cast<ConstantBufferDX12*>(cb);
+			D3D12_CONSTANT_BUFFER_VIEW_DESC desc = {};
+			desc.BufferLocation = _cb->Get()->GetGPUVirtualAddress() + _cb->GetOffset();
+			desc.SizeInBytes = _cb->GetActualSize();
+			auto cpuHandle = cpuDescriptorHandleConstant[0];
+			graphics_->GetDevice()->CreateConstantBufferView(&desc, cpuHandle);
+		}
+		else
+		{
+			// set dummy values
+			D3D12_CONSTANT_BUFFER_VIEW_DESC desc = {};
+			desc.BufferLocation = D3D12_GPU_VIRTUAL_ADDRESS();
+			desc.SizeInBytes = 0;
+			auto cpuHandle = cpuDescriptorHandleConstant[0];
+			graphics_->GetDevice()->CreateConstantBufferView(&desc, cpuHandle);
+		}
+	}
+
+	// UAV
+	{
+		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+
+		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+
+		uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+		uavDesc.Buffer.NumElements = cb->GetSize();
+		uavDesc.Buffer.StructureByteStride = sizeof(float) * pip->VertexLayoutCount;
+
+		auto cpuHandle = cpuDescriptorHandleCompute[0];
+		graphics_->GetDevice()->CreateUnorderedAccessView(computeBuffer->Get(), nullptr, &uavDesc, cpuHandle);
+	}
+
+	currentCommandList_->Dispatch(x, y, z);
+
+	CommandList::Dispatch(x, y, z);
 }
 
 void CommandListDX12::Clear(const Color8& color)

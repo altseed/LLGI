@@ -8,7 +8,8 @@ namespace LLGI
 
 ConstantBufferDX12::ConstantBufferDX12() {}
 
-ConstantBufferDX12::~ConstantBufferDX12() {
+ConstantBufferDX12::~ConstantBufferDX12()
+{
 	SafeRelease(constantBuffer_);
 	SafeRelease(cpuConstantBuffer_);
 }
@@ -20,16 +21,16 @@ bool ConstantBufferDX12::Initialize(GraphicsDX12* graphics, int32_t size)
 	constantBuffer_ = graphics->CreateResource(D3D12_HEAP_TYPE_DEFAULT,
 											   DXGI_FORMAT_UNKNOWN,
 											   D3D12_RESOURCE_DIMENSION_BUFFER,
-											   D3D12_RESOURCE_STATE_GENERIC_READ,
+											   D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
 											   Vec2I(actualSize_, 1));
 	if (constantBuffer_ == nullptr)
 		return false;
 
 	cpuConstantBuffer_ = graphics->CreateResource(D3D12_HEAP_TYPE_UPLOAD,
-											   DXGI_FORMAT_UNKNOWN,
-											   D3D12_RESOURCE_DIMENSION_BUFFER,
-											   D3D12_RESOURCE_STATE_GENERIC_READ,
-											   Vec2I(actualSize_, 1));
+												  DXGI_FORMAT_UNKNOWN,
+												  D3D12_RESOURCE_DIMENSION_BUFFER,
+												  D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+												  Vec2I(actualSize_, 1));
 
 	if (cpuConstantBuffer_ == nullptr)
 	{
@@ -71,7 +72,6 @@ void* ConstantBufferDX12::Lock()
 
 void* ConstantBufferDX12::Lock(int32_t offset, int32_t size)
 {
-	// TODO optimize it
 	auto hr = cpuConstantBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mapped_));
 	return SUCCEEDED(hr) ? mapped_ + offset_ + offset : nullptr;
 }

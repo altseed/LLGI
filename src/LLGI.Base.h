@@ -376,6 +376,7 @@ template <typename T> using unique_ref = std::unique_ptr<T, ReferenceDeleter<T>>
 class VertexBuffer;
 class IndexBuffer;
 class ConstantBuffer;
+class ComputeBuffer;
 class Shader;
 class PipelineState;
 class Texture;
@@ -385,8 +386,6 @@ class CommandList;
 class Compiler;
 class RenderPass;
 class RenderPassPipelineState;
-class ComputePass;
-class ComputePipeline;
 
 enum class LogType
 {

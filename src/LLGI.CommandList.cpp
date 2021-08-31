@@ -1,6 +1,7 @@
 
 #include "LLGI.CommandList.h"
 #include "LLGI.ConstantBuffer.h"
+#include "LLGI.ComputeBuffer.h"
 #include "LLGI.IndexBuffer.h"
 #include "LLGI.PipelineState.h"
 #include "LLGI.Texture.h"
@@ -31,6 +32,11 @@ void CommandList::GetCurrentPipelineState(PipelineState*& pipelineState, bool& i
 void CommandList::GetCurrentConstantBuffer(ShaderStageType type, ConstantBuffer*& buffer)
 {
 	buffer = constantBuffers[static_cast<int>(type)];
+}
+
+void CommandList::GetCurrentComputeBuffer(ComputeBuffer*& buffer, bool& isDirtied) {
+	buffer = computeBuffer_;
+	isDirtied = isPipelineDirtied;
 }
 
 void CommandList::RegisterReferencedObject(ReferenceObject* referencedObject)
@@ -237,6 +243,12 @@ bool CommandList::BeginRenderPassWithPlatformPtr(void* platformPtr)
 	isPipelineDirtied = true;
 	isInRenderPass_ = true;
 	return true;
+}
+
+void CommandList::Dispatch(int32_t x, int32_t y, int32_t z)
+{
+	isCurrentComputeBufferDirtied = false;
+	isPipelineDirtied = false;
 }
 
 void CommandList::SetImageData2D(Texture* texture, int32_t x, int32_t y, int32_t width, int32_t height, const void* data)
