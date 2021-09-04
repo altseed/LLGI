@@ -1,7 +1,7 @@
 
 #include "LLGI.CommandList.h"
-#include "LLGI.ConstantBuffer.h"
 #include "LLGI.ComputeBuffer.h"
+#include "LLGI.ConstantBuffer.h"
 #include "LLGI.IndexBuffer.h"
 #include "LLGI.PipelineState.h"
 #include "LLGI.Texture.h"
@@ -34,7 +34,8 @@ void CommandList::GetCurrentConstantBuffer(ShaderStageType type, ConstantBuffer*
 	buffer = constantBuffers[static_cast<int>(type)];
 }
 
-void CommandList::GetCurrentComputeBuffer(ComputeBuffer*& buffer, bool& isDirtied) {
+void CommandList::GetCurrentComputeBuffer(ComputeBuffer*& buffer, bool& isDirtied)
+{
 	buffer = computeBuffer_;
 	isDirtied = isPipelineDirtied;
 }
@@ -87,6 +88,8 @@ CommandList::~CommandList()
 		}
 		so.referencedObjects.clear();
 	}
+
+	SafeRelease(computeBuffer_);
 }
 
 void CommandList::Begin()
@@ -202,6 +205,12 @@ void CommandList::SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageT
 	SafeAssign(constantBuffers[ind], constantBuffer);
 
 	RegisterReferencedObject(constantBuffer);
+}
+
+void CommandList::SetComputeBuffer(ComputeBuffer* computeBuffer)
+{
+	SafeAssign(computeBuffer_, computeBuffer);
+	RegisterReferencedObject(computeBuffer);
 }
 
 void CommandList::SetTexture(

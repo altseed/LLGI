@@ -66,7 +66,7 @@ private:
 	bool doesBeginWithPlatform_ = false;
 
 	std::array<ConstantBuffer*, static_cast<int>(ShaderStageType::Max)> constantBuffers;
-	ComputeBuffer* computeBuffer_;
+	ComputeBuffer* computeBuffer_ = nullptr;
 
 protected:
 	bool isInRenderPass_ = false;
@@ -110,6 +110,7 @@ public:
 	virtual void SetIndexBuffer(IndexBuffer* indexBuffer, int32_t offset = 0);
 	virtual void SetPipelineState(PipelineState* pipelineState);
 	virtual void SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageType shaderStage);
+	virtual void SetComputeBuffer(ComputeBuffer* computeBuffer);
 
 	/**
 		@brief	copy a texture

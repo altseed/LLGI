@@ -4,6 +4,7 @@
 #include "LLGI.CommandListDX12.h"
 #include "LLGI.ConstantBufferDX12.h"
 #include "LLGI.IndexBufferDX12.h"
+#include "LLGI.ComputeBufferDX12.h"
 #include "LLGI.PipelineStateDX12.h"
 #include "LLGI.PlatformDX12.h"
 #include "LLGI.ShaderDX12.h"
@@ -102,6 +103,17 @@ ConstantBuffer* GraphicsDX12::CreateConstantBuffer(int32_t size)
 		return nullptr;
 	}
 
+	return obj;
+}
+
+ComputeBuffer* GraphicsDX12::CreateComputeBuffer(int32_t size)
+{
+	auto obj = new ComputeBufferDX12();
+	if (!obj->Initialize(this, size))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
 	return obj;
 }
 

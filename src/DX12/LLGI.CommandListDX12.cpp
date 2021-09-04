@@ -409,7 +409,7 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 						srvDesc.Texture2D.MostDetailedMip = 0;
 
 						auto cpuHandle =
-							cpuDescriptorHandleConstant[static_cast<int32_t>(ShaderStageType::Max) + static_cast<int32_t>(unit_ind)];
+							cpuDescriptorHandleConstant[2 + static_cast<int32_t>(unit_ind)];
 						graphics_->GetDevice()->CreateShaderResourceView(texture->Get(), &srvDesc, cpuHandle);
 					}
 
@@ -551,7 +551,7 @@ void CommandListDX12::UpdateDataToGPU(ComputeBuffer* computeBuffer)
 	auto buf = static_cast<ComputeBufferDX12*>(computeBuffer);
 
 	auto resource = buf->Get();
-	auto cpuResource = buf->GetCpu();
+	auto cpuResource = buf->GetUpload();
 
 	currentCommandList_->CopyBufferRegion(resource, buf->GetOffset(), cpuResource, buf->GetOffset(), buf->GetActualSize());
 }
@@ -561,9 +561,31 @@ void CommandListDX12::UpdateDataToCPU(ComputeBuffer* computeBuffer)
 	auto buf = static_cast<ComputeBufferDX12*>(computeBuffer);
 
 	auto resource = buf->Get();
-	auto cpuResource = buf->GetCpu();
+	auto cpuResource = buf->GetReadback();
+
+	/*{
+		D3D12_RESOURCE_BARRIER barrier = {};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = resource;
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_SOURCE;
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		currentCommandList_->ResourceBarrier(1, &barrier);
+	}*/
 
 	currentCommandList_->CopyBufferRegion(cpuResource, buf->GetOffset(), resource, buf->GetOffset(), buf->GetActualSize());
+
+	/*{
+		D3D12_RESOURCE_BARRIER barrier = {};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = resource;
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_SOURCE;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		currentCommandList_->ResourceBarrier(1, &barrier);
+	}*/
 }
 
 void CommandListDX12::BeginComputePass() {}
@@ -594,24 +616,14 @@ void CommandListDX12::Dispatch(int32_t x, int32_t y, int32_t z)
 		currentCommandList_->SetPipelineState(p);
 	}
 
-	int32_t requiredCBDescriptorCount = 1;
-	int32_t requiredComputeDescriptorCount = 1;
+	int32_t requiredCBDescriptorCount = 2;
 
 	ID3D12DescriptorHeap* heapConstant = nullptr;
-	ID3D12DescriptorHeap* heapCompute = nullptr;
 
 	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 16> cpuDescriptorHandleConstant;
 	std::array<D3D12_GPU_DESCRIPTOR_HANDLE, 16> gpuDescriptorHandleConstant;
-	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 16> cpuDescriptorHandleCompute;
-	std::array<D3D12_GPU_DESCRIPTOR_HANDLE, 16> gpuDescriptorHandleCompute;
 
 	if (!cbDescriptorHeap_->Allocate(heapConstant, cpuDescriptorHandleConstant, gpuDescriptorHandleConstant, requiredCBDescriptorCount))
-	{
-		Log(LogType::Error, "Failed to draw because of descriptors.");
-		return;
-	}
-
-	if (!computeDescriptorHeap_->Allocate(heapCompute, cpuDescriptorHandleCompute, gpuDescriptorHandleCompute, requiredComputeDescriptorCount))
 	{
 		Log(LogType::Error, "Failed to draw because of descriptors.");
 		return;
@@ -621,13 +633,11 @@ void CommandListDX12::Dispatch(int32_t x, int32_t y, int32_t z)
 		// set using descriptor heaps
 		ID3D12DescriptorHeap* heaps[] = {
 			heapConstant,
-			heapCompute,
 		};
-		currentCommandList_->SetDescriptorHeaps(2, heaps);
+		currentCommandList_->SetDescriptorHeaps(1, heaps);
 
 		// set descriptor tables
-		currentCommandList_->SetGraphicsRootDescriptorTable(0, gpuDescriptorHandleConstant[0]);
-		currentCommandList_->SetGraphicsRootDescriptorTable(1, gpuDescriptorHandleCompute[0]);
+		currentCommandList_->SetComputeRootDescriptorTable(0, gpuDescriptorHandleConstant[0]);
 	}
 
 	int stage_ind = static_cast<int>(ShaderStageType::Compute);
@@ -660,12 +670,47 @@ void CommandListDX12::Dispatch(int32_t x, int32_t y, int32_t z)
 		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 
 		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-
 		uavDesc.Format = DXGI_FORMAT_UNKNOWN;
-		uavDesc.Buffer.NumElements = cb->GetSize();
-		uavDesc.Buffer.StructureByteStride = sizeof(float) * pip->VertexLayoutCount;
 
-		auto cpuHandle = cpuDescriptorHandleCompute[0];
+		uint32_t stride = 0;
+		for (int i = 0; i < pip->VertexLayoutCount; i++)
+		{
+			if (pip->VertexLayouts[i] == VertexLayoutFormat::R32_FLOAT)
+			{
+				stride += sizeof(float) * 1;
+			}
+			else if (pip->VertexLayouts[i] == VertexLayoutFormat::R32G32_FLOAT)
+			{
+				stride += sizeof(float) * 2;
+			}
+			else if (pip->VertexLayouts[i] == VertexLayoutFormat::R32G32B32_FLOAT)
+			{
+				stride += sizeof(float) * 3;
+			}
+			else if (pip->VertexLayouts[i] == VertexLayoutFormat::R32G32B32A32_FLOAT)
+			{
+				stride += sizeof(float) * 4;
+			}
+			else if (pip->VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UNORM)
+			{
+				stride += sizeof(float) * 1;
+			}
+			else if (pip->VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UINT)
+			{
+				stride += sizeof(float) * 1;
+			}
+			else
+			{
+				Log(LogType::Error, "Unimplemented VertexLoayoutFormat");
+				return;
+			}
+		}
+		uavDesc.Buffer.StructureByteStride = stride;
+		uavDesc.Buffer.NumElements = computeBuffer->GetSize() / stride;
+		uavDesc.Buffer.FirstElement = 0;
+		uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+
+		auto cpuHandle = cpuDescriptorHandleConstant[1];
 		graphics_->GetDevice()->CreateUnorderedAccessView(computeBuffer->Get(), nullptr, &uavDesc, cpuHandle);
 	}
 

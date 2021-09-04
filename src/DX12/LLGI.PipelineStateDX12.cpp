@@ -123,7 +123,7 @@ FAILED_EXIT:
 
 bool PipelineStateDX12::CreateComputeRootSignature()
 {
-	D3D12_DESCRIPTOR_RANGE ranges[3] = {{}, {}, {}};
+	D3D12_DESCRIPTOR_RANGE ranges[2] = {{}, {}};
 	D3D12_ROOT_PARAMETER rootParameters[1] = {{}};
 
 	// descriptor range for constant buffer view
@@ -134,22 +134,15 @@ bool PipelineStateDX12::CreateComputeRootSignature()
 	ranges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	// descriptor range for shader resorce view
-	ranges[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	ranges[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
 	ranges[1].NumDescriptors = 1;
 	ranges[1].BaseShaderRegister = 0;
 	ranges[1].RegisterSpace = 0;
 	ranges[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	// descriptor range for sampler
-	ranges[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
-	ranges[2].NumDescriptors = 1;
-	ranges[2].BaseShaderRegister = 0;
-	ranges[2].RegisterSpace = 0;
-	ranges[2].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
-	// descriptor table for CBV/SRV
+	// descriptor table for CBV/UAV
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParameters[0].DescriptorTable.NumDescriptorRanges = 3;
+	rootParameters[0].DescriptorTable.NumDescriptorRanges = 2;
 	rootParameters[0].DescriptorTable.pDescriptorRanges = &ranges[0];
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
@@ -158,7 +151,7 @@ bool PipelineStateDX12::CreateComputeRootSignature()
 	desc.pParameters = rootParameters;
 	desc.NumStaticSamplers = 0;
 	desc.pStaticSamplers = nullptr;
-	desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_ALLOW_STREAM_OUTPUT;
 
 	auto hr = D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1, &computeSignature_, nullptr);
 
@@ -190,7 +183,7 @@ bool PipelineStateDX12::CreatePipelineState()
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateDesc = {};
 
-	for (size_t i = 0; i < shaders_.size(); i++)
+	for (size_t i = 0; i < 2; i++)
 	{
 		auto shader = static_cast<ShaderDX12*>(shaders_.at(i));
 		if (shader == nullptr)
@@ -458,10 +451,10 @@ bool PipelineStateDX12::CreateComputePipelineState()
 	pipelineStateDesc.CS.pShaderBytecode = shaderData.data();
 	pipelineStateDesc.CS.BytecodeLength = shaderData.size();
 	pipelineStateDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
-	pipelineStateDesc.NodeMask = 0;
-	pipelineStateDesc.pRootSignature = rootSignature_;
+	pipelineStateDesc.NodeMask = 1;
+	pipelineStateDesc.pRootSignature = computeRootSignature_;
 
-	auto hr = graphics_->GetDevice()->CreateComputePipelineState(&pipelineStateDesc, IID_PPV_ARGS(&pipelineState_));
+	auto hr = graphics_->GetDevice()->CreateComputePipelineState(&pipelineStateDesc, IID_PPV_ARGS(&computePipelineState_));
 
 	if (FAILED(hr))
 	{
@@ -474,7 +467,7 @@ bool PipelineStateDX12::CreateComputePipelineState()
 	return true;
 
 FAILED_EXIT:
-	SafeRelease(pipelineState_);
+	SafeRelease(computePipelineState_);
 	return false;
 }
 

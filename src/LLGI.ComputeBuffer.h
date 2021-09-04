@@ -16,6 +16,8 @@ public:
 	virtual void* Lock(int32_t offset, int32_t size);
 	virtual void Unlock();
 
+	virtual void* const Read();
+
 	virtual int32_t GetSize();
 };
 
