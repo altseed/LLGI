@@ -302,6 +302,68 @@ void TestHelper::CreateShader(LLGI::Graphics* graphics,
 	}
 }
 
+void TestHelper::CreateComputeShader(LLGI::Graphics* graphics,
+									 LLGI::DeviceType deviceType,
+									 const char* csBinaryPath,
+									 std::shared_ptr<LLGI::Shader>& cs)
+{
+	auto compiler = LLGI::CreateSharedPtr(LLGI::CreateCompiler(deviceType));
+
+	std::vector<LLGI::DataStructure> data_cs;
+
+	if (compiler == nullptr)
+	{
+		auto csBinaryPath_ = std::string(csBinaryPath);
+
+		// if (deviceType == LLGI::DeviceType::Vulkan)
+		{
+			csBinaryPath_ += ".spv";
+		}
+
+		auto binary_cs = TestHelper::LoadData(csBinaryPath_.c_str());
+
+		LLGI::DataStructure d_cs;
+
+		d_cs.Data = binary_cs.data();
+		d_cs.Size = static_cast<int32_t>(binary_cs.size());
+
+		data_cs.push_back(d_cs);
+
+		cs = LLGI::CreateSharedPtr(graphics->CreateShader(data_cs.data(), static_cast<int32_t>(data_cs.size())));
+	}
+	else
+	{
+		LLGI::CompilerResult result_cs;
+
+		auto csBinaryPath_ = std::string(csBinaryPath);
+
+		auto code_cs = TestHelper::LoadData(csBinaryPath_.c_str());
+		code_cs.push_back(0);
+
+		compiler->Compile(result_cs, (const char*)code_cs.data(), LLGI::ShaderStageType::Compute);
+
+		std::cout << result_cs.Message.c_str() << std::endl;
+
+		for (auto& b : result_cs.Binary)
+		{
+			LLGI::DataStructure d;
+			d.Data = b.data();
+			d.Size = static_cast<int32_t>(b.size());
+			data_cs.push_back(d);
+		}
+
+		for (auto& b : result_cs.Binary)
+		{
+			LLGI::DataStructure d;
+			d.Data = b.data();
+			d.Size = static_cast<int32_t>(b.size());
+			data_cs.push_back(d);
+		}
+
+		cs = LLGI::CreateSharedPtr(graphics->CreateShader(data_cs.data(), static_cast<int32_t>(data_cs.size())));
+	}
+}
+
 void TestHelper::Run(const ParsedArgs& args)
 {
 	auto helper = Get();

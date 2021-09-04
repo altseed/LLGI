@@ -54,6 +54,9 @@ public:
 							 std::shared_ptr<LLGI::Shader>& vs,
 							 std::shared_ptr<LLGI::Shader>& ps);
 
+	static void
+	CreateComputeShader(LLGI::Graphics* graphics, LLGI::DeviceType deviceType, const char* csBinaryPath, std::shared_ptr<LLGI::Shader>& cs);
+
 	static void Run(const ParsedArgs& args);
 
 	static void RegisterTest(const char* name, std::function<void(LLGI::DeviceType)> func);

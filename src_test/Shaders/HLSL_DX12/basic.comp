@@ -1,0 +1,16 @@
+struct VS_INPUT{
+    float value;
+};
+
+cbuffer CB : register(b0)
+{
+  float offset;
+};
+
+RWStructuredBuffer<VS_INPUT> real : register(u0);
+
+[numthreads(1, 1, 1)]
+void main(uint3 dtid : SV_DispatchThreadID)
+{
+   real[dtid.x].value = real[dtid.x].value * real[dtid.x].value + offset;
+}
