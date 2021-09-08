@@ -46,7 +46,7 @@ bool ConstantBufferVulkan::Initialize(GraphicsVulkan* graphics, int32_t size)
 		vk::MemoryRequirements memReqs = graphics_->GetDevice().getBufferMemoryRequirements(buffer);
 		vk::MemoryAllocateInfo memAlloc;
 		memAlloc.allocationSize = memReqs.size;
-		memAlloc.memoryTypeIndex = graphics_->GetMemoryTypeIndex(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible);
+		memAlloc.memoryTypeIndex = graphics_->GetMemoryTypeIndex(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
 		vk::DeviceMemory devMem = graphics_->GetDevice().allocateMemory(memAlloc);
 		graphics_->GetDevice().bindBufferMemory(buffer, devMem, 0);
 

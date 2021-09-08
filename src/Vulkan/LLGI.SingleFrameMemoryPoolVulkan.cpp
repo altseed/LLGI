@@ -25,7 +25,7 @@ bool InternalSingleFrameMemoryPoolVulkan::Initialize(GraphicsVulkan* graphics, i
 		vk::MemoryRequirements memReqs = graphics->GetDevice().getBufferMemoryRequirements(buffer);
 		vk::MemoryAllocateInfo memAlloc;
 		memAlloc.allocationSize = memReqs.size;
-		memAlloc.memoryTypeIndex = graphics->GetMemoryTypeIndex(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible);
+		memAlloc.memoryTypeIndex = graphics->GetMemoryTypeIndex(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
 		vk::DeviceMemory devMem = graphics->GetDevice().allocateMemory(memAlloc);
 		graphics->GetDevice().bindBufferMemory(buffer, devMem, 0);
 
