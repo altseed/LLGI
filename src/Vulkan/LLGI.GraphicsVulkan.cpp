@@ -1,6 +1,7 @@
 #include "LLGI.GraphicsVulkan.h"
 #include "LLGI.BaseVulkan.h"
 #include "LLGI.CommandListVulkan.h"
+#include "LLGI.ComputeBufferVulkan.h"
 #include "LLGI.ConstantBufferVulkan.h"
 #include "LLGI.IndexBufferVulkan.h"
 #include "LLGI.PipelineStateVulkan.h"
@@ -136,6 +137,17 @@ ConstantBuffer* GraphicsVulkan::CreateConstantBuffer(int32_t size)
 	return obj;
 }
 
+ComputeBuffer* GraphicsVulkan::CreateComputeBuffer(int32_t size)
+{
+	auto obj = new ComputeBufferVulkan();
+	if (!obj->Initialize(this, size))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
+	return obj;
+}
+
 RenderPass* GraphicsVulkan::CreateRenderPass(Texture** textures, int32_t textureCount, Texture* depthTexture)
 {
 	assert(textures != nullptr);
@@ -197,8 +209,13 @@ Texture* GraphicsVulkan::CreateTexture(const TextureInitializationParameter& par
 {
 	auto obj = new TextureVulkan();
 
-	if (!obj->Initialize(
-			this, true, parameter.Size, (vk::Format)VulkanHelper::TextureFormatToVkFormat(parameter.Format), 1, parameter.MipMapCount, TextureType::Color))
+	if (!obj->Initialize(this,
+						 true,
+						 parameter.Size,
+						 (vk::Format)VulkanHelper::TextureFormatToVkFormat(parameter.Format),
+						 1,
+						 parameter.MipMapCount,
+						 TextureType::Color))
 	{
 		SafeRelease(obj);
 		return nullptr;
