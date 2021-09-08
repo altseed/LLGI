@@ -604,7 +604,9 @@ void CommandListDX12::Dispatch(int32_t x, int32_t y, int32_t z)
 
 	GetCurrentPipelineState(pip_, isPipDirtied);
 	GetCurrentComputeBuffer(compute, isComputeBufferDirtied);
+
 	assert(pip_ != nullptr);
+	assert(compute != nullptr);
 
 	auto pip = static_cast<PipelineStateDX12*>(pip_);
 	auto computeBuffer = static_cast<ComputeBufferDX12*>(compute);
