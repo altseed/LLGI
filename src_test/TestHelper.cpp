@@ -352,14 +352,6 @@ void TestHelper::CreateComputeShader(LLGI::Graphics* graphics,
 			data_cs.push_back(d);
 		}
 
-		for (auto& b : result_cs.Binary)
-		{
-			LLGI::DataStructure d;
-			d.Data = b.data();
-			d.Size = static_cast<int32_t>(b.size());
-			data_cs.push_back(d);
-		}
-
 		cs = LLGI::CreateSharedPtr(graphics->CreateShader(data_cs.data(), static_cast<int32_t>(data_cs.size())));
 	}
 }
