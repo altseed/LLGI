@@ -1,5 +1,6 @@
 #include "LLGI.CommandListMetal.h"
 #include "LLGI.ConstantBufferMetal.h"
+#include "LLGI.ComputeBufferMetal.h"
 #include "LLGI.GraphicsMetal.h"
 #include "LLGI.IndexBufferMetal.h"
 #include "LLGI.Metal_Impl.h"
@@ -198,7 +199,7 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 	}
 
 	// Assign textures
-	for (int stage_ind = 0; stage_ind < (int32_t)ShaderStageType::Max; stage_ind++)
+	for (int stage_ind = 0; stage_ind < 2; stage_ind++)
 	{
 		for (int unit_ind = 0; unit_ind < currentTextures[stage_ind].size(); unit_ind++)
 		{
@@ -436,6 +437,60 @@ bool CommandListMetal::EndRenderPassWithPlatformPtr()
 	}
 
 	return CommandList::EndRenderPassWithPlatformPtr();
+}
+
+void CommandListMetal::BeginComputePass()
+{
+    computeEncoder_ = [commandBuffer_ computeCommandEncoder];
+}
+
+void CommandListMetal::EndComputePass()
+{
+    if (computeEncoder_)
+    {
+        [computeEncoder_ endEncoding];
+        [computeEncoder_ release];
+        computeEncoder_ = nullptr;
+    }
+}
+
+void CommandListMetal::Dispatch(int32_t x, int32_t y, int32_t z)
+{
+    ComputeBuffer* bcb = nullptr;
+    PipelineState* bpip = nullptr;
+
+    bool isCBDirtied = false;
+    bool isPipDirtied = false;
+
+    GetCurrentComputeBuffer(bcb, isCBDirtied);
+    GetCurrentPipelineState(bpip, isPipDirtied);
+
+    assert(bcb != nullptr);
+    assert(bpip != nullptr);
+    assert(computeEncoder_ != nullptr);
+
+    auto cb = static_cast<ComputeBufferMetal*>(bcb);
+    auto pip = static_cast<PipelineStateMetal*>(bpip);
+
+    [computeEncoder_ setBuffer:cb->GetBuffer().GetBuffer() offset:cb->GetOffset() atIndex:1];
+
+    // assign constant buffer
+    ConstantBuffer* ccb = nullptr;
+    GetCurrentConstantBuffer(ShaderStageType::Compute, ccb);
+    if (ccb != nullptr)
+    {
+        auto ccb_ = static_cast<ConstantBufferMetal*>(ccb);
+        [computeEncoder_ setBuffer:ccb_->GetBuffer().GetBuffer() offset:ccb_->GetOffset() atIndex:0];
+    }
+    
+    if (isPipDirtied)
+    {
+        [computeEncoder_ setComputePipelineState:pip->GetComputePipelineState()];
+    }
+    
+    [computeEncoder_ dispatchThreadgroups:{1, 1, 1} threadsPerThreadgroup:{(uint32)x, (uint32)y, (uint32)z}];
+
+    CommandList::Dispatch(x, y, z);
 }
 
 }

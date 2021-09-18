@@ -1,6 +1,7 @@
 #include "LLGI.GraphicsMetal.h"
 #include "LLGI.CommandListMetal.h"
 #include "LLGI.ConstantBufferMetal.h"
+#include "LLGI.ComputeBufferMetal.h"
 #include "LLGI.IndexBufferMetal.h"
 #include "LLGI.Metal_Impl.h"
 #include "LLGI.PipelineStateMetal.h"
@@ -167,6 +168,18 @@ ConstantBuffer* GraphicsMetal::CreateConstantBuffer(int32_t size)
 
 	SafeRelease(obj);
 	return nullptr;
+}
+
+ComputeBuffer* GraphicsMetal::CreateComputeBuffer(int32_t size)
+{
+    auto obj = new ComputeBufferMetal();
+    if (obj->Initialize(this, size))
+    {
+        return obj;
+    }
+
+    SafeRelease(obj);
+    return nullptr;
 }
 
 RenderPass* GraphicsMetal::CreateRenderPass(Texture** textures, int32_t textureCount, Texture* depthTexture)
