@@ -4,7 +4,7 @@
 namespace LLGI
 {
 
-static bool isGPUDebugEnabled_ = true;
+static bool isGPUDebugEnabled_ = false;
 
 bool GetIsGPUDebugEnabled() { return isGPUDebugEnabled_; }
 
