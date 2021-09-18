@@ -25,6 +25,7 @@ class CommandListMetal : public CommandList
 
 	id<MTLCommandBuffer> commandBuffer_ = nullptr;
 	id<MTLRenderCommandEncoder> renderEncoder_ = nullptr;
+    id<MTLComputeCommandEncoder> computeEncoder_ = nullptr;
 	id<MTLFence> fence_ = nullptr;
 	bool isCompleted_ = true;
 
@@ -48,6 +49,10 @@ public:
 
 	bool BeginRenderPassWithPlatformPtr(void* platformPtr) override;
 	bool EndRenderPassWithPlatformPtr() override;
+    
+    void BeginComputePass() override;
+    void EndComputePass() override;
+    void Dispatch(int32_t x, int32_t y, int32_t z) override;
 
 	bool GetIsCompleted() { return isCompleted_; }
 

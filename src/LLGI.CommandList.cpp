@@ -1,5 +1,6 @@
 
 #include "LLGI.CommandList.h"
+#include "LLGI.ComputeBuffer.h"
 #include "LLGI.ConstantBuffer.h"
 #include "LLGI.IndexBuffer.h"
 #include "LLGI.PipelineState.h"
@@ -31,6 +32,12 @@ void CommandList::GetCurrentPipelineState(PipelineState*& pipelineState, bool& i
 void CommandList::GetCurrentConstantBuffer(ShaderStageType type, ConstantBuffer*& buffer)
 {
 	buffer = constantBuffers[static_cast<int>(type)];
+}
+
+void CommandList::GetCurrentComputeBuffer(ComputeBuffer*& buffer, bool& isDirtied)
+{
+	buffer = computeBuffer_;
+	isDirtied = isPipelineDirtied;
 }
 
 void CommandList::RegisterReferencedObject(ReferenceObject* referencedObject)
@@ -81,6 +88,8 @@ CommandList::~CommandList()
 		}
 		so.referencedObjects.clear();
 	}
+
+	SafeRelease(computeBuffer_);
 }
 
 void CommandList::Begin()
@@ -198,6 +207,12 @@ void CommandList::SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageT
 	RegisterReferencedObject(constantBuffer);
 }
 
+void CommandList::SetComputeBuffer(ComputeBuffer* computeBuffer)
+{
+	SafeAssign(computeBuffer_, computeBuffer);
+	RegisterReferencedObject(computeBuffer);
+}
+
 void CommandList::SetTexture(
 	Texture* texture, TextureWrapMode wrapMode, TextureMinMagFilter minmagFilter, int32_t unit, ShaderStageType shaderStage)
 {
@@ -237,6 +252,12 @@ bool CommandList::BeginRenderPassWithPlatformPtr(void* platformPtr)
 	isPipelineDirtied = true;
 	isInRenderPass_ = true;
 	return true;
+}
+
+void CommandList::Dispatch(int32_t x, int32_t y, int32_t z)
+{
+	isCurrentComputeBufferDirtied = false;
+	isPipelineDirtied = false;
 }
 
 void CommandList::SetImageData2D(Texture* texture, int32_t x, int32_t y, int32_t width, int32_t height, const void* data)

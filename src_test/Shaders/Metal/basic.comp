@@ -1,0 +1,21 @@
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+
+#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+struct PS_INPUT
+{
+    float value;
+};
+
+struct CB
+{
+    float offset;
+};
+
+kernel void main0(constant CB& v_23 [[buffer(0)]], device PS_INPUT *real [[buffer(1)]], uint3 dtid [[thread_position_in_grid]])
+{
+    real[dtid.x].value = real[dtid.x].value * real[dtid.x].value + v_23.offset;
+}

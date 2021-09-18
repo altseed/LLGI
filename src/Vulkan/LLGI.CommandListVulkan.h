@@ -16,10 +16,15 @@ private:
 	int32_t slotSizeMax_;
 	std::vector<vk::DescriptorSet> dummySet_;
 
+	vk::DescriptorPool computeDescriptorPool_ = nullptr;
+	int32_t computeOffset = 0;
+	std::vector<std::vector<vk::DescriptorSet>> computeCache;
+
 public:
 	DescriptorPoolVulkan(std::shared_ptr<GraphicsVulkan> graphics, int32_t size, int stage);
 	virtual ~DescriptorPoolVulkan();
 	const std::vector<vk::DescriptorSet>& Get(PipelineStateVulkan* pip);
+	const std::vector<vk::DescriptorSet>& GetCompute(PipelineStateVulkan* pip);
 	void Reset();
 };
 
@@ -60,11 +65,17 @@ public:
 	void UpdateData(VertexBuffer* vertexBuffer) override;
 	void UpdateData(IndexBuffer* indexBuffer) override;
 	void UpdateData(ConstantBuffer* constantBuffer) override;
+	void UpdateDataToGPU(ComputeBuffer* computeBuffer) override;
+	void UpdateDataToCPU(ComputeBuffer* computeBuffer) override;
 
 	void BeginRenderPass(RenderPass* renderPass) override;
 	void EndRenderPass() override;
 	vk::CommandBuffer GetCommandBuffer() const;
 	vk::Fence GetFence() const;
+	
+	void BeginComputePass() override;
+	void EndComputePass() override;
+	void Dispatch(int32_t x, int32_t y, int32_t z) override;
 
 	void WaitUntilCompleted() override;
 };

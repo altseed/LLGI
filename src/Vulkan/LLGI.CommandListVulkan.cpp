@@ -1,4 +1,5 @@
 #include "LLGI.CommandListVulkan.h"
+#include "LLGI.ComputeBufferVulkan.h"
 #include "LLGI.ConstantBufferVulkan.h"
 #include "LLGI.GraphicsVulkan.h"
 #include "LLGI.IndexBufferVulkan.h"
@@ -12,18 +13,35 @@ namespace LLGI
 DescriptorPoolVulkan::DescriptorPoolVulkan(std::shared_ptr<GraphicsVulkan> graphics, int32_t size, int stage)
 	: graphics_(graphics), slotSizeMax_(size)
 {
-	std::array<vk::DescriptorPoolSize, 3> poolSizes;
-	poolSizes[0].type = vk::DescriptorType::eUniformBufferDynamic;
-	poolSizes[0].descriptorCount = size * stage;
-	poolSizes[1].type = vk::DescriptorType::eCombinedImageSampler;
-	poolSizes[1].descriptorCount = size * stage * TextureSlotMax;
+	{
+		std::array<vk::DescriptorPoolSize, 3> poolSizes;
+		poolSizes[0].type = vk::DescriptorType::eUniformBufferDynamic;
+		poolSizes[0].descriptorCount = size * stage;
+		poolSizes[1].type = vk::DescriptorType::eCombinedImageSampler;
+		poolSizes[1].descriptorCount = size * stage * TextureSlotMax;
 
-	vk::DescriptorPoolCreateInfo poolInfo;
-	poolInfo.poolSizeCount = 2;
-	poolInfo.pPoolSizes = poolSizes.data();
-	poolInfo.maxSets = size * stage;
+		vk::DescriptorPoolCreateInfo poolInfo;
+		poolInfo.poolSizeCount = 2;
+		poolInfo.pPoolSizes = poolSizes.data();
+		poolInfo.maxSets = size * stage;
 
-	descriptorPool_ = graphics_->GetDevice().createDescriptorPool(poolInfo);
+		descriptorPool_ = graphics_->GetDevice().createDescriptorPool(poolInfo);
+	}
+
+	{
+		std::array<vk::DescriptorPoolSize, 2> poolSizes;
+		poolSizes[0].type = vk::DescriptorType::eUniformBufferDynamic;
+		poolSizes[0].descriptorCount = 1;
+		poolSizes[1].type = vk::DescriptorType::eStorageBufferDynamic;
+		poolSizes[1].descriptorCount = 1;
+
+		vk::DescriptorPoolCreateInfo poolInfo;
+		poolInfo.poolSizeCount = 2;
+		poolInfo.pPoolSizes = poolSizes.data();
+		poolInfo.maxSets = 1;
+
+		computeDescriptorPool_ = graphics_->GetDevice().createDescriptorPool(poolInfo);
+	}
 }
 
 DescriptorPoolVulkan ::~DescriptorPoolVulkan()
@@ -32,6 +50,12 @@ DescriptorPoolVulkan ::~DescriptorPoolVulkan()
 	{
 		graphics_->GetDevice().destroyDescriptorPool(descriptorPool_);
 		descriptorPool_ = nullptr;
+	}
+
+	if (computeDescriptorPool_)
+	{
+		graphics_->GetDevice().destroyDescriptorPool(computeDescriptorPool_);
+		computeDescriptorPool_ = nullptr;
 	}
 }
 
@@ -61,7 +85,37 @@ const std::vector<vk::DescriptorSet>& DescriptorPoolVulkan::Get(PipelineStateVul
 	return cache[offset - 1];
 }
 
-void DescriptorPoolVulkan::Reset() { offset = 0; }
+const std::vector<vk::DescriptorSet>& DescriptorPoolVulkan::GetCompute(PipelineStateVulkan* pip)
+{
+	if (computeCache.size() > static_cast<size_t>(computeOffset))
+	{
+		computeOffset++;
+		return computeCache[computeOffset - 1];
+	}
+
+	if (computeOffset >= slotSizeMax_)
+	{
+		Log(LogType::Warning, "Lack of allocated memory.");
+		return dummySet_;
+	}
+
+	// TODO : improve it
+	vk::DescriptorSetAllocateInfo allocateInfo;
+	allocateInfo.descriptorPool = computeDescriptorPool_;
+	allocateInfo.descriptorSetCount = 1;
+	allocateInfo.pSetLayouts = (pip->GetComputeDescriptorSetLayout().data());
+
+	std::vector<vk::DescriptorSet> descriptorSets = graphics_->GetDevice().allocateDescriptorSets(allocateInfo);
+	computeCache.push_back(descriptorSets);
+	computeOffset++;
+	return computeCache[computeOffset - 1];
+}
+
+void DescriptorPoolVulkan::Reset()
+{
+	offset = 0;
+	computeOffset = 0;
+}
 
 CommandListVulkan::CommandListVulkan() {}
 
@@ -271,7 +325,7 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 	std::array<vk::DescriptorImageInfo, NumTexture * 2 + 2> descriptorImageInfos;
 	int descriptorImageIndex = 0;
 
-	std::array<bool, static_cast<int>(ShaderStageType::Max)> stages;
+	std::array<bool, 2> stages;
 	stages.fill(false);
 
 	ConstantBuffer* vcb = nullptr;
@@ -322,7 +376,7 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 	}
 
 	// Assign textures
-	for (int stage_ind = 0; stage_ind < static_cast<int32_t>(ShaderStageType::Max); stage_ind++)
+	for (int stage_ind = 0; stage_ind < 2; stage_ind++)
 	{
 		for (int unit_ind = 0; unit_ind < static_cast<int32_t>(currentTextures[stage_ind].size()); unit_ind++)
 		{
@@ -371,7 +425,7 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 		graphics_->GetDevice().updateDescriptorSets(writeDescriptorIndex, writeDescriptorSets.data(), 0, nullptr);
 	}
 
-	std::array<uint32_t, static_cast<int>(ShaderStageType::Max)> offsets;
+	std::array<uint32_t, 2> offsets;
 	offsets.fill(0);
 
 	if (stages[0] || stages[1])
@@ -498,13 +552,13 @@ void CommandListVulkan::GenerateMipMap(Texture* src)
 	srcTex->ResourceBarrior(currentCommandBuffer_, vk::ImageLayout::eShaderReadOnlyOptimal);
 }
 
-void CommandListVulkan::UpdateData(VertexBuffer* vertexBuffer) {
+void CommandListVulkan::UpdateData(VertexBuffer* vertexBuffer)
+{
 	auto buf = static_cast<VertexBufferVulkan*>(vertexBuffer);
 
 	auto gpuBuf = buf->GetBuffer();
 	auto cpuBuf = buf->GetCpuBuffer();
 
-	
 	vk::BufferCopy copyRegion;
 	copyRegion.size = buf->GetSize();
 	currentCommandBuffer_.copyBuffer(cpuBuf, gpuBuf, copyRegion);
@@ -522,7 +576,8 @@ void CommandListVulkan::UpdateData(IndexBuffer* indexBuffer)
 	currentCommandBuffer_.copyBuffer(cpuBuf, gpuBuf, copyRegion);
 }
 
-void CommandListVulkan::UpdateData(ConstantBuffer* constantBuffer) {
+void CommandListVulkan::UpdateData(ConstantBuffer* constantBuffer)
+{
 	auto buf = static_cast<ConstantBufferVulkan*>(constantBuffer);
 
 	auto gpuBuf = buf->GetBuffer();
@@ -533,6 +588,34 @@ void CommandListVulkan::UpdateData(ConstantBuffer* constantBuffer) {
 	copyRegion.srcOffset = buf->GetOffset();
 	copyRegion.dstOffset = buf->GetOffset();
 	currentCommandBuffer_.copyBuffer(cpuBuf, gpuBuf, copyRegion);
+}
+
+void CommandListVulkan::UpdateDataToGPU(ComputeBuffer* computeBuffer)
+{
+	auto buf = static_cast<ComputeBufferVulkan*>(computeBuffer);
+
+	auto gpuBuf = buf->GetBuffer();
+	auto uploadBuf = buf->GetUploadBuffer();
+
+	vk::BufferCopy copyRegion;
+	copyRegion.size = buf->GetSize();
+	copyRegion.srcOffset = buf->GetOffset();
+	copyRegion.dstOffset = buf->GetOffset();
+	currentCommandBuffer_.copyBuffer(uploadBuf, gpuBuf, copyRegion);
+}
+
+void CommandListVulkan::UpdateDataToCPU(ComputeBuffer* computeBuffer)
+{
+	auto buf = static_cast<ComputeBufferVulkan*>(computeBuffer);
+
+	auto gpuBuf = buf->GetBuffer();
+	auto readbackBuf = buf->GetReadbackBuffer();
+
+	vk::BufferCopy copyRegion;
+	copyRegion.size = buf->GetSize();
+	copyRegion.srcOffset = buf->GetOffset();
+	copyRegion.dstOffset = buf->GetOffset();
+	currentCommandBuffer_.copyBuffer(gpuBuf, readbackBuf, copyRegion);
 }
 
 void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
@@ -636,6 +719,113 @@ void CommandListVulkan::EndRenderPass()
 vk::CommandBuffer CommandListVulkan::GetCommandBuffer() const { return currentCommandBuffer_; }
 
 vk::Fence CommandListVulkan::GetFence() const { return fences_[currentSwapBufferIndex_]; }
+
+void CommandListVulkan::BeginComputePass() {}
+
+void CommandListVulkan::EndComputePass() {}
+
+void CommandListVulkan::Dispatch(int32_t x, int32_t y, int32_t z)
+{
+	ComputeBuffer* cb_;
+	PipelineState* pip_ = nullptr;
+
+	bool isComputeBufferDirtied = false;
+	bool isPipDirtied = false;
+
+	GetCurrentComputeBuffer(cb_, isComputeBufferDirtied);
+	GetCurrentPipelineState(pip_, isPipDirtied);
+
+	assert(cb_ != nullptr);
+	assert(pip_ != nullptr);
+
+	auto cb = static_cast<ComputeBufferVulkan*>(cb_);
+	auto pip = static_cast<PipelineStateVulkan*>(pip_);
+
+	auto& dp = descriptorPools[currentSwapBufferIndex_];
+
+	const auto& descriptorSets = dp->GetCompute(pip);
+	if (descriptorSets.size() == 0)
+	{
+		return;
+	}
+	/*
+	vk::DescriptorSetAllocateInfo allocateInfo;
+	allocateInfo.descriptorPool = descriptorPool;
+	allocateInfo.descriptorSetCount = 2;
+	allocateInfo.pSetLayouts = (pip->GetDescriptorSetLayout().data());
+
+	std::vector<vk::DescriptorSet> descriptorSets = graphics_->GetDevice().allocateDescriptorSets(allocateInfo);
+	*/
+
+	std::array<vk::WriteDescriptorSet, 2> writeDescriptorSets;
+	int writeDescriptorIndex = 0;
+
+	std::array<vk::DescriptorBufferInfo, 2> descriptorBufferInfos;
+	int descriptorBufferIndex = 0;
+
+	ConstantBuffer* ccb = nullptr;
+	GetCurrentConstantBuffer(ShaderStageType::Compute, ccb);
+	if (ccb != nullptr)
+	{
+		descriptorBufferInfos[descriptorBufferIndex].buffer = (static_cast<ConstantBufferVulkan*>(ccb)->GetBuffer());
+		descriptorBufferInfos[descriptorBufferIndex].offset = static_cast<ConstantBufferVulkan*>(ccb)->GetOffset();
+		descriptorBufferInfos[descriptorBufferIndex].range = ccb->GetSize();
+
+		vk::WriteDescriptorSet desc;
+		desc.descriptorType = vk::DescriptorType::eUniformBufferDynamic;
+		desc.dstSet = descriptorSets[0];
+		desc.dstBinding = 0;
+		desc.dstArrayElement = 0;
+		desc.pBufferInfo = &(descriptorBufferInfos[descriptorBufferIndex]);
+		desc.descriptorCount = 1;
+
+		writeDescriptorSets[writeDescriptorIndex] = desc;
+
+		descriptorBufferIndex++;
+		writeDescriptorIndex++;
+	}
+
+	// compute buffer
+	{
+		descriptorBufferInfos[descriptorBufferIndex].buffer = cb->GetBuffer();
+		descriptorBufferInfos[descriptorBufferIndex].offset = cb->GetOffset();
+		descriptorBufferInfos[descriptorBufferIndex].range = cb->GetSize();
+
+		vk::WriteDescriptorSet desc;
+		desc.descriptorType = vk::DescriptorType::eStorageBufferDynamic;
+		desc.dstSet = descriptorSets[0];
+		desc.dstBinding = 1;
+		desc.dstArrayElement = 0;
+		desc.pBufferInfo = &(descriptorBufferInfos[descriptorBufferIndex]);
+		desc.descriptorCount = 1;
+
+		writeDescriptorSets[writeDescriptorIndex] = desc;
+
+		descriptorBufferIndex++;
+		writeDescriptorIndex++;
+	}
+
+	if (writeDescriptorIndex > 0)
+	{
+		graphics_->GetDevice().updateDescriptorSets(writeDescriptorIndex, writeDescriptorSets.data(), 0, nullptr);
+	}
+
+	std::array<uint32_t, 2> offsets;
+	offsets.fill(0);
+
+	currentCommandBuffer_.bindDescriptorSets(
+		vk::PipelineBindPoint::eCompute, pip->GetComputePipelineLayout(), 0, 1, descriptorSets.data(), 2, offsets.data());
+
+	// assign a pipeline
+	if (isPipDirtied)
+	{
+		currentCommandBuffer_.bindPipeline(vk::PipelineBindPoint::eCompute, pip->GetComputePipeline());
+	}
+
+	currentCommandBuffer_.dispatch(x, y, z);
+
+	CommandList::Dispatch(x, y, z);
+}
 
 void CommandListVulkan::WaitUntilCompleted()
 {
