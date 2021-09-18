@@ -763,14 +763,10 @@ void CommandListVulkan::Dispatch(int32_t x, int32_t y, int32_t z)
 	std::array<vk::DescriptorBufferInfo, 2> descriptorBufferInfos;
 	int descriptorBufferIndex = 0;
 
-	bool isUseConstantBuffer = false;
-
 	ConstantBuffer* ccb = nullptr;
 	GetCurrentConstantBuffer(ShaderStageType::Compute, ccb);
 	if (ccb != nullptr)
 	{
-		isUseConstantBuffer = true;
-
 		descriptorBufferInfos[descriptorBufferIndex].buffer = (static_cast<ConstantBufferVulkan*>(ccb)->GetBuffer());
 		descriptorBufferInfos[descriptorBufferIndex].offset = static_cast<ConstantBufferVulkan*>(ccb)->GetOffset();
 		descriptorBufferInfos[descriptorBufferIndex].range = ccb->GetSize();
