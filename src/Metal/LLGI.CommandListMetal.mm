@@ -488,7 +488,7 @@ void CommandListMetal::Dispatch(int32_t x, int32_t y, int32_t z)
         [computeEncoder_ setComputePipelineState:pip->GetComputePipelineState()];
     }
     
-    [computeEncoder_ dispatchThreadgroups:{1, 1, 1} threadsPerThreadgroup:{(uint32)x, (uint32)y, (uint32)z}];
+    [computeEncoder_ dispatchThreadgroups:{1, 1, 1} threadsPerThreadgroup:{(uint32_t)x, (uint32_t)y, (uint32_t)z}];
 
     CommandList::Dispatch(x, y, z);
 }
