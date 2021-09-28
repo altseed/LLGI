@@ -13,7 +13,7 @@ class CommandListPool;
 struct TextureInitializationParameter
 {
 	Vec2I Size;
-	int LayerArrays = 0;
+	int ArrayLayers = 0;
 	int Depth = 0;
 	TextureFormatType Format = TextureFormatType::R8G8B8A8_UNORM;
 	int MipMapCount = 1;

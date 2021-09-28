@@ -279,6 +279,8 @@ enum class TextureType
 	Depth,
 	Render,
 	Cube,
+	Color2DArray,
+	Color3D,
 	Unknown,
 };
 

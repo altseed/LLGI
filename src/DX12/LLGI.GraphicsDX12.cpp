@@ -199,7 +199,18 @@ Texture* GraphicsDX12::CreateTexture(uint64_t id)
 Texture* GraphicsDX12::CreateTexture(const TextureInitializationParameter& parameter)
 {
 	auto obj = new TextureDX12(this, true);
-	if (!obj->Initialize(parameter.Size, parameter.Depth, parameter.LayerArrays, TextureType::Color, parameter.Format, 1))
+
+	TextureType type = TextureType::Color;
+	if (parameter.ArrayLayers > 0)
+	{
+		type = TextureType::Color2DArray;
+	}
+	else if (parameter.Depth > 0)
+	{
+		type = TextureType::Color3D;
+	}
+
+	if (!obj->Initialize(parameter.Size, parameter.Depth, parameter.ArrayLayers, type, parameter.Format, 1))
 	{
 		SafeRelease(obj);
 		return nullptr;

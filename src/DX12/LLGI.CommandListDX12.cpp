@@ -394,19 +394,46 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 					{
 						D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 
-						if (texture->GetSamplingCount() > 1)
+						if (texture->GetType() == TextureType::Color3D)
 						{
-							srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
+							srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
+							srvDesc.Texture3D.MipLevels = 1;
+							srvDesc.Texture3D.MostDetailedMip = 0;
+							srvDesc.Texture3D.ResourceMinLODClamp = 0.0f;
+						}
+						else if (texture->GetType() == TextureType::Color2DArray)
+						{
+							if (texture->GetSamplingCount() > 1)
+							{
+								srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY;
+							}
+							else
+							{
+								srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+							}
+							srvDesc.Texture2DArray.ArraySize = texture->GetArrayLayers();
+							srvDesc.Texture2DArray.FirstArraySlice = 0;
+							srvDesc.Texture2DArray.MipLevels = 1;
+							srvDesc.Texture2DArray.MostDetailedMip = 0;
+							srvDesc.Texture2DArray.PlaneSlice = 0;
+							srvDesc.Texture2DArray.ResourceMinLODClamp = 0.0f;
 						}
 						else
 						{
-							srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+							if (texture->GetSamplingCount() > 1)
+							{
+								srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
+							}
+							else
+							{
+								srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+							}
+							srvDesc.Texture2D.MipLevels = 1;
+							srvDesc.Texture2D.MostDetailedMip = 0;
 						}
 
 						srvDesc.Format = DirectX12::GetShaderResourceViewFormat(texture->GetDXGIFormat());
 						srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-						srvDesc.Texture2D.MipLevels = 1;
-						srvDesc.Texture2D.MostDetailedMip = 0;
 
 						auto cpuHandle = cpuDescriptorHandleConstant[2 + static_cast<int32_t>(unit_ind)];
 						graphics_->GetDevice()->CreateShaderResourceView(texture->Get(), &srvDesc, cpuHandle);
@@ -543,11 +570,15 @@ void CommandListDX12::CopyTexture(Texture* src,
 	srcTex->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_COPY_SOURCE);
 	dstTex->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_COPY_DEST);
 
-	D3D12_BOX box;
-	// TODO
-	// box.
+	D3D12_BOX srcBox;
+	srcBox.left = srcPos[0];
+	srcBox.right = srcPos[0] + size[0];
+	srcBox.top = srcPos[1];
+	srcBox.bottom = srcPos[1] + size[1];
+	srcBox.front = srcPos[2];
+	srcBox.back = srcPos[2] + size[2];
 
-	currentCommandList_->CopyTextureRegion(&dstLoc, dstPos[0], dstPos[1], dstPos[2], &srcLoc, &box);
+	currentCommandList_->CopyTextureRegion(&dstLoc, dstPos[0], dstPos[1], dstPos[2], &srcLoc, &srcBox);
 
 	dstTex->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_GENERIC_READ);
 	srcTex->ResourceBarrior(currentCommandList_, srcState);

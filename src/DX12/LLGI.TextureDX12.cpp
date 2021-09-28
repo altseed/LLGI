@@ -75,10 +75,12 @@ bool TextureDX12::Initialize(ID3D12Resource* textureResource)
 }
 
 bool TextureDX12::Initialize(
-	const Vec2I& size, int depth, int layerArrays, TextureType type, const TextureFormatType formatType, int32_t samplingCount)
+	const Vec2I& size, int depth, int arrayLayers, TextureType type, const TextureFormatType formatType, int32_t samplingCount)
 {
 	type_ = type;
-	Vec3I mergedSize{size.X, size.Y, std::max({depth, layerArrays, 1})};
+	arrayLayers_ = arrayLayers;
+
+	Vec3I mergedSize{size.X, size.Y, std::max({depth, arrayLayers, 1})};
 
 	if (type_ == TextureType::Depth)
 	{
@@ -118,12 +120,18 @@ bool TextureDX12::Initialize(
 										samplingCount);
 		state_ = D3D12_RESOURCE_STATE_DEPTH_READ;
 	}
-	else if (type_ == TextureType::Color)
+	else if (type_ == TextureType::Color || type_ == TextureType::Color2DArray || type_ == TextureType::Color3D)
 	{
+		auto target = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+		if (depth > 0)
+		{
+			target = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
+		}
+
 		texture_ = CreateResourceBuffer(device_,
 										D3D12_HEAP_TYPE_DEFAULT,
 										dxgiFormat_,
-										D3D12_RESOURCE_DIMENSION_TEXTURE2D,
+										target,
 										D3D12_RESOURCE_STATE_COPY_DEST,
 										D3D12_RESOURCE_FLAG_NONE,
 										mergedSize,

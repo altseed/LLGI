@@ -27,6 +27,7 @@ private:
 
 	Vec2I textureSize_;
 	int32_t cpuMemorySize_;
+	int32_t arrayLayers_ = 0;
 
 	void CreateBuffer();
 
@@ -41,7 +42,8 @@ public:
 	//! init as external texture
 	bool Initialize(ID3D12Resource* textureResource);
 
-	bool Initialize(const Vec2I& size, int depth, int layerArrays, TextureType type, const TextureFormatType formatType, int32_t samplingCount);
+	bool
+	Initialize(const Vec2I& size, int depth, int arrayLayers, TextureType type, const TextureFormatType formatType, int32_t samplingCount);
 
 	void* Lock() override;
 	void Unlock() override;
@@ -55,6 +57,8 @@ public:
 	const D3D12_PLACED_SUBRESOURCE_FOOTPRINT& GetFootprint() const { return footprint_; }
 
 	D3D12_RESOURCE_STATES GetState() const { return state_; }
+
+	int GetArrayLayers() const { return arrayLayers_; }
 
 	//! set a resource barrior and change a state
 	void ResourceBarrior(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES state);
