@@ -54,6 +54,13 @@ public:
 	void EndRenderPass() override;
 	void Draw(int32_t primitiveCount, int32_t instanceCount) override;
 	void CopyTexture(Texture* src, Texture* dst) override;
+	void CopyTexture(Texture* src,
+					 Texture* dst,
+					 const std::array<int, 3>& srcPos,
+					 const std::array<int, 3>& dstPos,
+					 const std::array<int, 3>& size,
+					 int srcLayer,
+					 int dstLayer) override;
 
 	void UpdateData(VertexBuffer* vertexBuffer) override;
 	void UpdateData(IndexBuffer* indexBuffer) override;

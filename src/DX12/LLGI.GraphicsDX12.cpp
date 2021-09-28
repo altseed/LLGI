@@ -2,9 +2,9 @@
 #include "LLGI.BaseDX12.h"
 #include "LLGI.BufferDX12.h"
 #include "LLGI.CommandListDX12.h"
+#include "LLGI.ComputeBufferDX12.h"
 #include "LLGI.ConstantBufferDX12.h"
 #include "LLGI.IndexBufferDX12.h"
-#include "LLGI.ComputeBufferDX12.h"
 #include "LLGI.PipelineStateDX12.h"
 #include "LLGI.PlatformDX12.h"
 #include "LLGI.ShaderDX12.h"
@@ -199,7 +199,7 @@ Texture* GraphicsDX12::CreateTexture(uint64_t id)
 Texture* GraphicsDX12::CreateTexture(const TextureInitializationParameter& parameter)
 {
 	auto obj = new TextureDX12(this, true);
-	if (!obj->Initialize(parameter.Size, TextureType::Color, parameter.Format, 1))
+	if (!obj->Initialize(parameter.Size, parameter.Depth, parameter.LayerArrays, TextureType::Color, parameter.Format, 1))
 	{
 		SafeRelease(obj);
 		return nullptr;
@@ -210,7 +210,7 @@ Texture* GraphicsDX12::CreateTexture(const TextureInitializationParameter& param
 Texture* GraphicsDX12::CreateRenderTexture(const RenderTextureInitializationParameter& parameter)
 {
 	auto obj = new TextureDX12(this, true);
-	if (!obj->Initialize(parameter.Size, TextureType::Render, parameter.Format, parameter.SamplingCount))
+	if (!obj->Initialize(parameter.Size, 1, 1, TextureType::Render, parameter.Format, parameter.SamplingCount))
 	{
 		SafeRelease(obj);
 		return nullptr;
@@ -228,7 +228,7 @@ Texture* GraphicsDX12::CreateDepthTexture(const DepthTextureInitializationParame
 		format = TextureFormatType::D24S8;
 	}
 
-	if (!obj->Initialize(parameter.Size, TextureType::Depth, format, parameter.SamplingCount))
+	if (!obj->Initialize(parameter.Size, 1, 1, TextureType::Depth, format, parameter.SamplingCount))
 	{
 		SafeRelease(obj);
 		return nullptr;
@@ -284,7 +284,7 @@ ID3D12Resource* GraphicsDX12::CreateResource(D3D12_HEAP_TYPE heapType,
 											 D3D12_RESOURCE_FLAGS flags,
 											 Vec2I size)
 {
-	return CreateResourceBuffer(device_, heapType, format, resourceDimention, resourceState, flags, size, 1);
+	return CreateResourceBuffer(device_, heapType, format, resourceDimention, resourceState, flags, {size.X, size.Y, 1}, 1);
 }
 
 std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)

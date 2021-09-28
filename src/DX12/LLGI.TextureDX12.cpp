@@ -74,9 +74,11 @@ bool TextureDX12::Initialize(ID3D12Resource* textureResource)
 	return true;
 }
 
-bool TextureDX12::Initialize(const Vec2I& size, TextureType type, const TextureFormatType formatType, int32_t samplingCount)
+bool TextureDX12::Initialize(
+	const Vec2I& size, int depth, int layerArrays, TextureType type, const TextureFormatType formatType, int32_t samplingCount)
 {
 	type_ = type;
+	Vec3I mergedSize{size.X, size.Y, std::max({depth, layerArrays, 1})};
 
 	if (type_ == TextureType::Depth)
 	{
@@ -100,7 +102,7 @@ bool TextureDX12::Initialize(const Vec2I& size, TextureType type, const TextureF
 										D3D12_RESOURCE_DIMENSION_TEXTURE2D,
 										D3D12_RESOURCE_STATE_GENERIC_READ,
 										D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
-										size,
+										mergedSize,
 										samplingCount);
 		state_ = D3D12_RESOURCE_STATE_GENERIC_READ;
 	}
@@ -112,7 +114,7 @@ bool TextureDX12::Initialize(const Vec2I& size, TextureType type, const TextureF
 										D3D12_RESOURCE_DIMENSION_TEXTURE2D,
 										D3D12_RESOURCE_STATE_DEPTH_READ,
 										D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
-										size,
+										mergedSize,
 										samplingCount);
 		state_ = D3D12_RESOURCE_STATE_DEPTH_READ;
 	}
@@ -124,7 +126,7 @@ bool TextureDX12::Initialize(const Vec2I& size, TextureType type, const TextureF
 										D3D12_RESOURCE_DIMENSION_TEXTURE2D,
 										D3D12_RESOURCE_STATE_COPY_DEST,
 										D3D12_RESOURCE_FLAG_NONE,
-										size,
+										mergedSize,
 										samplingCount);
 
 		state_ = D3D12_RESOURCE_STATE_COPY_DEST;
@@ -153,7 +155,7 @@ void TextureDX12::CreateBuffer()
 								   D3D12_RESOURCE_DIMENSION_BUFFER,
 								   D3D12_RESOURCE_STATE_GENERIC_READ,
 								   D3D12_RESOURCE_FLAG_NONE,
-								   Vec2I(static_cast<int32_t>(size), 1),
+								   {static_cast<int32_t>(size), 1, 1},
 								   1);
 	assert(buffer_ != nullptr);
 

@@ -118,6 +118,19 @@ public:
 	virtual void CopyTexture(Texture* src, Texture* dst) {}
 
 	/**
+		@brief	copy a texture
+	*/
+	virtual void CopyTexture(Texture* src,
+							 Texture* dst,
+							 const std::array<int, 3>& srcPos,
+							 const std::array<int, 3>& dstPos,
+							 const std::array<int, 3>& size,
+							 int srcLayer,
+							 int dstLayer)
+	{
+	}
+
+	/**
 		@brief specify textures
 		@note
 		shaderStage is ignored in DirectX12 (common textures are used on all stages)

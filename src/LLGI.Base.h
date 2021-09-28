@@ -169,6 +169,21 @@ struct Vec2F
 	Vec2F(float x, float y) : X(x), Y(y) {}
 };
 
+struct Vec3I
+{
+	int32_t X;
+	int32_t Y;
+	int32_t Z;
+
+	Vec3I() : X(0), Y(0), Z(0) {}
+
+	Vec3I(int32_t x, int32_t y, int32_t z) : X(x), Y(y), Z(z) {}
+
+	bool operator==(const Vec3I& o) const { return X == o.X && Y == o.Y && Z == o.Z; }
+
+	bool operator!=(const Vec3I& o) const { return !(*this == o); }
+};
+
 struct Vec3F
 {
 	float X;

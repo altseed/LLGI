@@ -515,6 +515,47 @@ void CommandListDX12::CopyTexture(Texture* src, Texture* dst)
 	RegisterReferencedObject(dst);
 }
 
+void CommandListDX12::CopyTexture(Texture* src,
+								  Texture* dst,
+								  const std::array<int, 3>& srcPos,
+								  const std::array<int, 3>& dstPos,
+								  const std::array<int, 3>& size,
+								  int srcLayer,
+								  int dstLayer)
+{
+	if (isInRenderPass_)
+	{
+		Log(LogType::Error, "Please call CopyTexture outside of RenderPass");
+		return;
+	}
+
+	auto srcTex = static_cast<TextureDX12*>(src);
+	auto dstTex = static_cast<TextureDX12*>(dst);
+
+	D3D12_TEXTURE_COPY_LOCATION srcLoc = {}, dstLoc = {};
+
+	srcLoc.pResource = srcTex->Get();
+
+	dstLoc.pResource = dstTex->Get();
+
+	auto srcState = srcTex->GetState();
+
+	srcTex->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_COPY_SOURCE);
+	dstTex->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_COPY_DEST);
+
+	D3D12_BOX box;
+	// TODO
+	// box.
+
+	currentCommandList_->CopyTextureRegion(&dstLoc, dstPos[0], dstPos[1], dstPos[2], &srcLoc, &box);
+
+	dstTex->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_GENERIC_READ);
+	srcTex->ResourceBarrior(currentCommandList_, srcState);
+
+	RegisterReferencedObject(src);
+	RegisterReferencedObject(dst);
+}
+
 void CommandListDX12::UpdateData(VertexBuffer* vertexBuffer)
 {
 	auto buf = static_cast<VertexBufferDX12*>(vertexBuffer);
