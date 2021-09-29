@@ -56,7 +56,7 @@ void test_compute_shader(LLGI::DeviceType deviceType)
 		constantBuffer->Unlock();
 	}
     
-    if (platform->NewFrame())
+    if (!platform->NewFrame())
         return;
     
     sfMemoryPool->NewFrame();
