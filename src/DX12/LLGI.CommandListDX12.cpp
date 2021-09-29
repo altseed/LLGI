@@ -408,8 +408,7 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 						srvDesc.Texture2D.MipLevels = 1;
 						srvDesc.Texture2D.MostDetailedMip = 0;
 
-						auto cpuHandle =
-							cpuDescriptorHandleConstant[2 + static_cast<int32_t>(unit_ind)];
+						auto cpuHandle = cpuDescriptorHandleConstant[2 + static_cast<int32_t>(unit_ind)];
 						graphics_->GetDevice()->CreateShaderResourceView(texture->Get(), &srvDesc, cpuHandle);
 					}
 
@@ -523,7 +522,29 @@ void CommandListDX12::UpdateData(VertexBuffer* vertexBuffer)
 	auto resource = buf->Get();
 	auto cpuResource = buf->GetCpu();
 
+	{
+		D3D12_RESOURCE_BARRIER barrier = {};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = resource;
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_GENERIC_READ;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		currentCommandList_->ResourceBarrier(1, &barrier);
+	}
+
 	currentCommandList_->CopyBufferRegion(resource, 0, cpuResource, 0, buf->GetSize());
+
+	{
+		D3D12_RESOURCE_BARRIER barrier = {};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = resource;
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_GENERIC_READ;
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		currentCommandList_->ResourceBarrier(1, &barrier);
+	}
 }
 
 void CommandListDX12::UpdateData(IndexBuffer* indexBuffer)
@@ -533,7 +554,29 @@ void CommandListDX12::UpdateData(IndexBuffer* indexBuffer)
 	auto resource = buf->Get();
 	auto cpuResource = buf->GetCpu();
 
+	{
+		D3D12_RESOURCE_BARRIER barrier = {};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = resource;
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_GENERIC_READ;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		currentCommandList_->ResourceBarrier(1, &barrier);
+	}
+
 	currentCommandList_->CopyBufferRegion(resource, 0, cpuResource, 0, buf->GetCount() * buf->GetStride());
+
+	{
+		D3D12_RESOURCE_BARRIER barrier = {};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = resource;
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_GENERIC_READ;
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		currentCommandList_->ResourceBarrier(1, &barrier);
+	}
 }
 
 void CommandListDX12::UpdateData(ConstantBuffer* constantBuffer)
@@ -543,7 +586,29 @@ void CommandListDX12::UpdateData(ConstantBuffer* constantBuffer)
 	auto resource = buf->Get();
 	auto cpuResource = buf->GetCpu();
 
+	{
+		D3D12_RESOURCE_BARRIER barrier = {};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = resource;
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_GENERIC_READ;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		currentCommandList_->ResourceBarrier(1, &barrier);
+	}
+
 	currentCommandList_->CopyBufferRegion(resource, buf->GetOffset(), cpuResource, buf->GetOffset(), buf->GetActualSize());
+
+	{
+		D3D12_RESOURCE_BARRIER barrier = {};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = resource;
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_GENERIC_READ;
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		currentCommandList_->ResourceBarrier(1, &barrier);
+	}
 }
 
 void CommandListDX12::UpdateDataToGPU(ComputeBuffer* computeBuffer)
@@ -553,7 +618,29 @@ void CommandListDX12::UpdateDataToGPU(ComputeBuffer* computeBuffer)
 	auto resource = buf->Get();
 	auto cpuResource = buf->GetUpload();
 
+	{
+		D3D12_RESOURCE_BARRIER barrier = {};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = resource;
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		currentCommandList_->ResourceBarrier(1, &barrier);
+	}
+
 	currentCommandList_->CopyBufferRegion(resource, buf->GetOffset(), cpuResource, buf->GetOffset(), buf->GetActualSize());
+
+	{
+		D3D12_RESOURCE_BARRIER barrier = {};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = resource;
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		currentCommandList_->ResourceBarrier(1, &barrier);
+	}
 }
 
 void CommandListDX12::UpdateDataToCPU(ComputeBuffer* computeBuffer)
@@ -563,7 +650,7 @@ void CommandListDX12::UpdateDataToCPU(ComputeBuffer* computeBuffer)
 	auto resource = buf->Get();
 	auto cpuResource = buf->GetReadback();
 
-	/*{
+	{
 		D3D12_RESOURCE_BARRIER barrier = {};
 		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -572,11 +659,11 @@ void CommandListDX12::UpdateDataToCPU(ComputeBuffer* computeBuffer)
 		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_SOURCE;
 		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 		currentCommandList_->ResourceBarrier(1, &barrier);
-	}*/
+	}
 
 	currentCommandList_->CopyBufferRegion(cpuResource, buf->GetOffset(), resource, buf->GetOffset(), buf->GetActualSize());
 
-	/*{
+	{
 		D3D12_RESOURCE_BARRIER barrier = {};
 		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -585,7 +672,7 @@ void CommandListDX12::UpdateDataToCPU(ComputeBuffer* computeBuffer)
 		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 		currentCommandList_->ResourceBarrier(1, &barrier);
-	}*/
+	}
 }
 
 void CommandListDX12::BeginComputePass() {}
@@ -630,7 +717,7 @@ void CommandListDX12::Dispatch(int32_t x, int32_t y, int32_t z)
 		Log(LogType::Error, "Failed to draw because of descriptors.");
 		return;
 	}
-	
+
 	{
 		// set using descriptor heaps
 		ID3D12DescriptorHeap* heaps[] = {

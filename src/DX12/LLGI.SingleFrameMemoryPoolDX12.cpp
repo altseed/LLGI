@@ -13,7 +13,7 @@ InternalSingleFrameMemoryPoolDX12::InternalSingleFrameMemoryPoolDX12(GraphicsDX1
 	constantBuffer_ = graphics->CreateResource(D3D12_HEAP_TYPE_DEFAULT,
 											   DXGI_FORMAT_UNKNOWN,
 											   D3D12_RESOURCE_DIMENSION_BUFFER,
-											   D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
+											   D3D12_RESOURCE_STATE_GENERIC_READ,
 											   Vec2I(constantBufferSize_, 1));
 
 	cpuConstantBuffer_ = graphics->CreateResource(D3D12_HEAP_TYPE_UPLOAD,

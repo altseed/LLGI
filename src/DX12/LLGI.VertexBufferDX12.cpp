@@ -7,7 +7,8 @@ namespace LLGI
 
 VertexBufferDX12::VertexBufferDX12() {}
 
-VertexBufferDX12::~VertexBufferDX12() {
+VertexBufferDX12::~VertexBufferDX12()
+{
 	SafeRelease(vertexBuffer_);
 	SafeRelease(cpuVertexBuffer_);
 }

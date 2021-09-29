@@ -21,7 +21,7 @@ bool ConstantBufferDX12::Initialize(GraphicsDX12* graphics, int32_t size)
 	constantBuffer_ = graphics->CreateResource(D3D12_HEAP_TYPE_DEFAULT,
 											   DXGI_FORMAT_UNKNOWN,
 											   D3D12_RESOURCE_DIMENSION_BUFFER,
-											   D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
+											   D3D12_RESOURCE_STATE_GENERIC_READ,
 											   Vec2I(actualSize_, 1));
 	if (constantBuffer_ == nullptr)
 		return false;
