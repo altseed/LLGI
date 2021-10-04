@@ -562,8 +562,10 @@ void CommandListDX12::CopyTexture(Texture* src,
 	D3D12_TEXTURE_COPY_LOCATION srcLoc = {}, dstLoc = {};
 
 	srcLoc.pResource = srcTex->Get();
+	srcLoc.SubresourceIndex = srcLayer;
 
 	dstLoc.pResource = dstTex->Get();
+	dstLoc.SubresourceIndex = dstLayer;
 
 	auto srcState = srcTex->GetState();
 

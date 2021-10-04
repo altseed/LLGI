@@ -61,9 +61,9 @@ void test_textures(LLGI::DeviceType deviceType)
 	{
 		auto p = static_cast<uint8_t*>(data);
 		p[0] = 255;
-		p[0] = 0;
-		p[0] = 0;
-		p[0] = 255;
+		p[1] = 0;
+		p[2] = 0;
+		p[3] = 255;
 		texSrc1->Unlock();
 	}
 
@@ -71,9 +71,9 @@ void test_textures(LLGI::DeviceType deviceType)
 	{
 		auto p = static_cast<uint8_t*>(data);
 		p[0] = 0;
-		p[0] = 255;
-		p[0] = 0;
-		p[0] = 255;
+		p[1] = 255;
+		p[2] = 0;
+		p[3] = 255;
 		texSrc2->Unlock();
 	}
 
@@ -81,9 +81,9 @@ void test_textures(LLGI::DeviceType deviceType)
 	{
 		auto p = static_cast<uint8_t*>(data);
 		p[0] = 0;
-		p[0] = 0;
-		p[0] = 255;
-		p[0] = 255;
+		p[1] = 0;
+		p[2] = 255;
+		p[3] = 255;
 		texSrc3->Unlock();
 	}
 
@@ -148,6 +148,9 @@ void test_textures(LLGI::DeviceType deviceType)
 		shader_vs = graphics->CreateShader(data_vs.data(), static_cast<int32_t>(data_vs.size()));
 		shader_ps = graphics->CreateShader(data_ps.data(), static_cast<int32_t>(data_ps.size()));
 	}
+
+	assert(shader_vs != nullptr);
+	assert(shader_ps != nullptr);
 
 	LLGI::Vec3F vert_ul = LLGI::Vec3F(-0.5, 0.5, 0.5);
 	LLGI::Vec3F vert_lr = LLGI::Vec3F(0.5, -0.5, 0.5);
