@@ -35,7 +35,7 @@ TextureDX12::TextureDX12(ID3D12Resource* textureResource, ID3D12Device* device, 
 
 	format_ = ConvertFormat(desc.Format);
 	textureSize_ = Vec2I(static_cast<int32_t>(desc.Width), static_cast<int32_t>(desc.Height));
-	cpuMemorySize_ = GetTextureMemorySize(format_, textureSize_);
+	cpuMemorySize_ = GetTextureMemorySize(format_, {textureSize_.X, textureSize_.Y, 1});
 
 	UINT64 size = 0;
 	device_->GetCopyableFootprints(&desc, 0, 1, 0, &footprint_, nullptr, nullptr, &size);
@@ -66,7 +66,7 @@ bool TextureDX12::Initialize(ID3D12Resource* textureResource)
 
 	format_ = ConvertFormat(desc.Format);
 	textureSize_ = Vec2I(static_cast<int32_t>(desc.Width), static_cast<int32_t>(desc.Height));
-	cpuMemorySize_ = GetTextureMemorySize(format_, textureSize_);
+	cpuMemorySize_ = GetTextureMemorySize(format_, {textureSize_.X, textureSize_.Y, 1});
 
 	UINT64 size = 0;
 	device_->GetCopyableFootprints(&desc, 0, 1, 0, &footprint_, nullptr, nullptr, &size);
@@ -86,14 +86,14 @@ bool TextureDX12::Initialize(
 	{
 		format_ = formatType;
 		dxgiFormat_ = ConvertFormat(formatType);
-		cpuMemorySize_ = GetTextureMemorySize(format_, textureSize_);
+		cpuMemorySize_ = GetTextureMemorySize(format_, mergedSize);
 	}
 	else
 	{
 		format_ = formatType;
 		dxgiFormat_ = ConvertFormat(formatType);
 		textureSize_ = Vec2I(size.X, size.Y);
-		cpuMemorySize_ = GetTextureMemorySize(format_, textureSize_);
+		cpuMemorySize_ = GetTextureMemorySize(format_, mergedSize);
 	}
 
 	if (type_ == TextureType::Render)

@@ -45,6 +45,8 @@ TextureVulkan::~TextureVulkan()
 bool TextureVulkan::Initialize(GraphicsVulkan* graphics,
 							   bool isStrongRef,
 							   const Vec2I& size,
+							   int depth,
+							   int arrayLayers,
 							   vk::Format format,
 							   int samplingCount,
 							   int mipmapCount,
@@ -59,6 +61,8 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics,
 	type_ = textureType;
 	format_ = VulkanHelper::VkFormatToTextureFormat(static_cast<VkFormat>(format));
 	samplingCount_ = samplingCount;
+	depth_ = depth;
+	arrayLayers_ = arrayLayers;
 
 	// check whether is mipmap enabled?
 	auto properties = graphics_->GetPysicalDevice().getFormatProperties(format);
@@ -72,12 +76,12 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics,
 	// image
 	vk::ImageCreateInfo imageCreateInfo;
 
-	imageCreateInfo.imageType = vk::ImageType::e2D;
+	imageCreateInfo.imageType = depth > 0 ? vk::ImageType::e3D : vk::ImageType::e2D;
 	imageCreateInfo.extent.width = size.X;
 	imageCreateInfo.extent.height = size.Y;
-	imageCreateInfo.extent.depth = 1;
+	imageCreateInfo.extent.depth = std::max(1, depth);
 	imageCreateInfo.mipLevels = mipmapCount;
-	imageCreateInfo.arrayLayers = 1;
+	imageCreateInfo.arrayLayers = std::max(1, arrayLayers);
 	imageCreateInfo.format = format;
 	imageCreateInfo.tiling = vk::ImageTiling::eOptimal;
 	imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
@@ -103,7 +107,7 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics,
 	auto device = graphics_->GetDevice();
 
 	// calculate size
-	memorySize = GetTextureMemorySize(format_, size);
+	memorySize = GetTextureMemorySize(format_, {size.X, size.Y, std::max({1, depth, arrayLayers})});
 
 	// create a buffer on cpu
 	{
@@ -136,13 +140,26 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics,
 	{
 		vk::ImageViewCreateInfo imageViewInfo;
 		imageViewInfo.image = image_;
-		imageViewInfo.viewType = vk::ImageViewType::e2D;
+
+		if (depth > 0)
+		{
+			imageViewInfo.viewType = vk::ImageViewType::e3D;
+		}
+		else if (arrayLayers > 0)
+		{
+			imageViewInfo.viewType = vk::ImageViewType::e2DArray;
+		}
+		else
+		{
+			imageViewInfo.viewType = vk::ImageViewType::e2D;
+		}
+
 		imageViewInfo.format = format;
 		imageViewInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
 		imageViewInfo.subresourceRange.baseMipLevel = 0;
 		imageViewInfo.subresourceRange.levelCount = mipmapCount;
 		imageViewInfo.subresourceRange.baseArrayLayer = 0;
-		imageViewInfo.subresourceRange.layerCount = 1;
+		imageViewInfo.subresourceRange.layerCount = std::max(1, arrayLayers);
 		subresourceRange_ = imageViewInfo.subresourceRange;
 		view_ = device.createImageView(imageViewInfo);
 	}
@@ -165,6 +182,8 @@ bool TextureVulkan::InitializeAsRenderTexture(GraphicsVulkan* graphics,
 	return Initialize(graphics,
 					  isStrongRef,
 					  parameter.Size,
+					  0,
+					  1,
 					  (vk::Format)VulkanHelper::TextureFormatToVkFormat(parameter.Format),
 					  parameter.SamplingCount,
 					  1,
@@ -180,7 +199,7 @@ bool TextureVulkan::InitializeAsScreen(const vk::Image& image, const vk::ImageVi
 	vkTextureFormat_ = format;
 	textureSize = size;
 	format_ = VulkanHelper::VkFormatToTextureFormat(static_cast<VkFormat>(vkTextureFormat_));
-	memorySize = GetTextureMemorySize(format_, size);
+	memorySize = GetTextureMemorySize(format_, {size.X, size.Y, 1});
 
 	subresourceRange_.aspectMask = vk::ImageAspectFlagBits::eColor;
 	subresourceRange_.baseArrayLayer = 0;
@@ -335,15 +354,16 @@ void TextureVulkan::Unlock()
 	imageBufferCopy.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
 	imageBufferCopy.imageSubresource.mipLevel = 0;
 	imageBufferCopy.imageSubresource.baseArrayLayer = 0;
-	imageBufferCopy.imageSubresource.layerCount = 1;
+	imageBufferCopy.imageSubresource.layerCount = std::max(arrayLayers_, 1);
 
 	imageBufferCopy.imageOffset = vk::Offset3D(0, 0, 0);
-	imageBufferCopy.imageExtent = vk::Extent3D(static_cast<uint32_t>(GetSizeAs2D().X), static_cast<uint32_t>(GetSizeAs2D().Y), 1);
+	imageBufferCopy.imageExtent =
+		vk::Extent3D(static_cast<uint32_t>(GetSizeAs2D().X), static_cast<uint32_t>(GetSizeAs2D().Y), std::max(depth_, 1));
 
 	vk::ImageSubresourceRange colorSubRange;
 	colorSubRange.aspectMask = vk::ImageAspectFlagBits::eColor;
 	colorSubRange.levelCount = 1;
-	colorSubRange.layerCount = 1;
+	colorSubRange.layerCount = std::max(arrayLayers_, 1);
 
 	vk::ImageLayout imageLayout = vk::ImageLayout::eTransferDstOptimal;
 	ResourceBarrior(copyCommandBuffer, imageLayout);

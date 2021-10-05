@@ -212,6 +212,8 @@ Texture* GraphicsVulkan::CreateTexture(const TextureInitializationParameter& par
 	if (!obj->Initialize(this,
 						 true,
 						 parameter.Size,
+						 parameter.Depth,
+						 parameter.ArrayLayers,
 						 (vk::Format)VulkanHelper::TextureFormatToVkFormat(parameter.Format),
 						 1,
 						 parameter.MipMapCount,

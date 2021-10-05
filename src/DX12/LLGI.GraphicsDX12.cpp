@@ -313,6 +313,8 @@ std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
 		return std::vector<uint8_t>();
 	}
 
+	const auto rtSize = renderTarget->GetSizeAs2D();
+	const auto rtSize3 = Vec3I{rtSize.X, rtSize.Y, 1};
 	auto device = GetDevice();
 
 	std::vector<uint8_t> result;
@@ -377,14 +379,14 @@ std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
 	SafeRelease(commandList);
 	SafeRelease(commandAllocator);
 
-	if (GetTextureMemorySize(renderTarget->GetFormat(), renderTarget->GetSizeAs2D()) != dstBuffer.GetSize())
+	if (GetTextureMemorySize(renderTarget->GetFormat(), rtSize3) != dstBuffer.GetSize())
 	{
-		result.resize(GetTextureMemorySize(renderTarget->GetFormat(), renderTarget->GetSizeAs2D()));
+		result.resize(GetTextureMemorySize(renderTarget->GetFormat(), rtSize3));
 		auto raw = static_cast<uint8_t*>(dstBuffer.Lock());
 
 		for (int32_t y = 0; y < renderTarget->GetSizeAs2D().Y; y++)
 		{
-			auto pitch = GetTextureMemorySize(renderTarget->GetFormat(), renderTarget->GetSizeAs2D()) / renderTarget->GetSizeAs2D().Y;
+			auto pitch = GetTextureMemorySize(renderTarget->GetFormat(), rtSize3) / renderTarget->GetSizeAs2D().Y;
 			memcpy(result.data() + pitch * y, raw + dstFootprint.RowPitch * y, pitch);
 		}
 

@@ -25,6 +25,8 @@ private:
 	vk::ImageSubresourceRange subresourceRange_;
 
 	Vec2I textureSize;
+	int depth_ = 0;
+	int arrayLayers_ = 0;
 
 	int32_t memorySize = 0;
 	std::unique_ptr<Buffer> cpuBuf;
@@ -41,6 +43,8 @@ public:
 	bool Initialize(GraphicsVulkan* graphics,
 					bool isStrongRef,
 					const Vec2I& size,
+					int depth,
+					int arrayLayers,
 					vk::Format format,
 					int samplingCount,
 					int mipmapCount,

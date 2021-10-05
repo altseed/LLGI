@@ -461,32 +461,32 @@ inline std::string to_string(TextureFormatType format)
 	}
 }
 
-inline int32_t GetTextureMemorySize(TextureFormatType format, Vec2I size)
+inline int32_t GetTextureMemorySize(TextureFormatType format, Vec3I size)
 {
 	switch (format)
 	{
 	case TextureFormatType::R8G8B8A8_UNORM:
-		return size.X * size.Y * 4;
+		return size.X * size.Y * size.Z * 4;
 	case TextureFormatType::B8G8R8A8_UNORM:
-		return size.X * size.Y * 4;
+		return size.X * size.Y * size.Z * 4;
 	case TextureFormatType::R8_UNORM:
-		return size.X * size.Y * 1;
+		return size.X * size.Y * size.Z * 1;
 	case TextureFormatType::R16G16_FLOAT:
-		return size.X * size.Y * 4;
+		return size.X * size.Y * size.Z * 4;
 	case TextureFormatType::R16G16B16A16_FLOAT:
-		return size.X * size.Y * 8;
+		return size.X * size.Y * size.Z * 8;
 	case TextureFormatType::R32G32B32A32_FLOAT:
-		return size.X * size.Y * 16;
+		return size.X * size.Y * size.Z * 16;
 	case TextureFormatType::R8G8B8A8_UNORM_SRGB:
-		return size.X * size.Y * 4;
+		return size.X * size.Y * size.Z * 4;
 	case TextureFormatType::B8G8R8A8_UNORM_SRGB:
-		return size.X * size.Y * 4;
+		return size.X * size.Y * size.Z * 4;
 	case TextureFormatType::D32:
-		return size.X * size.Y * 4;
+		return size.X * size.Y * size.Z * 4;
 	case TextureFormatType::D24S8:
-		return size.X * size.Y * 4;
+		return size.X * size.Y * size.Z * 4;
 	case TextureFormatType::D32S8:
-		return size.X * size.Y * 5;
+		return size.X * size.Y * size.Z * 5;
 	default:
 		auto str = to_string(format);
 		Log(LogType::Error, str + " : GetTextureMemorySize is not supported");

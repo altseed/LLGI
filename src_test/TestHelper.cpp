@@ -69,7 +69,7 @@ ParsedArgs TestHelper::ParseArg(int argc, char* argv[])
 std::vector<uint8_t> TestHelper::CreateDummyTextureData(LLGI::Vec2I size, LLGI::TextureFormatType format)
 {
 	std::vector<uint8_t> ret;
-	ret.resize(LLGI::GetTextureMemorySize(format, size));
+	ret.resize(LLGI::GetTextureMemorySize(format, {size.X, size.Y, 1}));
 
 	if (format == LLGI::TextureFormatType::R8G8B8A8_UNORM)
 	{
