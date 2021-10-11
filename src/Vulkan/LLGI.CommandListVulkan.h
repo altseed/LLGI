@@ -59,6 +59,13 @@ public:
 	void SetScissor(int32_t x, int32_t y, int32_t width, int32_t height) override;
 	void Draw(int32_t primitiveCount, int32_t instanceCount) override;
 	void CopyTexture(Texture* src, Texture* dst) override;
+	void CopyTexture(Texture* src,
+					 Texture* dst,
+					 const std::array<int, 3>& srcPos,
+					 const std::array<int, 3>& dstPos,
+					 const std::array<int, 3>& size,
+					 int srcLayer,
+					 int dstLayer) override;
 
 	void GenerateMipMap(Texture* src) override;
 
@@ -72,7 +79,7 @@ public:
 	void EndRenderPass() override;
 	vk::CommandBuffer GetCommandBuffer() const;
 	vk::Fence GetFence() const;
-	
+
 	void BeginComputePass() override;
 	void EndComputePass() override;
 	void Dispatch(int32_t x, int32_t y, int32_t z) override;

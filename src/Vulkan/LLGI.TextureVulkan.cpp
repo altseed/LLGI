@@ -172,6 +172,24 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics,
 
 	ResetImageLayouts(mipmapCount_, imageCreateInfo.initialLayout);
 
+	vk::CommandBufferAllocateInfo cmdBufInfo;
+	cmdBufInfo.commandPool = graphics_->GetCommandPool();
+	cmdBufInfo.level = vk::CommandBufferLevel::ePrimary;
+	cmdBufInfo.commandBufferCount = 1;
+	auto cmdBuffers = graphics_->GetDevice().allocateCommandBuffersUnique(cmdBufInfo);
+
+	// a texture state must starts from undefined, so the states must be changed with a command buffer
+	vk::CommandBufferBeginInfo cmdBufferBeginInfo;
+	cmdBuffers[0]->begin(cmdBufferBeginInfo);
+	ResourceBarrior(cmdBuffers[0].get(), vk::ImageLayout::eShaderReadOnlyOptimal);
+	cmdBuffers[0]->end();
+	std::array<vk::SubmitInfo, 1> submitInfos;
+	submitInfos[0].commandBufferCount = 1;
+	submitInfos[0].pCommandBuffers = &(cmdBuffers[0].get());
+
+	graphics_->GetQueue().submit(static_cast<uint32_t>(submitInfos.size()), submitInfos.data(), vk::Fence());
+	graphics_->GetQueue().waitIdle();
+
 	return true;
 }
 

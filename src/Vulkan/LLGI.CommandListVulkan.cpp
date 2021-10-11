@@ -511,6 +511,59 @@ void CommandListVulkan::CopyTexture(Texture* src, Texture* dst)
 	RegisterReferencedObject(dst);
 }
 
+void CommandListVulkan::CopyTexture(Texture* src,
+									Texture* dst,
+									const std::array<int, 3>& srcPos,
+									const std::array<int, 3>& dstPos,
+									const std::array<int, 3>& size,
+									int srcLayer,
+									int dstLayer)
+{
+	if (isInRenderPass_)
+	{
+		Log(LogType::Error, "Please call CopyTexture outside of RenderPass");
+		return;
+	}
+
+	auto srcTex = static_cast<TextureVulkan*>(src);
+	auto dstTex = static_cast<TextureVulkan*>(dst);
+
+	if (srcTex->GetMipmapCount() != dstTex->GetMipmapCount())
+	{
+		Log(LogType::Error, "CopyTexture : MipLevel is different.");
+		return;
+	}
+
+	if (srcTex->GetMipmapCount() != 1)
+	{
+		Log(LogType::Error, "CopyTexture : MipLevel is not supported.");
+		return;
+	}
+
+	std::array<vk::ImageCopy, 1> imageCopy;
+	imageCopy[0].dstOffset = vk::Offset3D(dstPos[0], dstPos[1], dstPos[2]);
+	imageCopy[0].srcOffset = vk::Offset3D(srcPos[0], srcPos[1], srcPos[2]);
+	imageCopy[0].extent.width = size[0];
+	imageCopy[0].extent.height = size[1];
+	imageCopy[0].extent.depth = size[2];
+	imageCopy[0].srcSubresource.aspectMask = srcTex->GetSubresourceRange().aspectMask;
+	imageCopy[0].srcSubresource.layerCount = 1;
+	imageCopy[0].srcSubresource.baseArrayLayer = srcLayer;
+	imageCopy[0].dstSubresource.aspectMask = dstTex->GetSubresourceRange().aspectMask;
+	imageCopy[0].dstSubresource.layerCount = 1;
+	imageCopy[0].dstSubresource.baseArrayLayer = dstLayer;
+
+	srcTex->ResourceBarrior(currentCommandBuffer_, vk::ImageLayout::eTransferSrcOptimal);
+	dstTex->ResourceBarrior(currentCommandBuffer_, vk::ImageLayout::eTransferDstOptimal);
+	currentCommandBuffer_.copyImage(
+		srcTex->GetImage(), srcTex->GetImageLayouts()[0], dstTex->GetImage(), dstTex->GetImageLayouts()[0], imageCopy);
+	dstTex->ResourceBarrior(currentCommandBuffer_, vk::ImageLayout::eShaderReadOnlyOptimal);
+	srcTex->ResourceBarrior(currentCommandBuffer_, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+	RegisterReferencedObject(src);
+	RegisterReferencedObject(dst);
+}
+
 void CommandListVulkan::GenerateMipMap(Texture* src)
 {
 	auto srcTex = static_cast<TextureVulkan*>(src);
