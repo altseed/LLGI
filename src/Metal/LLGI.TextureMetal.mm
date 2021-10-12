@@ -6,7 +6,7 @@ namespace LLGI
 {
 
 bool TextureMetal::Initialize(
-	id<MTLDevice> device, const Vec2I& size, TextureFormatType format, int samplingCount, TextureType type, int MipMapCount)
+	id<MTLDevice> device, const Vec3I& size, TextureFormatType format, TextureUsageType usage, int dimension, int samplingCount, TextureType type, int MipMapCount)
 {
 	MTLTextureDescriptor* textureDescriptor = nullptr;
 
@@ -35,7 +35,59 @@ bool TextureMetal::Initialize(
 																			   width:size.X
 																			  height:size.Y
 																		   mipmapped:isMipmapped];
-	}
+        
+        textureDescriptor = [[[MTLTextureDescriptor alloc] init] autorelease];
+        
+        const bool isArray = (usage & TextureUsageType::Array) != TextureUsageType::None;
+        
+        if(dimension == 3)
+        {
+            textureDescriptor.textureType = MTLTextureType3D;
+        }
+        else if(dimension == 2)
+        {
+            if(isArray)
+            {
+                if(samplingCount > 1)
+                {
+                    textureDescriptor.textureType = MTLTextureType2DMultisampleArray;
+                }
+                else
+                {
+                    textureDescriptor.textureType = MTLTextureType2DArray;
+                }
+            }
+            else
+            {
+                if(samplingCount > 1)
+                {
+                    textureDescriptor.textureType = MTLTextureType2DMultisample;
+                }
+                else
+                {
+                    textureDescriptor.textureType = MTLTextureType2D;
+                }
+            }
+        }
+        else
+        {
+            throw "1d texture is not supported";
+        }
+        
+        textureDescriptor.width = size.X;
+        textureDescriptor.height = size.Y;
+        textureDescriptor.depth = isArray ? 1 : size.Z;
+        textureDescriptor.arrayLength = isArray ? size.Z : 1;
+        textureDescriptor.pixelFormat = ConvertFormat(format);
+        textureDescriptor.sampleCount = samplingCount;
+        textureDescriptor.mipmapLevelCount = isMipmapped ? GetMaximumMipLevels(Vec2I{size.X,size.Y}) : 1;
+        
+        if (samplingCount > 1)
+        {
+            textureDescriptor.textureType = MTLTextureType2DMultisample;
+            textureDescriptor.storageMode = MTLStorageModePrivate;
+        }
+    }
 
 	if (isMipmapped)
 	{
@@ -43,7 +95,7 @@ bool TextureMetal::Initialize(
 	}
 
 	texture_ = [device newTextureWithDescriptor:textureDescriptor];
-
+    
 	size_ = size;
 
 	fromExternal_ = false;
@@ -55,7 +107,7 @@ void TextureMetal::Write(const uint8_t* data)
 {
 	MTLRegion region = {{0, 0, 0}, {static_cast<uint32_t>(size_.X), static_cast<uint32_t>(size_.Y), 1}};
 
-	auto allSize = GetTextureMemorySize(ConvertFormat(texture_.pixelFormat), size_);
+    auto allSize = GetTextureMemorySize(ConvertFormat(texture_.pixelFormat), Vec3I{size_.X, size_.Y, 1});
 
 	[texture_ replaceRegion:region mipmapLevel:0 withBytes:data bytesPerRow:allSize / size_.Y];
 }
@@ -76,16 +128,31 @@ TextureMetal::~TextureMetal()
 bool TextureMetal::Initialize(GraphicsMetal* owner, const TextureInitializationParameter& parameter)
 {
 	type_ = TextureType::Color;
-
+    
+    const auto depthSize = std::max({parameter.ArrayLayers, parameter.Depth, 1});
+    const auto mergedSize = Vec3I{parameter.Size.X, parameter.Size.Y, depthSize};
+    
 	SafeAssign(owner_, static_cast<ReferenceObject*>(owner));
 
-	if (!Initialize(owner->GetDevice(), parameter.Size, parameter.Format, 1, type_, parameter.MipMapCount))
+    TextureUsageType usage = TextureUsageType::None;
+    int dimension = 2;
+    
+    if(parameter.ArrayLayers > 0)
+    {
+        usage = TextureUsageType::Array;
+    }
+    else if(parameter.Depth > 0)
+    {
+        dimension = 3;
+    }
+    
+	if (!Initialize(owner->GetDevice(), mergedSize, parameter.Format, usage, dimension, 1, type_, parameter.MipMapCount))
 	{
 		return false;
 	}
 
 	format_ = ConvertFormat(texture_.pixelFormat);
-	data.resize(GetTextureMemorySize(format_, size_));
+    data.resize(GetTextureMemorySize(format_, mergedSize));
 
 	return true;
 }
@@ -128,12 +195,12 @@ bool TextureMetal::Initialize(GraphicsMetal* owner, const RenderTextureInitializ
 
 	texture_ = [device newTextureWithDescriptor:textureDescriptor];
 
-	size_ = parameter.Size;
+    size_ = Vec3I{parameter.Size.X, parameter.Size.Y, 1};
 
 	fromExternal_ = false;
 
 	format_ = ConvertFormat(texture_.pixelFormat);
-	data.resize(GetTextureMemorySize(format_, size_));
+    data.resize(GetTextureMemorySize(format_, size_));
 
 	return true;
 }
@@ -167,13 +234,14 @@ bool TextureMetal::Initialize(GraphicsMetal* owner, const DepthTextureInitializa
 		}
 	}
 
-	if (!Initialize(owner->GetDevice(), parameter.Size, format, parameter.SamplingCount, type_, 1))
+    const auto mergedSize = Vec3I{size_.X, size_.Y, 1};
+	if (!Initialize(owner->GetDevice(), mergedSize, format, TextureUsageType::None, 2, parameter.SamplingCount, type_, 1))
 	{
 		return false;
 	}
 
 	format_ = ConvertFormat(texture_.pixelFormat);
-	data.resize(GetTextureMemorySize(format_, size_));
+    data.resize(GetTextureMemorySize(format_, mergedSize));
 
 	return true;
 }
@@ -229,6 +297,6 @@ void* TextureMetal::Lock() { return data.data(); }
 
 void TextureMetal::Unlock() { Write(data.data()); }
 
-Vec2I TextureMetal::GetSizeAs2D() const { return size_; }
+Vec2I TextureMetal::GetSizeAs2D() const { return Vec2I{size_.X, size_.Y}; }
 
 }

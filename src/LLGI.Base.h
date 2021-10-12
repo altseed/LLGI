@@ -261,6 +261,24 @@ enum class TextureFormatType
 	Unknown,
 };
 
+enum class TextureUsageType : uint32_t
+{
+    None = 0,
+    RenderTarget = 1 << 0,
+    Array = 1 << 1,
+    External = 1 << 2,
+};
+
+inline TextureUsageType operator|(TextureUsageType lhs, TextureUsageType rhs)
+{
+    return static_cast<TextureUsageType>(static_cast<uint32_t>(lhs) | static_cast<uint32_t>(rhs));
+}
+
+inline TextureUsageType operator&(TextureUsageType lhs, TextureUsageType rhs)
+{
+    return static_cast<TextureUsageType>(static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs));
+}
+
 inline bool HasStencil(TextureFormatType format)
 {
 	if (format == TextureFormatType::D24S8)

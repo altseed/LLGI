@@ -14,11 +14,11 @@ private:
 	std::vector<uint8_t> data;
 
 	id<MTLTexture> texture_ = nullptr;
-	Vec2I size_;
+	Vec3I size_;
 	bool fromExternal_ = false;
 
 	bool
-	Initialize(id<MTLDevice> device, const Vec2I& size, TextureFormatType format, int samplingCount, TextureType type, int MipMapCount);
+	Initialize(id<MTLDevice> device, const Vec3I& size, TextureFormatType format, TextureUsageType usage, int dimension, int samplingCount, TextureType type, int MipMapCount);
 	void Write(const uint8_t* data);
 
 public:

@@ -316,6 +316,45 @@ void CommandListMetal::CopyTexture(Texture* src, Texture* dst)
 	}
 }
 
+void CommandListMetal::CopyTexture(Texture* src,
+                Texture* dst,
+                const std::array<int, 3>& srcPos,
+                const std::array<int, 3>& dstPos,
+                const std::array<int, 3>& size,
+                int srcLayer,
+                int dstLayer)
+{
+    @autoreleasepool
+    {
+        if (isInRenderPass_)
+        {
+            Log(LogType::Error, "Please call CopyTexture outside of RenderPass");
+            return;
+        }
+
+        auto srcTex = static_cast<TextureMetal*>(src);
+        auto dstTex = static_cast<TextureMetal*>(dst);
+
+        id<MTLBlitCommandEncoder> blitEncoder = [commandBuffer_ blitCommandEncoder];
+
+        MTLRegion region = {{(uint32_t)srcPos[0], (uint32_t)srcPos[1], (uint32_t)srcPos[2]}, {(uint32_t)size[0], (uint32_t)size[1], (uint32_t)size[2]}};
+
+        [blitEncoder copyFromTexture:srcTex->GetTexture()
+                         sourceSlice:srcLayer
+                         sourceLevel:0
+                        sourceOrigin:region.origin
+                          sourceSize:region.size
+                           toTexture:dstTex->GetTexture()
+                    destinationSlice:dstLayer
+                    destinationLevel:0
+                   destinationOrigin:{(uint32_t)dstPos[0], (uint32_t)dstPos[1], (uint32_t)dstPos[2]}];
+        [blitEncoder endEncoding];
+
+        RegisterReferencedObject(src);
+        RegisterReferencedObject(dst);
+    }
+}
+
 void CommandListMetal::GenerateMipMap(Texture* src)
 {
 	auto srcTex = static_cast<TextureMetal*>(src);

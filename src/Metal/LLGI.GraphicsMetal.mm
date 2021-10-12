@@ -317,7 +317,7 @@ std::vector<uint8_t> GraphicsMetal::CaptureRenderTarget(Texture* renderTarget)
 	[commandBuffer commit];
 	[commandBuffer waitUntilCompleted];
 
-	NSUInteger bytesPerPixel = GetTextureMemorySize(renderTarget->GetFormat(), renderTarget->GetSizeAs2D()) / width / height;
+    NSUInteger bytesPerPixel = GetTextureMemorySize(renderTarget->GetFormat(), Vec3I{renderTarget->GetSizeAs2D().X, renderTarget->GetSizeAs2D().Y, 1}) / width / height;
 	NSUInteger imageByteCount = width * height * bytesPerPixel;
 	NSUInteger bytesPerRow = width * bytesPerPixel;
 	MTLRegion region = MTLRegionMake2D(0, 0, width, height);
