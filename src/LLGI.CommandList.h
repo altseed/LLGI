@@ -120,13 +120,8 @@ public:
 	/**
 		@brief	copy a texture
 	*/
-	virtual void CopyTexture(Texture* src,
-							 Texture* dst,
-							 const std::array<int, 3>& srcPos,
-							 const std::array<int, 3>& dstPos,
-							 const std::array<int, 3>& size,
-							 int srcLayer,
-							 int dstLayer)
+	virtual void
+	CopyTexture(Texture* src, Texture* dst, const Vec3I& srcPos, const Vec3I& dstPos, const Vec3I& size, int srcLayer, int dstLayer)
 	{
 	}
 

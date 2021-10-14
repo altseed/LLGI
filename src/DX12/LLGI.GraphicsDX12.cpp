@@ -185,6 +185,17 @@ RenderPass* GraphicsDX12::CreateRenderPass(Texture* texture, Texture* resolvedTe
 	return renderPass;
 }
 
+Texture* GraphicsDX12::CreateTexture(const TextureParameter& parameter)
+{
+	auto obj = new TextureDX12(this, true);
+	if (!obj->Initialize(parameter))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
+	return obj;
+}
+
 Texture* GraphicsDX12::CreateTexture(uint64_t id)
 {
 	auto obj = new TextureDX12(this, true);
@@ -198,19 +209,15 @@ Texture* GraphicsDX12::CreateTexture(uint64_t id)
 
 Texture* GraphicsDX12::CreateTexture(const TextureInitializationParameter& parameter)
 {
+	TextureParameter param;
+	param.Dimension = 2;
+	param.Format = parameter.Format;
+	param.MipLevelCount = parameter.MipMapCount;
+	param.SampleCount = 1;
+	param.Size = {parameter.Size.X, parameter.Size.Y, 1};
+
 	auto obj = new TextureDX12(this, true);
-
-	TextureType type = TextureType::Color;
-	if (parameter.ArrayLayers > 0)
-	{
-		type = TextureType::Color2DArray;
-	}
-	else if (parameter.Depth > 0)
-	{
-		type = TextureType::Color3D;
-	}
-
-	if (!obj->Initialize(parameter.Size, parameter.Depth, parameter.ArrayLayers, type, parameter.Format, 1))
+	if (!obj->Initialize(param))
 	{
 		SafeRelease(obj);
 		return nullptr;
@@ -220,8 +227,16 @@ Texture* GraphicsDX12::CreateTexture(const TextureInitializationParameter& param
 
 Texture* GraphicsDX12::CreateRenderTexture(const RenderTextureInitializationParameter& parameter)
 {
+	TextureParameter param;
+	param.Dimension = 2;
+	param.Format = parameter.Format;
+	param.MipLevelCount = 1;
+	param.SampleCount = parameter.SamplingCount;
+	param.Size = {parameter.Size.X, parameter.Size.Y, 1};
+	param.Usage = TextureUsageType::RenderTarget;
+
 	auto obj = new TextureDX12(this, true);
-	if (!obj->Initialize(parameter.Size, 1, 1, TextureType::Render, parameter.Format, parameter.SamplingCount))
+	if (!obj->Initialize(param))
 	{
 		SafeRelease(obj);
 		return nullptr;
@@ -231,15 +246,21 @@ Texture* GraphicsDX12::CreateRenderTexture(const RenderTextureInitializationPara
 
 Texture* GraphicsDX12::CreateDepthTexture(const DepthTextureInitializationParameter& parameter)
 {
-	auto obj = new TextureDX12(this, true);
-
 	auto format = TextureFormatType::D32;
 	if (parameter.Mode == DepthTextureMode::DepthStencil)
 	{
 		format = TextureFormatType::D24S8;
 	}
 
-	if (!obj->Initialize(parameter.Size, 1, 1, TextureType::Depth, format, parameter.SamplingCount))
+	TextureParameter param;
+	param.Dimension = 2;
+	param.Format = format;
+	param.MipLevelCount = 1;
+	param.SampleCount = parameter.SamplingCount;
+	param.Size = {parameter.Size.X, parameter.Size.Y, 1};
+
+	auto obj = new TextureDX12(this, true);
+	if (!obj->Initialize(param))
 	{
 		SafeRelease(obj);
 		return nullptr;

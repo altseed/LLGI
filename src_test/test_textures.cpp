@@ -40,18 +40,18 @@ void test_textures(LLGI::DeviceType deviceType)
 	texParamSrc3.Size = {1, 1};
 	auto texSrc3 = LLGI::CreateSharedPtr(graphics->CreateTexture(texParamSrc3));
 
-	LLGI::TextureInitializationParameter texParamDst1;
-	texParamDst1.Size = {1, 1};
+	LLGI::TextureParameter texParamDst1;
+	texParamDst1.Size = {1, 1, 1};
 	auto texDst1 = LLGI::CreateSharedPtr(graphics->CreateTexture(texParamDst1));
 
-	LLGI::TextureInitializationParameter texParamDst2;
-	texParamDst2.Size = {1, 1};
-	texParamDst2.ArrayLayers = 3;
+	LLGI::TextureParameter texParamDst2;
+	texParamDst2.Size = {1, 1, 3};
+	texParamDst2.Usage = LLGI::TextureUsageType::Array;
 	auto texDst2 = LLGI::CreateSharedPtr(graphics->CreateTexture(texParamDst2));
 
-	LLGI::TextureInitializationParameter texParamDst3;
-	texParamDst3.Size = {1, 1};
-	texParamDst3.Depth = 3;
+	LLGI::TextureParameter texParamDst3;
+	texParamDst3.Size = {1, 1, 3};
+	texParamDst3.Dimension = 3;
 	auto texDst3 = LLGI::CreateSharedPtr(graphics->CreateTexture(texParamDst3));
 
 	assert(texDst2 != nullptr);

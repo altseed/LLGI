@@ -34,7 +34,7 @@ TextureDX12::TextureDX12(ID3D12Resource* textureResource, ID3D12Device* device, 
 	dxgiFormat_ = desc.Format;
 
 	format_ = ConvertFormat(desc.Format);
-	textureSize_ = Vec2I(static_cast<int32_t>(desc.Width), static_cast<int32_t>(desc.Height));
+	textureSize_ = Vec3I(static_cast<int32_t>(desc.Width), static_cast<int32_t>(desc.Height), 1);
 	cpuMemorySize_ = GetTextureMemorySize(format_, {textureSize_.X, textureSize_.Y, 1});
 
 	UINT64 size = 0;
@@ -54,6 +54,94 @@ TextureDX12::~TextureDX12()
 	SafeRelease(commandQueue_);
 }
 
+bool TextureDX12::Initialize(const TextureParameter& parameter)
+{
+	if (parameter.Dimension < 2)
+	{
+		return false;
+	}
+
+	format_ = parameter.Format;
+	dxgiFormat_ = ConvertFormat(parameter.Format);
+	cpuMemorySize_ = GetTextureMemorySize(format_, parameter.Size);
+	textureSize_ = parameter.Size;
+	samplingCount_ = parameter.SampleCount;
+	parameter_ = parameter;
+
+	type_ = TextureType::Color;
+
+	D3D12_RESOURCE_DIMENSION dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	if (parameter.Dimension == 2)
+	{
+		dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	}
+	else if (parameter.Dimension == 3)
+	{
+		dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
+	}
+
+	D3D12_RESOURCE_FLAGS resourceFlag = D3D12_RESOURCE_FLAG_NONE;
+
+	if (IsDepthFormat(parameter.Format))
+	{
+		resourceFlag = resourceFlag | D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+		type_ = TextureType::Depth;
+	}
+
+	if ((parameter.Usage & TextureUsageType::RenderTarget) != TextureUsageType::None)
+	{
+		resourceFlag = resourceFlag | D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+		type_ = TextureType::Render;
+	}
+
+	if (type_ == TextureType::Render)
+	{
+		texture_ = CreateResourceBuffer(device_,
+										D3D12_HEAP_TYPE_DEFAULT,
+										dxgiFormat_,
+										dimension,
+										D3D12_RESOURCE_STATE_GENERIC_READ,
+										resourceFlag,
+										parameter.Size,
+										parameter.SampleCount);
+		state_ = D3D12_RESOURCE_STATE_GENERIC_READ;
+	}
+	else if (type_ == TextureType::Depth)
+	{
+		texture_ = CreateResourceBuffer(device_,
+										D3D12_HEAP_TYPE_DEFAULT,
+										dxgiFormat_,
+										dimension,
+										D3D12_RESOURCE_STATE_DEPTH_READ,
+										resourceFlag,
+										parameter.Size,
+										parameter.SampleCount);
+		state_ = D3D12_RESOURCE_STATE_DEPTH_READ;
+	}
+	else if (type_ == TextureType::Color)
+	{
+
+		texture_ = CreateResourceBuffer(device_,
+										D3D12_HEAP_TYPE_DEFAULT,
+										dxgiFormat_,
+										dimension,
+										D3D12_RESOURCE_STATE_COPY_DEST,
+										D3D12_RESOURCE_FLAG_NONE,
+										parameter.Size,
+										parameter.SampleCount);
+
+		state_ = D3D12_RESOURCE_STATE_COPY_DEST;
+	}
+
+	if (texture_ == nullptr)
+		return false;
+
+	// TODO: when it's NOT editable, do NOT call CreateBuffer.
+	CreateBuffer();
+
+	return true;
+}
+
 bool TextureDX12::Initialize(ID3D12Resource* textureResource)
 {
 	type_ = TextureType::Color;
@@ -65,88 +153,11 @@ bool TextureDX12::Initialize(ID3D12Resource* textureResource)
 	dxgiFormat_ = desc.Format;
 
 	format_ = ConvertFormat(desc.Format);
-	textureSize_ = Vec2I(static_cast<int32_t>(desc.Width), static_cast<int32_t>(desc.Height));
-	cpuMemorySize_ = GetTextureMemorySize(format_, {textureSize_.X, textureSize_.Y, 1});
+	textureSize_ = Vec3I(static_cast<int32_t>(desc.Width), static_cast<int32_t>(desc.Height), 1);
+	cpuMemorySize_ = GetTextureMemorySize(format_, textureSize_);
 
 	UINT64 size = 0;
 	device_->GetCopyableFootprints(&desc, 0, 1, 0, &footprint_, nullptr, nullptr, &size);
-
-	return true;
-}
-
-bool TextureDX12::Initialize(
-	const Vec2I& size, int depth, int arrayLayers, TextureType type, const TextureFormatType formatType, int32_t samplingCount)
-{
-	type_ = type;
-	arrayLayers_ = arrayLayers;
-
-	Vec3I mergedSize{size.X, size.Y, std::max({depth, arrayLayers, 1})};
-
-	if (type_ == TextureType::Depth)
-	{
-		format_ = formatType;
-		dxgiFormat_ = ConvertFormat(formatType);
-		cpuMemorySize_ = GetTextureMemorySize(format_, mergedSize);
-	}
-	else
-	{
-		format_ = formatType;
-		dxgiFormat_ = ConvertFormat(formatType);
-		textureSize_ = Vec2I(size.X, size.Y);
-		cpuMemorySize_ = GetTextureMemorySize(format_, mergedSize);
-	}
-
-	if (type_ == TextureType::Render)
-	{
-		texture_ = CreateResourceBuffer(device_,
-										D3D12_HEAP_TYPE_DEFAULT,
-										dxgiFormat_,
-										D3D12_RESOURCE_DIMENSION_TEXTURE2D,
-										D3D12_RESOURCE_STATE_GENERIC_READ,
-										D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
-										mergedSize,
-										samplingCount);
-		state_ = D3D12_RESOURCE_STATE_GENERIC_READ;
-	}
-	else if (type_ == TextureType::Depth)
-	{
-		texture_ = CreateResourceBuffer(device_,
-										D3D12_HEAP_TYPE_DEFAULT,
-										dxgiFormat_,
-										D3D12_RESOURCE_DIMENSION_TEXTURE2D,
-										D3D12_RESOURCE_STATE_DEPTH_READ,
-										D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
-										mergedSize,
-										samplingCount);
-		state_ = D3D12_RESOURCE_STATE_DEPTH_READ;
-	}
-	else if (type_ == TextureType::Color || type_ == TextureType::Color2DArray || type_ == TextureType::Color3D)
-	{
-		auto target = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-		if (depth > 0)
-		{
-			target = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
-		}
-
-		texture_ = CreateResourceBuffer(device_,
-										D3D12_HEAP_TYPE_DEFAULT,
-										dxgiFormat_,
-										target,
-										D3D12_RESOURCE_STATE_COPY_DEST,
-										D3D12_RESOURCE_FLAG_NONE,
-										mergedSize,
-										samplingCount);
-
-		state_ = D3D12_RESOURCE_STATE_COPY_DEST;
-	}
-	textureSize_ = size;
-	samplingCount_ = samplingCount;
-
-	if (texture_ == nullptr)
-		return false;
-
-	// TODO: when it's NOT editable, do NOT call CreateBuffer.
-	CreateBuffer();
 
 	return true;
 }
@@ -278,7 +289,7 @@ FAILED_EXIT:
 	}
 }
 
-Vec2I TextureDX12::GetSizeAs2D() const { return textureSize_; }
+Vec2I TextureDX12::GetSizeAs2D() const { return Vec2I{textureSize_.X, textureSize_.Y}; }
 
 void TextureDX12::ResourceBarrior(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES state)
 {

@@ -179,6 +179,10 @@ struct Vec3I
 
 	Vec3I(int32_t x, int32_t y, int32_t z) : X(x), Y(y), Z(z) {}
 
+	int32_t& operator[](int i) { return reinterpret_cast<int32_t*>(this)[i]; }
+
+	const int32_t& operator[](int i) const { return reinterpret_cast<const int32_t*>(this)[i]; }
+
 	bool operator==(const Vec3I& o) const { return X == o.X && Y == o.Y && Z == o.Z; }
 
 	bool operator!=(const Vec3I& o) const { return !(*this == o); }
@@ -263,20 +267,34 @@ enum class TextureFormatType
 
 enum class TextureUsageType : uint32_t
 {
-    None = 0,
-    RenderTarget = 1 << 0,
-    Array = 1 << 1,
-    External = 1 << 2,
+	None = 0,
+	RenderTarget = 1 << 0,
+	Array = 1 << 1,
+	External = 1 << 2,
 };
 
 inline TextureUsageType operator|(TextureUsageType lhs, TextureUsageType rhs)
 {
-    return static_cast<TextureUsageType>(static_cast<uint32_t>(lhs) | static_cast<uint32_t>(rhs));
+	return static_cast<TextureUsageType>(static_cast<uint32_t>(lhs) | static_cast<uint32_t>(rhs));
 }
 
 inline TextureUsageType operator&(TextureUsageType lhs, TextureUsageType rhs)
 {
-    return static_cast<TextureUsageType>(static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs));
+	return static_cast<TextureUsageType>(static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs));
+}
+
+inline bool IsDepthFormat(TextureFormatType format)
+{
+	if (format == TextureFormatType::D32)
+		return true;
+
+	if (format == TextureFormatType::D24S8)
+		return true;
+
+	if (format == TextureFormatType::D32S8)
+		return true;
+
+	return false;
 }
 
 inline bool HasStencil(TextureFormatType format)
@@ -297,8 +315,6 @@ enum class TextureType
 	Depth,
 	Render,
 	Cube,
-	Color2DArray,
-	Color3D,
 	Unknown,
 };
 
