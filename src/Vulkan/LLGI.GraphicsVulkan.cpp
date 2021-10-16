@@ -205,36 +205,51 @@ Texture* GraphicsVulkan::CreateTexture(uint64_t id)
 	return obj;
 }
 
-Texture* GraphicsVulkan::CreateTexture(const TextureInitializationParameter& parameter)
+Texture* GraphicsVulkan::CreateTexture(const TextureParameter& parameter)
 {
 	auto obj = new TextureVulkan();
-
-	if (!obj->Initialize(this,
-						 true,
-						 parameter.Size,
-						 parameter.Depth,
-						 parameter.ArrayLayers,
-						 (vk::Format)VulkanHelper::TextureFormatToVkFormat(parameter.Format),
-						 1,
-						 parameter.MipMapCount,
-						 TextureType::Color))
+	if (!obj->Initialize(this, true, parameter))
 	{
 		SafeRelease(obj);
 		return nullptr;
 	}
+	return obj;
+}
 
+Texture* GraphicsVulkan::CreateTexture(const TextureInitializationParameter& parameter)
+{
+	TextureParameter param;
+	param.Dimension = 2;
+	param.Format = parameter.Format;
+	param.MipLevelCount = parameter.MipMapCount;
+	param.SampleCount = 1;
+	param.Size = {parameter.Size.X, parameter.Size.Y, 1};
+
+	auto obj = new TextureVulkan();
+	if (!obj->Initialize(this, true, param))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
 	return obj;
 }
 
 Texture* GraphicsVulkan::CreateRenderTexture(const RenderTextureInitializationParameter& parameter)
 {
+	TextureParameter param;
+	param.Dimension = 2;
+	param.Format = parameter.Format;
+	param.MipLevelCount = 1;
+	param.SampleCount = parameter.SamplingCount;
+	param.Size = {parameter.Size.X, parameter.Size.Y, 1};
+	param.Usage = TextureUsageType::RenderTarget;
+
 	auto obj = new TextureVulkan();
-	if (!obj->InitializeAsRenderTexture(this, true, parameter))
+	if (!obj->Initialize(this, true, param))
 	{
 		SafeRelease(obj);
 		return nullptr;
 	}
-
 	return obj;
 }
 

@@ -42,30 +42,61 @@ TextureVulkan::~TextureVulkan()
 	SafeRelease(owner_);
 }
 
-bool TextureVulkan::Initialize(GraphicsVulkan* graphics,
-							   bool isStrongRef,
-							   const Vec2I& size,
-							   int depth,
-							   int arrayLayers,
-							   vk::Format format,
-							   int samplingCount,
-							   int mipmapCount,
-							   TextureType textureType)
+bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const TextureParameter& parameter)
 {
+	if (parameter.Dimension < 2)
+	{
+		return false;
+	}
+
 	graphics_ = graphics;
 	if (isStrongRef_)
 	{
 		SafeAddRef(graphics_);
 	}
 
-	type_ = textureType;
-	format_ = VulkanHelper::VkFormatToTextureFormat(static_cast<VkFormat>(format));
-	samplingCount_ = samplingCount;
-	depth_ = depth;
-	arrayLayers_ = arrayLayers;
+	parameter_ = parameter;
+
+	type_ = TextureType::Color;
+	vk::ImageType dimension = vk::ImageType::e2D;
+
+	if (parameter.Dimension == 2)
+	{
+		dimension = vk::ImageType::e2D;
+	}
+	else if (parameter.Dimension == 3)
+	{
+		dimension = vk::ImageType::e3D;
+	}
+
+	auto vkFormat = (vk::Format)VulkanHelper::TextureFormatToVkFormat(parameter.Format);
+	format_ = parameter.Format;
+
+	vk::ImageUsageFlags resourceFlag = {};
+
+	if (IsDepthFormat(parameter.Format))
+	{
+		resourceFlag = resourceFlag | vk::ImageUsageFlagBits::eDepthStencilAttachment;
+		type_ = TextureType::Depth;
+	}
+	else
+	{
+		resourceFlag =
+			resourceFlag | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eSampled;
+	}
+
+	if ((parameter.Usage & TextureUsageType::RenderTarget) != TextureUsageType::None)
+	{
+		resourceFlag = resourceFlag | vk::ImageUsageFlagBits::eColorAttachment;
+		type_ = TextureType::Render;
+	}
+
+	samplingCount_ = parameter.SampleCount;
+
+	int mipmapCount = parameter.MipLevelCount;
 
 	// check whether is mipmap enabled?
-	auto properties = graphics_->GetPysicalDevice().getFormatProperties(format);
+	auto properties = graphics_->GetPysicalDevice().getFormatProperties((vk::Format)vkFormat);
 	if (!(properties.optimalTilingFeatures & vk::FormatFeatureFlagBits::eSampledImageFilterLinear))
 	{
 		mipmapCount = 1;
@@ -73,16 +104,17 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics,
 
 	cpuBuf = std::unique_ptr<Buffer>(new Buffer(graphics_));
 
+	auto isArray = (parameter.Usage & TextureUsageType::Array) != TextureUsageType::None;
 	// image
 	vk::ImageCreateInfo imageCreateInfo;
 
-	imageCreateInfo.imageType = depth > 0 ? vk::ImageType::e3D : vk::ImageType::e2D;
-	imageCreateInfo.extent.width = size.X;
-	imageCreateInfo.extent.height = size.Y;
-	imageCreateInfo.extent.depth = std::max(1, depth);
+	imageCreateInfo.imageType = dimension;
+	imageCreateInfo.extent.width = parameter.Size.X;
+	imageCreateInfo.extent.height = parameter.Size.Y;
+	imageCreateInfo.extent.depth = isArray ? 1 : parameter.Size.Z;
 	imageCreateInfo.mipLevels = mipmapCount;
-	imageCreateInfo.arrayLayers = std::max(1, arrayLayers);
-	imageCreateInfo.format = format;
+	imageCreateInfo.arrayLayers = isArray ? parameter.Size.Z : 1;
+	imageCreateInfo.format = vkFormat;
 	imageCreateInfo.tiling = vk::ImageTiling::eOptimal;
 	imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
 
@@ -107,7 +139,7 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics,
 	auto device = graphics_->GetDevice();
 
 	// calculate size
-	memorySize = GetTextureMemorySize(format_, {size.X, size.Y, std::max({1, depth, arrayLayers})});
+	memorySize = GetTextureMemorySize(format_, parameter.Size);
 
 	// create a buffer on cpu
 	{
@@ -141,11 +173,11 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics,
 		vk::ImageViewCreateInfo imageViewInfo;
 		imageViewInfo.image = image_;
 
-		if (depth > 0)
+		if (parameter.Dimension == 3)
 		{
 			imageViewInfo.viewType = vk::ImageViewType::e3D;
 		}
-		else if (arrayLayers > 0)
+		else if (isArray)
 		{
 			imageViewInfo.viewType = vk::ImageViewType::e2DArray;
 		}
@@ -154,17 +186,17 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics,
 			imageViewInfo.viewType = vk::ImageViewType::e2D;
 		}
 
-		imageViewInfo.format = format;
+		imageViewInfo.format = vkFormat;
 		imageViewInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
 		imageViewInfo.subresourceRange.baseMipLevel = 0;
 		imageViewInfo.subresourceRange.levelCount = mipmapCount;
 		imageViewInfo.subresourceRange.baseArrayLayer = 0;
-		imageViewInfo.subresourceRange.layerCount = std::max(1, arrayLayers);
+		imageViewInfo.subresourceRange.layerCount = isArray ? parameter_.Size.Z : 1;
 		subresourceRange_ = imageViewInfo.subresourceRange;
 		view_ = device.createImageView(imageViewInfo);
 	}
 
-	textureSize = size;
+	textureSize = parameter.Size;
 	mipmapCount_ = mipmapCount;
 	vkTextureFormat_ = imageCreateInfo.format;
 	format_ = VulkanHelper::VkFormatToTextureFormat(static_cast<VkFormat>(vkTextureFormat_));
@@ -193,21 +225,6 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics,
 	return true;
 }
 
-bool TextureVulkan::InitializeAsRenderTexture(GraphicsVulkan* graphics,
-											  bool isStrongRef,
-											  const RenderTextureInitializationParameter& parameter)
-{
-	return Initialize(graphics,
-					  isStrongRef,
-					  parameter.Size,
-					  0,
-					  1,
-					  (vk::Format)VulkanHelper::TextureFormatToVkFormat(parameter.Format),
-					  parameter.SamplingCount,
-					  1,
-					  TextureType::Render);
-}
-
 bool TextureVulkan::InitializeAsScreen(const vk::Image& image, const vk::ImageView& imageVew, vk::Format format, const Vec2I& size)
 {
 	type_ = TextureType::Screen;
@@ -215,7 +232,7 @@ bool TextureVulkan::InitializeAsScreen(const vk::Image& image, const vk::ImageVi
 	this->image_ = image;
 	this->view_ = imageVew;
 	vkTextureFormat_ = format;
-	textureSize = size;
+	textureSize = {size.X, size.Y, 1};
 	format_ = VulkanHelper::VkFormatToTextureFormat(static_cast<VkFormat>(vkTextureFormat_));
 	memorySize = GetTextureMemorySize(format_, {size.X, size.Y, 1});
 
@@ -237,7 +254,7 @@ bool TextureVulkan::InitializeAsDepthStencil(
 	vk::Device device, vk::PhysicalDevice physicalDevice, const Vec2I& size, vk::Format format, int samplingCount, ReferenceObject* owner)
 {
 	type_ = TextureType::Depth;
-	textureSize = size;
+	textureSize = {size.X, size.Y, 1};
 
 	owner_ = owner;
 	SafeAddRef(owner_);
@@ -303,7 +320,7 @@ bool TextureVulkan::InitializeAsDepthStencil(
 bool TextureVulkan::InitializeAsExternal(vk::Device device, const VulkanImageInfo& info, ReferenceObject* owner)
 {
 	type_ = TextureType::Color;
-	textureSize = Vec2I(0, 0);
+	textureSize = Vec3I{0, 0, 0};
 	device_ = device;
 
 	owner_ = owner;
@@ -363,6 +380,8 @@ void TextureVulkan::Unlock()
 
 	copyCommandBuffer.begin(cmdBufferBeginInfo);
 
+	auto isArray = (parameter_.Usage & TextureUsageType::Array) != TextureUsageType::None;
+
 	vk::BufferImageCopy imageBufferCopy;
 
 	imageBufferCopy.bufferOffset = 0;
@@ -372,16 +391,16 @@ void TextureVulkan::Unlock()
 	imageBufferCopy.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
 	imageBufferCopy.imageSubresource.mipLevel = 0;
 	imageBufferCopy.imageSubresource.baseArrayLayer = 0;
-	imageBufferCopy.imageSubresource.layerCount = std::max(arrayLayers_, 1);
+	imageBufferCopy.imageSubresource.layerCount = isArray ? parameter_.Size.Z : 1;
 
 	imageBufferCopy.imageOffset = vk::Offset3D(0, 0, 0);
 	imageBufferCopy.imageExtent =
-		vk::Extent3D(static_cast<uint32_t>(GetSizeAs2D().X), static_cast<uint32_t>(GetSizeAs2D().Y), std::max(depth_, 1));
+		vk::Extent3D(static_cast<uint32_t>(GetSizeAs2D().X), static_cast<uint32_t>(GetSizeAs2D().Y), isArray ? 1 : parameter_.Size.Z);
 
 	vk::ImageSubresourceRange colorSubRange;
 	colorSubRange.aspectMask = vk::ImageAspectFlagBits::eColor;
 	colorSubRange.levelCount = 1;
-	colorSubRange.layerCount = std::max(arrayLayers_, 1);
+	colorSubRange.layerCount = isArray ? parameter_.Size.Z : 1;
 
 	vk::ImageLayout imageLayout = vk::ImageLayout::eTransferDstOptimal;
 	ResourceBarrior(copyCommandBuffer, imageLayout);
@@ -400,7 +419,7 @@ void TextureVulkan::Unlock()
 	graphics_->GetDevice().freeCommandBuffers(graphics_->GetCommandPool(), copyCommandBuffer);
 }
 
-Vec2I TextureVulkan::GetSizeAs2D() const { return textureSize; }
+Vec2I TextureVulkan::GetSizeAs2D() const { return {textureSize.X, textureSize.Y}; }
 
 std::vector<vk::ImageLayout> TextureVulkan::GetImageLayouts() const { return imageLayouts_; }
 

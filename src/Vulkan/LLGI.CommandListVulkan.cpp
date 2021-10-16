@@ -466,58 +466,12 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 
 void CommandListVulkan::CopyTexture(Texture* src, Texture* dst)
 {
-	if (isInRenderPass_)
-	{
-		Log(LogType::Error, "Please call CopyTexture outside of RenderPass");
-		return;
-	}
-
 	auto srcTex = static_cast<TextureVulkan*>(src);
-	auto dstTex = static_cast<TextureVulkan*>(dst);
-
-	if (srcTex->GetMipmapCount() != dstTex->GetMipmapCount())
-	{
-		Log(LogType::Error, "CopyTexture : MipLevel is different.");
-		return;
-	}
-
-	if (srcTex->GetMipmapCount() != 1)
-	{
-		Log(LogType::Error, "CopyTexture : MipLevel is not supported.");
-		return;
-	}
-
-	std::array<vk::ImageCopy, 1> imageCopy;
-	imageCopy[0].dstOffset = vk::Offset3D(0, 0, 0);
-	imageCopy[0].srcOffset = vk::Offset3D(0, 0, 0);
-	imageCopy[0].extent.width = src->GetSizeAs2D().X;
-	imageCopy[0].extent.height = src->GetSizeAs2D().Y;
-	imageCopy[0].extent.depth = 1;
-	imageCopy[0].srcSubresource.aspectMask = srcTex->GetSubresourceRange().aspectMask;
-	imageCopy[0].srcSubresource.layerCount = 1;
-	imageCopy[0].srcSubresource.baseArrayLayer = 0;
-	imageCopy[0].dstSubresource.aspectMask = dstTex->GetSubresourceRange().aspectMask;
-	imageCopy[0].dstSubresource.layerCount = 1;
-	imageCopy[0].dstSubresource.baseArrayLayer = 0;
-
-	srcTex->ResourceBarrior(currentCommandBuffer_, vk::ImageLayout::eTransferSrcOptimal);
-	dstTex->ResourceBarrior(currentCommandBuffer_, vk::ImageLayout::eTransferDstOptimal);
-	currentCommandBuffer_.copyImage(
-		srcTex->GetImage(), srcTex->GetImageLayouts()[0], dstTex->GetImage(), dstTex->GetImageLayouts()[0], imageCopy);
-	dstTex->ResourceBarrior(currentCommandBuffer_, vk::ImageLayout::eShaderReadOnlyOptimal);
-	srcTex->ResourceBarrior(currentCommandBuffer_, vk::ImageLayout::eShaderReadOnlyOptimal);
-
-	RegisterReferencedObject(src);
-	RegisterReferencedObject(dst);
+	CopyTexture(src, dst, {0, 0, 0}, {0, 0, 0}, srcTex->GetParameter().Size, 0, 0);
 }
 
-void CommandListVulkan::CopyTexture(Texture* src,
-									Texture* dst,
-									const std::array<int, 3>& srcPos,
-									const std::array<int, 3>& dstPos,
-									const std::array<int, 3>& size,
-									int srcLayer,
-									int dstLayer)
+void CommandListVulkan::CopyTexture(
+	Texture* src, Texture* dst, const Vec3I& srcPos, const Vec3I& dstPos, const Vec3I& size, int srcLayer, int dstLayer)
 {
 	if (isInRenderPass_)
 	{
