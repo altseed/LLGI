@@ -88,7 +88,7 @@ bool TextureDX12::Initialize(const TextureParameter& parameter)
 		type_ = TextureType::Depth;
 	}
 
-	if ((parameter.Usage & TextureUsageType::RenderTarget) != TextureUsageType::None)
+	if ((parameter.Usage & TextureUsageType::RenderTarget) != TextureUsageType::NoneFlag)
 	{
 		resourceFlag = resourceFlag | D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 		type_ = TextureType::Render;

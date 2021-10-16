@@ -85,7 +85,7 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const
 			resourceFlag | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eSampled;
 	}
 
-	if ((parameter.Usage & TextureUsageType::RenderTarget) != TextureUsageType::None)
+	if ((parameter.Usage & TextureUsageType::RenderTarget) != TextureUsageType::NoneFlag)
 	{
 		resourceFlag = resourceFlag | vk::ImageUsageFlagBits::eColorAttachment;
 		type_ = TextureType::Render;
@@ -104,7 +104,7 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const
 
 	cpuBuf = std::unique_ptr<Buffer>(new Buffer(graphics_));
 
-	auto isArray = (parameter.Usage & TextureUsageType::Array) != TextureUsageType::None;
+	auto isArray = (parameter.Usage & TextureUsageType::Array) != TextureUsageType::NoneFlag;
 	// image
 	vk::ImageCreateInfo imageCreateInfo;
 
@@ -380,7 +380,7 @@ void TextureVulkan::Unlock()
 
 	copyCommandBuffer.begin(cmdBufferBeginInfo);
 
-	auto isArray = (parameter_.Usage & TextureUsageType::Array) != TextureUsageType::None;
+	auto isArray = (parameter_.Usage & TextureUsageType::Array) != TextureUsageType::NoneFlag;
 
 	vk::BufferImageCopy imageBufferCopy;
 

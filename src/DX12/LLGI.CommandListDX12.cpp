@@ -427,7 +427,7 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 							srvDesc.Texture3D.MostDetailedMip = 0;
 							srvDesc.Texture3D.ResourceMinLODClamp = 0.0f;
 						}
-						else if ((texture->GetParameter().Usage & TextureUsageType::Array) != TextureUsageType::None)
+						else if ((texture->GetParameter().Usage & TextureUsageType::Array) != TextureUsageType::NoneFlag)
 						{
 							if (texture->GetParameter().SampleCount > 1)
 							{
