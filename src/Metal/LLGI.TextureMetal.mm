@@ -38,7 +38,7 @@ bool TextureMetal::Initialize(
         
         textureDescriptor = [[[MTLTextureDescriptor alloc] init] autorelease];
         
-        const bool isArray = (usage & TextureUsageType::Array) != TextureUsageType::None;
+        const bool isArray = (usage & TextureUsageType::Array) != TextureUsageType::NoneFlag;
         
         if(dimension == 3)
         {
@@ -50,7 +50,11 @@ bool TextureMetal::Initialize(
             {
                 if(samplingCount > 1)
                 {
+#if !(TARGET_OS_IPHONE) && !(TARGET_OS_SIMULATOR)
                     textureDescriptor.textureType = MTLTextureType2DMultisampleArray;
+#else
+                    textureDescriptor.textureType = MTLTextureType2DArray;
+#endif
                 }
                 else
                 {
@@ -217,7 +221,7 @@ bool TextureMetal::Initialize(GraphicsMetal* owner, const DepthTextureInitializa
 	}
 
     const auto mergedSize = Vec3I{size_.X, size_.Y, 1};
-	if (!Initialize(owner->GetDevice(), mergedSize, format, TextureUsageType::None, 2, parameter.SamplingCount, type_, 1))
+	if (!Initialize(owner->GetDevice(), mergedSize, format, TextureUsageType::NoneFlag, 2, parameter.SamplingCount, type_, 1))
 	{
 		return false;
 	}
