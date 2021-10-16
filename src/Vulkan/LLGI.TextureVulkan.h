@@ -16,7 +16,6 @@ private:
 	ReferenceObject* owner_ = nullptr;
 	vk::Device device_ = nullptr;
 
-	bool isStrongRef_ = false;
 	vk::Image image_ = nullptr;
 	vk::ImageView view_ = nullptr;
 	std::vector<vk::ImageLayout> imageLayouts_;
@@ -39,19 +38,16 @@ public:
 	TextureVulkan();
 	~TextureVulkan() override;
 
-	bool Initialize(GraphicsVulkan* graphics, bool isStrongRef, const TextureParameter& parameter);
+	bool Initialize(GraphicsVulkan* graphics,
+					vk::Device device,
+					vk::PhysicalDevice physicalDevice,
+					ReferenceObject* owner,
+					const TextureParameter& parameter);
 
 	/**
 		@brief	initialize as screen
 	*/
 	bool InitializeAsScreen(const vk::Image& image, const vk::ImageView& imageVew, vk::Format format, const Vec2I& size);
-
-	bool InitializeAsDepthStencil(vk::Device device,
-								  vk::PhysicalDevice physicalDevice,
-								  const Vec2I& size,
-								  vk::Format format,
-								  int samplingCount,
-								  ReferenceObject* owner);
 
 	bool InitializeAsExternal(vk::Device device, const VulkanImageInfo& info, ReferenceObject* owner);
 

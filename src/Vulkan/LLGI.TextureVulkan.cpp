@@ -34,26 +34,24 @@ TextureVulkan::~TextureVulkan()
 		}
 	}
 
-	if (isStrongRef_)
-	{
-		SafeRelease(graphics_);
-	}
-
 	SafeRelease(owner_);
 }
 
-bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const TextureParameter& parameter)
+bool TextureVulkan::Initialize(GraphicsVulkan* graphics,
+							   vk::Device device,
+							   vk::PhysicalDevice physicalDevice,
+							   ReferenceObject* owner,
+							   const TextureParameter& parameter)
 {
 	if (parameter.Dimension < 2)
 	{
 		return false;
 	}
 
+	owner_ = owner;
+	SafeAddRef(owner_);
+	device_ = device;
 	graphics_ = graphics;
-	if (isStrongRef_)
-	{
-		SafeAddRef(graphics_);
-	}
 
 	parameter_ = parameter;
 
@@ -72,22 +70,40 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const
 	auto vkFormat = (vk::Format)VulkanHelper::TextureFormatToVkFormat(parameter.Format);
 	format_ = parameter.Format;
 
-	vk::ImageUsageFlags resourceFlag = {};
+	vk::ImageUsageFlags resourceUsage = {};
+
+	vk::ImageAspectFlags aspect = {};
 
 	if (IsDepthFormat(parameter.Format))
 	{
-		resourceFlag = resourceFlag | vk::ImageUsageFlagBits::eDepthStencilAttachment;
+		resourceUsage = resourceUsage | vk::ImageUsageFlagBits::eDepthStencilAttachment;
+
+		aspect = vk::ImageAspectFlagBits::eDepth;
+
+		if (HasStencil(format_))
+		{
+			aspect = aspect | vk::ImageAspectFlagBits::eStencil;
+		}
+
 		type_ = TextureType::Depth;
+
+		vk::FormatProperties formatProps = physicalDevice.getFormatProperties((vk::Format)vkFormat);
+		if (!(formatProps.optimalTilingFeatures & vk::FormatFeatureFlagBits::eDepthStencilAttachment))
+		{
+			throw "Invalid formatProps";
+		}
 	}
 	else
 	{
-		resourceFlag =
-			resourceFlag | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eSampled;
+		aspect = vk::ImageAspectFlagBits::eColor;
+
+		resourceUsage =
+			resourceUsage | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eSampled;
 	}
 
 	if ((parameter.Usage & TextureUsageType::RenderTarget) != TextureUsageType::NoneFlag)
 	{
-		resourceFlag = resourceFlag | vk::ImageUsageFlagBits::eColorAttachment;
+		resourceUsage = resourceUsage | vk::ImageUsageFlagBits::eColorAttachment;
 		type_ = TextureType::Render;
 	}
 
@@ -96,13 +112,11 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const
 	int mipmapCount = parameter.MipLevelCount;
 
 	// check whether is mipmap enabled?
-	auto properties = graphics_->GetPysicalDevice().getFormatProperties((vk::Format)vkFormat);
+	auto properties = physicalDevice.getFormatProperties((vk::Format)vkFormat);
 	if (!(properties.optimalTilingFeatures & vk::FormatFeatureFlagBits::eSampledImageFilterLinear))
 	{
 		mipmapCount = 1;
 	}
-
-	cpuBuf = std::unique_ptr<Buffer>(new Buffer(graphics_));
 
 	auto isArray = (parameter.Usage & TextureUsageType::Array) != TextureUsageType::NoneFlag;
 	// image
@@ -117,43 +131,32 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const
 	imageCreateInfo.format = vkFormat;
 	imageCreateInfo.tiling = vk::ImageTiling::eOptimal;
 	imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
-
-	if (type_ == TextureType::Render)
-	{
-		imageCreateInfo.usage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferDst |
-								vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eSampled;
-	}
-	else
-	{
-		imageCreateInfo.usage =
-			vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eSampled;
-	}
+	imageCreateInfo.usage = resourceUsage;
 
 	imageCreateInfo.sharingMode = vk::SharingMode::eExclusive;
 	imageCreateInfo.samples = (vk::SampleCountFlagBits)samplingCount_;
 	imageCreateInfo.flags = (vk::ImageCreateFlagBits)0;
 
-	image_ = graphics_->GetDevice().createImage(imageCreateInfo);
-
-	// get device
-	auto device = graphics_->GetDevice();
+	image_ = device.createImage(imageCreateInfo);
 
 	// calculate size
 	memorySize = GetTextureMemorySize(format_, parameter.Size);
 
 	// create a buffer on cpu
+	if (!IsDepthFormat(parameter.Format))
 	{
+		cpuBuf = std::unique_ptr<Buffer>(new Buffer(graphics_));
 		vk::BufferCreateInfo bufferInfo;
 		bufferInfo.size = memorySize;
 		bufferInfo.usage = vk::BufferUsageFlagBits::eTransferSrc;
-		vk::Buffer buffer = graphics_->GetDevice().createBuffer(bufferInfo);
+		vk::Buffer buffer = device.createBuffer(bufferInfo);
 
-		vk::MemoryRequirements memReqs = graphics_->GetDevice().getBufferMemoryRequirements(buffer);
+		vk::MemoryRequirements memReqs = device.getBufferMemoryRequirements(buffer);
 		vk::MemoryAllocateInfo memAlloc;
 		memAlloc.allocationSize = memReqs.size;
-		memAlloc.memoryTypeIndex = graphics_->GetMemoryTypeIndex(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible);
-		vk::DeviceMemory devMem = graphics_->GetDevice().allocateMemory(memAlloc);
-		graphics_->GetDevice().bindBufferMemory(buffer, devMem, 0);
+		memAlloc.memoryTypeIndex = GetMemoryTypeIndex(physicalDevice, memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible);
+		vk::DeviceMemory devMem = device.allocateMemory(memAlloc);
+		device.bindBufferMemory(buffer, devMem, 0);
 
 		cpuBuf->Attach(buffer, devMem);
 	}
@@ -163,9 +166,9 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const
 		vk::MemoryRequirements memReqs = device.getImageMemoryRequirements(image_);
 		vk::MemoryAllocateInfo memAlloc;
 		memAlloc.allocationSize = memReqs.size;
-		memAlloc.memoryTypeIndex = graphics_->GetMemoryTypeIndex(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
+		memAlloc.memoryTypeIndex = GetMemoryTypeIndex(physicalDevice, memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
 		devMem_ = device.allocateMemory(memAlloc);
-		graphics_->GetDevice().bindImageMemory(image_, devMem_, 0);
+		device.bindImageMemory(image_, devMem_, 0);
 	}
 
 	// create a texture view
@@ -187,7 +190,7 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const
 		}
 
 		imageViewInfo.format = vkFormat;
-		imageViewInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+		imageViewInfo.subresourceRange.aspectMask = aspect;
 		imageViewInfo.subresourceRange.baseMipLevel = 0;
 		imageViewInfo.subresourceRange.levelCount = mipmapCount;
 		imageViewInfo.subresourceRange.baseArrayLayer = 0;
@@ -200,27 +203,29 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics, bool isStrongRef, const
 	mipmapCount_ = mipmapCount;
 	vkTextureFormat_ = imageCreateInfo.format;
 	format_ = VulkanHelper::VkFormatToTextureFormat(static_cast<VkFormat>(vkTextureFormat_));
-	device_ = graphics_->GetDevice();
 
 	ResetImageLayouts(mipmapCount_, imageCreateInfo.initialLayout);
 
-	vk::CommandBufferAllocateInfo cmdBufInfo;
-	cmdBufInfo.commandPool = graphics_->GetCommandPool();
-	cmdBufInfo.level = vk::CommandBufferLevel::ePrimary;
-	cmdBufInfo.commandBufferCount = 1;
-	auto cmdBuffers = graphics_->GetDevice().allocateCommandBuffersUnique(cmdBufInfo);
+	if (!IsDepthFormat(parameter.Format) && graphics_ != nullptr)
+	{
+		vk::CommandBufferAllocateInfo cmdBufInfo;
+		cmdBufInfo.commandPool = graphics_->GetCommandPool();
+		cmdBufInfo.level = vk::CommandBufferLevel::ePrimary;
+		cmdBufInfo.commandBufferCount = 1;
+		auto cmdBuffers = graphics_->GetDevice().allocateCommandBuffersUnique(cmdBufInfo);
 
-	// a texture state must starts from undefined, so the states must be changed with a command buffer
-	vk::CommandBufferBeginInfo cmdBufferBeginInfo;
-	cmdBuffers[0]->begin(cmdBufferBeginInfo);
-	ResourceBarrior(cmdBuffers[0].get(), vk::ImageLayout::eShaderReadOnlyOptimal);
-	cmdBuffers[0]->end();
-	std::array<vk::SubmitInfo, 1> submitInfos;
-	submitInfos[0].commandBufferCount = 1;
-	submitInfos[0].pCommandBuffers = &(cmdBuffers[0].get());
+		// a texture state must starts from undefined, so the states must be changed with a command buffer
+		vk::CommandBufferBeginInfo cmdBufferBeginInfo;
+		cmdBuffers[0]->begin(cmdBufferBeginInfo);
+		ResourceBarrior(cmdBuffers[0].get(), vk::ImageLayout::eShaderReadOnlyOptimal);
+		cmdBuffers[0]->end();
+		std::array<vk::SubmitInfo, 1> submitInfos;
+		submitInfos[0].commandBufferCount = 1;
+		submitInfos[0].pCommandBuffers = &(cmdBuffers[0].get());
 
-	graphics_->GetQueue().submit(static_cast<uint32_t>(submitInfos.size()), submitInfos.data(), vk::Fence());
-	graphics_->GetQueue().waitIdle();
+		graphics_->GetQueue().submit(static_cast<uint32_t>(submitInfos.size()), submitInfos.data(), vk::Fence());
+		graphics_->GetQueue().waitIdle();
+	}
 
 	return true;
 }
@@ -246,73 +251,6 @@ bool TextureVulkan::InitializeAsScreen(const vk::Image& image, const vk::ImageVi
 
 	mipmapCount_ = 1;
 	ResetImageLayouts(mipmapCount_, vk::ImageLayout::eUndefined);
-
-	return true;
-}
-
-bool TextureVulkan::InitializeAsDepthStencil(
-	vk::Device device, vk::PhysicalDevice physicalDevice, const Vec2I& size, vk::Format format, int samplingCount, ReferenceObject* owner)
-{
-	type_ = TextureType::Depth;
-	textureSize = {size.X, size.Y, 1};
-
-	owner_ = owner;
-	SafeAddRef(owner_);
-	device_ = device;
-
-	samplingCount_ = samplingCount;
-
-	// check a format whether specified format is supported
-	vk::Format depthFormat = format;
-	format_ = VulkanHelper::VkFormatToTextureFormat(static_cast<VkFormat>(format));
-
-	vk::FormatProperties formatProps = physicalDevice.getFormatProperties(depthFormat);
-	if (!(formatProps.optimalTilingFeatures & vk::FormatFeatureFlagBits::eDepthStencilAttachment))
-	{
-		throw "Invalid formatProps";
-	}
-
-	vk::ImageAspectFlags aspect = vk::ImageAspectFlagBits::eDepth;
-	if (HasStencil(format_))
-	{
-		aspect = aspect | vk::ImageAspectFlagBits::eStencil;
-	}
-
-	// create an image
-	vk::ImageCreateInfo imageCreateInfo;
-	imageCreateInfo.imageType = vk::ImageType::e2D;
-	imageCreateInfo.extent = vk::Extent3D(size.X, size.Y, 1);
-	imageCreateInfo.format = depthFormat;
-	imageCreateInfo.mipLevels = 1;
-	imageCreateInfo.arrayLayers = 1;
-	imageCreateInfo.samples = (vk::SampleCountFlagBits)samplingCount_;
-	imageCreateInfo.usage = vk::ImageUsageFlagBits::eDepthStencilAttachment /* | vk::ImageUsageFlagBits::eSampled*/;
-	image_ = device.createImage(imageCreateInfo);
-
-	// allocate memory
-	vk::MemoryRequirements memReqs = device.getImageMemoryRequirements(image_);
-	vk::MemoryAllocateInfo memAlloc;
-	memAlloc.allocationSize = memReqs.size;
-	memAlloc.memoryTypeIndex = GetMemoryTypeIndex(physicalDevice, memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
-	devMem_ = device.allocateMemory(memAlloc);
-	device.bindImageMemory(image_, devMem_, 0);
-
-	// create view
-	vk::ImageViewCreateInfo viewCreateInfo;
-	viewCreateInfo.viewType = vk::ImageViewType::e2D;
-	viewCreateInfo.format = depthFormat;
-	viewCreateInfo.components = {vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eG, vk::ComponentSwizzle::eB, vk::ComponentSwizzle::eA};
-	viewCreateInfo.subresourceRange.aspectMask = aspect;
-	viewCreateInfo.subresourceRange.levelCount = 1;
-	viewCreateInfo.subresourceRange.layerCount = 1;
-	viewCreateInfo.image = image_;
-	view_ = device.createImageView(viewCreateInfo);
-
-	subresourceRange_ = viewCreateInfo.subresourceRange;
-	vkTextureFormat_ = depthFormat;
-
-	mipmapCount_ = 1;
-	ResetImageLayouts(mipmapCount_, imageCreateInfo.initialLayout);
 
 	return true;
 }

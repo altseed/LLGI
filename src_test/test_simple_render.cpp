@@ -140,16 +140,17 @@ void test_simple_rectangle(LLGI::DeviceType deviceType, SingleRectangleTestMode 
 			if (mode == SingleRectangleTestMode::Triangle)
 			{
 				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat())
-					.Save("SimpleRender.BasicTriangle.png");
+					.Save("SimpleRender.BasicTriangle_" + TestHelper::GetDeviceName(deviceType) + ".png");
 			}
 			else if (mode == SingleRectangleTestMode::Line)
 			{
-				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save("SimpleRender.BasicLine.png");
+				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat())
+					.Save("SimpleRender.BasicLine_" + TestHelper::GetDeviceName(deviceType) + ".png");
 			}
 			else if (mode == SingleRectangleTestMode::Point)
 			{
 				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat())
-					.Save("SimpleRender.BasicPoint.png");
+					.Save("SimpleRender.BasicPoint_" + TestHelper::GetDeviceName(deviceType) + ".png");
 			}
 			break;
 		}
@@ -257,7 +258,8 @@ void test_index_offset(LLGI::DeviceType deviceType)
 			commandList->WaitUntilCompleted();
 			auto texture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
 			auto data = graphics->CaptureRenderTarget(texture);
-			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save("SimpleRender.IndexOffset.png");
+			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat())
+				.Save("SimpleRender.IndexOffset_" + TestHelper::GetDeviceName(deviceType) + ".png");
 			break;
 		}
 	}
@@ -543,12 +545,12 @@ void main()
 			if (type == LLGI::ConstantBufferType::LongTime)
 			{
 				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat())
-					.Save("SimpleRender.ConstantLT.png");
+					.Save("SimpleRender.ConstantLT_" + TestHelper::GetDeviceName(deviceType) + ".png");
 			}
 			else
 			{
 				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat())
-					.Save("SimpleRender.ConstantST.png");
+					.Save("SimpleRender.ConstantST_" + TestHelper::GetDeviceName(deviceType) + ".png");
 			}
 
 			break;
@@ -804,18 +806,19 @@ void main()
 			if (mode == SimpleTextureRectangleTestMode::RGBA8)
 			{
 				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat())
-					.Save("SimpleRender.TextureRGB8.png");
+					.Save("SimpleRender.TextureRGB8_" + TestHelper::GetDeviceName(deviceType) + ".png");
 			}
 
 			if (mode == SimpleTextureRectangleTestMode::RGBA32F)
 			{
 				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat())
-					.Save("SimpleRender.TextureRGB32F.png");
+					.Save("SimpleRender.TextureRGB32F_" + TestHelper::GetDeviceName(deviceType) + ".png");
 			}
 
 			if (mode == SimpleTextureRectangleTestMode::R8)
 			{
-				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save("SimpleRender.TextureR8.png");
+				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat())
+					.Save("SimpleRender.TextureR8_" + TestHelper::GetDeviceName(deviceType) + ".png");
 			}
 			break;
 		}
@@ -946,7 +949,7 @@ void test_instancing(LLGI::DeviceType deviceType)
 			auto data = graphics->CaptureRenderTarget(texture);
 
 			// save
-			std::string path = "SimpleRender.Instancing.png";
+			std::string path = "SimpleRender.Instancing_" + TestHelper::GetDeviceName(deviceType) + ".png";
 			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save(path.c_str());
 		}
 	}
@@ -1064,7 +1067,7 @@ void test_vtf(LLGI::DeviceType deviceType)
 			auto data = graphics->CaptureRenderTarget(texture);
 
 			// save
-			std::string path = "SimpleRender.VTF.png";
+			std::string path = "SimpleRender.VTF_" + TestHelper::GetDeviceName(deviceType) + ".png";
 			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save(path.c_str());
 		}
 	}

@@ -81,7 +81,7 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 	struct PipelineStateSet
 	{
 		std::shared_ptr<LLGI::PipelineState> writeState; // write depth or stencil
-		std::shared_ptr<LLGI::PipelineState> testState;  // depth-test or stencil-test
+		std::shared_ptr<LLGI::PipelineState> testState;	 // depth-test or stencil-test
 	};
 	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, PipelineStateSet> pips;
 
@@ -288,16 +288,18 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 			// save
 			if (mode == DepthStencilTestMode::Depth)
 			{
-				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save("DepthStencil.Depth.png");
+				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat())
+					.Save("DepthStencil.Depth_" + TestHelper::GetDeviceName(deviceType) + ".png");
 			}
 			else if (mode == DepthStencilTestMode::Stencil)
 			{
-				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save("DepthStencil.Stencil.png");
+				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat())
+					.Save("DepthStencil.Stencil_" + TestHelper::GetDeviceName(deviceType) + ".png");
 			}
 			else if (mode == DepthStencilTestMode::DepthAsTexture)
 			{
 				Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat())
-					.Save("DepthStencil.DepthAsTexture.png");
+					.Save("DepthStencil.DepthAsTexture_" + TestHelper::GetDeviceName(deviceType) + ".png");
 			}
 		}
 	}

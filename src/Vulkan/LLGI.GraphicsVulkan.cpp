@@ -208,7 +208,7 @@ Texture* GraphicsVulkan::CreateTexture(uint64_t id)
 Texture* GraphicsVulkan::CreateTexture(const TextureParameter& parameter)
 {
 	auto obj = new TextureVulkan();
-	if (!obj->Initialize(this, true, parameter))
+	if (!obj->Initialize(this, this->GetDevice(), this->GetPysicalDevice(), this, parameter))
 	{
 		SafeRelease(obj);
 		return nullptr;
@@ -224,14 +224,7 @@ Texture* GraphicsVulkan::CreateTexture(const TextureInitializationParameter& par
 	param.MipLevelCount = parameter.MipMapCount;
 	param.SampleCount = 1;
 	param.Size = {parameter.Size.X, parameter.Size.Y, 1};
-
-	auto obj = new TextureVulkan();
-	if (!obj->Initialize(this, true, param))
-	{
-		SafeRelease(obj);
-		return nullptr;
-	}
-	return obj;
+	return CreateTexture(param);
 }
 
 Texture* GraphicsVulkan::CreateRenderTexture(const RenderTextureInitializationParameter& parameter)
@@ -243,38 +236,24 @@ Texture* GraphicsVulkan::CreateRenderTexture(const RenderTextureInitializationPa
 	param.SampleCount = parameter.SamplingCount;
 	param.Size = {parameter.Size.X, parameter.Size.Y, 1};
 	param.Usage = TextureUsageType::RenderTarget;
-
-	auto obj = new TextureVulkan();
-	if (!obj->Initialize(this, true, param))
-	{
-		SafeRelease(obj);
-		return nullptr;
-	}
-	return obj;
+	return CreateTexture(param);
 }
 
 Texture* GraphicsVulkan::CreateDepthTexture(const DepthTextureInitializationParameter& parameter)
 {
-	auto obj = new TextureVulkan();
-
 	auto format = TextureFormatType::D32;
 	if (parameter.Mode == DepthTextureMode::DepthStencil)
 	{
 		format = TextureFormatType::D24S8;
 	}
 
-	if (!obj->InitializeAsDepthStencil(this->vkDevice_,
-									   this->vkPysicalDevice_,
-									   parameter.Size,
-									   (vk::Format)VulkanHelper::TextureFormatToVkFormat(format),
-									   parameter.SamplingCount,
-									   this))
-	{
-		SafeRelease(obj);
-		return nullptr;
-	}
-
-	return obj;
+	TextureParameter param;
+	param.Dimension = 2;
+	param.Format = format;
+	param.MipLevelCount = 1;
+	param.SampleCount = parameter.SamplingCount;
+	param.Size = {parameter.Size.X, parameter.Size.Y, 1};
+	return CreateTexture(param);
 }
 
 std::vector<uint8_t> GraphicsVulkan::CaptureRenderTarget(Texture* renderTarget)

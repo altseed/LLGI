@@ -231,7 +231,7 @@ void test_textures(LLGI::DeviceType deviceType)
 
 			auto textureMipmap = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
 			auto data = graphics->CaptureRenderTarget(textureMipmap);
-			std::string path = "SimpleRender.Textures.png";
+			std::string path = "SimpleRender.Textures_" + TestHelper::GetDeviceName(deviceType) + ".png";
 			Bitmap2D(data, textureMipmap->GetSizeAs2D().X, textureMipmap->GetSizeAs2D().Y, textureMipmap->GetFormat()).Save(path.c_str());
 		}
 	}
