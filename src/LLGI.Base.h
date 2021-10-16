@@ -265,6 +265,11 @@ enum class TextureFormatType
 	Unknown,
 };
 
+#if defined(__linux__)
+#pragma push_macro("None")
+#undef None
+#endif
+
 enum class TextureUsageType : uint32_t
 {
 	None = 0,
@@ -272,6 +277,10 @@ enum class TextureUsageType : uint32_t
 	Array = 1 << 1,
 	External = 1 << 2,
 };
+
+#if defined(__linux__)
+#pragma pop_macro("None")
+#endif
 
 inline TextureUsageType operator|(TextureUsageType lhs, TextureUsageType rhs)
 {
