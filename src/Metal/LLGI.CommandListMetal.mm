@@ -283,44 +283,15 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 
 void CommandListMetal::CopyTexture(Texture* src, Texture* dst)
 {
-	@autoreleasepool
-	{
-		if (isInRenderPass_)
-		{
-			Log(LogType::Error, "Please call CopyTexture outside of RenderPass");
-			return;
-		}
-
-		auto srcTex = static_cast<TextureMetal*>(src);
-		auto dstTex = static_cast<TextureMetal*>(dst);
-
-		id<MTLBlitCommandEncoder> blitEncoder = [commandBuffer_ blitCommandEncoder];
-
-		auto regionSize = srcTex->GetSizeAs2D();
-
-		MTLRegion region = {{0, 0, 0}, {(uint32_t)regionSize.X, (uint32_t)regionSize.Y, 1}};
-
-		[blitEncoder copyFromTexture:srcTex->GetTexture()
-						 sourceSlice:0
-						 sourceLevel:0
-						sourceOrigin:region.origin
-						  sourceSize:region.size
-						   toTexture:dstTex->GetTexture()
-					destinationSlice:0
-					destinationLevel:0
-				   destinationOrigin:{0, 0, 0}];
-		[blitEncoder endEncoding];
-
-		RegisterReferencedObject(src);
-		RegisterReferencedObject(dst);
-	}
+    auto srcTex = static_cast<TextureMetal*>(src);
+    CopyTexture(src, dst, {0, 0, 0}, {0, 0, 0}, srcTex->GetParameter().Size, 0, 0);
 }
 
 void CommandListMetal::CopyTexture(Texture* src,
                 Texture* dst,
-                const std::array<int, 3>& srcPos,
-                const std::array<int, 3>& dstPos,
-                const std::array<int, 3>& size,
+                const Vec3I& srcPos,
+                const Vec3I& dstPos,
+                const Vec3I& size,
                 int srcLayer,
                 int dstLayer)
 {

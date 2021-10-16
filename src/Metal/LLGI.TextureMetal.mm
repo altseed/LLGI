@@ -125,36 +125,18 @@ TextureMetal::~TextureMetal()
 	SafeRelease(owner_);
 }
 
-bool TextureMetal::Initialize(GraphicsMetal* owner, const TextureInitializationParameter& parameter)
+bool TextureMetal::Initialize(GraphicsMetal* owner, const TextureParameter& parameter)
 {
-	type_ = TextureType::Color;
-    
-    const auto depthSize = std::max({parameter.ArrayLayers, parameter.Depth, 1});
-    const auto mergedSize = Vec3I{parameter.Size.X, parameter.Size.Y, depthSize};
-    
-	SafeAssign(owner_, static_cast<ReferenceObject*>(owner));
-
-    TextureUsageType usage = TextureUsageType::None;
-    int dimension = 2;
-    
-    if(parameter.ArrayLayers > 0)
+    type_ = TextureType::Color;
+    if (!Initialize(owner->GetDevice(), parameter.Size, parameter.Format, parameter.Usage, parameter.Dimension, parameter.SampleCount, type_, parameter.MipLevelCount))
     {
-        usage = TextureUsageType::Array;
+        return false;
     }
-    else if(parameter.Depth > 0)
-    {
-        dimension = 3;
-    }
-    
-	if (!Initialize(owner->GetDevice(), mergedSize, parameter.Format, usage, dimension, 1, type_, parameter.MipMapCount))
-	{
-		return false;
-	}
 
-	format_ = ConvertFormat(texture_.pixelFormat);
-    data.resize(GetTextureMemorySize(format_, mergedSize));
-
-	return true;
+    format_ = ConvertFormat(texture_.pixelFormat);
+    data.resize(GetTextureMemorySize(format_, parameter.Size));
+    parameter_ = parameter;    
+    return true;
 }
 
 bool TextureMetal::Initialize(GraphicsMetal* owner, const RenderTextureInitializationParameter& parameter)

@@ -213,16 +213,26 @@ GraphicsMetal::CreateRenderPass(Texture* texture, Texture* resolvedTexture, Text
 	return renderPass;
 }
 
+Texture* GraphicsMetal::CreateTexture(const TextureParameter& parameter)
+{
+    auto obj = new TextureMetal();
+    if (!obj->Initialize(this, parameter))
+    {
+        SafeRelease(obj);
+        return nullptr;
+    }
+    return obj;
+}
+
 Texture* GraphicsMetal::CreateTexture(const TextureInitializationParameter& parameter)
 {
-	auto o = new TextureMetal();
-	if (o->Initialize(this, parameter))
-	{
-		return o;
-	}
-
-	SafeRelease(o);
-	return nullptr;
+    TextureParameter param;
+    param.Dimension = 2;
+    param.Format = parameter.Format;
+    param.MipLevelCount = parameter.MipMapCount;
+    param.SampleCount = 1;
+    param.Size = {parameter.Size.X, parameter.Size.Y, 1};
+    return CreateTexture(param);
 }
 
 Texture* GraphicsMetal::CreateRenderTexture(const RenderTextureInitializationParameter& parameter)
