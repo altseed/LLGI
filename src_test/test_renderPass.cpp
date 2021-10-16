@@ -276,23 +276,25 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 
 			if (mode == RenderPassTestMode::MSAA)
 			{
-				Bitmap2D(data, screenTex->GetSizeAs2D().X, screenTex->GetSizeAs2D().Y, screenTex->GetFormat()).Save("RenderPass.MSAA.png");
+				Bitmap2D(data, screenTex->GetSizeAs2D().X, screenTex->GetSizeAs2D().Y, screenTex->GetFormat())
+					.Save("RenderPass.MSAA_" + TestHelper::GetDeviceName(deviceType) + ".png");
 			}
 			else if (mode == RenderPassTestMode::None)
 			{
-				Bitmap2D(data, screenTex->GetSizeAs2D().X, screenTex->GetSizeAs2D().Y, screenTex->GetFormat()).Save("RenderPass.Basic.png");
+				Bitmap2D(data, screenTex->GetSizeAs2D().X, screenTex->GetSizeAs2D().Y, screenTex->GetFormat())
+					.Save("RenderPass.Basic_" + TestHelper::GetDeviceName(deviceType) + ".png");
 			}
 			else
 			{
 				Bitmap2D(data, screenTex->GetSizeAs2D().X, screenTex->GetSizeAs2D().Y, screenTex->GetFormat())
-					.Save("RenderPass.CopyTexture.png");
+					.Save("RenderPass.CopyTexture_" + TestHelper::GetDeviceName(deviceType) + ".png");
 			}
 
 			if (mode == RenderPassTestMode::None)
 			{
 				auto data2 = graphics->CaptureRenderTarget(renderTexture);
 				Bitmap2D(data2, renderTexture->GetSizeAs2D().X, renderTexture->GetSizeAs2D().Y, renderTexture->GetFormat())
-					.Save("RenderPass.Basic.2.png");
+					.Save("RenderPass.Basic.2_" + TestHelper::GetDeviceName(deviceType) + ".png");
 			}
 		}
 	}
@@ -388,7 +390,7 @@ void test_copyTextureToScreen(LLGI::DeviceType deviceType)
 			auto data = graphics->CaptureRenderTarget(texture);
 
 			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat())
-				.Save("RenderPass.CopyTextureToScreen.png");
+				.Save("RenderPass.CopyTextureToScreen_" + TestHelper::GetDeviceName(deviceType) + ".png");
 		}
 	}
 
@@ -601,7 +603,7 @@ void test_multiRenderPass(LLGI::DeviceType deviceType)
 			auto screenTexture = platform->GetCurrentScreen(LLGI::Color8(), true)->GetRenderTexture(0);
 			auto data = graphics->CaptureRenderTarget(screenTexture);
 			Bitmap2D(data, screenTexture->GetSizeAs2D().X, screenTexture->GetSizeAs2D().Y, screenTexture->GetFormat())
-				.Save("RenderPass.MRT.png");
+				.Save("RenderPass.MRT_" + TestHelper::GetDeviceName(deviceType) + ".png");
 		}
 	}
 

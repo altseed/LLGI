@@ -182,7 +182,7 @@ void test_capture(LLGI::DeviceType deviceType, LLGI::Vec2I windowSize)
 			auto data = graphics->CaptureRenderTarget(texture);
 
 			// save
-			std::string path = "Capture.Size" + std::to_string(windowSize.X) + ".png";
+			std::string path = "Capture.Size" + std::to_string(windowSize.X) + "_" + TestHelper::GetDeviceName(deviceType) + ".png";
 			Bitmap2D(data, texture->GetSizeAs2D().X, texture->GetSizeAs2D().Y, texture->GetFormat()).Save(path.c_str());
 		}
 	}

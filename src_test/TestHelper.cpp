@@ -398,6 +398,24 @@ void TestHelper::Dispose()
 	//	internalTestHelper.reset();
 }
 
+std::string TestHelper::GetDeviceName(LLGI::DeviceType device)
+{
+	if (device == LLGI::DeviceType::DirectX12)
+	{
+		return std::string{"DirectX12"};
+	}
+	else if (device == LLGI::DeviceType::Metal)
+	{
+		return std::string{"Metal"};
+	}
+	else if (device == LLGI::DeviceType::Vulkan)
+	{
+		return std::string{"Vulkan"};
+	}
+
+	return std::string{"Unknown"};
+}
+
 Bitmap2D::Bitmap2D(const std::vector<uint8_t>& data, int width, int height, LLGI::TextureFormatType format)
 	: data_(data), width_(width), height_(height)
 {
@@ -424,4 +442,4 @@ Bitmap2D::Color Bitmap2D::GetPixel(int x, int y) const
 	return Bitmap2D::Color{b[0], b[1], b[2], b[3]};
 }
 
-void Bitmap2D::Save(const char* filePath) { stbi_write_png(filePath, width_, height_, 4, data_.data(), width_ * 4); }
+void Bitmap2D::Save(const std::string& filePath) { stbi_write_png(filePath.c_str(), width_, height_, 4, data_.data(), width_ * 4); }

@@ -64,6 +64,8 @@ public:
 	static bool GetIsCaptureRequired();
 	static void SetIsCaptureRequired(bool required);
 	static void Dispose();
+
+	static std::string GetDeviceName(LLGI::DeviceType device);
 };
 
 struct TestRegister
@@ -82,7 +84,7 @@ public:
 	Bitmap2D(const std::vector<uint8_t>& data, int width, int height, LLGI::TextureFormatType format);
 
 	Color GetPixel(int x, int y) const;
-	void Save(const char* filePath);
+	void Save(const std::string& filePath);
 
 private:
 	std::vector<uint8_t> data_; // RGBA
