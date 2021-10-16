@@ -681,7 +681,6 @@ bool PlatformVulkan::NewFrame()
 
 void PlatformVulkan::Present()
 {
-
 	// waiting or empty command
 	auto& cmdBuffer = vkCmdBuffers[frameIndex];
 
@@ -689,40 +688,10 @@ void PlatformVulkan::Present()
 	vk::CommandBufferBeginInfo cmdBufInfo;
 	cmdBuffer.begin(cmdBufInfo);
 
-	// typical driver causes errors without present command
-	if (executedCommandCount == 0)
+	if (swapBuffers[frameIndex].texture->GetImageLayouts()[0] != vk::ImageLayout::ePresentSrcKHR)
 	{
-		vk::ClearColorValue clearColor(std::array<float, 4>{0, 0, 0, 0});
-		// vk::ClearDepthStencilValue clearDepth(1.0f, 0);
-
-		vk::ImageSubresourceRange colorSubRange;
-		colorSubRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-		colorSubRange.levelCount = 1;
-		colorSubRange.layerCount = 1;
-
-		vk::ImageSubresourceRange depthSubRange;
-		depthSubRange.aspectMask = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
-		depthSubRange.levelCount = 1;
-		depthSubRange.layerCount = 1;
-
-		// to make screen clear
-		SetImageLayout(
-			cmdBuffer, swapBuffers[frameIndex].image, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal, colorSubRange);
-		// SetImageLayout(cmdBuffer,
-		//			   depthStencilBuffer.image,
-		//				vk::ImageLayout::eDepthReadOnlyStencilAttachmentOptimal,
-		//			   vk::ImageLayout::eTransferDstOptimal,
-		//			   depthSubRange);
-
-		// cmdBuffer.clearColorImage(swapBuffers[frameIndex].image, vk::ImageLayout::eColorAttachmentOptimal, clearColor, colorSubRange);
-		// cmdBuffer.clearDepthStencilImage(depthStencilBuffer.image, vk::ImageLayout::eDepthStencilAttachmentOptimal, clearDepth,
-		// depthSubRange);
-
-		SetImageLayout(cmdBuffer,
-					   swapBuffers[frameIndex].image,
-					   vk::ImageLayout::eColorAttachmentOptimal,
-					   vk::ImageLayout::ePresentSrcKHR,
-					   colorSubRange);
+		swapBuffers[frameIndex].texture->ResourceBarrior(cmdBuffer, vk::ImageLayout::eColorAttachmentOptimal);
+		swapBuffers[frameIndex].texture->ResourceBarrior(cmdBuffer, vk::ImageLayout::ePresentSrcKHR);
 	}
 
 	cmdBuffer.end();
