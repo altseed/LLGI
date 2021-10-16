@@ -215,6 +215,19 @@ void CommandListDX12::EndRenderPass()
 		auto src = static_cast<TextureDX12*>(renderPass_->GetRenderTexture(0));
 		auto dst = static_cast<TextureDX12*>(renderPass_->GetResolvedRenderTexture());
 
+		// TODO : refactor
+		if (src->GetParameter().SampleCount <= 1)
+		{
+			Log(LogType::Error, "src SampleCount must be larger than 2.");
+			return;
+		}
+
+		if (dst->GetParameter().SampleCount != 1)
+		{
+			Log(LogType::Error, "dst SampleCount must be 1.");
+			return;
+		}
+
 		src->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_RESOLVE_SOURCE);
 		dst->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_RESOLVE_DEST);
 
@@ -225,6 +238,19 @@ void CommandListDX12::EndRenderPass()
 	{
 		auto src = static_cast<TextureDX12*>(renderPass_->GetDepthTexture());
 		auto dst = static_cast<TextureDX12*>(renderPass_->GetResolvedDepthTexture());
+
+		// TODO : refactor
+		if (src->GetParameter().SampleCount <= 1)
+		{
+			Log(LogType::Error, "src SampleCount must be larger than 2.");
+			return;
+		}
+
+		if (dst->GetParameter().SampleCount != 1)
+		{
+			Log(LogType::Error, "dst SampleCount must be 1.");
+			return;
+		}
 
 		src->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_RESOLVE_SOURCE);
 		dst->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_RESOLVE_DEST);
@@ -394,19 +420,46 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 					{
 						D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 
-						if (texture->GetSamplingCount() > 1)
+						if (texture->GetParameter().Dimension == 3)
 						{
-							srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
+							srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
+							srvDesc.Texture3D.MipLevels = 1;
+							srvDesc.Texture3D.MostDetailedMip = 0;
+							srvDesc.Texture3D.ResourceMinLODClamp = 0.0f;
+						}
+						else if ((texture->GetParameter().Usage & TextureUsageType::Array) != TextureUsageType::NoneFlag)
+						{
+							if (texture->GetParameter().SampleCount > 1)
+							{
+								srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY;
+							}
+							else
+							{
+								srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+							}
+							srvDesc.Texture2DArray.ArraySize = texture->GetParameter().Size.Z;
+							srvDesc.Texture2DArray.FirstArraySlice = 0;
+							srvDesc.Texture2DArray.MipLevels = 1;
+							srvDesc.Texture2DArray.MostDetailedMip = 0;
+							srvDesc.Texture2DArray.PlaneSlice = 0;
+							srvDesc.Texture2DArray.ResourceMinLODClamp = 0.0f;
 						}
 						else
 						{
-							srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+							if (texture->GetParameter().SampleCount > 1)
+							{
+								srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
+							}
+							else
+							{
+								srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+							}
+							srvDesc.Texture2D.MipLevels = 1;
+							srvDesc.Texture2D.MostDetailedMip = 0;
 						}
 
 						srvDesc.Format = DirectX12::GetShaderResourceViewFormat(texture->GetDXGIFormat());
 						srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-						srvDesc.Texture2D.MipLevels = 1;
-						srvDesc.Texture2D.MostDetailedMip = 0;
 
 						auto cpuHandle = cpuDescriptorHandleConstant[2 + static_cast<int32_t>(unit_ind)];
 						graphics_->GetDevice()->CreateShaderResourceView(texture->Get(), &srvDesc, cpuHandle);
@@ -486,6 +539,13 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 
 void CommandListDX12::CopyTexture(Texture* src, Texture* dst)
 {
+	auto srcTex = static_cast<TextureDX12*>(src);
+	CopyTexture(src, dst, {0, 0, 0}, {0, 0, 0}, srcTex->GetParameter().Size, 0, 0);
+}
+
+void CommandListDX12::CopyTexture(
+	Texture* src, Texture* dst, const Vec3I& srcPos, const Vec3I& dstPos, const Vec3I& size, int srcLayer, int dstLayer)
+{
 	if (isInRenderPass_)
 	{
 		Log(LogType::Error, "Please call CopyTexture outside of RenderPass");
@@ -498,15 +558,25 @@ void CommandListDX12::CopyTexture(Texture* src, Texture* dst)
 	D3D12_TEXTURE_COPY_LOCATION srcLoc = {}, dstLoc = {};
 
 	srcLoc.pResource = srcTex->Get();
+	srcLoc.SubresourceIndex = srcLayer;
 
 	dstLoc.pResource = dstTex->Get();
+	dstLoc.SubresourceIndex = dstLayer;
 
 	auto srcState = srcTex->GetState();
 
 	srcTex->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_COPY_SOURCE);
 	dstTex->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_COPY_DEST);
 
-	currentCommandList_->CopyTextureRegion(&dstLoc, 0, 0, 0, &srcLoc, nullptr);
+	D3D12_BOX srcBox;
+	srcBox.left = srcPos[0];
+	srcBox.right = srcPos[0] + size[0];
+	srcBox.top = srcPos[1];
+	srcBox.bottom = srcPos[1] + size[1];
+	srcBox.front = srcPos[2];
+	srcBox.back = srcPos[2] + size[2];
+
+	currentCommandList_->CopyTextureRegion(&dstLoc, dstPos[0], dstPos[1], dstPos[2], &srcLoc, &srcBox);
 
 	dstTex->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_GENERIC_READ);
 	srcTex->ResourceBarrior(currentCommandList_, srcState);

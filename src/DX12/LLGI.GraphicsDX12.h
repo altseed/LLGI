@@ -53,6 +53,7 @@ public:
 	CommandList* CreateCommandList(SingleFrameMemoryPool* memoryPool) override;
 	RenderPass* CreateRenderPass(Texture** textures, int32_t textureCount, Texture* depthTexture) override;
 	RenderPass* CreateRenderPass(Texture* texture, Texture* resolvedTexture, Texture* depthTexture, Texture* resolvedDepthTexture) override;
+	Texture* CreateTexture(const TextureParameter& parameter) override;
 	Texture* CreateTexture(uint64_t id) override;
 	Texture* CreateTexture(const TextureInitializationParameter& parameter) override;
 	Texture* CreateRenderTexture(const RenderTextureInitializationParameter& parameter) override;

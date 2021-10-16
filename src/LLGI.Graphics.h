@@ -10,6 +10,16 @@ namespace LLGI
 {
 class CommandListPool;
 
+struct TextureParameter
+{
+	TextureUsageType Usage = TextureUsageType::NoneFlag;
+	TextureFormatType Format = TextureFormatType::R8G8B8A8_UNORM;
+	int32_t Dimension = 2;
+	Vec3I Size = Vec3I{1, 1, 1};
+	int32_t MipLevelCount = 1;
+	int SampleCount = 1;
+};
+
 struct TextureInitializationParameter
 {
 	Vec2I Size;
@@ -267,6 +277,8 @@ public:
 	{
 		return nullptr;
 	}
+
+	virtual Texture* CreateTexture(const TextureParameter& parameter) { return nullptr; }
 
 	virtual Texture* CreateTexture(const TextureInitializationParameter& parameter) { return nullptr; }
 

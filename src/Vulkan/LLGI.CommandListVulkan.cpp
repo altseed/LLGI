@@ -466,6 +466,13 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 
 void CommandListVulkan::CopyTexture(Texture* src, Texture* dst)
 {
+	auto srcTex = static_cast<TextureVulkan*>(src);
+	CopyTexture(src, dst, {0, 0, 0}, {0, 0, 0}, srcTex->GetParameter().Size, 0, 0);
+}
+
+void CommandListVulkan::CopyTexture(
+	Texture* src, Texture* dst, const Vec3I& srcPos, const Vec3I& dstPos, const Vec3I& size, int srcLayer, int dstLayer)
+{
 	if (isInRenderPass_)
 	{
 		Log(LogType::Error, "Please call CopyTexture outside of RenderPass");
@@ -488,17 +495,17 @@ void CommandListVulkan::CopyTexture(Texture* src, Texture* dst)
 	}
 
 	std::array<vk::ImageCopy, 1> imageCopy;
-	imageCopy[0].dstOffset = vk::Offset3D(0, 0, 0);
-	imageCopy[0].srcOffset = vk::Offset3D(0, 0, 0);
-	imageCopy[0].extent.width = src->GetSizeAs2D().X;
-	imageCopy[0].extent.height = src->GetSizeAs2D().Y;
-	imageCopy[0].extent.depth = 1;
+	imageCopy[0].dstOffset = vk::Offset3D(dstPos[0], dstPos[1], dstPos[2]);
+	imageCopy[0].srcOffset = vk::Offset3D(srcPos[0], srcPos[1], srcPos[2]);
+	imageCopy[0].extent.width = size[0];
+	imageCopy[0].extent.height = size[1];
+	imageCopy[0].extent.depth = size[2];
 	imageCopy[0].srcSubresource.aspectMask = srcTex->GetSubresourceRange().aspectMask;
 	imageCopy[0].srcSubresource.layerCount = 1;
-	imageCopy[0].srcSubresource.baseArrayLayer = 0;
+	imageCopy[0].srcSubresource.baseArrayLayer = srcLayer;
 	imageCopy[0].dstSubresource.aspectMask = dstTex->GetSubresourceRange().aspectMask;
 	imageCopy[0].dstSubresource.layerCount = 1;
-	imageCopy[0].dstSubresource.baseArrayLayer = 0;
+	imageCopy[0].dstSubresource.baseArrayLayer = dstLayer;
 
 	srcTex->ResourceBarrior(currentCommandBuffer_, vk::ImageLayout::eTransferSrcOptimal);
 	dstTex->ResourceBarrior(currentCommandBuffer_, vk::ImageLayout::eTransferDstOptimal);

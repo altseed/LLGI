@@ -54,6 +54,8 @@ public:
 	void EndRenderPass() override;
 	void Draw(int32_t primitiveCount, int32_t instanceCount) override;
 	void CopyTexture(Texture* src, Texture* dst) override;
+	void CopyTexture(
+		Texture* src, Texture* dst, const Vec3I& srcPos, const Vec3I& dstPos, const Vec3I& size, int srcLayer, int dstLayer) override;
 
 	void UpdateData(VertexBuffer* vertexBuffer) override;
 	void UpdateData(IndexBuffer* indexBuffer) override;

@@ -14,18 +14,20 @@ private:
 	std::vector<uint8_t> data;
 
 	id<MTLTexture> texture_ = nullptr;
-	Vec2I size_;
+	Vec3I size_;
 	bool fromExternal_ = false;
 
+    TextureParameter parameter_;
+    
 	bool
-	Initialize(id<MTLDevice> device, const Vec2I& size, TextureFormatType format, int samplingCount, TextureType type, int MipMapCount);
+	Initialize(id<MTLDevice> device, const Vec3I& size, TextureFormatType format, TextureUsageType usage, int dimension, int samplingCount, TextureType type, int MipMapCount);
 	void Write(const uint8_t* data);
 
 public:
 	TextureMetal();
 	~TextureMetal() override;
 
-	bool Initialize(GraphicsMetal* owner, const TextureInitializationParameter& parameter);
+    bool Initialize(GraphicsMetal* owner, const TextureParameter& parameter);
 	bool Initialize(GraphicsMetal* owner, const RenderTextureInitializationParameter& parameter);
 	bool Initialize(GraphicsMetal* owner, const DepthTextureInitializationParameter& parameter);
 	bool Initialize(GraphicsMetal* owner, id<MTLTexture> externalTexture);
@@ -33,6 +35,8 @@ public:
 	void* Lock() override;
 	void Unlock() override;
 	Vec2I GetSizeAs2D() const override;
+    
+    const TextureParameter& GetParameter() const { return parameter_; }
 
 	id<MTLTexture>& GetTexture() { return texture_; }
 };

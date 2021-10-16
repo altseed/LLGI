@@ -283,37 +283,47 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 
 void CommandListMetal::CopyTexture(Texture* src, Texture* dst)
 {
-	@autoreleasepool
-	{
-		if (isInRenderPass_)
-		{
-			Log(LogType::Error, "Please call CopyTexture outside of RenderPass");
-			return;
-		}
+    auto srcTex = static_cast<TextureMetal*>(src);
+    CopyTexture(src, dst, {0, 0, 0}, {0, 0, 0}, srcTex->GetParameter().Size, 0, 0);
+}
 
-		auto srcTex = static_cast<TextureMetal*>(src);
-		auto dstTex = static_cast<TextureMetal*>(dst);
+void CommandListMetal::CopyTexture(Texture* src,
+                Texture* dst,
+                const Vec3I& srcPos,
+                const Vec3I& dstPos,
+                const Vec3I& size,
+                int srcLayer,
+                int dstLayer)
+{
+    @autoreleasepool
+    {
+        if (isInRenderPass_)
+        {
+            Log(LogType::Error, "Please call CopyTexture outside of RenderPass");
+            return;
+        }
 
-		id<MTLBlitCommandEncoder> blitEncoder = [commandBuffer_ blitCommandEncoder];
+        auto srcTex = static_cast<TextureMetal*>(src);
+        auto dstTex = static_cast<TextureMetal*>(dst);
 
-		auto regionSize = srcTex->GetSizeAs2D();
+        id<MTLBlitCommandEncoder> blitEncoder = [commandBuffer_ blitCommandEncoder];
 
-		MTLRegion region = {{0, 0, 0}, {(uint32_t)regionSize.X, (uint32_t)regionSize.Y, 1}};
+        MTLRegion region = {{(uint32_t)srcPos[0], (uint32_t)srcPos[1], (uint32_t)srcPos[2]}, {(uint32_t)size[0], (uint32_t)size[1], (uint32_t)size[2]}};
 
-		[blitEncoder copyFromTexture:srcTex->GetTexture()
-						 sourceSlice:0
-						 sourceLevel:0
-						sourceOrigin:region.origin
-						  sourceSize:region.size
-						   toTexture:dstTex->GetTexture()
-					destinationSlice:0
-					destinationLevel:0
-				   destinationOrigin:{0, 0, 0}];
-		[blitEncoder endEncoding];
+        [blitEncoder copyFromTexture:srcTex->GetTexture()
+                         sourceSlice:srcLayer
+                         sourceLevel:0
+                        sourceOrigin:region.origin
+                          sourceSize:region.size
+                           toTexture:dstTex->GetTexture()
+                    destinationSlice:dstLayer
+                    destinationLevel:0
+                   destinationOrigin:{(uint32_t)dstPos[0], (uint32_t)dstPos[1], (uint32_t)dstPos[2]}];
+        [blitEncoder endEncoding];
 
-		RegisterReferencedObject(src);
-		RegisterReferencedObject(dst);
-	}
+        RegisterReferencedObject(src);
+        RegisterReferencedObject(dst);
+    }
 }
 
 void CommandListMetal::GenerateMipMap(Texture* src)

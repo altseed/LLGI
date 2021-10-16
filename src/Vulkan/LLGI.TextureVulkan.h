@@ -24,7 +24,8 @@ private:
 	vk::Format vkTextureFormat_;
 	vk::ImageSubresourceRange subresourceRange_;
 
-	Vec2I textureSize;
+	Vec3I textureSize;
+	TextureParameter parameter_;
 
 	int32_t memorySize = 0;
 	std::unique_ptr<Buffer> cpuBuf;
@@ -38,15 +39,7 @@ public:
 	TextureVulkan();
 	~TextureVulkan() override;
 
-	bool Initialize(GraphicsVulkan* graphics,
-					bool isStrongRef,
-					const Vec2I& size,
-					vk::Format format,
-					int samplingCount,
-					int mipmapCount,
-					TextureType textureType);
-
-	bool InitializeAsRenderTexture(GraphicsVulkan* graphics, bool isStrongRef, const RenderTextureInitializationParameter& parameter);
+	bool Initialize(GraphicsVulkan* graphics, bool isStrongRef, const TextureParameter& parameter);
 
 	/**
 		@brief	initialize as screen
@@ -64,7 +57,10 @@ public:
 
 	void* Lock() override;
 	void Unlock() override;
+
+	Vec3I GetSize() const { return textureSize; }
 	Vec2I GetSizeAs2D() const override;
+	const TextureParameter& GetParameter() { return parameter_; }
 
 	const vk::Image& GetImage() const { return image_; }
 	const vk::ImageView& GetView() const { return view_; }

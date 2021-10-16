@@ -38,6 +38,14 @@ public:
 	void SetScissor(int32_t x, int32_t y, int32_t width, int32_t height) override;
 	void Draw(int32_t primitiveCount, int32_t instanceCount) override;
 	void CopyTexture(Texture* src, Texture* dst) override;
+    void CopyTexture(Texture* src,
+                    Texture* dst,
+                    const Vec3I& srcPos,
+                    const Vec3I& dstPos,
+                    const Vec3I& size,
+                    int srcLayer,
+                    int dstLayer) override;
+    
 	void GenerateMipMap(Texture* src) override;
 	void BeginRenderPass(RenderPass* renderPass) override;
 	void EndRenderPass() override;
