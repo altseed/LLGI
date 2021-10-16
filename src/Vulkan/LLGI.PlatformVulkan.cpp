@@ -154,13 +154,15 @@ bool PlatformVulkan::CreateDepthBuffer(Vec2I windowSize)
 {
 	SafeRelease(depthStencilTexture_);
 
+	TextureParameter param;
+	param.Dimension = 2;
+	param.Format = TextureFormatType::D24S8;
+	param.MipLevelCount = 1;
+	param.SampleCount = 1;
+	param.Size = {windowSize.X, windowSize.Y, 1};
+
 	depthStencilTexture_ = new TextureVulkan();
-	if (!depthStencilTexture_->InitializeAsDepthStencil(vkDevice_,
-														vkPhysicalDevice,
-														windowSize,
-														(vk::Format)VulkanHelper::TextureFormatToVkFormat(TextureFormatType::D24S8),
-														1,
-														nullptr))
+	if (!depthStencilTexture_->Initialize(nullptr, vkDevice_, vkPhysicalDevice, nullptr, param))
 	{
 		return false;
 	}
