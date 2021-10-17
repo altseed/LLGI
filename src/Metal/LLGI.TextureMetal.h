@@ -20,7 +20,7 @@ private:
     TextureParameter parameter_;
     
 	bool
-	Initialize(id<MTLDevice> device, const Vec3I& size, TextureFormatType format, TextureUsageType usage, int dimension, int samplingCount, TextureType type, int MipMapCount);
+	Initialize(id<MTLDevice> device, const TextureParameter& parameter);
 	void Write(const uint8_t* data);
 
 public:
@@ -28,8 +28,6 @@ public:
 	~TextureMetal() override;
 
     bool Initialize(GraphicsMetal* owner, const TextureParameter& parameter);
-	bool Initialize(GraphicsMetal* owner, const RenderTextureInitializationParameter& parameter);
-	bool Initialize(GraphicsMetal* owner, const DepthTextureInitializationParameter& parameter);
 	bool Initialize(GraphicsMetal* owner, id<MTLTexture> externalTexture);
 	void Reset(id<MTLTexture> nativeTexture);
 	void* Lock() override;

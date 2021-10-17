@@ -14,16 +14,11 @@ ComputeBufferMetal::~ComputeBufferMetal() { SafeRelease(buffer_); }
 bool ComputeBufferMetal::Initialize(Graphics* graphics, int32_t size)
 {
     auto buffer = new BufferMetal(graphics, size);
-    {
-        SafeAssign(buffer_, buffer);
-        SafeRelease(buffer);
-        size_ = size;
-        offset_ = 0;
-        return true;
-    }
-
+    SafeAssign(buffer_, buffer);
     SafeRelease(buffer);
-    return false;
+    size_ = size;
+    offset_ = 0;
+    return true;
 }
 
 void* ComputeBufferMetal::Lock()

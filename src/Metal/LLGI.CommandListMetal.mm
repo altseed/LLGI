@@ -452,6 +452,7 @@ bool CommandListMetal::EndRenderPassWithPlatformPtr()
 void CommandListMetal::BeginComputePass()
 {
     computeEncoder_ = [commandBuffer_ computeCommandEncoder];
+    [computeEncoder_ retain];
 }
 
 void CommandListMetal::EndComputePass()

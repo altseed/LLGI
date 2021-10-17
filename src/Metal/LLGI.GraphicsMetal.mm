@@ -237,26 +237,36 @@ Texture* GraphicsMetal::CreateTexture(const TextureInitializationParameter& para
 
 Texture* GraphicsMetal::CreateRenderTexture(const RenderTextureInitializationParameter& parameter)
 {
-	auto o = new TextureMetal();
-	if (o->Initialize(this, parameter))
-	{
-		return o;
-	}
-
-	SafeRelease(o);
-	return nullptr;
+    TextureParameter param;
+    param.Dimension = 2;
+    param.Format = parameter.Format;
+    param.MipLevelCount = 1;
+    param.SampleCount = parameter.SamplingCount;
+    param.Size = {parameter.Size.X, parameter.Size.Y, 1};
+    param.Usage = TextureUsageType::RenderTarget;
+    return CreateTexture(param);
 }
 
 Texture* GraphicsMetal::CreateDepthTexture(const DepthTextureInitializationParameter& parameter)
 {
-	auto o = new TextureMetal();
-	if (o->Initialize(this, parameter))
-	{
-		return o;
-	}
-
-	SafeRelease(o);
-	return nullptr;
+    auto format = TextureFormatType::D32;
+    if (parameter.Mode == DepthTextureMode::DepthStencil)
+    {
+        format = TextureFormatType::D24S8;
+        
+        if (!GetDevice().isDepth24Stencil8PixelFormatSupported)
+        {
+            return nullptr;
+        }
+    }
+    
+    TextureParameter param;
+    param.Dimension = 2;
+    param.Format = format;
+    param.MipLevelCount = 1;
+    param.SampleCount = parameter.SamplingCount;
+    param.Size = {parameter.Size.X, parameter.Size.Y, 1};
+    return CreateTexture(param);
 }
 
 Texture* GraphicsMetal::CreateTexture(uint64_t texid)
