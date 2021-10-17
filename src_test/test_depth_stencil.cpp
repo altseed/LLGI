@@ -316,6 +316,6 @@ TestRegister DepthStencil_Depth("DepthStencil.Depth",
 TestRegister DepthStencil_Stencil("DepthStencil.Stencil",
 								  [](LLGI::DeviceType device) -> void { test_depth_stencil(device, DepthStencilTestMode::Stencil); });
 
-TestRegister DepthStencil_DepthAsTexture("DepthStencil.DepthAsTexture",
-										 [](LLGI::DeviceType device) -> void
-										 { test_depth_stencil(device, DepthStencilTestMode::DepthAsTexture); });
+TestRegister DepthStencil_DepthAsTexture("DepthStencil.DepthAsTexture", [](LLGI::DeviceType device) -> void {
+	test_depth_stencil(device, DepthStencilTestMode::DepthAsTexture);
+});

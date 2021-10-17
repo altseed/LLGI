@@ -23,7 +23,8 @@ InternalSingleFrameMemoryPoolDX12::InternalSingleFrameMemoryPoolDX12(GraphicsDX1
 												  Vec2I(constantBufferSize_, 1));
 }
 
-InternalSingleFrameMemoryPoolDX12 ::~InternalSingleFrameMemoryPoolDX12() {
+InternalSingleFrameMemoryPoolDX12 ::~InternalSingleFrameMemoryPoolDX12()
+{
 	SafeRelease(constantBuffer_);
 	SafeRelease(cpuConstantBuffer_);
 }

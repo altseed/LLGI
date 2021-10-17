@@ -38,7 +38,7 @@ public:
 	*/
 	int32_t GetActualSize() const;
 	int32_t GetOffset() const;
-	
+
 	ID3D12Resource* Get() { return computeBuffer_; }
 	ID3D12Resource* GetReadback() { return readbackComputeBuffer_; }
 	ID3D12Resource* GetUpload() { return uploadComputeBuffer_; }

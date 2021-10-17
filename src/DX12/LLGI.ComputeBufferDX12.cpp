@@ -43,7 +43,8 @@ bool ComputeBufferDX12::Initialize(GraphicsDX12* graphics, int32_t size)
 	return true;
 }
 
-ComputeBufferDX12::~ComputeBufferDX12() {
+ComputeBufferDX12::~ComputeBufferDX12()
+{
 	SafeRelease(computeBuffer_);
 	SafeRelease(uploadComputeBuffer_);
 	SafeRelease(readbackComputeBuffer_);
