@@ -15,10 +15,10 @@ void test_compute_shader(LLGI::DeviceType deviceType)
 	pp.Device = deviceType;
 	pp.WaitVSync = true;
 	auto window = std::unique_ptr<LLGI::Window>(LLGI::CreateWindow("Capture", LLGI::Vec2I(1280, 720)));
-    auto platform = LLGI::CreateSharedPtr(LLGI::CreatePlatform(pp, window.get()));
-    auto graphics = LLGI::CreateSharedPtr(platform->CreateGraphics());
+	auto platform = LLGI::CreateSharedPtr(LLGI::CreatePlatform(pp, window.get()));
+	auto graphics = LLGI::CreateSharedPtr(platform->CreateGraphics());
 
-    auto sfMemoryPool = LLGI::CreateSharedPtr(graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128));
+	auto sfMemoryPool = LLGI::CreateSharedPtr(graphics->CreateSingleFrameMemoryPool(1024 * 1024, 128));
 
 	auto commandListPool = std::make_shared<LLGI::CommandListPool>(graphics.get(), sfMemoryPool.get(), 3);
 
@@ -55,11 +55,11 @@ void test_compute_shader(LLGI::DeviceType deviceType)
 		data[0] = 100;
 		constantBuffer->Unlock();
 	}
-    
-    if (!platform->NewFrame())
-        return;
-    
-    sfMemoryPool->NewFrame();
+
+	if (!platform->NewFrame())
+		return;
+
+	sfMemoryPool->NewFrame();
 
 	auto commandList = commandListPool->Get();
 	commandList->Begin();
@@ -84,8 +84,8 @@ void test_compute_shader(LLGI::DeviceType deviceType)
 			std::cout << "data[" << i << "] = " << data[i].value << std::endl;
 		}
 	}
-    
-    platform->Present();
+
+	platform->Present();
 }
 
 TestRegister ComputeShader_Basic("ComputeShader.Basic", [](LLGI::DeviceType device) -> void { test_compute_shader(device); });

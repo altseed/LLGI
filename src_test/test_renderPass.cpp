@@ -221,7 +221,7 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 		}
 
 		commandList->BeginRenderPass(platform->GetCurrentScreen(color2, true));
-		
+
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get());
 

@@ -1,6 +1,6 @@
 #include "LLGI.CommandListMetal.h"
-#include "LLGI.ConstantBufferMetal.h"
 #include "LLGI.ComputeBufferMetal.h"
+#include "LLGI.ConstantBufferMetal.h"
 #include "LLGI.GraphicsMetal.h"
 #include "LLGI.IndexBufferMetal.h"
 #include "LLGI.Metal_Impl.h"
@@ -283,47 +283,43 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 
 void CommandListMetal::CopyTexture(Texture* src, Texture* dst)
 {
-    auto srcTex = static_cast<TextureMetal*>(src);
-    CopyTexture(src, dst, {0, 0, 0}, {0, 0, 0}, srcTex->GetParameter().Size, 0, 0);
+	auto srcTex = static_cast<TextureMetal*>(src);
+	CopyTexture(src, dst, {0, 0, 0}, {0, 0, 0}, srcTex->GetParameter().Size, 0, 0);
 }
 
-void CommandListMetal::CopyTexture(Texture* src,
-                Texture* dst,
-                const Vec3I& srcPos,
-                const Vec3I& dstPos,
-                const Vec3I& size,
-                int srcLayer,
-                int dstLayer)
+void CommandListMetal::CopyTexture(
+	Texture* src, Texture* dst, const Vec3I& srcPos, const Vec3I& dstPos, const Vec3I& size, int srcLayer, int dstLayer)
 {
-    @autoreleasepool
-    {
-        if (isInRenderPass_)
-        {
-            Log(LogType::Error, "Please call CopyTexture outside of RenderPass");
-            return;
-        }
+	@autoreleasepool
+	{
+		if (isInRenderPass_)
+		{
+			Log(LogType::Error, "Please call CopyTexture outside of RenderPass");
+			return;
+		}
 
-        auto srcTex = static_cast<TextureMetal*>(src);
-        auto dstTex = static_cast<TextureMetal*>(dst);
+		auto srcTex = static_cast<TextureMetal*>(src);
+		auto dstTex = static_cast<TextureMetal*>(dst);
 
-        id<MTLBlitCommandEncoder> blitEncoder = [commandBuffer_ blitCommandEncoder];
+		id<MTLBlitCommandEncoder> blitEncoder = [commandBuffer_ blitCommandEncoder];
 
-        MTLRegion region = {{(uint32_t)srcPos[0], (uint32_t)srcPos[1], (uint32_t)srcPos[2]}, {(uint32_t)size[0], (uint32_t)size[1], (uint32_t)size[2]}};
+		MTLRegion region = {{(uint32_t)srcPos[0], (uint32_t)srcPos[1], (uint32_t)srcPos[2]},
+							{(uint32_t)size[0], (uint32_t)size[1], (uint32_t)size[2]}};
 
-        [blitEncoder copyFromTexture:srcTex->GetTexture()
-                         sourceSlice:srcLayer
-                         sourceLevel:0
-                        sourceOrigin:region.origin
-                          sourceSize:region.size
-                           toTexture:dstTex->GetTexture()
-                    destinationSlice:dstLayer
-                    destinationLevel:0
-                   destinationOrigin:{(uint32_t)dstPos[0], (uint32_t)dstPos[1], (uint32_t)dstPos[2]}];
-        [blitEncoder endEncoding];
+		[blitEncoder copyFromTexture:srcTex->GetTexture()
+						 sourceSlice:srcLayer
+						 sourceLevel:0
+						sourceOrigin:region.origin
+						  sourceSize:region.size
+						   toTexture:dstTex->GetTexture()
+					destinationSlice:dstLayer
+					destinationLevel:0
+				   destinationOrigin:{(uint32_t)dstPos[0], (uint32_t)dstPos[1], (uint32_t)dstPos[2]}];
+		[blitEncoder endEncoding];
 
-        RegisterReferencedObject(src);
-        RegisterReferencedObject(dst);
-    }
+		RegisterReferencedObject(src);
+		RegisterReferencedObject(dst);
+	}
 }
 
 void CommandListMetal::GenerateMipMap(Texture* src)
@@ -451,57 +447,57 @@ bool CommandListMetal::EndRenderPassWithPlatformPtr()
 
 void CommandListMetal::BeginComputePass()
 {
-    computeEncoder_ = [commandBuffer_ computeCommandEncoder];
-    [computeEncoder_ retain];
+	computeEncoder_ = [commandBuffer_ computeCommandEncoder];
+	[computeEncoder_ retain];
 }
 
 void CommandListMetal::EndComputePass()
 {
-    if (computeEncoder_)
-    {
-        [computeEncoder_ endEncoding];
-        [computeEncoder_ release];
-        computeEncoder_ = nullptr;
-    }
+	if (computeEncoder_)
+	{
+		[computeEncoder_ endEncoding];
+		[computeEncoder_ release];
+		computeEncoder_ = nullptr;
+	}
 }
 
 void CommandListMetal::Dispatch(int32_t x, int32_t y, int32_t z)
 {
-    ComputeBuffer* bcb = nullptr;
-    PipelineState* bpip = nullptr;
+	ComputeBuffer* bcb = nullptr;
+	PipelineState* bpip = nullptr;
 
-    bool isCBDirtied = false;
-    bool isPipDirtied = false;
+	bool isCBDirtied = false;
+	bool isPipDirtied = false;
 
-    GetCurrentComputeBuffer(bcb, isCBDirtied);
-    GetCurrentPipelineState(bpip, isPipDirtied);
+	GetCurrentComputeBuffer(bcb, isCBDirtied);
+	GetCurrentPipelineState(bpip, isPipDirtied);
 
-    assert(bcb != nullptr);
-    assert(bpip != nullptr);
-    assert(computeEncoder_ != nullptr);
+	assert(bcb != nullptr);
+	assert(bpip != nullptr);
+	assert(computeEncoder_ != nullptr);
 
-    auto cb = static_cast<ComputeBufferMetal*>(bcb);
-    auto pip = static_cast<PipelineStateMetal*>(bpip);
+	auto cb = static_cast<ComputeBufferMetal*>(bcb);
+	auto pip = static_cast<PipelineStateMetal*>(bpip);
 
-    [computeEncoder_ setBuffer:cb->GetBuffer().GetBuffer() offset:cb->GetOffset() atIndex:1];
+	[computeEncoder_ setBuffer:cb->GetBuffer().GetBuffer() offset:cb->GetOffset() atIndex:1];
 
-    // assign constant buffer
-    ConstantBuffer* ccb = nullptr;
-    GetCurrentConstantBuffer(ShaderStageType::Compute, ccb);
-    if (ccb != nullptr)
-    {
-        auto ccb_ = static_cast<ConstantBufferMetal*>(ccb);
-        [computeEncoder_ setBuffer:ccb_->GetBuffer().GetBuffer() offset:ccb_->GetOffset() atIndex:0];
-    }
-    
-    if (isPipDirtied)
-    {
-        [computeEncoder_ setComputePipelineState:pip->GetComputePipelineState()];
-    }
-    
-    [computeEncoder_ dispatchThreadgroups:{1, 1, 1} threadsPerThreadgroup:{(uint32_t)x, (uint32_t)y, (uint32_t)z}];
+	// assign constant buffer
+	ConstantBuffer* ccb = nullptr;
+	GetCurrentConstantBuffer(ShaderStageType::Compute, ccb);
+	if (ccb != nullptr)
+	{
+		auto ccb_ = static_cast<ConstantBufferMetal*>(ccb);
+		[computeEncoder_ setBuffer:ccb_->GetBuffer().GetBuffer() offset:ccb_->GetOffset() atIndex:0];
+	}
 
-    CommandList::Dispatch(x, y, z);
+	if (isPipDirtied)
+	{
+		[computeEncoder_ setComputePipelineState:pip->GetComputePipelineState()];
+	}
+
+	[computeEncoder_ dispatchThreadgroups:{1, 1, 1} threadsPerThreadgroup:{(uint32_t)x, (uint32_t)y, (uint32_t)z}];
+
+	CommandList::Dispatch(x, y, z);
 }
 
 }

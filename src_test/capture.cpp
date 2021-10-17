@@ -18,7 +18,8 @@ void test_capture_texture(LLGI::DeviceType deviceType)
 
 	auto commandListPool = std::make_shared<LLGI::CommandListPool>(graphics.get(), sfMemoryPool.get(), 3);
 
-	auto compareTexture = [graphics](bool isRenderTexture, LLGI::Vec2I size, LLGI::TextureFormatType format) -> void {
+	auto compareTexture = [graphics](bool isRenderTexture, LLGI::Vec2I size, LLGI::TextureFormatType format) -> void
+	{
 		std::shared_ptr<LLGI::Texture> texture;
 		if (isRenderTexture)
 		{

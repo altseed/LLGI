@@ -25,7 +25,7 @@ class CommandListMetal : public CommandList
 
 	id<MTLCommandBuffer> commandBuffer_ = nullptr;
 	id<MTLRenderCommandEncoder> renderEncoder_ = nullptr;
-    id<MTLComputeCommandEncoder> computeEncoder_ = nullptr;
+	id<MTLComputeCommandEncoder> computeEncoder_ = nullptr;
 	id<MTLFence> fence_ = nullptr;
 	bool isCompleted_ = true;
 
@@ -38,14 +38,9 @@ public:
 	void SetScissor(int32_t x, int32_t y, int32_t width, int32_t height) override;
 	void Draw(int32_t primitiveCount, int32_t instanceCount) override;
 	void CopyTexture(Texture* src, Texture* dst) override;
-    void CopyTexture(Texture* src,
-                    Texture* dst,
-                    const Vec3I& srcPos,
-                    const Vec3I& dstPos,
-                    const Vec3I& size,
-                    int srcLayer,
-                    int dstLayer) override;
-    
+	void CopyTexture(
+		Texture* src, Texture* dst, const Vec3I& srcPos, const Vec3I& dstPos, const Vec3I& size, int srcLayer, int dstLayer) override;
+
 	void GenerateMipMap(Texture* src) override;
 	void BeginRenderPass(RenderPass* renderPass) override;
 	void EndRenderPass() override;
@@ -57,10 +52,10 @@ public:
 
 	bool BeginRenderPassWithPlatformPtr(void* platformPtr) override;
 	bool EndRenderPassWithPlatformPtr() override;
-    
-    void BeginComputePass() override;
-    void EndComputePass() override;
-    void Dispatch(int32_t x, int32_t y, int32_t z) override;
+
+	void BeginComputePass() override;
+	void EndComputePass() override;
+	void Dispatch(int32_t x, int32_t y, int32_t z) override;
 
 	bool GetIsCompleted() { return isCompleted_; }
 
