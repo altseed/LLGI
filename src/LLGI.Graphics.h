@@ -236,6 +236,8 @@ public:
 	*/
 	virtual void WaitFinish() {}
 
+	virtual Buffer* CreateBuffer(int32_t size);
+
 	/**
 		@brief	create a vertex buffer
 		@param	size	the size of vertex buffer

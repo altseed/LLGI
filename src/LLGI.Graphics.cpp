@@ -347,6 +347,8 @@ void Graphics::Execute(CommandList* commandList) {}
 
 // RenderPass* Graphics::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared) { return nullptr; }
 
+Buffer* Graphics::CreateBuffer(int32_t size) { return nullptr; }
+
 VertexBuffer* Graphics::CreateVertexBuffer(int32_t size) { return nullptr; }
 
 IndexBuffer* Graphics::CreateIndexBuffer(int32_t stride, int32_t count) { return nullptr; }
