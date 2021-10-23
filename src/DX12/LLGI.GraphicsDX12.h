@@ -43,6 +43,7 @@ public:
 	void Execute(CommandList* commandList) override;
 	void WaitFinish() override;
 
+	Buffer* CreateBuffer(BufferUsageType usage, int32_t size) override;
 	VertexBuffer* CreateVertexBuffer(int32_t size) override;
 	IndexBuffer* CreateIndexBuffer(int32_t stride, int32_t count) override;
 	ConstantBuffer* CreateConstantBuffer(int32_t size) override;

@@ -70,6 +70,18 @@ void GraphicsDX12::WaitFinish()
 	}
 }
 
+Buffer* GraphicsDX12::CreateBuffer(BufferUsageType usage, int32_t size)
+{
+	auto obj = new BufferDX12();
+	if (!obj->Initialize(this, usage, size))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
+
+	return obj;
+}
+
 VertexBuffer* GraphicsDX12::CreateVertexBuffer(int32_t size)
 {
 	auto obj = new VertexBufferDX12();
@@ -346,7 +358,7 @@ std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
 	auto dstFootprint = texture->GetFootprint().Footprint;
 
 	BufferDX12 dstBuffer;
-	if (!dstBuffer.Initialize(this, dstFootprint.RowPitch * dstFootprint.Height))
+	if (!dstBuffer.Initialize(this, BufferUsageType::Compute, dstFootprint.RowPitch * dstFootprint.Height))
 	{
 		auto msg = (std::string("Error : ") + std::string(__FILE__) + " : " + std::to_string(__LINE__) + std::string(" : "));
 		::LLGI::Log(::LLGI::LogType::Error, msg.c_str());
@@ -383,7 +395,7 @@ std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
 	src.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
 	src.SubresourceIndex = 0;
 
-	dst.pResource = dstBuffer.Get();
+	dst.pResource = dstBuffer.GetReadback();
 	dst.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
 	dst.PlacedFootprint = footprint;
 
@@ -403,22 +415,19 @@ std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
 	if (GetTextureMemorySize(renderTarget->GetFormat(), rtSize3) != dstBuffer.GetSize())
 	{
 		result.resize(GetTextureMemorySize(renderTarget->GetFormat(), rtSize3));
-		auto raw = static_cast<uint8_t*>(dstBuffer.Lock());
+		auto raw = static_cast<uint8_t*>(dstBuffer.Read());
 
 		for (int32_t y = 0; y < renderTarget->GetSizeAs2D().Y; y++)
 		{
 			auto pitch = GetTextureMemorySize(renderTarget->GetFormat(), rtSize3) / renderTarget->GetSizeAs2D().Y;
 			memcpy(result.data() + pitch * y, raw + dstFootprint.RowPitch * y, pitch);
 		}
-
-		dstBuffer.Unlock();
 	}
 	else
 	{
 		result.resize(dstBuffer.GetSize());
-		auto raw = dstBuffer.Lock();
+		auto raw = dstBuffer.Read();
 		memcpy(result.data(), raw, result.size());
-		dstBuffer.Unlock();
 	}
 
 	return result;

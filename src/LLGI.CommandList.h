@@ -165,9 +165,11 @@ public:
 	virtual void EndComputePass() {}
 	virtual void Dispatch(int32_t x, int32_t y, int32_t z);
 
-	virtual void UploadBuffer(Buffer* buffer);
+	virtual void UploadBuffer(Buffer* buffer) {}
 
-	virtual void ReadBackBuffer(Buffer* buffer);
+	virtual void ReadBackBuffer(Buffer* buffer) {}
+
+	virtual void CopyBuffer(Buffer* src, Buffer* dst) {}
 
 	/**
 		@brief	send a memory in specified VertexBuffer from cpu to gpu
