@@ -1,5 +1,5 @@
 #include "LLGI.Graphics.h"
-#include "LLGI.ConstantBuffer.h"
+#include "LLGI.Buffer.h"
 #include "LLGI.Texture.h"
 
 namespace LLGI
@@ -24,15 +24,15 @@ SingleFrameMemoryPool::SingleFrameMemoryPool(int32_t swapBufferCount) : swapBuff
 	for (int i = 0; i < swapBufferCount_; i++)
 	{
 		offsets_.push_back(0);
-		constantBuffers_.push_back(std::vector<ConstantBuffer*>());
+		buffers_.push_back(std::vector<Buffer*>());
 	}
 }
 
 SingleFrameMemoryPool::~SingleFrameMemoryPool()
 {
-	for (auto& constantBuffer : constantBuffers_)
+	for (auto& buffer : buffers_)
 	{
-		for (auto c : constantBuffer)
+		for (auto c : buffer)
 		{
 			c->Release();
 		}
@@ -46,27 +46,27 @@ void SingleFrameMemoryPool::NewFrame()
 	offsets_[currentSwapBuffer_] = 0;
 }
 
-ConstantBuffer* SingleFrameMemoryPool::CreateConstantBuffer(int32_t size)
+Buffer* SingleFrameMemoryPool::CreateConstantBuffer(int32_t size)
 {
 	assert(currentSwapBuffer_ >= 0);
 
-	if (static_cast<int32_t>(constantBuffers_[currentSwapBuffer_].size()) <= offsets_[currentSwapBuffer_])
+	if (static_cast<int32_t>(buffers_[currentSwapBuffer_].size()) <= offsets_[currentSwapBuffer_])
 	{
-		auto cb = CreateConstantBufferInternal(size);
+		auto cb = CreateBufferInternal(size);
 		if (cb == nullptr)
 		{
 			return nullptr;
 		}
 
-		constantBuffers_[currentSwapBuffer_].push_back(cb);
+		buffers_[currentSwapBuffer_].push_back(cb);
 		SafeAddRef(cb);
 		offsets_[currentSwapBuffer_]++;
 		return cb;
 	}
 	else
 	{
-		auto cb = constantBuffers_[currentSwapBuffer_][offsets_[currentSwapBuffer_]];
-		auto newCb = ReinitializeConstantBuffer(cb, size);
+		auto cb = buffers_[currentSwapBuffer_][offsets_[currentSwapBuffer_]];
+		auto newCb = ReinitializeBuffer(cb, size);
 		if (newCb == nullptr)
 		{
 			return nullptr;

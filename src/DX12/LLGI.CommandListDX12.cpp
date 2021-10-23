@@ -605,7 +605,7 @@ void CommandListDX12::UploadBuffer(Buffer* buffer) {
 		currentCommandList_->ResourceBarrier(1, &barrier);
 	}
 
-	currentCommandList_->CopyBufferRegion(resource, 0, stagingResource, 0, buf->GetSize());
+	currentCommandList_->CopyBufferRegion(resource, buf->GetOffset(), stagingResource, buf->GetOffset(), buf->GetActualSize());
 
 	{
 		D3D12_RESOURCE_BARRIER barrier = {};
@@ -638,7 +638,7 @@ void CommandListDX12::ReadBackBuffer(Buffer* buffer)
 		currentCommandList_->ResourceBarrier(1, &barrier);
 	}
 
-	currentCommandList_->CopyBufferRegion(readbackResource, 0, resource, 0, buf->GetSize());
+	currentCommandList_->CopyBufferRegion(readbackResource, buf->GetOffset(), resource, buf->GetOffset(), buf->GetActualSize());
 
 	{
 		D3D12_RESOURCE_BARRIER barrier = {};
@@ -684,7 +684,7 @@ void CommandListDX12::CopyBuffer(Buffer* src, Buffer* dst) {
 		currentCommandList_->ResourceBarrier(1, &barrier);
 	}
 
-	currentCommandList_->CopyBufferRegion(dstResource, 0, srcResource, 0, srcBuf->GetSize());
+	currentCommandList_->CopyBufferRegion(dstResource, dstBuf->GetOffset(), srcResource, srcBuf->GetOffset(), srcBuf->GetActualSize());
 
 	{
 		D3D12_RESOURCE_BARRIER barrier = {};

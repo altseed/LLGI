@@ -56,17 +56,17 @@ protected:
 	int32_t currentSwapBuffer_ = -1;
 	int32_t swapBufferCount_ = 0;
 	std::vector<int32_t> offsets_;
-	std::vector<std::vector<ConstantBuffer*>> constantBuffers_;
+	std::vector<std::vector<Buffer*>> buffers_;
 
 	/**
-		@brief	create constant buffer
+		@brief	create buffer
 	*/
-	virtual ConstantBuffer* CreateConstantBufferInternal(int32_t size) { return nullptr; }
+	virtual Buffer* CreateBufferInternal(int32_t size) { return nullptr; }
 
 	/**
 		@brief	reinitialize buffer with a size
 	*/
-	virtual ConstantBuffer* ReinitializeConstantBuffer(ConstantBuffer* cb, int32_t size) { return nullptr; }
+	virtual Buffer* ReinitializeBuffer(Buffer* cb, int32_t size) { return nullptr; }
 
 public:
 	SingleFrameMemoryPool(int32_t swapBufferCount = 3);
@@ -77,7 +77,7 @@ public:
 	*/
 	virtual void NewFrame();
 
-	virtual ConstantBuffer* CreateConstantBuffer(int32_t size);
+	virtual Buffer* CreateConstantBuffer(int32_t size);
 };
 
 struct RenderPassPipelineStateKey
