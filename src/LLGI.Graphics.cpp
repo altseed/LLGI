@@ -349,10 +349,6 @@ void Graphics::Execute(CommandList* commandList) {}
 
 Buffer* Graphics::CreateBuffer(BufferUsageType usage, int32_t size) { return nullptr; }
 
-VertexBuffer* Graphics::CreateVertexBuffer(int32_t size) { return nullptr; }
-
-IndexBuffer* Graphics::CreateIndexBuffer(int32_t stride, int32_t count) { return nullptr; }
-
 Shader* Graphics::CreateShader(DataStructure* data, int32_t count) { return nullptr; }
 
 PipelineState* Graphics::CreatePiplineState() { return nullptr; }
@@ -360,10 +356,6 @@ PipelineState* Graphics::CreatePiplineState() { return nullptr; }
 SingleFrameMemoryPool* Graphics::CreateSingleFrameMemoryPool(int32_t constantBufferPoolSize, int32_t drawingCount) { return nullptr; }
 
 CommandList* Graphics::CreateCommandList(SingleFrameMemoryPool* memoryPool) { return nullptr; }
-
-ConstantBuffer* Graphics::CreateConstantBuffer(int32_t size) { return nullptr; }
-
-ComputeBuffer* Graphics::CreateComputeBuffer(int32_t size) { return nullptr; }
 
 Texture* Graphics::CreateTexture(uint64_t id) { return nullptr; }
 

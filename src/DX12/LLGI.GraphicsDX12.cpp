@@ -2,15 +2,11 @@
 #include "LLGI.BaseDX12.h"
 #include "LLGI.BufferDX12.h"
 #include "LLGI.CommandListDX12.h"
-#include "LLGI.ComputeBufferDX12.h"
-#include "LLGI.ConstantBufferDX12.h"
-#include "LLGI.IndexBufferDX12.h"
 #include "LLGI.PipelineStateDX12.h"
 #include "LLGI.PlatformDX12.h"
 #include "LLGI.ShaderDX12.h"
 #include "LLGI.SingleFrameMemoryPoolDX12.h"
 #include "LLGI.TextureDX12.h"
-#include "LLGI.VertexBufferDX12.h"
 
 namespace LLGI
 {
@@ -79,53 +75,6 @@ Buffer* GraphicsDX12::CreateBuffer(BufferUsageType usage, int32_t size)
 		return nullptr;
 	}
 
-	return obj;
-}
-
-VertexBuffer* GraphicsDX12::CreateVertexBuffer(int32_t size)
-{
-	auto obj = new VertexBufferDX12();
-	if (!obj->Initialize(this, size))
-	{
-		SafeRelease(obj);
-		return nullptr;
-	}
-
-	return obj;
-}
-
-IndexBuffer* GraphicsDX12::CreateIndexBuffer(int32_t stride, int32_t count)
-{
-	auto obj = new IndexBufferDX12();
-	if (!obj->Initialize(this, stride, count))
-	{
-		SafeRelease(obj);
-		return nullptr;
-	}
-
-	return obj;
-}
-
-ConstantBuffer* GraphicsDX12::CreateConstantBuffer(int32_t size)
-{
-	auto obj = new ConstantBufferDX12();
-	if (!obj->Initialize(this, size))
-	{
-		SafeRelease(obj);
-		return nullptr;
-	}
-
-	return obj;
-}
-
-ComputeBuffer* GraphicsDX12::CreateComputeBuffer(int32_t size)
-{
-	auto obj = new ComputeBufferDX12();
-	if (!obj->Initialize(this, size))
-	{
-		SafeRelease(obj);
-		return nullptr;
-	}
 	return obj;
 }
 
@@ -358,7 +307,7 @@ std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
 	auto dstFootprint = texture->GetFootprint().Footprint;
 
 	BufferDX12 dstBuffer;
-	if (!dstBuffer.Initialize(this, BufferUsageType::Compute, dstFootprint.RowPitch * dstFootprint.Height))
+	if (!dstBuffer.Initialize(this, BufferUsageType::Index, dstFootprint.RowPitch * dstFootprint.Height))
 	{
 		auto msg = (std::string("Error : ") + std::string(__FILE__) + " : " + std::to_string(__LINE__) + std::string(" : "));
 		::LLGI::Log(::LLGI::LogType::Error, msg.c_str());

@@ -10,7 +10,11 @@ BufferDX12::BufferDX12()
 	state_ = D3D12_RESOURCE_STATE_COMMON;
 }
 
-BufferDX12::~BufferDX12() { SafeRelease(buffer_); }
+BufferDX12::~BufferDX12() {
+	SafeRelease(buffer_);
+	SafeRelease(stagingBuffer_);
+	SafeRelease(readbackBuffer_);
+}
 
 bool BufferDX12::Initialize(GraphicsDX12* graphics, const BufferUsageType usage, const int32_t size)
 {
@@ -81,17 +85,20 @@ bool BufferDX12::InitializeAsShortTime(SingleFrameMemoryPoolDX12* memoryPool, in
 	auto oldStaging = stagingBuffer_;
 	auto oldReadback = readbackBuffer_;
 
-	auto size_ = (size + 255) & ~255; // buffer size should be multiple of 256
+	auto actualSize = (size + 255) & ~255; // buffer size should be multiple of 256
 
 	BufferDX12* poolBuffer;
-	if (memoryPool->GetConstantBuffer(size_, poolBuffer, offset_))
+	if (memoryPool->GetConstantBuffer(actualSize, poolBuffer, offset_))
 	{
 		buffer_ = poolBuffer->Get();
 		stagingBuffer_ = poolBuffer->GetStaging();
 		readbackBuffer_ = poolBuffer->GetReadback();
 
+		usage_ = poolBuffer->usage_;
+		state_ = poolBuffer->state_;
+
 		size_ = size;
-		actualSize_ = size_;
+		actualSize_ = actualSize;
 
 		SafeAddRef(buffer_);
 		SafeAddRef(stagingBuffer_);

@@ -111,8 +111,8 @@ void test_capture(LLGI::DeviceType deviceType, LLGI::Vec2I windowSize)
 
 	TestHelper::CreateShader(graphics.get(), deviceType, "simple_rectangle.vert", "simple_rectangle.frag", shader_vs, shader_ps);
 
-	std::shared_ptr<LLGI::VertexBuffer> vb;
-	std::shared_ptr<LLGI::IndexBuffer> ib;
+	std::shared_ptr<LLGI::Buffer> vb;
+	std::shared_ptr<LLGI::Buffer> ib;
 	TestHelper::CreateRectangle(graphics.get(),
 								LLGI::Vec3F(-0.5, 0.5, 0.5),
 								LLGI::Vec3F(0.5, -0.5, 0.5),
@@ -160,11 +160,11 @@ void test_capture(LLGI::DeviceType deviceType, LLGI::Vec2I windowSize)
 
 		auto commandList = commandListPool->Get();
 		commandList->Begin();
-		commandList->UpdateData(vb.get());
-		commandList->UpdateData(ib.get());
+		commandList->UploadBuffer(vb.get());
+		commandList->UploadBuffer(ib.get());
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib.get());
+		commandList->SetIndexBuffer(ib.get(), 2);
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
 		commandList->Draw(2);
 		commandList->EndRenderPass();

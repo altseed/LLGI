@@ -238,18 +238,6 @@ public:
 
 	virtual Buffer* CreateBuffer(BufferUsageType usage ,int32_t size);
 
-	/**
-		@brief	create a vertex buffer
-		@param	size	the size of vertex buffer
-	*/
-	virtual VertexBuffer* CreateVertexBuffer(int32_t size);
-
-	/**
-		@brief	create an index buffer
-		@param	stride	the stride of index(2 or 4)
-		@param	count	the number of index
-	*/
-	virtual IndexBuffer* CreateIndexBuffer(int32_t stride, int32_t count);
 	virtual Shader* CreateShader(DataStructure* data, int32_t count);
 	virtual PipelineState* CreatePiplineState();
 
@@ -264,14 +252,6 @@ public:
 		@param memoryPool if memory pool is null, allocate memory from graphics
 	*/
 	virtual CommandList* CreateCommandList(SingleFrameMemoryPool* memoryPool);
-
-	/**
-		@brief	create a constant buffer
-		@param	size buffer size
-	*/
-	virtual ConstantBuffer* CreateConstantBuffer(int32_t size);
-
-	virtual ComputeBuffer* CreateComputeBuffer(int32_t size);
 
 	virtual RenderPass* CreateRenderPass(Texture** textures, int32_t textureCount, Texture* depthTexture) { return nullptr; }
 

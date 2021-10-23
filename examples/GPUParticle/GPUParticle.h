@@ -95,10 +95,10 @@ private:
 	std::shared_ptr<Shader> shader_;
 
 	// LLGI::CommandList::SetData() が未対応なので、Lock/Unlock で対応することになるが、そのため FrameCount 分必要/
-	std::vector<std::shared_ptr<LLGI::VertexBuffer>> emitDataVertexBuffer_;
+	std::vector<std::shared_ptr<LLGI::Buffer>> emitDataVertexBuffer_;
 
 	// いまは DX12 バックエンドが IndexBuffer 必須となっているので用意する必要がある
-	std::shared_ptr<LLGI::IndexBuffer> emitDataIndexBuffer_;
+	std::shared_ptr<LLGI::Buffer> emitDataIndexBuffer_;
 
 	std::array<std::shared_ptr<LLGI::RenderPass>, 2> emitParticleRenderPass_;
 
@@ -118,8 +118,8 @@ public:
 private:
 	GPUParticleContext* context_;
 	std::shared_ptr<Shader> shader_;
-	std::shared_ptr<LLGI::VertexBuffer> vertexBuffer_;
-	std::shared_ptr<LLGI::IndexBuffer> indexBuffer_;
+	std::shared_ptr<LLGI::Buffer> vertexBuffer_;
+	std::shared_ptr<LLGI::Buffer> indexBuffer_;
 	std::array<std::shared_ptr<LLGI::PipelineState>, 2> pipelineState_;
 };
 
@@ -140,8 +140,8 @@ public:
 private:
 	GPUParticleContext* context_;
 	std::shared_ptr<Shader> shader_;
-	std::shared_ptr<LLGI::VertexBuffer> vb_;
-	std::shared_ptr<LLGI::IndexBuffer> ib_;
+	std::shared_ptr<LLGI::Buffer> vb_;
+	std::shared_ptr<LLGI::Buffer> ib_;
 	std::unordered_map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pipelineCache_;
 
 };
@@ -182,7 +182,7 @@ public:
 
 	GPUParticleBuffer* GetTargetParticleBuffer() const { return particleBuffers_[(primaryParticleBufferIndex_ + 1) % 2].get(); }
 
-	LLGI::ConstantBuffer* GetTextureInfoConstantBuffer() const { return textureInfoConstantBuffer_.get(); }
+	LLGI::Buffer* GetTextureInfoConstantBuffer() const { return textureInfoConstantBuffer_.get(); }
 
 	int GetPrimaryParticleBufferIndex() const { return primaryParticleBufferIndex_; }
 	int GetTargetParticleBufferIndex() const { return (primaryParticleBufferIndex_ + 1) % 2; }
@@ -210,7 +210,7 @@ private:
 	int newParticleCountInFrame_;
 
 	std::array<std::unique_ptr<GPUParticleBuffer>, 2> particleBuffers_;
-	std::shared_ptr<LLGI::ConstantBuffer> textureInfoConstantBuffer_;
+	std::shared_ptr<LLGI::Buffer> textureInfoConstantBuffer_;
 	int primaryParticleBufferIndex_;
 
 	std::unique_ptr<GPUParticleEmitPass> particleEmitPass_;

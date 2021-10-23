@@ -155,8 +155,8 @@ void test_textures(LLGI::DeviceType deviceType)
 	LLGI::Vec3F vert_ul = LLGI::Vec3F(-0.5, 0.5, 0.5);
 	LLGI::Vec3F vert_lr = LLGI::Vec3F(0.5, -0.5, 0.5);
 
-	std::shared_ptr<LLGI::VertexBuffer> vb;
-	std::shared_ptr<LLGI::IndexBuffer> ib;
+	std::shared_ptr<LLGI::Buffer> vb;
+	std::shared_ptr<LLGI::Buffer> ib;
 	TestHelper::CreateRectangle(graphics, vert_ul, vert_lr, LLGI::Color8(255, 255, 255, 255), LLGI::Color8(255, 255, 255, 255), vb, ib);
 
 	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pips;
@@ -199,8 +199,8 @@ void test_textures(LLGI::DeviceType deviceType)
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
 
-		commandList->UpdateData(vb.get());
-		commandList->UpdateData(ib.get());
+		commandList->UploadBuffer(vb.get());
+		commandList->UploadBuffer(ib.get());
 
 		commandList->CopyTexture(texSrc1.get(), texDst1.get(), {0, 0, 0}, {0, 0, 0}, {1, 1, 1}, 0, 0);
 		commandList->CopyTexture(texSrc2.get(), texDst2.get(), {0, 0, 0}, {0, 0, 0}, {1, 1, 1}, 0, 1);
@@ -208,7 +208,7 @@ void test_textures(LLGI::DeviceType deviceType)
 
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib.get());
+		commandList->SetIndexBuffer(ib.get(), 2);
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
 		commandList->SetTexture(
 			texDst1.get(), LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);

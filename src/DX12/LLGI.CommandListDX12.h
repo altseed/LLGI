@@ -61,12 +61,6 @@ public:
 	void ReadBackBuffer(Buffer* buffer) override;
 	void CopyBuffer(Buffer* src, Buffer* dst) override;
 
-	void UpdateData(VertexBuffer* vertexBuffer) override;
-	void UpdateData(IndexBuffer* indexBuffer) override;
-	void UpdateData(ConstantBuffer* constantBuffer) override;
-	void UpdateDataToGPU(ComputeBuffer* computeBuffer) override;
-	void UpdateDataToCPU(ComputeBuffer* computeBuffer) override;
-
 	void BeginComputePass() override;
 	void EndComputePass() override;
 	void Dispatch(int32_t x, int32_t y, int32_t z) override;

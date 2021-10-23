@@ -1,7 +1,7 @@
 #include "TestHelper.h"
 #include "test.h"
 
-#include <LLGI.ComputeBuffer.h>
+#include <LLGI.Buffer.h>
 #include <Utils/LLGI.CommandListPool.h>
 
 struct ComputeData
@@ -35,8 +35,8 @@ void test_compute_shader(LLGI::DeviceType deviceType)
 
 	int dataSize = 256;
 
-	std::shared_ptr<LLGI::ComputeBuffer> computeBuffer;
-	computeBuffer = LLGI::CreateSharedPtr(graphics->CreateComputeBuffer(sizeof(ComputeData) * dataSize));
+	std::shared_ptr<LLGI::Buffer> computeBuffer;
+	computeBuffer = LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Compute, sizeof(ComputeData) * dataSize));
 
 	{
 		auto data = (ComputeData*)computeBuffer->Lock();
@@ -47,8 +47,8 @@ void test_compute_shader(LLGI::DeviceType deviceType)
 		computeBuffer->Unlock();
 	}
 
-	std::shared_ptr<LLGI::ConstantBuffer> constantBuffer;
-	constantBuffer = LLGI::CreateSharedPtr(graphics->CreateConstantBuffer(sizeof(float)));
+	std::shared_ptr<LLGI::Buffer> constantBuffer;
+	constantBuffer = LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Constant, sizeof(float)));
 
 	{
 		auto data = (float*)constantBuffer->Lock();
@@ -63,15 +63,15 @@ void test_compute_shader(LLGI::DeviceType deviceType)
 
 	auto commandList = commandListPool->Get();
 	commandList->Begin();
-	commandList->UpdateDataToGPU(computeBuffer.get());
-	commandList->UpdateData(constantBuffer.get());
+	commandList->UploadBuffer(computeBuffer.get());
+	commandList->UploadBuffer(constantBuffer.get());
 	commandList->BeginComputePass();
 	commandList->SetPipelineState(pip.get());
 	commandList->SetComputeBuffer(computeBuffer.get());
 	commandList->SetConstantBuffer(constantBuffer.get(), LLGI::ShaderStageType::Compute);
 	commandList->Dispatch(dataSize, 1, 1);
 	commandList->EndComputePass();
-	commandList->UpdateDataToCPU(computeBuffer.get());
+	commandList->ReadBackBuffer(computeBuffer.get());
 	commandList->End();
 
 	graphics->Execute(commandList);

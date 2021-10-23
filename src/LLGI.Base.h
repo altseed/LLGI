@@ -285,10 +285,10 @@ inline TextureUsageType operator&(TextureUsageType lhs, TextureUsageType rhs)
 
 enum class BufferUsageType : uint32_t
 {
-	Index = 0,
-	Vertex = 1 << 0,
-	Constant = 1 << 1,
-	Compute = 1 << 2,
+	Index = 1 << 0,
+	Vertex = 1 << 1,
+	Constant = 1 << 2,
+	Compute = 1 << 3,
 };
 
 inline BufferUsageType operator|(BufferUsageType lhs, BufferUsageType rhs)
@@ -443,10 +443,6 @@ template <typename T> inline std::unique_ptr<T, ReferenceDeleter<T>> CreateUniqu
 template <typename T> using unique_ref = std::unique_ptr<T, ReferenceDeleter<T>>;
 
 class Buffer;
-class VertexBuffer;
-class IndexBuffer;
-class ConstantBuffer;
-class ComputeBuffer;
 class Shader;
 class PipelineState;
 class Texture;
