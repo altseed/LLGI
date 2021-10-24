@@ -27,7 +27,7 @@ private:
 	TextureParameter parameter_;
 
 	int32_t memorySize = 0;
-	std::unique_ptr<Buffer> cpuBuf;
+	std::unique_ptr<InternalBuffer> cpuBuf;
 	void* data = nullptr;
 
 	bool isExternalResource_ = false;
