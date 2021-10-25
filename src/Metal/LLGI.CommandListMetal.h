@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../LLGI.CommandList.h"
+#include "../LLGI.Buffer.h"
 #import <MetalKit/MetalKit.h>
 
 #include <memory>
@@ -58,7 +59,11 @@ public:
 	void Dispatch(int32_t x, int32_t y, int32_t z) override;
 
 	bool GetIsCompleted() { return isCompleted_; }
-
+    
+    void UploadBuffer(Buffer* buffer) override;
+    void ReadBackBuffer(Buffer* buffer) override;
+    void CopyBuffer(Buffer* src, Buffer* dst) override;
+    
 	void ResetCompleted() { isCompleted_ = false; }
 
 	id<MTLCommandBuffer>& GetCommandBuffer() { return commandBuffer_; }
