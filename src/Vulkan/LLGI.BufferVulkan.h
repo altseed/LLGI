@@ -4,10 +4,10 @@
 #include "../LLGI.Buffer.h"
 #include "LLGI.BaseVulkan.h"
 #include "LLGI.GraphicsVulkan.h"
-#include "LLGI.SingleFrameMemoryPoolVulkan.h"
 
 namespace LLGI
 {
+class SingleFrameMemoryPoolVulkan;
 
 class BufferVulkan : public Buffer
 {

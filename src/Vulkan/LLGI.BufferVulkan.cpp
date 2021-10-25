@@ -1,4 +1,5 @@
 #include "LLGI.BufferVulkan.h"
+#include "LLGI.SingleFrameMemoryPoolVulkan.h"
 
 namespace LLGI
 {
