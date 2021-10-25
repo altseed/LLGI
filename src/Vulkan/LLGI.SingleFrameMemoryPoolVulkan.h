@@ -3,6 +3,7 @@
 
 #include "LLGI.BaseVulkan.h"
 #include "LLGI.GraphicsVulkan.h"
+#include "LLGI.BufferVulkan.h"
 
 namespace LLGI
 {
