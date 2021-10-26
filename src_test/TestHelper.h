@@ -44,8 +44,8 @@ public:
 								const LLGI::Vec3F& lr,
 								const LLGI::Color8& cul,
 								const LLGI::Color8& clr,
-								std::shared_ptr<LLGI::VertexBuffer>& vb,
-								std::shared_ptr<LLGI::IndexBuffer>& ib);
+								std::shared_ptr<LLGI::Buffer>& vb,
+								std::shared_ptr<LLGI::Buffer>& ib);
 
 	static void CreateShader(LLGI::Graphics* graphics,
 							 LLGI::DeviceType deviceType,

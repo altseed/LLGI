@@ -49,7 +49,7 @@ void test_mipmap(LLGI::DeviceType deviceType)
 	std::vector<LLGI::DataStructure> data_vs;
 	std::vector<LLGI::DataStructure> data_ps;
 
-	auto dummy_cb = LLGI::CreateSharedPtr(graphics->CreateConstantBuffer(16));
+	auto dummy_cb = LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Constant, 16));
 
 	if (compiler == nullptr)
 	{
@@ -117,20 +117,20 @@ void test_mipmap(LLGI::DeviceType deviceType)
 	LLGI::Vec3F offset = LLGI::Vec3F(0.0, 0.5F, 0.0);
 
 	// left
-	std::shared_ptr<LLGI::VertexBuffer> vb;
-	std::shared_ptr<LLGI::IndexBuffer> ib;
+	std::shared_ptr<LLGI::Buffer> vb;
+	std::shared_ptr<LLGI::Buffer> ib;
 	TestHelper::CreateRectangle(graphics, large_ul, large_lr, LLGI::Color8(255, 255, 255, 255), LLGI::Color8(0, 255, 0, 255), vb, ib);
 
-	std::shared_ptr<LLGI::VertexBuffer> vb2;
-	std::shared_ptr<LLGI::IndexBuffer> ib2;
+	std::shared_ptr<LLGI::Buffer> vb2;
+	std::shared_ptr<LLGI::Buffer> ib2;
 	TestHelper::CreateRectangle(graphics, middle_ul, middle_lr, LLGI::Color8(255, 255, 255, 255), LLGI::Color8(0, 255, 0, 255), vb2, ib2);
 
-	std::shared_ptr<LLGI::VertexBuffer> vb3;
-	std::shared_ptr<LLGI::IndexBuffer> ib3;
+	std::shared_ptr<LLGI::Buffer> vb3;
+	std::shared_ptr<LLGI::Buffer> ib3;
 	TestHelper::CreateRectangle(graphics, small_ul, small_lr, LLGI::Color8(255, 255, 255, 255), LLGI::Color8(0, 255, 0, 255), vb3, ib3);
 
-	std::shared_ptr<LLGI::VertexBuffer> vb4;
-	std::shared_ptr<LLGI::IndexBuffer> ib4;
+	std::shared_ptr<LLGI::Buffer> vb4;
+	std::shared_ptr<LLGI::Buffer> ib4;
 	TestHelper::CreateRectangle(graphics,
 								LLGI::Vec3F::Sub(large_ul, offset),
 								LLGI::Vec3F::Sub(large_lr, offset),
@@ -139,8 +139,8 @@ void test_mipmap(LLGI::DeviceType deviceType)
 								vb4,
 								ib4);
 
-	std::shared_ptr<LLGI::VertexBuffer> vb5;
-	std::shared_ptr<LLGI::IndexBuffer> ib5;
+	std::shared_ptr<LLGI::Buffer> vb5;
+	std::shared_ptr<LLGI::Buffer> ib5;
 	TestHelper::CreateRectangle(graphics,
 								LLGI::Vec3F::Sub(middle_ul, offset),
 								LLGI::Vec3F::Sub(middle_lr, offset),
@@ -149,8 +149,8 @@ void test_mipmap(LLGI::DeviceType deviceType)
 								vb5,
 								ib5);
 
-	std::shared_ptr<LLGI::VertexBuffer> vb6;
-	std::shared_ptr<LLGI::IndexBuffer> ib6;
+	std::shared_ptr<LLGI::Buffer> vb6;
+	std::shared_ptr<LLGI::Buffer> ib6;
 	TestHelper::CreateRectangle(graphics,
 								LLGI::Vec3F::Sub(small_ul, offset),
 								LLGI::Vec3F::Sub(small_lr, offset),
@@ -199,56 +199,56 @@ void test_mipmap(LLGI::DeviceType deviceType)
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
 
-		commandList->UpdateData(vb.get());
-		commandList->UpdateData(ib.get());
-		commandList->UpdateData(vb2.get());
-		commandList->UpdateData(ib2.get());
-		commandList->UpdateData(vb3.get());
-		commandList->UpdateData(ib3.get());
-		commandList->UpdateData(vb4.get());
-		commandList->UpdateData(ib4.get());
-		commandList->UpdateData(vb5.get());
-		commandList->UpdateData(ib5.get());
-		commandList->UpdateData(vb6.get());
-		commandList->UpdateData(ib6.get());
+		commandList->UploadBuffer(vb.get());
+		commandList->UploadBuffer(ib.get());
+		commandList->UploadBuffer(vb2.get());
+		commandList->UploadBuffer(ib2.get());
+		commandList->UploadBuffer(vb3.get());
+		commandList->UploadBuffer(ib3.get());
+		commandList->UploadBuffer(vb4.get());
+		commandList->UploadBuffer(ib4.get());
+		commandList->UploadBuffer(vb5.get());
+		commandList->UploadBuffer(ib5.get());
+		commandList->UploadBuffer(vb6.get());
+		commandList->UploadBuffer(ib6.get());
 
 		commandList->GenerateMipMap(textureDrawnMipmap);
 		commandList->BeginRenderPass(renderPass);
 		// commandList->SetConstantBuffer(dummy_cb.get(), LLGI::ShaderStageType::Vertex);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib.get());
+		commandList->SetIndexBuffer(ib.get(), 2);
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
 		commandList->SetTexture(
 			textureDrawnMipmap, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 
 		commandList->SetVertexBuffer(vb2.get(), sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib2.get());
+		commandList->SetIndexBuffer(ib2.get(), 2);
 		commandList->SetTexture(
 			textureDrawnMipmap, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 
 		commandList->SetVertexBuffer(vb3.get(), sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib3.get());
+		commandList->SetIndexBuffer(ib3.get(), 2);
 		commandList->SetTexture(
 			textureDrawnMipmap, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 
 		commandList->SetVertexBuffer(vb4.get(), sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib4.get());
+		commandList->SetIndexBuffer(ib4.get(), 2);
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
 		commandList->SetTexture(
 			textureDrawn, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 
 		commandList->SetVertexBuffer(vb5.get(), sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib5.get());
+		commandList->SetIndexBuffer(ib5.get(), 2);
 		commandList->SetTexture(
 			textureDrawn, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 
 		commandList->SetVertexBuffer(vb6.get(), sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib6.get());
+		commandList->SetIndexBuffer(ib6.get(), 2);
 		commandList->SetTexture(
 			textureDrawn, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);

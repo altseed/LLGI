@@ -189,11 +189,11 @@ void TestHelper::CreateRectangle(LLGI::Graphics* graphics,
 								 const LLGI::Vec3F& lr,
 								 const LLGI::Color8& cul,
 								 const LLGI::Color8& clr,
-								 std::shared_ptr<LLGI::VertexBuffer>& vb,
-								 std::shared_ptr<LLGI::IndexBuffer>& ib)
+								 std::shared_ptr<LLGI::Buffer>& vb,
+								 std::shared_ptr<LLGI::Buffer>& ib)
 {
-	vb = LLGI::CreateSharedPtr(graphics->CreateVertexBuffer(sizeof(SimpleVertex) * 4));
-	ib = LLGI::CreateSharedPtr(graphics->CreateIndexBuffer(2, 6));
+	vb = LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Vertex, sizeof(SimpleVertex) * 4));
+	ib = LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Index, 2 * 6));
 	auto vb_buf = (SimpleVertex*)vb->Lock();
 	vb_buf[0].Pos = LLGI::Vec3F(ul.X, ul.Y, ul.Z);
 	vb_buf[1].Pos = LLGI::Vec3F(lr.X, ul.Y, ul.Z);

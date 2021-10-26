@@ -114,8 +114,8 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 
 	TestHelper::CreateShader(graphics, deviceType, "simple_texture_rectangle.vert", "simple_texture_rectangle.frag", shader_vs, shader_ps);
 
-	std::shared_ptr<LLGI::VertexBuffer> vb;
-	std::shared_ptr<LLGI::IndexBuffer> ib;
+	std::shared_ptr<LLGI::Buffer> vb;
+	std::shared_ptr<LLGI::Buffer> ib;
 	TestHelper::CreateRectangle(graphics,
 								LLGI::Vec3F(-0.5, 0.5, 0.5),
 								LLGI::Vec3F(0.5, -0.5, 0.5),
@@ -124,10 +124,10 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 								vb,
 								ib);
 
-	std::shared_ptr<LLGI::VertexBuffer> vb2;
+	std::shared_ptr<LLGI::Buffer> vb2;
 	{
 
-		vb2 = LLGI::CreateSharedPtr(graphics->CreateVertexBuffer(sizeof(SimpleVertex) * 4));
+		vb2 = LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Vertex, sizeof(SimpleVertex) * 4));
 		auto vb_buf = (SimpleVertex*)vb2->Lock();
 		vb_buf[0].Pos = LLGI::Vec3F(-0.5f, 0.5f, 0.5f);
 		vb_buf[1].Pos = LLGI::Vec3F(0.5f, 0.5f, 0.5f);
@@ -175,13 +175,13 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
 
-		commandList->UpdateData(vb.get());
-		commandList->UpdateData(vb2.get());
-		commandList->UpdateData(ib.get());
+		commandList->UploadBuffer(vb.get());
+		commandList->UploadBuffer(vb2.get());
+		commandList->UploadBuffer(ib.get());
 
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb2.get(), sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib.get());
+		commandList->SetIndexBuffer(ib.get(), 2);
 
 		auto renderPassPipelineState = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPass));
 
@@ -223,7 +223,7 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 		commandList->BeginRenderPass(platform->GetCurrentScreen(color2, true));
 
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib.get());
+		commandList->SetIndexBuffer(ib.get(), 2);
 
 		if (pips.count(renderPassPipelineStateSc) == 0)
 		{
@@ -463,8 +463,8 @@ void test_multiRenderPass(LLGI::DeviceType deviceType)
 	TestHelper::CreateShader(
 		graphics.get(), deviceType, "simple_texture_rectangle.vert", "simple_mrt_texture_rectangle.frag", shader_mrt_vs, shader_mrt_ps);
 
-	std::shared_ptr<LLGI::VertexBuffer> vb;
-	std::shared_ptr<LLGI::IndexBuffer> ib;
+	std::shared_ptr<LLGI::Buffer> vb;
+	std::shared_ptr<LLGI::Buffer> ib;
 	TestHelper::CreateRectangle(graphics.get(),
 								LLGI::Vec3F(-0.75, -0.25, 0.5),
 								LLGI::Vec3F(-0.25, -0.75, 0.5),
@@ -473,8 +473,8 @@ void test_multiRenderPass(LLGI::DeviceType deviceType)
 								vb,
 								ib);
 
-	std::shared_ptr<LLGI::VertexBuffer> vb2;
-	std::shared_ptr<LLGI::IndexBuffer> ib2;
+	std::shared_ptr<LLGI::Buffer> vb2;
+	std::shared_ptr<LLGI::Buffer> ib2;
 	TestHelper::CreateRectangle(graphics.get(),
 								LLGI::Vec3F(0.25, 0.75, 0.5),
 								LLGI::Vec3F(0.75, 0.25, 0.5),
@@ -511,14 +511,14 @@ void test_multiRenderPass(LLGI::DeviceType deviceType)
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
 
-		commandList->UpdateData(vb.get());
-		commandList->UpdateData(ib.get());
-		commandList->UpdateData(vb2.get());
-		commandList->UpdateData(ib2.get());
+		commandList->UploadBuffer(vb.get());
+		commandList->UploadBuffer(ib.get());
+		commandList->UploadBuffer(vb2.get());
+		commandList->UploadBuffer(ib2.get());
 
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib.get());
+		commandList->SetIndexBuffer(ib.get(), 2);
 
 		auto renderPassPipelineState = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPass));
 
@@ -553,7 +553,7 @@ void test_multiRenderPass(LLGI::DeviceType deviceType)
 
 		commandList->BeginRenderPass(platform->GetCurrentScreen(color2, true));
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib.get());
+		commandList->SetIndexBuffer(ib.get(), 2);
 
 		if (pips.count(renderPassPipelineStateSc) == 0)
 		{
@@ -578,13 +578,13 @@ void test_multiRenderPass(LLGI::DeviceType deviceType)
 		commandList->SetPipelineState(pips[renderPassPipelineStateSc].get());
 
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib.get());
+		commandList->SetIndexBuffer(ib.get(), 2);
 		commandList->SetTexture(
 			renderTexture1, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);
 
 		commandList->SetVertexBuffer(vb2.get(), sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib2.get());
+		commandList->SetIndexBuffer(ib2.get(), 2);
 		commandList->SetTexture(
 			renderTexture2, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->Draw(2);

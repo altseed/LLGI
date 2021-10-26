@@ -5,12 +5,14 @@
 namespace LLGI
 {
 
-class ComputeBuffer : public ReferenceObject
+class Buffer : public ReferenceObject
 {
-private:
+protected:
+	BufferUsageType usage_ = BufferUsageType::Index;
+
 public:
-	ComputeBuffer() = default;
-	~ComputeBuffer() override = default;
+	Buffer() = default;
+	~Buffer() override = default;
 
 	virtual void* Lock();
 	virtual void* Lock(int32_t offset, int32_t size);
@@ -19,6 +21,8 @@ public:
 	virtual void* const Read();
 
 	virtual int32_t GetSize();
+
+	BufferUsageType GetBufferUsage() { return usage_; }
 };
 
 } // namespace LLGI

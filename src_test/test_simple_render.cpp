@@ -54,8 +54,8 @@ void test_simple_rectangle(LLGI::DeviceType deviceType, SingleRectangleTestMode 
 
 	TestHelper::CreateShader(graphics, deviceType, "simple_rectangle.vert", "simple_rectangle.frag", shader_vs, shader_ps);
 
-	std::shared_ptr<LLGI::VertexBuffer> vb;
-	std::shared_ptr<LLGI::IndexBuffer> ib;
+	std::shared_ptr<LLGI::Buffer> vb;
+	std::shared_ptr<LLGI::Buffer> ib;
 	TestHelper::CreateRectangle(graphics,
 								LLGI::Vec3F(-0.5, 0.5, 0.5),
 								LLGI::Vec3F(0.5, -0.5, 0.5),
@@ -116,11 +116,11 @@ void test_simple_rectangle(LLGI::DeviceType deviceType, SingleRectangleTestMode 
 
 		auto commandList = commandListPool->Get();
 		commandList->Begin();
-		commandList->UpdateData(vb.get());
-		commandList->UpdateData(ib.get());
+		commandList->UploadBuffer(vb.get());
+		commandList->UploadBuffer(ib.get());
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib.get());
+		commandList->SetIndexBuffer(ib.get(), 2);
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
 		commandList->Draw(2);
 		commandList->EndRenderPass();
@@ -189,8 +189,8 @@ void test_index_offset(LLGI::DeviceType deviceType)
 
 	TestHelper::CreateShader(graphics, deviceType, "simple_rectangle.vert", "simple_rectangle.frag", shader_vs, shader_ps);
 
-	std::shared_ptr<LLGI::VertexBuffer> vb;
-	std::shared_ptr<LLGI::IndexBuffer> ib;
+	std::shared_ptr<LLGI::Buffer> vb;
+	std::shared_ptr<LLGI::Buffer> ib;
 	TestHelper::CreateRectangle(graphics,
 								LLGI::Vec3F(-0.5, 0.5, 0.5),
 								LLGI::Vec3F(0.5, -0.5, 0.5),
@@ -238,8 +238,8 @@ void test_index_offset(LLGI::DeviceType deviceType)
 
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
-		commandList->UpdateData(vb.get());
-		commandList->UpdateData(ib.get());
+		commandList->UploadBuffer(vb.get());
+		commandList->UploadBuffer(ib.get());
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get(), 2 * 3);
@@ -347,8 +347,8 @@ void main()
 	for (size_t i = 0; i < commandLists.size(); i++)
 		commandLists[i] = graphics->CreateCommandList(sfMemoryPool);
 
-	LLGI::ConstantBuffer* cb_vs = nullptr;
-	LLGI::ConstantBuffer* cb_ps = nullptr;
+	LLGI::Buffer* cb_vs = nullptr;
+	LLGI::Buffer* cb_ps = nullptr;
 
 	LLGI::Shader* shader_vs = nullptr;
 	LLGI::Shader* shader_ps = nullptr;
@@ -417,8 +417,8 @@ void main()
 		shader_ps = graphics->CreateShader(data_ps.data(), static_cast<int32_t>(data_ps.size()));
 	}
 
-	std::shared_ptr<LLGI::VertexBuffer> vb;
-	std::shared_ptr<LLGI::IndexBuffer> ib;
+	std::shared_ptr<LLGI::Buffer> vb;
+	std::shared_ptr<LLGI::Buffer> ib;
 	TestHelper::CreateRectangle(graphics,
 								LLGI::Vec3F(-0.5, 0.5, 0.5),
 								LLGI::Vec3F(0.5, -0.5, 0.5),
@@ -429,8 +429,8 @@ void main()
 
 	if (type == LLGI::ConstantBufferType::LongTime)
 	{
-		cb_vs = graphics->CreateConstantBuffer(sizeof(float) * 4);
-		cb_ps = graphics->CreateConstantBuffer(sizeof(float) * 4);
+		cb_vs = graphics->CreateBuffer(LLGI::BufferUsageType::Constant, sizeof(float) * 4);
+		cb_ps = graphics->CreateBuffer(LLGI::BufferUsageType::Constant, sizeof(float) * 4);
 
 		auto cb_vs_buf = (float*)cb_vs->Lock();
 		cb_vs_buf[0] = 0.2f;
@@ -509,14 +509,14 @@ void main()
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
 
-		commandList->UpdateData(vb.get());
-		commandList->UpdateData(ib.get());
-		commandList->UpdateData(cb_vs);
-		commandList->UpdateData(cb_ps);
+		commandList->UploadBuffer(vb.get());
+		commandList->UploadBuffer(ib.get());
+		commandList->UploadBuffer(cb_vs);
+		commandList->UploadBuffer(cb_ps);
 
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib.get());
+		commandList->SetIndexBuffer(ib.get(), 2);
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
 		commandList->SetConstantBuffer(cb_vs, LLGI::ShaderStageType::Vertex);
 		commandList->SetConstantBuffer(cb_ps, LLGI::ShaderStageType::Pixel);
@@ -665,7 +665,7 @@ void main()
 	std::vector<LLGI::DataStructure> data_vs;
 	std::vector<LLGI::DataStructure> data_ps;
 
-	auto dummy_cb = LLGI::CreateSharedPtr(graphics->CreateConstantBuffer(16));
+	auto dummy_cb = LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Constant, 16));
 
 	if (compiler == nullptr)
 	{
@@ -728,8 +728,8 @@ void main()
 		shader_ps = graphics->CreateShader(data_ps.data(), static_cast<int32_t>(data_ps.size()));
 	}
 
-	std::shared_ptr<LLGI::VertexBuffer> vb;
-	std::shared_ptr<LLGI::IndexBuffer> ib;
+	std::shared_ptr<LLGI::Buffer> vb;
+	std::shared_ptr<LLGI::Buffer> ib;
 	TestHelper::CreateRectangle(graphics,
 								LLGI::Vec3F(-0.5, 0.5, 0.5),
 								LLGI::Vec3F(0.5, -0.5, 0.5),
@@ -779,12 +779,12 @@ void main()
 
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
-		commandList->UpdateData(vb.get());
-		commandList->UpdateData(ib.get());
+		commandList->UploadBuffer(vb.get());
+		commandList->UploadBuffer(ib.get());
 		commandList->BeginRenderPass(renderPass);
 		// commandList->SetConstantBuffer(dummy_cb.get(), LLGI::ShaderStageType::Vertex);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib.get());
+		commandList->SetIndexBuffer(ib.get(), 2);
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
 		commandList->SetTexture(
 			textureDrawn, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
@@ -860,8 +860,8 @@ void test_instancing(LLGI::DeviceType deviceType)
 
 	TestHelper::CreateShader(graphics.get(), deviceType, "instancing.vert", "simple_rectangle.frag", shader_vs, shader_ps);
 
-	std::shared_ptr<LLGI::VertexBuffer> vb;
-	std::shared_ptr<LLGI::IndexBuffer> ib;
+	std::shared_ptr<LLGI::Buffer> vb;
+	std::shared_ptr<LLGI::Buffer> ib;
 	TestHelper::CreateRectangle(graphics.get(),
 								LLGI::Vec3F(-0.2f, 0.2f, 0.5f),
 								LLGI::Vec3F(0.2f, -0.2f, 0.5f),
@@ -870,7 +870,7 @@ void test_instancing(LLGI::DeviceType deviceType)
 								vb,
 								ib);
 
-	auto cb = LLGI::CreateSharedPtr(graphics->CreateConstantBuffer(sizeof(float) * 4 * 10));
+	auto cb = LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Constant, sizeof(float) * 4 * 10));
 
 	if (auto buf = static_cast<float*>(cb->Lock()))
 	{
@@ -924,13 +924,13 @@ void test_instancing(LLGI::DeviceType deviceType)
 		auto commandList = commandListPool->Get();
 		commandList->Begin();
 
-		commandList->UpdateData(vb.get());
-		commandList->UpdateData(ib.get());
-		commandList->UpdateData(cb.get());
+		commandList->UploadBuffer(vb.get());
+		commandList->UploadBuffer(ib.get());
+		commandList->UploadBuffer(cb.get());
 
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib.get());
+		commandList->SetIndexBuffer(ib.get(), 2);
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
 		commandList->SetConstantBuffer(cb.get(), LLGI::ShaderStageType::Vertex);
 		commandList->Draw(2, 5);
@@ -992,8 +992,8 @@ void test_vtf(LLGI::DeviceType deviceType)
 	}
 	textureDrawn->Unlock();
 
-	std::shared_ptr<LLGI::VertexBuffer> vb;
-	std::shared_ptr<LLGI::IndexBuffer> ib;
+	std::shared_ptr<LLGI::Buffer> vb;
+	std::shared_ptr<LLGI::Buffer> ib;
 	TestHelper::CreateRectangle(graphics.get(),
 								LLGI::Vec3F(-0.2f, 0.2f, 0.5f),
 								LLGI::Vec3F(0.2f, -0.2f, 0.5f),
@@ -1042,12 +1042,12 @@ void test_vtf(LLGI::DeviceType deviceType)
 		auto commandList = commandListPool->Get();
 		commandList->Begin();
 
-		commandList->UpdateData(vb.get());
-		commandList->UpdateData(ib.get());
+		commandList->UploadBuffer(vb.get());
+		commandList->UploadBuffer(ib.get());
 
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib.get());
+		commandList->SetIndexBuffer(ib.get(), 2);
 		commandList->SetTexture(
 			textureDrawn.get(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Linear, 0, LLGI::ShaderStageType::Vertex);
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());

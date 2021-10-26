@@ -1,11 +1,8 @@
 #include "LLGI.CommandListVulkan.h"
-#include "LLGI.ComputeBufferVulkan.h"
-#include "LLGI.ConstantBufferVulkan.h"
+#include "LLGI.BufferVulkan.h"
 #include "LLGI.GraphicsVulkan.h"
-#include "LLGI.IndexBufferVulkan.h"
 #include "LLGI.PipelineStateVulkan.h"
 #include "LLGI.TextureVulkan.h"
-#include "LLGI.VertexBufferVulkan.h"
 
 namespace LLGI
 {
@@ -274,8 +271,8 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 	assert(ib_.indexBuffer != nullptr);
 	assert(pip_ != nullptr);
 
-	auto vb = static_cast<VertexBufferVulkan*>(vb_.vertexBuffer);
-	auto ib = static_cast<IndexBufferVulkan*>(ib_.indexBuffer);
+	auto vb = static_cast<BufferVulkan*>(vb_.vertexBuffer);
+	auto ib = static_cast<BufferVulkan*>(ib_.indexBuffer);
 	auto pip = static_cast<PipelineStateVulkan*>(pip_);
 
 	// assign a vertex buffer
@@ -292,9 +289,9 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 		vk::DeviceSize indexOffset = ib_.offset;
 		vk::IndexType indexType = vk::IndexType::eUint16;
 
-		if (ib->GetStride() == 2)
+		if (ib_.stride == 2)
 			indexType = vk::IndexType::eUint16;
-		if (ib->GetStride() == 4)
+		if (ib_.stride == 4)
 			indexType = vk::IndexType::eUint32;
 
 		currentCommandBuffer_.bindIndexBuffer(ib->GetBuffer(), indexOffset, indexType);
@@ -328,14 +325,14 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 	std::array<bool, 2> stages;
 	stages.fill(false);
 
-	ConstantBuffer* vcb = nullptr;
+	Buffer* vcb = nullptr;
 	GetCurrentConstantBuffer(ShaderStageType::Vertex, vcb);
 	if (vcb != nullptr)
 	{
 		stages[0] = true;
 
-		descriptorBufferInfos[descriptorBufferIndex].buffer = (static_cast<ConstantBufferVulkan*>(vcb)->GetBuffer());
-		descriptorBufferInfos[descriptorBufferIndex].offset = static_cast<ConstantBufferVulkan*>(vcb)->GetOffset();
+		descriptorBufferInfos[descriptorBufferIndex].buffer = (static_cast<BufferVulkan*>(vcb)->GetBuffer());
+		descriptorBufferInfos[descriptorBufferIndex].offset = static_cast<BufferVulkan*>(vcb)->GetOffset();
 		descriptorBufferInfos[descriptorBufferIndex].range = vcb->GetSize();
 
 		vk::WriteDescriptorSet desc;
@@ -352,14 +349,14 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 		writeDescriptorIndex++;
 	}
 
-	ConstantBuffer* pcb = nullptr;
+	Buffer* pcb = nullptr;
 	GetCurrentConstantBuffer(ShaderStageType::Pixel, pcb);
 	if (pcb != nullptr)
 	{
 		stages[1] = true;
 
-		descriptorBufferInfos[descriptorBufferIndex].buffer = (static_cast<ConstantBufferVulkan*>(pcb)->GetBuffer());
-		descriptorBufferInfos[descriptorBufferIndex].offset = static_cast<ConstantBufferVulkan*>(pcb)->GetOffset();
+		descriptorBufferInfos[descriptorBufferIndex].buffer = (static_cast<BufferVulkan*>(pcb)->GetBuffer());
+		descriptorBufferInfos[descriptorBufferIndex].offset = static_cast<BufferVulkan*>(pcb)->GetOffset();
 		descriptorBufferInfos[descriptorBufferIndex].range = pcb->GetSize();
 		vk::WriteDescriptorSet desc;
 		desc.descriptorType = vk::DescriptorType::eUniformBufferDynamic;
@@ -559,70 +556,46 @@ void CommandListVulkan::GenerateMipMap(Texture* src)
 	srcTex->ResourceBarrior(currentCommandBuffer_, vk::ImageLayout::eShaderReadOnlyOptimal);
 }
 
-void CommandListVulkan::UpdateData(VertexBuffer* vertexBuffer)
-{
-	auto buf = static_cast<VertexBufferVulkan*>(vertexBuffer);
+void CommandListVulkan::UploadBuffer(Buffer* buffer) {
+	auto buf = static_cast<BufferVulkan*>(buffer);
 
 	auto gpuBuf = buf->GetBuffer();
-	auto cpuBuf = buf->GetCpuBuffer();
+	auto stagingBuf = buf->GetStagingBuffer();
 
 	vk::BufferCopy copyRegion;
-	copyRegion.size = buf->GetSize();
-	currentCommandBuffer_.copyBuffer(cpuBuf, gpuBuf, copyRegion);
-}
-
-void CommandListVulkan::UpdateData(IndexBuffer* indexBuffer)
-{
-	auto buf = static_cast<IndexBufferVulkan*>(indexBuffer);
-
-	auto gpuBuf = buf->GetBuffer();
-	auto cpuBuf = buf->GetCpuBuffer();
-
-	vk::BufferCopy copyRegion;
-	copyRegion.size = buf->GetStride() * buf->GetCount();
-	currentCommandBuffer_.copyBuffer(cpuBuf, gpuBuf, copyRegion);
-}
-
-void CommandListVulkan::UpdateData(ConstantBuffer* constantBuffer)
-{
-	auto buf = static_cast<ConstantBufferVulkan*>(constantBuffer);
-
-	auto gpuBuf = buf->GetBuffer();
-	auto cpuBuf = buf->GetCpuBuffer();
-
-	vk::BufferCopy copyRegion;
-	copyRegion.size = buf->GetSize();
 	copyRegion.srcOffset = buf->GetOffset();
 	copyRegion.dstOffset = buf->GetOffset();
-	currentCommandBuffer_.copyBuffer(cpuBuf, gpuBuf, copyRegion);
-}
-
-void CommandListVulkan::UpdateDataToGPU(ComputeBuffer* computeBuffer)
-{
-	auto buf = static_cast<ComputeBufferVulkan*>(computeBuffer);
-
-	auto gpuBuf = buf->GetBuffer();
-	auto uploadBuf = buf->GetUploadBuffer();
-
-	vk::BufferCopy copyRegion;
 	copyRegion.size = buf->GetSize();
-	copyRegion.srcOffset = buf->GetOffset();
-	copyRegion.dstOffset = buf->GetOffset();
-	currentCommandBuffer_.copyBuffer(uploadBuf, gpuBuf, copyRegion);
+	currentCommandBuffer_.copyBuffer(stagingBuf, gpuBuf, copyRegion);
 }
 
-void CommandListVulkan::UpdateDataToCPU(ComputeBuffer* computeBuffer)
+void CommandListVulkan::ReadBackBuffer(Buffer* buffer)
 {
-	auto buf = static_cast<ComputeBufferVulkan*>(computeBuffer);
+	auto buf = static_cast<BufferVulkan*>(buffer);
 
 	auto gpuBuf = buf->GetBuffer();
 	auto readbackBuf = buf->GetReadbackBuffer();
 
 	vk::BufferCopy copyRegion;
-	copyRegion.size = buf->GetSize();
 	copyRegion.srcOffset = buf->GetOffset();
 	copyRegion.dstOffset = buf->GetOffset();
+	copyRegion.size = buf->GetSize();
 	currentCommandBuffer_.copyBuffer(gpuBuf, readbackBuf, copyRegion);
+}
+
+void CommandListVulkan::CopyBuffer(Buffer* src, Buffer* dst)
+{
+	auto srcBuf = static_cast<BufferVulkan*>(src);
+	auto srcGpuBuf = srcBuf->GetBuffer();
+
+	auto dstBuf = static_cast<BufferVulkan*>(dst);
+	auto dstGpuBuf = dstBuf->GetBuffer();
+
+	vk::BufferCopy copyRegion;
+	copyRegion.srcOffset = srcBuf->GetOffset();
+	copyRegion.dstOffset = dstBuf->GetOffset();
+	copyRegion.size = srcBuf->GetSize();
+	currentCommandBuffer_.copyBuffer(srcGpuBuf, dstGpuBuf, copyRegion);
 }
 
 void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
@@ -733,7 +706,7 @@ void CommandListVulkan::EndComputePass() {}
 
 void CommandListVulkan::Dispatch(int32_t x, int32_t y, int32_t z)
 {
-	ComputeBuffer* cb_;
+	Buffer* cb_;
 	PipelineState* pip_ = nullptr;
 
 	bool isComputeBufferDirtied = false;
@@ -745,7 +718,7 @@ void CommandListVulkan::Dispatch(int32_t x, int32_t y, int32_t z)
 	assert(cb_ != nullptr);
 	assert(pip_ != nullptr);
 
-	auto cb = static_cast<ComputeBufferVulkan*>(cb_);
+	auto cb = static_cast<BufferVulkan*>(cb_);
 	auto pip = static_cast<PipelineStateVulkan*>(pip_);
 
 	auto& dp = descriptorPools[currentSwapBufferIndex_];
@@ -770,12 +743,12 @@ void CommandListVulkan::Dispatch(int32_t x, int32_t y, int32_t z)
 	std::array<vk::DescriptorBufferInfo, 2> descriptorBufferInfos;
 	int descriptorBufferIndex = 0;
 
-	ConstantBuffer* ccb = nullptr;
+	Buffer* ccb = nullptr;
 	GetCurrentConstantBuffer(ShaderStageType::Compute, ccb);
 	if (ccb != nullptr)
 	{
-		descriptorBufferInfos[descriptorBufferIndex].buffer = (static_cast<ConstantBufferVulkan*>(ccb)->GetBuffer());
-		descriptorBufferInfos[descriptorBufferIndex].offset = static_cast<ConstantBufferVulkan*>(ccb)->GetOffset();
+		descriptorBufferInfos[descriptorBufferIndex].buffer = (static_cast<BufferVulkan*>(ccb)->GetBuffer());
+		descriptorBufferInfos[descriptorBufferIndex].offset = static_cast<BufferVulkan*>(ccb)->GetOffset();
 		descriptorBufferInfos[descriptorBufferIndex].range = ccb->GetSize();
 
 		vk::WriteDescriptorSet desc;

@@ -64,11 +64,9 @@ public:
 
 	void GenerateMipMap(Texture* src) override;
 
-	void UpdateData(VertexBuffer* vertexBuffer) override;
-	void UpdateData(IndexBuffer* indexBuffer) override;
-	void UpdateData(ConstantBuffer* constantBuffer) override;
-	void UpdateDataToGPU(ComputeBuffer* computeBuffer) override;
-	void UpdateDataToCPU(ComputeBuffer* computeBuffer) override;
+	void UploadBuffer(Buffer* buffer) override;
+	void ReadBackBuffer(Buffer* buffer) override;
+	void CopyBuffer(Buffer* src, Buffer* dst) override;
 
 	void BeginRenderPass(RenderPass* renderPass) override;
 	void EndRenderPass() override;

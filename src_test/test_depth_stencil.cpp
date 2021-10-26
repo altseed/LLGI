@@ -46,8 +46,8 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 		graphics.get(), deviceType, "simple_texture_rectangle.vert", "simple_texture_rectangle.frag", shader_screen_vs, shader_screen_ps);
 
 	// Green: near
-	std::shared_ptr<LLGI::VertexBuffer> vb1;
-	std::shared_ptr<LLGI::IndexBuffer> ib1;
+	std::shared_ptr<LLGI::Buffer> vb1;
+	std::shared_ptr<LLGI::Buffer> ib1;
 	TestHelper::CreateRectangle(graphics.get(),
 								LLGI::Vec3F(-0.5f, 0.5f, 0.5f),
 								LLGI::Vec3F(0.5f, -0.5f, 0.5f),
@@ -57,8 +57,8 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 								ib1);
 
 	// Blue: far
-	std::shared_ptr<LLGI::VertexBuffer> vb2;
-	std::shared_ptr<LLGI::IndexBuffer> ib2;
+	std::shared_ptr<LLGI::Buffer> vb2;
+	std::shared_ptr<LLGI::Buffer> ib2;
 	TestHelper::CreateRectangle(graphics.get(),
 								LLGI::Vec3F(-0.2f, 0.2f, 0.8f),
 								LLGI::Vec3F(0.7f, -0.7f, 0.8f),
@@ -68,8 +68,8 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 								ib2);
 
 	// Screen
-	std::shared_ptr<LLGI::VertexBuffer> vb3;
-	std::shared_ptr<LLGI::IndexBuffer> ib3;
+	std::shared_ptr<LLGI::Buffer> vb3;
+	std::shared_ptr<LLGI::Buffer> ib3;
 	TestHelper::CreateRectangle(graphics.get(),
 								LLGI::Vec3F(-1.0f, 1.0f, 0.5f),
 								LLGI::Vec3F(1.0f, -1.0f, 0.5f),
@@ -229,24 +229,24 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 
 		commandList->Begin();
 
-		commandList->UpdateData(vb1.get());
-		commandList->UpdateData(ib1.get());
-		commandList->UpdateData(vb2.get());
-		commandList->UpdateData(ib2.get());
-		commandList->UpdateData(vb3.get());
-		commandList->UpdateData(ib3.get());
+		commandList->UploadBuffer(vb1.get());
+		commandList->UploadBuffer(ib1.get());
+		commandList->UploadBuffer(vb2.get());
+		commandList->UploadBuffer(ib2.get());
+		commandList->UploadBuffer(vb3.get());
+		commandList->UploadBuffer(ib3.get());
 
 		commandList->BeginRenderPass(renderPass.get());
 
 		// First, green rectangle.
 		commandList->SetVertexBuffer(vb1.get(), sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib1.get());
+		commandList->SetIndexBuffer(ib1.get(), 2);
 		commandList->SetPipelineState(pips[renderPassPipelineState].writeState.get());
 		commandList->Draw(2);
 
 		// Next, blue rectangle.
 		commandList->SetVertexBuffer(vb2.get(), sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib2.get());
+		commandList->SetIndexBuffer(ib2.get(), 2);
 		commandList->SetPipelineState(pips[renderPassPipelineState].testState.get());
 		commandList->Draw(2);
 
@@ -255,7 +255,7 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 		// Screen
 		commandList->BeginRenderPass(screenRenderPass);
 		commandList->SetVertexBuffer(vb3.get(), sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib3.get());
+		commandList->SetIndexBuffer(ib3.get(), 2);
 
 		if (mode == DepthStencilTestMode::DepthAsTexture)
 		{

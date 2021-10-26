@@ -1,18 +1,14 @@
 
 #include "LLGI.CommandList.h"
-#include "LLGI.ComputeBuffer.h"
-#include "LLGI.ConstantBuffer.h"
-#include "LLGI.IndexBuffer.h"
+#include "LLGI.Buffer.h"
 #include "LLGI.PipelineState.h"
 #include "LLGI.Texture.h"
-#include "LLGI.VertexBuffer.h"
 
 namespace LLGI
 {
 
 void CommandList::GetCurrentVertexBuffer(BindingVertexBuffer& buffer, bool& isDirtied)
 {
-
 	buffer = bindingVertexBuffer;
 	isDirtied = isVertexBufferDirtied;
 }
@@ -29,12 +25,9 @@ void CommandList::GetCurrentPipelineState(PipelineState*& pipelineState, bool& i
 	isDirtied = isPipelineDirtied;
 }
 
-void CommandList::GetCurrentConstantBuffer(ShaderStageType type, ConstantBuffer*& buffer)
-{
-	buffer = constantBuffers[static_cast<int>(type)];
-}
+void CommandList::GetCurrentConstantBuffer(ShaderStageType type, Buffer*& buffer) { buffer = constantBuffers[static_cast<int>(type)]; }
 
-void CommandList::GetCurrentComputeBuffer(ComputeBuffer*& buffer, bool& isDirtied)
+void CommandList::GetCurrentComputeBuffer(Buffer*& buffer, bool& isDirtied)
 {
 	buffer = computeBuffer_;
 	isDirtied = isPipelineDirtied;
@@ -171,7 +164,7 @@ void CommandList::Draw(int32_t primitiveCount, int32_t instanceCount)
 	isPipelineDirtied = false;
 }
 
-void CommandList::SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride, int32_t offset)
+void CommandList::SetVertexBuffer(Buffer* vertexBuffer, int32_t stride, int32_t offset)
 {
 	isVertexBufferDirtied |=
 		bindingVertexBuffer.vertexBuffer != vertexBuffer || bindingVertexBuffer.stride != stride || bindingVertexBuffer.offset != offset;
@@ -182,10 +175,11 @@ void CommandList::SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride, in
 	RegisterReferencedObject(vertexBuffer);
 }
 
-void CommandList::SetIndexBuffer(IndexBuffer* indexBuffer, int32_t offset)
+void CommandList::SetIndexBuffer(Buffer* indexBuffer, int32_t stride, int32_t offset)
 {
 	isCurrentIndexBufferDirtied |= bindingIndexBuffer.indexBuffer != indexBuffer || bindingIndexBuffer.offset != offset;
 	bindingIndexBuffer.indexBuffer = indexBuffer;
+	bindingIndexBuffer.stride = stride;
 	bindingIndexBuffer.offset = offset;
 
 	RegisterReferencedObject(indexBuffer);
@@ -199,7 +193,7 @@ void CommandList::SetPipelineState(PipelineState* pipelineState)
 	RegisterReferencedObject(pipelineState);
 }
 
-void CommandList::SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageType shaderStage)
+void CommandList::SetConstantBuffer(Buffer* constantBuffer, ShaderStageType shaderStage)
 {
 	auto ind = static_cast<int>(shaderStage);
 	SafeAssign(constantBuffers[ind], constantBuffer);
@@ -207,7 +201,7 @@ void CommandList::SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageT
 	RegisterReferencedObject(constantBuffer);
 }
 
-void CommandList::SetComputeBuffer(ComputeBuffer* computeBuffer)
+void CommandList::SetComputeBuffer(Buffer* computeBuffer)
 {
 	SafeAssign(computeBuffer_, computeBuffer);
 	RegisterReferencedObject(computeBuffer);

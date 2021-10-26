@@ -57,11 +57,9 @@ public:
 	void CopyTexture(
 		Texture* src, Texture* dst, const Vec3I& srcPos, const Vec3I& dstPos, const Vec3I& size, int srcLayer, int dstLayer) override;
 
-	void UpdateData(VertexBuffer* vertexBuffer) override;
-	void UpdateData(IndexBuffer* indexBuffer) override;
-	void UpdateData(ConstantBuffer* constantBuffer) override;
-	void UpdateDataToGPU(ComputeBuffer* computeBuffer) override;
-	void UpdateDataToCPU(ComputeBuffer* computeBuffer) override;
+	void UploadBuffer(Buffer* buffer) override;
+	void ReadBackBuffer(Buffer* buffer) override;
+	void CopyBuffer(Buffer* src, Buffer* dst) override;
 
 	void BeginComputePass() override;
 	void EndComputePass() override;

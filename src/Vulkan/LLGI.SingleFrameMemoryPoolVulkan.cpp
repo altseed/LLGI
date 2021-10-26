@@ -1,5 +1,5 @@
 #include "LLGI.SingleFrameMemoryPoolVulkan.h"
-#include "LLGI.ConstantBufferVulkan.h"
+#include "LLGI.BufferVulkan.h"
 
 namespace LLGI
 {
@@ -11,77 +11,32 @@ InternalSingleFrameMemoryPoolVulkan ::~InternalSingleFrameMemoryPoolVulkan() {}
 bool InternalSingleFrameMemoryPoolVulkan::Initialize(GraphicsVulkan* graphics, int32_t constantBufferPoolSize, int32_t drawingCount)
 {
 	constantBufferSize_ = (constantBufferPoolSize + 255) & ~255; // buffer size should be multiple of 256
-	
-	cpuBuf = std::unique_ptr<Buffer>(new Buffer(graphics));
-	gpuBuf = std::unique_ptr<Buffer>(new Buffer(graphics));
 
-	// create a buffer on gpu
-	{
-		vk::BufferCreateInfo IndexBufferInfo;
-		IndexBufferInfo.size = constantBufferSize_;
-		IndexBufferInfo.usage = vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst;
-		vk::Buffer buffer = graphics->GetDevice().createBuffer(IndexBufferInfo);
-
-		vk::MemoryRequirements memReqs = graphics->GetDevice().getBufferMemoryRequirements(buffer);
-		vk::MemoryAllocateInfo memAlloc;
-		memAlloc.allocationSize = memReqs.size;
-		memAlloc.memoryTypeIndex = graphics->GetMemoryTypeIndex(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
-		vk::DeviceMemory devMem = graphics->GetDevice().allocateMemory(memAlloc);
-		graphics->GetDevice().bindBufferMemory(buffer, devMem, 0);
-
-		gpuBuf->Attach(buffer, devMem);
-	}
-
-	// create a buffer on cpu
-	{
-		vk::BufferCreateInfo IndexBufferInfo;
-		IndexBufferInfo.size = constantBufferSize_;
-		IndexBufferInfo.usage = vk::BufferUsageFlagBits::eTransferSrc;
-		vk::Buffer buffer = graphics->GetDevice().createBuffer(IndexBufferInfo);
-
-		vk::MemoryRequirements memReqs = graphics->GetDevice().getBufferMemoryRequirements(buffer);
-		vk::MemoryAllocateInfo memAlloc;
-		memAlloc.allocationSize = memReqs.size;
-		memAlloc.memoryTypeIndex = graphics->GetMemoryTypeIndex(memReqs.memoryTypeBits, vk::MemoryPropertyFlagBits::eHostVisible);
-		vk::DeviceMemory devMem = graphics->GetDevice().allocateMemory(memAlloc);
-		graphics->GetDevice().bindBufferMemory(buffer, devMem, 0);
-
-		cpuBuf->Attach(buffer, devMem);
-	}
+	buffer_ =
+		std::unique_ptr<BufferVulkan>(static_cast<BufferVulkan*>(graphics->CreateBuffer(BufferUsageType::Constant, constantBufferSize_)));
 
 	return true;
 }
 
-void InternalSingleFrameMemoryPoolVulkan::Dispose()
-{
-	gpuBuf = nullptr;
-	cpuBuf = nullptr;
-}
+void InternalSingleFrameMemoryPoolVulkan::Dispose() { buffer_ = nullptr; }
 
-bool InternalSingleFrameMemoryPoolVulkan::GetConstantBuffer(int32_t size,
-															vk::Buffer* outResource,
-															vk::DeviceMemory* deviceMemory,
-															vk::Buffer* outCpuResource,
-															vk::DeviceMemory* cpuDeviceMemory,
-															int32_t* outOffset)
+bool InternalSingleFrameMemoryPoolVulkan::GetConstantBuffer(int32_t size, BufferVulkan*& buffer, int32_t& outOffset)
 {
 	if (constantBufferOffset_ + size > constantBufferSize_)
 		return false;
 
-	*outResource = gpuBuf->buffer();
-	*deviceMemory = gpuBuf->devMem();
-	*outCpuResource = cpuBuf->buffer();
-	*cpuDeviceMemory = cpuBuf->devMem();
-	*outOffset = constantBufferOffset_;
+	buffer = buffer_.get();
+	outOffset = constantBufferOffset_;
 	constantBufferOffset_ += size;
+
 	return true;
 }
 
 void InternalSingleFrameMemoryPoolVulkan::Reset() { constantBufferOffset_ = 0; }
 
-ConstantBuffer* SingleFrameMemoryPoolVulkan::CreateConstantBufferInternal(int32_t size)
+Buffer* SingleFrameMemoryPoolVulkan::CreateBufferInternal(int32_t size)
 {
-	auto obj = new ConstantBufferVulkan();
+	auto obj = new BufferVulkan();
 	if (!obj->InitializeAsShortTime(graphics_, this, size))
 	{
 		SafeRelease(obj);
@@ -91,9 +46,9 @@ ConstantBuffer* SingleFrameMemoryPoolVulkan::CreateConstantBufferInternal(int32_
 	return obj;
 }
 
-ConstantBuffer* SingleFrameMemoryPoolVulkan::ReinitializeConstantBuffer(ConstantBuffer* cb, int32_t size)
+Buffer* SingleFrameMemoryPoolVulkan::ReinitializeBuffer(Buffer* cb, int32_t size)
 {
-	auto obj = static_cast<ConstantBufferVulkan*>(cb);
+	auto obj = static_cast<BufferVulkan*>(cb);
 	if (!obj->InitializeAsShortTime(graphics_, this, size))
 	{
 		return nullptr;
@@ -136,15 +91,10 @@ SingleFrameMemoryPoolVulkan ::~SingleFrameMemoryPoolVulkan()
 	}
 }
 
-bool SingleFrameMemoryPoolVulkan::GetConstantBuffer(int32_t size,
-													vk::Buffer* outResource,
-													vk::DeviceMemory* deviceMemory,
-													vk::Buffer* outCpuResource,
-													vk::DeviceMemory* cpuDeviceMemory,
-													int32_t* outOffset)
+bool SingleFrameMemoryPoolVulkan::GetConstantBuffer(int32_t size, BufferVulkan*& buffer, int32_t& outOffset)
 {
 	assert(currentSwap_ >= 0);
-	return memoryPools[currentSwap_]->GetConstantBuffer(size, outResource, deviceMemory, outCpuResource, cpuDeviceMemory, outOffset);
+	return memoryPools[currentSwap_]->GetConstantBuffer(size, buffer, outOffset);
 }
 
 InternalSingleFrameMemoryPoolVulkan* SingleFrameMemoryPoolVulkan::GetInternal() { return memoryPools[currentSwap_].get(); }

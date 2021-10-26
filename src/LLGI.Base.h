@@ -283,6 +283,24 @@ inline TextureUsageType operator&(TextureUsageType lhs, TextureUsageType rhs)
 	return static_cast<TextureUsageType>(static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs));
 }
 
+enum class BufferUsageType : uint32_t
+{
+	Index = 1 << 0,
+	Vertex = 1 << 1,
+	Constant = 1 << 2,
+	Compute = 1 << 3,
+};
+
+inline BufferUsageType operator|(BufferUsageType lhs, BufferUsageType rhs)
+{
+	return static_cast<BufferUsageType>(static_cast<uint32_t>(lhs) | static_cast<uint32_t>(rhs));
+}
+
+inline BufferUsageType operator&(BufferUsageType lhs, BufferUsageType rhs)
+{
+	return static_cast<BufferUsageType>(static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs));
+}
+
 inline bool IsDepthFormat(TextureFormatType format)
 {
 	if (format == TextureFormatType::D32)
@@ -424,10 +442,7 @@ template <typename T> inline std::unique_ptr<T, ReferenceDeleter<T>> CreateUniqu
 
 template <typename T> using unique_ref = std::unique_ptr<T, ReferenceDeleter<T>>;
 
-class VertexBuffer;
-class IndexBuffer;
-class ConstantBuffer;
-class ComputeBuffer;
+class Buffer;
 class Shader;
 class PipelineState;
 class Texture;

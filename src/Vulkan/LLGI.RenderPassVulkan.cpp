@@ -1,14 +1,11 @@
 #include "LLGI.RenderPassVulkan.h"
 #include "LLGI.BaseVulkan.h"
 #include "LLGI.CommandListVulkan.h"
-#include "LLGI.ConstantBufferVulkan.h"
 #include "LLGI.GraphicsVulkan.h"
-#include "LLGI.IndexBufferVulkan.h"
 #include "LLGI.PipelineStateVulkan.h"
 #include "LLGI.ShaderVulkan.h"
 #include "LLGI.SingleFrameMemoryPoolVulkan.h"
 #include "LLGI.TextureVulkan.h"
-#include "LLGI.VertexBufferVulkan.h"
 
 namespace LLGI
 {

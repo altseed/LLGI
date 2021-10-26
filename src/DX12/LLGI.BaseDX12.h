@@ -35,6 +35,7 @@ void EndDX12_DRED_Debug();
 		DumpDX12_DRED(device);                                                                                                             \
 	}
 
+class BufferDX12;
 class GraphicsDX12;
 class RenderPassDX12;
 class SingleFrameMemoryPoolDX12;

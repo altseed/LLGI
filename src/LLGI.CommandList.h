@@ -26,14 +26,15 @@ class CommandList : public ReferenceObject
 protected:
 	struct BindingVertexBuffer
 	{
-		VertexBuffer* vertexBuffer = nullptr;
+		Buffer* vertexBuffer = nullptr;
 		int32_t stride = 0;
 		int32_t offset = 0;
 	};
 
 	struct BindingIndexBuffer
 	{
-		IndexBuffer* indexBuffer = nullptr;
+		Buffer* indexBuffer = nullptr;
+		int32_t stride = 0;
 		int32_t offset = 0;
 	};
 
@@ -65,8 +66,8 @@ private:
 	bool isPipelineDirtied = true;
 	bool doesBeginWithPlatform_ = false;
 
-	std::array<ConstantBuffer*, static_cast<int>(ShaderStageType::Max)> constantBuffers;
-	ComputeBuffer* computeBuffer_ = nullptr;
+	std::array<Buffer*, static_cast<int>(ShaderStageType::Max)> constantBuffers;
+	Buffer* computeBuffer_ = nullptr;
 
 protected:
 	bool isInRenderPass_ = false;
@@ -78,8 +79,8 @@ protected:
 	void GetCurrentVertexBuffer(BindingVertexBuffer& buffer, bool& isDirtied);
 	void GetCurrentIndexBuffer(BindingIndexBuffer& buffer, bool& isDirtied);
 	void GetCurrentPipelineState(PipelineState*& pipelineState, bool& isDirtied);
-	void GetCurrentConstantBuffer(ShaderStageType type, ConstantBuffer*& buffer);
-	void GetCurrentComputeBuffer(ComputeBuffer*& buffer, bool& isDirtied);
+	void GetCurrentConstantBuffer(ShaderStageType type, Buffer*& buffer);
+	void GetCurrentComputeBuffer(Buffer*& buffer, bool& isDirtied);
 	void RegisterReferencedObject(ReferenceObject* referencedObject);
 
 public:
@@ -106,11 +107,11 @@ public:
 
 	virtual void SetScissor(int32_t x, int32_t y, int32_t width, int32_t height);
 	virtual void Draw(int32_t primitiveCount, int32_t instanceCount = 1);
-	virtual void SetVertexBuffer(VertexBuffer* vertexBuffer, int32_t stride, int32_t offset);
-	virtual void SetIndexBuffer(IndexBuffer* indexBuffer, int32_t offset = 0);
+	virtual void SetVertexBuffer(Buffer* vertexBuffer, int32_t stride, int32_t offset);
+	virtual void SetIndexBuffer(Buffer* indexBuffer, int32_t stride, int32_t offset = 0);
 	virtual void SetPipelineState(PipelineState* pipelineState);
-	virtual void SetConstantBuffer(ConstantBuffer* constantBuffer, ShaderStageType shaderStage);
-	virtual void SetComputeBuffer(ComputeBuffer* computeBuffer);
+	virtual void SetConstantBuffer(Buffer* constantBuffer, ShaderStageType shaderStage);
+	virtual void SetComputeBuffer(Buffer* computeBuffer);
 
 	/**
 		@brief	copy a texture
@@ -165,30 +166,9 @@ public:
 	virtual void EndComputePass() {}
 	virtual void Dispatch(int32_t x, int32_t y, int32_t z);
 
-	/**
-		@brief	send a memory in specified VertexBuffer from cpu to gpu
-	*/
-	virtual void UpdateData(VertexBuffer* vertexBuffer) {}
-
-	/**
-		@brief	send a memory in specified IndexBuffer from cpu to gpu
-	*/
-	virtual void UpdateData(IndexBuffer* indexBuffer) {}
-
-	/**
-		@brief	send a memory in specified ConstantBuffer from cpu to gpu
-	*/
-	virtual void UpdateData(ConstantBuffer* constantBuffer) {}
-
-	/**
-		@brief	send a memory in specified ComputeBuffer from cpu to gpu
-	*/
-	virtual void UpdateDataToGPU(ComputeBuffer* computeBuffer) {}
-
-	/**
-		@brief	send a memory in specified ComputeBuffer from gpu to cpu
-	*/
-	virtual void UpdateDataToCPU(ComputeBuffer* computeBuffer) {}
+	virtual void UploadBuffer(Buffer* buffer) {}
+	virtual void ReadBackBuffer(Buffer* buffer) {}
+	virtual void CopyBuffer(Buffer* src, Buffer* dst) {}
 
 	/**
 		@brief	send a memory in specified texture from cpu to gpu

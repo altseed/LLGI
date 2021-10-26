@@ -1,14 +1,10 @@
-
+#include "LLGI.BufferDX12.h"
 #include "LLGI.CommandListDX12.h"
-#include "LLGI.ComputeBufferDX12.h"
-#include "LLGI.ConstantBufferDX12.h"
 #include "LLGI.DescriptorHeapDX12.h"
 #include "LLGI.GraphicsDX12.h"
-#include "LLGI.IndexBufferDX12.h"
 #include "LLGI.PipelineStateDX12.h"
 #include "LLGI.RenderPassDX12.h"
 #include "LLGI.TextureDX12.h"
-#include "LLGI.VertexBufferDX12.h"
 
 namespace LLGI
 {
@@ -268,7 +264,7 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 
 	BindingVertexBuffer vb_;
 	BindingIndexBuffer ib_;
-	ConstantBuffer* cb = nullptr;
+	Buffer* cb = nullptr;
 	PipelineState* pip_ = nullptr;
 
 	bool isVBDirtied = false;
@@ -283,8 +279,8 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 	assert(ib_.indexBuffer != nullptr);
 	assert(pip_ != nullptr);
 
-	auto vb = static_cast<VertexBufferDX12*>(vb_.vertexBuffer);
-	auto ib = static_cast<IndexBufferDX12*>(ib_.indexBuffer);
+	auto vb = static_cast<BufferDX12*>(vb_.vertexBuffer);
+	auto ib = static_cast<BufferDX12*>(ib_.indexBuffer);
 	auto pip = static_cast<PipelineStateDX12*>(pip_);
 
 	{
@@ -302,8 +298,8 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 	{
 		D3D12_INDEX_BUFFER_VIEW indexView;
 		indexView.BufferLocation = ib->Get()->GetGPUVirtualAddress() + ib_.offset;
-		indexView.SizeInBytes = ib->GetStride() * ib->GetCount() - ib_.offset;
-		indexView.Format = ib->GetStride() == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
+		indexView.SizeInBytes = ib->GetActualSize() - ib_.offset;
+		indexView.Format = ib_.stride == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
 		currentCommandList_->IASetIndexBuffer(&indexView);
 	}
 
@@ -373,7 +369,7 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 			GetCurrentConstantBuffer(static_cast<ShaderStageType>(stage_ind), cb);
 			if (cb != nullptr)
 			{
-				auto _cb = static_cast<ConstantBufferDX12*>(cb);
+				auto _cb = static_cast<BufferDX12*>(cb);
 				D3D12_CONSTANT_BUFFER_VIEW_DESC desc = {};
 				desc.BufferLocation = _cb->Get()->GetGPUVirtualAddress() + _cb->GetOffset();
 				desc.SizeInBytes = _cb->GetActualSize();
@@ -587,25 +583,25 @@ void CommandListDX12::CopyTexture(
 	RegisterReferencedObject(dst);
 }
 
-void CommandListDX12::UpdateData(VertexBuffer* vertexBuffer)
-{
-	auto buf = static_cast<VertexBufferDX12*>(vertexBuffer);
+void CommandListDX12::UploadBuffer(Buffer* buffer) {
+	auto buf = static_cast<BufferDX12*>(buffer);
 
 	auto resource = buf->Get();
-	auto cpuResource = buf->GetCpu();
+	auto stagingResource = buf->GetStaging();
+	auto state = buf->GetResourceState();
 
 	{
 		D3D12_RESOURCE_BARRIER barrier = {};
 		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 		barrier.Transition.pResource = resource;
-		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_GENERIC_READ;
+		barrier.Transition.StateBefore = state;
 		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
 		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 		currentCommandList_->ResourceBarrier(1, &barrier);
 	}
 
-	currentCommandList_->CopyBufferRegion(resource, 0, cpuResource, 0, buf->GetSize());
+	currentCommandList_->CopyBufferRegion(resource, buf->GetOffset(), stagingResource, buf->GetOffset(), buf->GetActualSize());
 
 	{
 		D3D12_RESOURCE_BARRIER barrier = {};
@@ -613,127 +609,32 @@ void CommandListDX12::UpdateData(VertexBuffer* vertexBuffer)
 		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 		barrier.Transition.pResource = resource;
 		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
-		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_GENERIC_READ;
+		barrier.Transition.StateAfter = state;
 		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 		currentCommandList_->ResourceBarrier(1, &barrier);
 	}
 }
 
-void CommandListDX12::UpdateData(IndexBuffer* indexBuffer)
+void CommandListDX12::ReadBackBuffer(Buffer* buffer)
 {
-	auto buf = static_cast<IndexBufferDX12*>(indexBuffer);
+	auto buf = static_cast<BufferDX12*>(buffer);
 
 	auto resource = buf->Get();
-	auto cpuResource = buf->GetCpu();
+	auto readbackResource = buf->GetReadback();
+	auto state = buf->GetResourceState();
 
 	{
 		D3D12_RESOURCE_BARRIER barrier = {};
 		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 		barrier.Transition.pResource = resource;
-		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_GENERIC_READ;
-		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
-		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		currentCommandList_->ResourceBarrier(1, &barrier);
-	}
-
-	currentCommandList_->CopyBufferRegion(resource, 0, cpuResource, 0, buf->GetCount() * buf->GetStride());
-
-	{
-		D3D12_RESOURCE_BARRIER barrier = {};
-		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.Transition.pResource = resource;
-		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
-		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_GENERIC_READ;
-		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		currentCommandList_->ResourceBarrier(1, &barrier);
-	}
-}
-
-void CommandListDX12::UpdateData(ConstantBuffer* constantBuffer)
-{
-	auto buf = static_cast<ConstantBufferDX12*>(constantBuffer);
-
-	auto resource = buf->Get();
-	auto cpuResource = buf->GetCpu();
-
-	{
-		D3D12_RESOURCE_BARRIER barrier = {};
-		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.Transition.pResource = resource;
-		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_GENERIC_READ;
-		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
-		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		currentCommandList_->ResourceBarrier(1, &barrier);
-	}
-
-	currentCommandList_->CopyBufferRegion(resource, buf->GetOffset(), cpuResource, buf->GetOffset(), buf->GetActualSize());
-
-	{
-		D3D12_RESOURCE_BARRIER barrier = {};
-		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.Transition.pResource = resource;
-		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
-		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_GENERIC_READ;
-		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		currentCommandList_->ResourceBarrier(1, &barrier);
-	}
-}
-
-void CommandListDX12::UpdateDataToGPU(ComputeBuffer* computeBuffer)
-{
-	auto buf = static_cast<ComputeBufferDX12*>(computeBuffer);
-
-	auto resource = buf->Get();
-	auto cpuResource = buf->GetUpload();
-
-	{
-		D3D12_RESOURCE_BARRIER barrier = {};
-		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.Transition.pResource = resource;
-		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
-		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		currentCommandList_->ResourceBarrier(1, &barrier);
-	}
-
-	currentCommandList_->CopyBufferRegion(resource, buf->GetOffset(), cpuResource, buf->GetOffset(), buf->GetActualSize());
-
-	{
-		D3D12_RESOURCE_BARRIER barrier = {};
-		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.Transition.pResource = resource;
-		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
-		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		currentCommandList_->ResourceBarrier(1, &barrier);
-	}
-}
-
-void CommandListDX12::UpdateDataToCPU(ComputeBuffer* computeBuffer)
-{
-	auto buf = static_cast<ComputeBufferDX12*>(computeBuffer);
-
-	auto resource = buf->Get();
-	auto cpuResource = buf->GetReadback();
-
-	{
-		D3D12_RESOURCE_BARRIER barrier = {};
-		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.Transition.pResource = resource;
-		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+		barrier.Transition.StateBefore = state;
 		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_SOURCE;
 		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 		currentCommandList_->ResourceBarrier(1, &barrier);
 	}
 
-	currentCommandList_->CopyBufferRegion(cpuResource, buf->GetOffset(), resource, buf->GetOffset(), buf->GetActualSize());
+	currentCommandList_->CopyBufferRegion(readbackResource, buf->GetOffset(), resource, buf->GetOffset(), buf->GetActualSize());
 
 	{
 		D3D12_RESOURCE_BARRIER barrier = {};
@@ -741,7 +642,64 @@ void CommandListDX12::UpdateDataToCPU(ComputeBuffer* computeBuffer)
 		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 		barrier.Transition.pResource = resource;
 		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_SOURCE;
-		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+		barrier.Transition.StateAfter = state;
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		currentCommandList_->ResourceBarrier(1, &barrier);
+	}
+}
+
+void CommandListDX12::CopyBuffer(Buffer* src, Buffer* dst) {
+	auto srcBuf = static_cast<BufferDX12*>(src);
+	auto dstBuf = static_cast<BufferDX12*>(dst);
+
+	auto srcResource = srcBuf->Get();
+	auto srcState = srcBuf->GetResourceState();
+
+	auto dstResource = dstBuf->Get();
+	auto dstState = dstBuf->GetResourceState();
+
+	{
+		D3D12_RESOURCE_BARRIER barrier = {};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = srcResource;
+		barrier.Transition.StateBefore = srcState;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_SOURCE;
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		currentCommandList_->ResourceBarrier(1, &barrier);
+	}
+
+	{
+		D3D12_RESOURCE_BARRIER barrier = {};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = dstResource;
+		barrier.Transition.StateBefore = dstState;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		currentCommandList_->ResourceBarrier(1, &barrier);
+	}
+
+	currentCommandList_->CopyBufferRegion(dstResource, dstBuf->GetOffset(), srcResource, srcBuf->GetOffset(), srcBuf->GetActualSize());
+
+	{
+		D3D12_RESOURCE_BARRIER barrier = {};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = srcResource;
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_SOURCE;
+		barrier.Transition.StateAfter = srcState;
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		currentCommandList_->ResourceBarrier(1, &barrier);
+	}
+
+	{
+		D3D12_RESOURCE_BARRIER barrier = {};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = dstResource;
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+		barrier.Transition.StateAfter = dstState;
 		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 		currentCommandList_->ResourceBarrier(1, &barrier);
 	}
@@ -755,8 +713,8 @@ void CommandListDX12::Dispatch(int32_t x, int32_t y, int32_t z)
 {
 	assert(currentCommandList_ != nullptr);
 	PipelineState* pip_ = nullptr;
-	ConstantBuffer* cb = nullptr;
-	ComputeBuffer* compute = nullptr;
+	Buffer* cb = nullptr;
+	Buffer* compute = nullptr;
 
 	bool isComputeBufferDirtied = false;
 	bool isPipDirtied = false;
@@ -768,7 +726,7 @@ void CommandListDX12::Dispatch(int32_t x, int32_t y, int32_t z)
 	assert(compute != nullptr);
 
 	auto pip = static_cast<PipelineStateDX12*>(pip_);
-	auto computeBuffer = static_cast<ComputeBufferDX12*>(compute);
+	auto computeBuffer = static_cast<BufferDX12*>(compute);
 
 	if (pip != nullptr)
 	{
@@ -808,7 +766,7 @@ void CommandListDX12::Dispatch(int32_t x, int32_t y, int32_t z)
 		GetCurrentConstantBuffer(static_cast<ShaderStageType>(stage_ind), cb);
 		if (cb != nullptr)
 		{
-			auto _cb = static_cast<ConstantBufferDX12*>(cb);
+			auto _cb = static_cast<BufferDX12*>(cb);
 			D3D12_CONSTANT_BUFFER_VIEW_DESC desc = {};
 			desc.BufferLocation = _cb->Get()->GetGPUVirtualAddress() + _cb->GetOffset();
 			desc.SizeInBytes = _cb->GetActualSize();

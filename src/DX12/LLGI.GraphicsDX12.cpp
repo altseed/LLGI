@@ -2,15 +2,11 @@
 #include "LLGI.BaseDX12.h"
 #include "LLGI.BufferDX12.h"
 #include "LLGI.CommandListDX12.h"
-#include "LLGI.ComputeBufferDX12.h"
-#include "LLGI.ConstantBufferDX12.h"
-#include "LLGI.IndexBufferDX12.h"
 #include "LLGI.PipelineStateDX12.h"
 #include "LLGI.PlatformDX12.h"
 #include "LLGI.ShaderDX12.h"
 #include "LLGI.SingleFrameMemoryPoolDX12.h"
 #include "LLGI.TextureDX12.h"
-#include "LLGI.VertexBufferDX12.h"
 
 namespace LLGI
 {
@@ -70,50 +66,15 @@ void GraphicsDX12::WaitFinish()
 	}
 }
 
-VertexBuffer* GraphicsDX12::CreateVertexBuffer(int32_t size)
+Buffer* GraphicsDX12::CreateBuffer(BufferUsageType usage, int32_t size)
 {
-	auto obj = new VertexBufferDX12();
-	if (!obj->Initialize(this, size))
+	auto obj = new BufferDX12();
+	if (!obj->Initialize(this, usage, size))
 	{
 		SafeRelease(obj);
 		return nullptr;
 	}
 
-	return obj;
-}
-
-IndexBuffer* GraphicsDX12::CreateIndexBuffer(int32_t stride, int32_t count)
-{
-	auto obj = new IndexBufferDX12();
-	if (!obj->Initialize(this, stride, count))
-	{
-		SafeRelease(obj);
-		return nullptr;
-	}
-
-	return obj;
-}
-
-ConstantBuffer* GraphicsDX12::CreateConstantBuffer(int32_t size)
-{
-	auto obj = new ConstantBufferDX12();
-	if (!obj->Initialize(this, size))
-	{
-		SafeRelease(obj);
-		return nullptr;
-	}
-
-	return obj;
-}
-
-ComputeBuffer* GraphicsDX12::CreateComputeBuffer(int32_t size)
-{
-	auto obj = new ComputeBufferDX12();
-	if (!obj->Initialize(this, size))
-	{
-		SafeRelease(obj);
-		return nullptr;
-	}
 	return obj;
 }
 
@@ -346,7 +307,7 @@ std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
 	auto dstFootprint = texture->GetFootprint().Footprint;
 
 	BufferDX12 dstBuffer;
-	if (!dstBuffer.Initialize(this, dstFootprint.RowPitch * dstFootprint.Height))
+	if (!dstBuffer.Initialize(this, BufferUsageType::Index, dstFootprint.RowPitch * dstFootprint.Height))
 	{
 		auto msg = (std::string("Error : ") + std::string(__FILE__) + " : " + std::to_string(__LINE__) + std::string(" : "));
 		::LLGI::Log(::LLGI::LogType::Error, msg.c_str());
@@ -383,7 +344,7 @@ std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
 	src.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
 	src.SubresourceIndex = 0;
 
-	dst.pResource = dstBuffer.Get();
+	dst.pResource = dstBuffer.GetReadback();
 	dst.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
 	dst.PlacedFootprint = footprint;
 
@@ -403,22 +364,19 @@ std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
 	if (GetTextureMemorySize(renderTarget->GetFormat(), rtSize3) != dstBuffer.GetSize())
 	{
 		result.resize(GetTextureMemorySize(renderTarget->GetFormat(), rtSize3));
-		auto raw = static_cast<uint8_t*>(dstBuffer.Lock());
+		auto raw = static_cast<uint8_t*>(dstBuffer.Read());
 
 		for (int32_t y = 0; y < renderTarget->GetSizeAs2D().Y; y++)
 		{
 			auto pitch = GetTextureMemorySize(renderTarget->GetFormat(), rtSize3) / renderTarget->GetSizeAs2D().Y;
 			memcpy(result.data() + pitch * y, raw + dstFootprint.RowPitch * y, pitch);
 		}
-
-		dstBuffer.Unlock();
 	}
 	else
 	{
 		result.resize(dstBuffer.GetSize());
-		auto raw = dstBuffer.Lock();
+		auto raw = dstBuffer.Read();
 		memcpy(result.data(), raw, result.size());
-		dstBuffer.Unlock();
 	}
 
 	return result;

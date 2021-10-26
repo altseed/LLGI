@@ -43,10 +43,7 @@ public:
 	void Execute(CommandList* commandList) override;
 	void WaitFinish() override;
 
-	VertexBuffer* CreateVertexBuffer(int32_t size) override;
-	IndexBuffer* CreateIndexBuffer(int32_t stride, int32_t count) override;
-	ConstantBuffer* CreateConstantBuffer(int32_t size) override;
-	ComputeBuffer* CreateComputeBuffer(int32_t size) override;
+	Buffer* CreateBuffer(BufferUsageType usage, int32_t size) override;
 	Shader* CreateShader(DataStructure* data, int32_t count) override;
 	PipelineState* CreatePiplineState() override;
 	SingleFrameMemoryPool* CreateSingleFrameMemoryPool(int32_t constantBufferPoolSize, int32_t drawingCount) override;

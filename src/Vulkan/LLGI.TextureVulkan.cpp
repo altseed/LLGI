@@ -145,7 +145,7 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics,
 	// create a buffer on cpu
 	if (!IsDepthFormat(parameter.Format))
 	{
-		cpuBuf = std::unique_ptr<Buffer>(new Buffer(graphics_));
+		cpuBuf = std::unique_ptr<InternalBuffer>(new InternalBuffer(graphics_));
 		vk::BufferCreateInfo bufferInfo;
 		bufferInfo.size = memorySize;
 		bufferInfo.usage = vk::BufferUsageFlagBits::eTransferSrc;

@@ -1,14 +1,12 @@
 
+#include <LLGI.Buffer.h>
 #include <LLGI.CommandList.h>
+#include <LLGI.Compiler.h>
 #include <LLGI.Graphics.h>
+#include <LLGI.PipelineState.h>
 #include <LLGI.Platform.h>
 #include <LLGI.Shader.h>
-#include <LLGI.Compiler.h>
-#include <LLGI.VertexBuffer.h>
-#include <LLGI.IndexBuffer.h>
-#include <LLGI.PipelineState.h>
 #include <LLGI.Texture.h>
-#include <LLGI.ConstantBuffer.h>
 #include "GPUParticle.h"
 
 //==============================================================================
@@ -106,18 +104,14 @@ GPUParticleBuffer::GPUParticleBuffer(GPUParticleContext* context)
 	positionTexture_ = LLGI::CreateSharedPtr(context->GetGraphcis()->CreateRenderTexture(params));
 	velocityTexture_ = LLGI::CreateSharedPtr(context->GetGraphcis()->CreateRenderTexture(params));
 
-	LLGI::Texture* textures[] = { positionTexture_.get(), velocityTexture_.get() };
+	LLGI::Texture* textures[] = {positionTexture_.get(), velocityTexture_.get()};
 	renderPass_ = LLGI::CreateSharedPtr(context->GetGraphcis()->CreateRenderPass(textures, 2, nullptr));
 }
 
 //==============================================================================
 // GPUParticleEmitPass
 
-Shader::Shader(
-	LLGI::Graphics* graphics,
-	LLGI::DeviceType deviceType,
-	const char* vsBinaryPath,
-	const char* psBinaryPath)
+Shader::Shader(LLGI::Graphics* graphics, LLGI::DeviceType deviceType, const char* vsBinaryPath, const char* psBinaryPath)
 {
 	auto compiler = LLGI::CreateSharedPtr(LLGI::CreateCompiler(deviceType));
 
@@ -220,27 +214,31 @@ std::vector<uint8_t> Shader::LoadData(const char* path)
 //==============================================================================
 // GPUParticleEmitPass
 
-GPUParticleEmitPass::GPUParticleEmitPass(GPUParticleContext* context)
-	: context_(context)
+GPUParticleEmitPass::GPUParticleEmitPass(GPUParticleContext* context) : context_(context)
 {
 	shader_ = context_->shaders().emitShader;
 
-	for (int i = 0; i < context_->GetMaxFrameCount(); i++) {
-		auto vb = LLGI::CreateSharedPtr(context_->GetGraphcis()->CreateVertexBuffer(sizeof(EmitDataVertex) * context_->GetMaxParticles()));
+	for (int i = 0; i < context_->GetMaxFrameCount(); i++)
+	{
+		auto vb = LLGI::CreateSharedPtr(
+			context_->GetGraphcis()->CreateBuffer(LLGI::BufferUsageType::Vertex, sizeof(EmitDataVertex) * context_->GetMaxParticles()));
 		emitDataVertexBuffer_.push_back(vb);
 	}
 
-	emitDataIndexBuffer_ = LLGI::CreateSharedPtr(context_->GetGraphcis()->CreateIndexBuffer(sizeof(uint32_t), context_->GetMaxParticles()));
+	emitDataIndexBuffer_ = LLGI::CreateSharedPtr(
+		context_->GetGraphcis()->CreateBuffer(LLGI::BufferUsageType::Index, sizeof(uint32_t) * context_->GetMaxParticles()));
 	auto ib_buf = (uint32_t*)emitDataIndexBuffer_->Lock();
-	for (int i = 0; i < context_->GetMaxParticles(); i++) {
+	for (int i = 0; i < context_->GetMaxParticles(); i++)
+	{
 		ib_buf[i] = i;
 	}
 	emitDataIndexBuffer_->Unlock();
 
-	for (int i = 0; i < 2; i++) {
+	for (int i = 0; i < 2; i++)
+	{
 		auto particleBuffer = context_->GetParticleBuffer(i);
 
-		LLGI::Texture* textures[] = { particleBuffer->GetPositionTexture(), particleBuffer->GetVelocityTexture() };
+		LLGI::Texture* textures[] = {particleBuffer->GetPositionTexture(), particleBuffer->GetVelocityTexture()};
 		emitParticleRenderPass_[i] = LLGI::CreateSharedPtr(context_->GetGraphcis()->CreateRenderPass(textures, 2, nullptr));
 
 		auto pipelineState = LLGI::CreateSharedPtr(context_->GetGraphcis()->CreatePiplineState());
@@ -264,7 +262,8 @@ GPUParticleEmitPass::GPUParticleEmitPass(GPUParticleContext* context)
 
 void GPUParticleEmitPass::Render(LLGI::CommandList* commandList, const std::vector<EmitDataVertex>& emitData, int particleDataCount)
 {
-	if (particleDataCount <= 0) return;
+	if (particleDataCount <= 0)
+		return;
 
 	// Apply new particles
 	auto currentVB = emitDataVertexBuffer_[context_->GetFrameIndex()].get();
@@ -274,13 +273,12 @@ void GPUParticleEmitPass::Render(LLGI::CommandList* commandList, const std::vect
 		currentVB->Unlock();
 	}
 
-
 	int bufferIndex = context_->GetPrimaryParticleBufferIndex();
 
 	commandList->BeginRenderPass(emitParticleRenderPass_[bufferIndex].get());
 
 	commandList->SetVertexBuffer(currentVB, sizeof(EmitDataVertex), 0);
-	commandList->SetIndexBuffer(emitDataIndexBuffer_.get());
+	commandList->SetIndexBuffer(emitDataIndexBuffer_.get(), 2);
 	commandList->SetConstantBuffer(context_->GetTextureInfoConstantBuffer(), LLGI::ShaderStageType::Vertex);
 	commandList->SetPipelineState(pipelineState_[bufferIndex].get());
 	commandList->Draw(particleDataCount);
@@ -291,24 +289,24 @@ void GPUParticleEmitPass::Render(LLGI::CommandList* commandList, const std::vect
 //==============================================================================
 // GPUParticleUpdatePass
 
-GPUParticleUpdatePass::GPUParticleUpdatePass(GPUParticleContext* context)
-	: context_(context)
+GPUParticleUpdatePass::GPUParticleUpdatePass(GPUParticleContext* context) : context_(context)
 {
 	shader_ = context_->shaders().updateShader;
 
-	vertexBuffer_ = LLGI::CreateSharedPtr(context_->GetGraphcis()->CreateVertexBuffer(sizeof(RectangleVertex) * 4));
+	vertexBuffer_ =
+		LLGI::CreateSharedPtr(context_->GetGraphcis()->CreateBuffer(LLGI::BufferUsageType::Vertex, sizeof(RectangleVertex) * 4));
 	auto vb_buf = (RectangleVertex*)vertexBuffer_->Lock();
-	vb_buf[0].Position = LLGI::Vec3F(-1.0f, 1.0f, 0.0f);	// Upper-Left
-	vb_buf[1].Position = LLGI::Vec3F(1.0f, 1.0f, 0.0f);		// Upper-Right
-	vb_buf[2].Position = LLGI::Vec3F(-1.0f, -1.0f, 0.0f);	// Lower-Left
-	vb_buf[3].Position = LLGI::Vec3F(1.0f, -1.0f, 0.0f);	// Lower-Right
+	vb_buf[0].Position = LLGI::Vec3F(-1.0f, 1.0f, 0.0f);  // Upper-Left
+	vb_buf[1].Position = LLGI::Vec3F(1.0f, 1.0f, 0.0f);	  // Upper-Right
+	vb_buf[2].Position = LLGI::Vec3F(-1.0f, -1.0f, 0.0f); // Lower-Left
+	vb_buf[3].Position = LLGI::Vec3F(1.0f, -1.0f, 0.0f);  // Lower-Right
 	vb_buf[0].UV = LLGI::Vec2F(0.0f, 0.0f);
 	vb_buf[1].UV = LLGI::Vec2F(1.0f, 0.0f);
 	vb_buf[2].UV = LLGI::Vec2F(0.0f, 1.0f);
 	vb_buf[3].UV = LLGI::Vec2F(1.0f, 1.0f);
 	vertexBuffer_->Unlock();
 
-	indexBuffer_ = LLGI::CreateSharedPtr(context_->GetGraphcis()->CreateIndexBuffer(2, 6));
+	indexBuffer_ = LLGI::CreateSharedPtr(context_->GetGraphcis()->CreateBuffer(LLGI::BufferUsageType::Index, 2 * 6));
 	auto ib_buf = (uint16_t*)indexBuffer_->Lock();
 	ib_buf[0] = 0;
 	ib_buf[1] = 1;
@@ -318,7 +316,8 @@ GPUParticleUpdatePass::GPUParticleUpdatePass(GPUParticleContext* context)
 	ib_buf[5] = 3;
 	indexBuffer_->Unlock();
 
-	for (int i = 0; i < 2; i++) {
+	for (int i = 0; i < 2; i++)
+	{
 		auto particleBuffer = context_->GetParticleBuffer(i);
 
 		auto pipelineState = LLGI::CreateSharedPtr(context_->GetGraphcis()->CreatePiplineState());
@@ -347,9 +346,11 @@ void GPUParticleUpdatePass::Render(LLGI::CommandList* commandList)
 	commandList->BeginRenderPass(dstBuffer->GetRenderPass());
 
 	commandList->SetVertexBuffer(vertexBuffer_.get(), sizeof(RectangleVertex), 0);
-	commandList->SetIndexBuffer(indexBuffer_.get());
-	commandList->SetTexture(srcBuffer->GetPositionTexture(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
-	commandList->SetTexture(srcBuffer->GetVelocityTexture(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Nearest, 1, LLGI::ShaderStageType::Pixel);
+	commandList->SetIndexBuffer(indexBuffer_.get(), 2);
+	commandList->SetTexture(
+		srcBuffer->GetPositionTexture(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+	commandList->SetTexture(
+		srcBuffer->GetVelocityTexture(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Nearest, 1, LLGI::ShaderStageType::Pixel);
 	commandList->SetPipelineState(pipelineState_[srcBufferIndex].get());
 	commandList->Draw(2);
 
@@ -359,15 +360,14 @@ void GPUParticleUpdatePass::Render(LLGI::CommandList* commandList)
 //==============================================================================
 // GPUParticleRenderPass
 
-GPUParticleRenderPass::GPUParticleRenderPass(GPUParticleContext* context)
-	: context_(context)
+GPUParticleRenderPass::GPUParticleRenderPass(GPUParticleContext* context) : context_(context)
 {
 	shader_ = context_->shaders().renderShader;
 
 	const LLGI::Vec3F ul = LLGI::Vec3F(-0.5, 0.5, 0.5);
 	const LLGI::Vec3F lr = LLGI::Vec3F(0.5, -0.5, 0.5);
 
-	vb_ = LLGI::CreateSharedPtr(context_->GetGraphcis()->CreateVertexBuffer(sizeof(SimpleVertex) * 4));
+	vb_ = LLGI::CreateSharedPtr(context_->GetGraphcis()->CreateBuffer(LLGI::BufferUsageType::Vertex, sizeof(SimpleVertex) * 4));
 	auto vb_buf = (SimpleVertex*)vb_->Lock();
 	vb_buf[0].Position = LLGI::Vec3F(-0.5f, 0.5f, 0.0f);
 	vb_buf[1].Position = LLGI::Vec3F(0.5f, 0.5f, 0.0f);
@@ -379,7 +379,7 @@ GPUParticleRenderPass::GPUParticleRenderPass(GPUParticleContext* context)
 	vb_buf[3].UV = LLGI::Vec2F(1.0f, 1.0f);
 	vb_->Unlock();
 
-	ib_ = LLGI::CreateSharedPtr(context_->GetGraphcis()->CreateIndexBuffer(2, 6));
+	ib_ = LLGI::CreateSharedPtr(context_->GetGraphcis()->CreateBuffer(LLGI::BufferUsageType::Index, 2 * 6));
 	auto ib_buf = (uint16_t*)ib_->Lock();
 	ib_buf[0] = 0;
 	ib_buf[1] = 1;
@@ -396,7 +396,8 @@ void GPUParticleRenderPass::Render(LLGI::RenderPass* renderPass, LLGI::CommandLi
 
 	std::shared_ptr<LLGI::PipelineState> pipeline;
 	auto itr = pipelineCache_.find(renderPassState);
-	if (itr == pipelineCache_.end()) {
+	if (itr == pipelineCache_.end())
+	{
 		auto pip = context_->GetGraphcis()->CreatePiplineState();
 		pip->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
 		pip->VertexLayouts[1] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
@@ -420,7 +421,8 @@ void GPUParticleRenderPass::Render(LLGI::RenderPass* renderPass, LLGI::CommandLi
 		pipeline = LLGI::CreateSharedPtr(pip);
 		pipelineCache_[renderPassState] = pipeline;
 	}
-	else {
+	else
+	{
 		pipeline = itr->second;
 	}
 
@@ -428,11 +430,20 @@ void GPUParticleRenderPass::Render(LLGI::RenderPass* renderPass, LLGI::CommandLi
 
 	commandList->BeginRenderPass(renderPass);
 	commandList->SetVertexBuffer(vb_.get(), sizeof(SimpleVertex), 0);
-	commandList->SetIndexBuffer(ib_.get());
+	commandList->SetIndexBuffer(ib_.get(), 2);
 	commandList->SetConstantBuffer(context_->GetTextureInfoConstantBuffer(), LLGI::ShaderStageType::Vertex);
-	commandList->SetTexture(particleDataBuffer->GetPositionTexture(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Vertex);
-	commandList->SetTexture(particleDataBuffer->GetVelocityTexture(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Nearest, 1, LLGI::ShaderStageType::Vertex);
-	commandList->SetTexture(context_->GetParticleTexture(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Linear, 2, LLGI::ShaderStageType::Pixel);
+	commandList->SetTexture(particleDataBuffer->GetPositionTexture(),
+							LLGI::TextureWrapMode::Clamp,
+							LLGI::TextureMinMagFilter::Nearest,
+							0,
+							LLGI::ShaderStageType::Vertex);
+	commandList->SetTexture(particleDataBuffer->GetVelocityTexture(),
+							LLGI::TextureWrapMode::Clamp,
+							LLGI::TextureMinMagFilter::Nearest,
+							1,
+							LLGI::ShaderStageType::Vertex);
+	commandList->SetTexture(
+		context_->GetParticleTexture(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Linear, 2, LLGI::ShaderStageType::Pixel);
 	commandList->SetPipelineState(pipeline.get());
 	commandList->Draw(2, context_->GetMaxParticles());
 	commandList->EndRenderPass();
@@ -441,17 +452,16 @@ void GPUParticleRenderPass::Render(LLGI::RenderPass* renderPass, LLGI::CommandLi
 //==============================================================================
 // GPUParticleContext
 
-GPUParticleContext::GPUParticleContext(
-	LLGI::Graphics* graphics,
-	LLGI::DeviceType deviceType,
-	int frameCount,
-	int textureSize,
-	LLGI::Texture* particleTexture,
-	GPUParticleShaders shaders)
+GPUParticleContext::GPUParticleContext(LLGI::Graphics* graphics,
+									   LLGI::DeviceType deviceType,
+									   int frameCount,
+									   int textureSize,
+									   LLGI::Texture* particleTexture,
+									   GPUParticleShaders shaders)
 	: graphcis_(graphics)
 	, deviceType_(deviceType)
 	, bufferTextureWidth_(textureSize)
-	, maxTexels_(textureSize* textureSize)
+	, maxTexels_(textureSize * textureSize)
 	, shaders_(shaders)
 	, particleTexture_(particleTexture)
 	, frameIndex_(-1)
@@ -469,7 +479,8 @@ GPUParticleContext::GPUParticleContext(
 	view.LookAtRH(LLGI::Vec3F(0, 0, 800), LLGI::Vec3F(0, 0, 0), LLGI::Vec3F(0, 1, 0));
 	proj.PerspectiveFovRH(0.3, 1280.0 / 720.0, 0.1, 1000.0);
 
-	textureInfoConstantBuffer_ = LLGI::CreateSharedPtr(graphcis_->CreateConstantBuffer(sizeof(GPUParticleTextureInfo)));
+	textureInfoConstantBuffer_ =
+		LLGI::CreateSharedPtr(graphcis_->CreateBuffer(LLGI::BufferUsageType::Constant, sizeof(GPUParticleTextureInfo)));
 	auto info = (GPUParticleTextureInfo*)textureInfoConstantBuffer_->Lock();
 	info->TextureSize[0] = bufferTextureWidth_;
 	info->TextureSize[1] = bufferTextureWidth_;
@@ -508,6 +519,5 @@ void GPUParticleContext::Render(LLGI::RenderPass* renderPass, LLGI::CommandList*
 
 	particleRenderPass_->Render(renderPass, commandList);
 
-
-	//std::cout << "emitedCount_: " << emitedCount_ << std::endl;
+	// std::cout << "emitedCount_: " << emitedCount_ << std::endl;
 }

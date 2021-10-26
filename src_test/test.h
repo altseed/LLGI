@@ -3,14 +3,12 @@
 
 #include <LLGI.CommandList.h>
 #include <LLGI.Compiler.h>
-#include <LLGI.ConstantBuffer.h>
+#include <LLGI.Buffer.h>
 #include <LLGI.Graphics.h>
-#include <LLGI.IndexBuffer.h>
 #include <LLGI.PipelineState.h>
 #include <LLGI.Platform.h>
 #include <LLGI.Shader.h>
 #include <LLGI.Texture.h>
-#include <LLGI.VertexBuffer.h>
 
 #include <iostream>
 
