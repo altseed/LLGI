@@ -88,6 +88,11 @@ bool PipelineStateVulkan::Compile()
 
 bool PipelineStateVulkan::CreateGraphicsPipeline()
 {
+	if (renderPassPipelineState_ == nullptr)
+	{
+		return false;
+	}
+
 	vk::GraphicsPipelineCreateInfo graphicsPipelineInfo;
 
 	std::vector<vk::PipelineShaderStageCreateInfo> shaderStageInfos;

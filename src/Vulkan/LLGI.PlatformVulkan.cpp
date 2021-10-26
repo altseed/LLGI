@@ -45,6 +45,19 @@ bool PlatformVulkan::CreateSwapChain(Vec2I windowSize, bool waitVSync)
 {
 	auto oldSwapChain = swapchain_;
 
+	const auto disposeOldSwapchain = [&]() {
+		if (oldSwapChain)
+		{
+			for (uint32_t i = 0; i < swapBuffers.size(); i++)
+			{
+				vkDevice_.destroyImageView(swapBuffers[i].view);
+				SafeRelease(swapBuffers[i].texture);
+			}
+			vkDevice_.destroySwapchainKHR(oldSwapChain);
+			swapBuffers.clear();
+		}
+	};
+
 	frameIndex = 0;
 
 	auto caps = vkPhysicalDevice.getSurfaceCapabilitiesKHR(surface_);
@@ -54,96 +67,97 @@ bool PlatformVulkan::CreateSwapChain(Vec2I windowSize, bool waitVSync)
 		swapchainExtent = caps.currentExtent;
 	}
 
-	// select sync or vsync
-	vk::PresentModeKHR swapchainPresentMode = vk::PresentModeKHR::eFifo;
-	if (!waitVSync)
+	if (swapchainExtent.width == 0 || swapchainExtent.height == 0)
 	{
-		for (auto mode : vkPhysicalDevice.getSurfacePresentModesKHR(surface_))
-
+		disposeOldSwapchain();
+		swapchain_ = nullptr;
+		frameIndex = 0;
+	}
+	else
+	{
+		// select sync or vsync
+		vk::PresentModeKHR swapchainPresentMode = vk::PresentModeKHR::eFifo;
+		if (!waitVSync)
 		{
-			if (mode == vk::PresentModeKHR::eMailbox)
+			for (auto mode : vkPhysicalDevice.getSurfacePresentModesKHR(surface_))
+
 			{
-				swapchainPresentMode = vk::PresentModeKHR::eMailbox;
-				break;
-			}
-			else if (mode == vk::PresentModeKHR::eImmediate)
-			{
-				swapchainPresentMode = vk::PresentModeKHR::eImmediate;
+				if (mode == vk::PresentModeKHR::eMailbox)
+				{
+					swapchainPresentMode = vk::PresentModeKHR::eMailbox;
+					break;
+				}
+				else if (mode == vk::PresentModeKHR::eImmediate)
+				{
+					swapchainPresentMode = vk::PresentModeKHR::eImmediate;
+				}
 			}
 		}
-	}
 
-	// decide the number of swapchain
-	auto desiredSwapBufferCount = caps.minImageCount + 1;
-	if ((caps.maxImageCount > 0) && (desiredSwapBufferCount > caps.maxImageCount))
-	{
-		desiredSwapBufferCount = caps.maxImageCount;
-	}
+		// decide the number of swapchain
+		auto desiredSwapBufferCount = caps.minImageCount + 1;
+		if ((caps.maxImageCount > 0) && (desiredSwapBufferCount > caps.maxImageCount))
+		{
+			desiredSwapBufferCount = caps.maxImageCount;
+		}
 
-	// deside a transform
-	vk::SurfaceTransformFlagBitsKHR preTransform = vk::SurfaceTransformFlagBitsKHR::eIdentity;
-	if (!(caps.supportedTransforms & vk::SurfaceTransformFlagBitsKHR::eIdentity))
-	{
-		preTransform = caps.currentTransform;
-	}
+		// deside a transform
+		vk::SurfaceTransformFlagBitsKHR preTransform = vk::SurfaceTransformFlagBitsKHR::eIdentity;
+		if (!(caps.supportedTransforms & vk::SurfaceTransformFlagBitsKHR::eIdentity))
+		{
+			preTransform = caps.currentTransform;
+		}
 
-	// create swapchain
-	vk::SwapchainCreateInfoKHR swapchainCreateInfo;
-	swapchainCreateInfo.surface = surface_;
-	swapchainCreateInfo.minImageCount = desiredSwapBufferCount;
-	swapchainCreateInfo.imageFormat = surfaceFormat;
-	swapchainCreateInfo.imageColorSpace = surfaceColorSpace;
-	swapchainCreateInfo.imageExtent = swapchainExtent;
-	swapchainCreateInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferDst |
-									 vk::ImageUsageFlagBits::eTransferSrc; // eTransferSrc: for capture
-	swapchainCreateInfo.preTransform = preTransform;
-	swapchainCreateInfo.imageArrayLayers = 1;
-	swapchainCreateInfo.imageSharingMode = vk::SharingMode::eExclusive;
-	swapchainCreateInfo.queueFamilyIndexCount = 0;
-	swapchainCreateInfo.pQueueFamilyIndices = nullptr;
-	swapchainCreateInfo.presentMode = swapchainPresentMode;
-	swapchainCreateInfo.oldSwapchain = oldSwapChain;
-	swapchainCreateInfo.clipped = true;
-	swapchainCreateInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
+		// create swapchain
+		vk::SwapchainCreateInfoKHR swapchainCreateInfo;
+		swapchainCreateInfo.surface = surface_;
+		swapchainCreateInfo.minImageCount = desiredSwapBufferCount;
+		swapchainCreateInfo.imageFormat = surfaceFormat;
+		swapchainCreateInfo.imageColorSpace = surfaceColorSpace;
+		swapchainCreateInfo.imageExtent = swapchainExtent;
+		swapchainCreateInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferDst |
+										 vk::ImageUsageFlagBits::eTransferSrc; // eTransferSrc: for capture
+		swapchainCreateInfo.preTransform = preTransform;
+		swapchainCreateInfo.imageArrayLayers = 1;
+		swapchainCreateInfo.imageSharingMode = vk::SharingMode::eExclusive;
+		swapchainCreateInfo.queueFamilyIndexCount = 0;
+		swapchainCreateInfo.pQueueFamilyIndices = nullptr;
+		swapchainCreateInfo.presentMode = swapchainPresentMode;
+		swapchainCreateInfo.oldSwapchain = oldSwapChain;
+		swapchainCreateInfo.clipped = true;
+		swapchainCreateInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
 
-	swapBufferCountMin_ = desiredSwapBufferCount;
+		swapBufferCountMin_ = desiredSwapBufferCount;
 
-	swapchain_ = vkDevice_.createSwapchainKHR(swapchainCreateInfo);
+		swapchain_ = vkDevice_.createSwapchainKHR(swapchainCreateInfo);
 
-	// remove old swap chain
-	if (oldSwapChain)
-	{
+		// remove old swap chain
+		disposeOldSwapchain();
+
+		vk::ImageViewCreateInfo viewCreateInfo;
+		viewCreateInfo.format = surfaceFormat;
+		viewCreateInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+		viewCreateInfo.subresourceRange.levelCount = 1;
+		viewCreateInfo.subresourceRange.layerCount = 1;
+		viewCreateInfo.viewType = vk::ImageViewType::e2D;
+
+		auto swapChainImages = vkDevice_.getSwapchainImagesKHR(swapchain_);
+		swapBufferCount = static_cast<uint32_t>(swapChainImages.size());
+
+		swapBuffers.resize(swapBufferCount);
 		for (uint32_t i = 0; i < swapBuffers.size(); i++)
 		{
-			vkDevice_.destroyImageView(swapBuffers[i].view);
-			SafeRelease(swapBuffers[i].texture);
-		}
-		vkDevice_.destroySwapchainKHR(oldSwapChain);
-	}
+			swapBuffers[i].image = swapChainImages[i];
+			viewCreateInfo.image = swapChainImages[i];
+			swapBuffers[i].view = vkDevice_.createImageView(viewCreateInfo);
+			swapBuffers[i].fence = vk::Fence();
 
-	vk::ImageViewCreateInfo viewCreateInfo;
-	viewCreateInfo.format = surfaceFormat;
-	viewCreateInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-	viewCreateInfo.subresourceRange.levelCount = 1;
-	viewCreateInfo.subresourceRange.layerCount = 1;
-	viewCreateInfo.viewType = vk::ImageViewType::e2D;
-
-	auto swapChainImages = vkDevice_.getSwapchainImagesKHR(swapchain_);
-	swapBufferCount = static_cast<uint32_t>(swapChainImages.size());
-
-	swapBuffers.resize(swapBufferCount);
-	for (uint32_t i = 0; i < swapBuffers.size(); i++)
-	{
-		swapBuffers[i].image = swapChainImages[i];
-		viewCreateInfo.image = swapChainImages[i];
-		swapBuffers[i].view = vkDevice_.createImageView(viewCreateInfo);
-		swapBuffers[i].fence = vk::Fence();
-
-		swapBuffers[i].texture = new TextureVulkan();
-		if (!swapBuffers[i].texture->InitializeAsScreen(swapBuffers[i].image, swapBuffers[i].view, surfaceFormat, windowSize))
-		{
-			Log(LogType::Error, "failed to create a texture while creating swap buffers.");
-			throw "failed to create a texture while creating swap buffers.";
+			swapBuffers[i].texture = new TextureVulkan();
+			if (!swapBuffers[i].texture->InitializeAsScreen(swapBuffers[i].image, swapBuffers[i].view, surfaceFormat, windowSize))
+			{
+				Log(LogType::Error, "failed to create a texture while creating swap buffers.");
+				throw "failed to create a texture while creating swap buffers.";
+			}
 		}
 	}
 
@@ -654,6 +668,9 @@ bool PlatformVulkan::Initialize(Window* window, bool waitVSync)
 		// create renderpasses
 		CreateRenderPass();
 
+		dummyRenderPass_ = CreateSharedPtr(new RenderPassVulkan(renderPassPipelineStateCache_, vkDevice_, nullptr));
+		dummyRenderPass_->InitializeAsDummy();
+
 		return true;
 	}
 	catch (const std::exception& e)
@@ -674,13 +691,21 @@ bool PlatformVulkan::NewFrame()
 		return false;
 	}
 
-	AcquireNextImage(vkPresentComplete_);
+	if (IsSwapchainValid())
+	{
+		AcquireNextImage(vkPresentComplete_);
+	}
 	executedCommandCount = 0;
 	return true;
 }
 
 void PlatformVulkan::Present()
 {
+	if (!IsSwapchainValid())
+	{
+		return;
+	}
+
 	// waiting or empty command
 	auto& cmdBuffer = vkCmdBuffers[frameIndex];
 
@@ -722,7 +747,7 @@ void PlatformVulkan::Present()
 		}
 	}
 
-	auto result = Present(vkRenderComplete_);
+	const auto result = Present(vkRenderComplete_);
 
 	// TODO optimize it
 	if (result == vk::Result::eErrorOutOfDateKHR)
@@ -775,12 +800,19 @@ Graphics* PlatformVulkan::CreateGraphics()
 
 RenderPass* PlatformVulkan::GetCurrentScreen(const Color8& clearColor, bool isColorCleared, bool isDepthCleared)
 {
-	auto currentRenderPass = renderPasses_[frameIndex];
+	if (IsSwapchainValid())
+	{
+		auto currentRenderPass = renderPasses_[frameIndex];
 
-	currentRenderPass->SetClearColor(clearColor);
-	currentRenderPass->SetIsColorCleared(isColorCleared);
-	currentRenderPass->SetIsDepthCleared(isDepthCleared);
-	return currentRenderPass.get();
+		currentRenderPass->SetClearColor(clearColor);
+		currentRenderPass->SetIsColorCleared(isColorCleared);
+		currentRenderPass->SetIsDepthCleared(isDepthCleared);
+		return currentRenderPass.get();
+	}
+	else
+	{
+		return dummyRenderPass_.get();
+	}
 }
 
 } // namespace LLGI
