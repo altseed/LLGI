@@ -128,7 +128,10 @@ CommandListVulkan::~CommandListVulkan()
 
 	for (size_t i = 0; i < fences_.size(); i++)
 	{
-		graphics_->GetDevice().destroyFence(fences_[i]);
+		if (fences_[i])
+		{
+			graphics_->GetDevice().destroyFence(fences_[i]);
+		}
 	}
 	fences_.clear();
 
@@ -160,7 +163,7 @@ bool CommandListVulkan::Initialize(GraphicsVulkan* graphics, int32_t drawingCoun
 		auto dp = std::make_shared<DescriptorPoolVulkan>(graphics_, drawingCount, 2);
 		descriptorPools.push_back(dp);
 
-		fences_.emplace_back(graphics->GetDevice().createFence(vk::FenceCreateFlags()));
+		fences_.emplace_back(vk::Fence{});
 	}
 
 	// Sampler
@@ -206,10 +209,18 @@ void CommandListVulkan::Begin()
 	currentSwapBufferIndex_++;
 	currentSwapBufferIndex_ %= commandBuffers_.size();
 
+	if (fences_[currentSwapBufferIndex_])
+	{
+		WaitUntilCompleted();
+	}
+	else
+	{
+		fences_[currentSwapBufferIndex_] = graphics_->GetDevice().createFence(vk::FenceCreateFlags());
+	}
+
 	graphics_->GetDevice().resetFences(1, &(fences_[currentSwapBufferIndex_]));
 
 	currentCommandBuffer_ = commandBuffers_[currentSwapBufferIndex_];
-
 	currentCommandBuffer_.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
 	vk::CommandBufferBeginInfo cmdBufInfo;
 	currentCommandBuffer_.begin(cmdBufInfo);
@@ -249,12 +260,22 @@ void CommandListVulkan::EndWithPlatform()
 
 void CommandListVulkan::SetScissor(int32_t x, int32_t y, int32_t width, int32_t height)
 {
+	if (!isInValidRenderPass_)
+	{
+		return;
+	}
+
 	vk::Rect2D scissor = vk::Rect2D(vk::Offset2D(x, y), vk::Extent2D(width, height));
 	currentCommandBuffer_.setScissor(0, scissor);
 }
 
 void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 {
+	if (!isInValidRenderPass_)
+	{
+		return;
+	}
+
 	BindingVertexBuffer vb_;
 	BindingIndexBuffer ib_;
 	PipelineState* pip_ = nullptr;
@@ -556,7 +577,8 @@ void CommandListVulkan::GenerateMipMap(Texture* src)
 	srcTex->ResourceBarrior(currentCommandBuffer_, vk::ImageLayout::eShaderReadOnlyOptimal);
 }
 
-void CommandListVulkan::UploadBuffer(Buffer* buffer) {
+void CommandListVulkan::UploadBuffer(Buffer* buffer)
+{
 	auto buf = static_cast<BufferVulkan*>(buffer);
 
 	auto gpuBuf = buf->GetBuffer();
@@ -601,6 +623,11 @@ void CommandListVulkan::CopyBuffer(Buffer* src, Buffer* dst)
 void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
 {
 	auto renderPass_ = static_cast<RenderPassVulkan*>(renderPass);
+	if (!renderPass_->GetIsValid())
+	{
+		CommandList::BeginRenderPass(renderPass);
+		return;
+	}
 
 	vk::ClearColorValue clearColor(std::array<float, 4>{renderPass_->GetClearColor().R / 255.0f,
 														renderPass_->GetClearColor().G / 255.0f,
@@ -685,14 +712,18 @@ void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
 		t->ChangeImageLayout(renderPass_->renderPassPipelineState->finalLayouts_.at(layoutOffset));
 	}
 
+	isInValidRenderPass_ = true;
 	CommandList::BeginRenderPass(renderPass);
 }
 
 void CommandListVulkan::EndRenderPass()
 {
 	// end renderpass
-	currentCommandBuffer_.endRenderPass();
-
+	if (isInValidRenderPass_)
+	{
+		currentCommandBuffer_.endRenderPass();
+	}
+	isInValidRenderPass_ = false;
 	CommandList::EndRenderPass();
 }
 
