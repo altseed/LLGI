@@ -22,7 +22,7 @@ private:
 	ReferenceObject* owner_ = nullptr;
 
 	std::shared_ptr<TextureVulkan> depthBufferPtr;
-	bool isDummy_ = false;
+	bool isValid_ = false;
 
 public:
 	struct RenderTargetProperty
@@ -49,15 +49,13 @@ public:
 					TextureVulkan* resolvedTexture,
 					TextureVulkan* resolvedDepthTexture);
 
-	void InitializeAsDummy() { isDummy_ = true; }
-
 	Vec2I GetImageSize() const;
 
 	virtual void SetIsColorCleared(bool isColorCleared) override;
 
 	virtual void SetIsDepthCleared(bool isDepthCleared) override;
 
-	bool GetIsDummyRenderPass() const { return isDummy_; }
+	bool GetIsValid() const { return isValid_; }
 
 private:
 	void ResetRenderPassPipelineState();
@@ -74,7 +72,7 @@ public:
 
 	~RenderPassPipelineStateVulkan() override;
 
-	vk::RenderPass renderPass_;
+	vk::RenderPass renderPass_ = nullptr;
 	int32_t RenderTargetCount = 0;
 	FixedSizeVector<vk::ImageLayout, RenderTargetMax + 1> finalLayouts_;
 

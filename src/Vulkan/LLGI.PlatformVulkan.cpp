@@ -51,6 +51,11 @@ bool PlatformVulkan::CreateSwapChain(Vec2I windowSize, bool waitVSync)
 			for (uint32_t i = 0; i < swapBuffers.size(); i++)
 			{
 				vkDevice_.destroyImageView(swapBuffers[i].view);
+				if (swapBuffers[i].fence)
+				{
+					vkDevice_.destroyFence(swapBuffers[i].fence);
+				}
+
 				SafeRelease(swapBuffers[i].texture);
 			}
 			vkDevice_.destroySwapchainKHR(oldSwapChain);
@@ -274,6 +279,8 @@ void PlatformVulkan::Reset()
 		}
 
 		renderPasses_.clear();
+
+		dummyRenderPass_.reset();
 
 		if (vkPipelineCache_)
 		{
@@ -669,7 +676,6 @@ bool PlatformVulkan::Initialize(Window* window, bool waitVSync)
 		CreateRenderPass();
 
 		dummyRenderPass_ = CreateSharedPtr(new RenderPassVulkan(renderPassPipelineStateCache_, vkDevice_, nullptr));
-		dummyRenderPass_->InitializeAsDummy();
 
 		return true;
 	}

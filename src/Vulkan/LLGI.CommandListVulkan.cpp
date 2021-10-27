@@ -128,7 +128,10 @@ CommandListVulkan::~CommandListVulkan()
 
 	for (size_t i = 0; i < fences_.size(); i++)
 	{
-		graphics_->GetDevice().destroyFence(fences_[i]);
+		if (fences_[i])
+		{
+			graphics_->GetDevice().destroyFence(fences_[i]);
+		}
 	}
 	fences_.clear();
 
@@ -160,7 +163,7 @@ bool CommandListVulkan::Initialize(GraphicsVulkan* graphics, int32_t drawingCoun
 		auto dp = std::make_shared<DescriptorPoolVulkan>(graphics_, drawingCount, 2);
 		descriptorPools.push_back(dp);
 
-		fences_.emplace_back(graphics->GetDevice().createFence(vk::FenceCreateFlags()));
+		fences_.emplace_back(vk::Fence{});
 	}
 
 	// Sampler
@@ -206,10 +209,18 @@ void CommandListVulkan::Begin()
 	currentSwapBufferIndex_++;
 	currentSwapBufferIndex_ %= commandBuffers_.size();
 
+	if (fences_[currentSwapBufferIndex_])
+	{
+		WaitUntilCompleted();
+	}
+	else
+	{
+		fences_[currentSwapBufferIndex_] = graphics_->GetDevice().createFence(vk::FenceCreateFlags());
+	}
+
 	graphics_->GetDevice().resetFences(1, &(fences_[currentSwapBufferIndex_]));
 
 	currentCommandBuffer_ = commandBuffers_[currentSwapBufferIndex_];
-
 	currentCommandBuffer_.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
 	vk::CommandBufferBeginInfo cmdBufInfo;
 	currentCommandBuffer_.begin(cmdBufInfo);
@@ -612,7 +623,7 @@ void CommandListVulkan::CopyBuffer(Buffer* src, Buffer* dst)
 void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
 {
 	auto renderPass_ = static_cast<RenderPassVulkan*>(renderPass);
-	if (renderPass_->GetIsDummyRenderPass())
+	if (!renderPass_->GetIsValid())
 	{
 		CommandList::BeginRenderPass(renderPass);
 		return;

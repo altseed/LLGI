@@ -123,6 +123,8 @@ bool RenderPassVulkan::Initialize(const TextureVulkan** textures,
 
 	frameBuffer_ = device_.createFramebuffer(framebufferCreateInfo);
 
+	isValid_ = true;
+
 	return true;
 }
 
