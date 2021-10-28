@@ -5,7 +5,13 @@
 
 using namespace metal;
 
-struct PS_INPUT
+struct CS_INPUT
+{
+    float value1;
+    float value2;
+};
+
+struct CS_OUTPUT
 {
     float value;
 };
@@ -15,7 +21,7 @@ struct CB
     float offset;
 };
 
-kernel void main0(constant CB& v_23 [[buffer(0)]], device PS_INPUT *real [[buffer(1)]], uint3 dtid [[thread_position_in_grid]])
+kernel void main0(constant CB& v_23 [[buffer(0)]], device CS_INPUT *read [[buffer(1)]], device CS_OUTPUT *write [[buffer(2)]], uint3 dtid [[thread_position_in_grid]])
 {
-    real[dtid.x].value = real[dtid.x].value * real[dtid.x].value + v_23.offset;
+    write[dtid.x].value = read[dtid.x].value1 * read[dtid.x].value2 + v_23.offset;
 }

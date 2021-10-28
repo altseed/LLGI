@@ -27,11 +27,7 @@ void CommandList::GetCurrentPipelineState(PipelineState*& pipelineState, bool& i
 
 void CommandList::GetCurrentConstantBuffer(ShaderStageType type, Buffer*& buffer) { buffer = constantBuffers[static_cast<int>(type)]; }
 
-void CommandList::GetCurrentComputeBuffer(Buffer*& buffer, bool& isDirtied)
-{
-	buffer = computeBuffer_;
-	isDirtied = isPipelineDirtied;
-}
+void CommandList::GetCurrentComputeBuffer(int32_t unit, BindingComputeBuffer& buffer) { buffer = computeBuffers_[unit]; }
 
 void CommandList::RegisterReferencedObject(ReferenceObject* referencedObject)
 {
@@ -46,6 +42,11 @@ void CommandList::RegisterReferencedObject(ReferenceObject* referencedObject)
 CommandList::CommandList(int32_t swapCount) : swapCount_(swapCount)
 {
 	constantBuffers.fill(nullptr);
+
+	for (auto& t : computeBuffers_)
+	{
+		t.computeBuffer = nullptr;
+	}
 
 	for (auto& t : currentTextures)
 	{
@@ -82,7 +83,10 @@ CommandList::~CommandList()
 		so.referencedObjects.clear();
 	}
 
-	SafeRelease(computeBuffer_);
+	for (auto& c : computeBuffers_)
+	{
+		SafeRelease(c.computeBuffer);
+	}
 }
 
 void CommandList::Begin()
@@ -201,9 +205,10 @@ void CommandList::SetConstantBuffer(Buffer* constantBuffer, ShaderStageType shad
 	RegisterReferencedObject(constantBuffer);
 }
 
-void CommandList::SetComputeBuffer(Buffer* computeBuffer)
+void CommandList::SetComputeBuffer(Buffer* computeBuffer, int32_t stride, int32_t unit)
 {
-	SafeAssign(computeBuffer_, computeBuffer);
+	SafeAssign(computeBuffers_[unit].computeBuffer, computeBuffer);
+	computeBuffers_[unit].stride = stride;
 	RegisterReferencedObject(computeBuffer);
 }
 
@@ -248,11 +253,7 @@ bool CommandList::BeginRenderPassWithPlatformPtr(void* platformPtr)
 	return true;
 }
 
-void CommandList::Dispatch(int32_t x, int32_t y, int32_t z)
-{
-	isCurrentComputeBufferDirtied = false;
-	isPipelineDirtied = false;
-}
+void CommandList::Dispatch(int32_t x, int32_t y, int32_t z) { isPipelineDirtied = false; }
 
 void CommandList::SetImageData2D(Texture* texture, int32_t x, int32_t y, int32_t width, int32_t height, const void* data)
 {

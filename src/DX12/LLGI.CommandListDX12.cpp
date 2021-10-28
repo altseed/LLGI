@@ -1,5 +1,5 @@
-#include "LLGI.BufferDX12.h"
 #include "LLGI.CommandListDX12.h"
+#include "LLGI.BufferDX12.h"
 #include "LLGI.DescriptorHeapDX12.h"
 #include "LLGI.GraphicsDX12.h"
 #include "LLGI.PipelineStateDX12.h"
@@ -583,7 +583,8 @@ void CommandListDX12::CopyTexture(
 	RegisterReferencedObject(dst);
 }
 
-void CommandListDX12::UploadBuffer(Buffer* buffer) {
+void CommandListDX12::UploadBuffer(Buffer* buffer)
+{
 	auto buf = static_cast<BufferDX12*>(buffer);
 
 	auto resource = buf->Get();
@@ -648,7 +649,8 @@ void CommandListDX12::ReadBackBuffer(Buffer* buffer)
 	}
 }
 
-void CommandListDX12::CopyBuffer(Buffer* src, Buffer* dst) {
+void CommandListDX12::CopyBuffer(Buffer* src, Buffer* dst)
+{
 	auto srcBuf = static_cast<BufferDX12*>(src);
 	auto dstBuf = static_cast<BufferDX12*>(dst);
 
@@ -714,19 +716,14 @@ void CommandListDX12::Dispatch(int32_t x, int32_t y, int32_t z)
 	assert(currentCommandList_ != nullptr);
 	PipelineState* pip_ = nullptr;
 	Buffer* cb = nullptr;
-	Buffer* compute = nullptr;
 
-	bool isComputeBufferDirtied = false;
 	bool isPipDirtied = false;
 
 	GetCurrentPipelineState(pip_, isPipDirtied);
-	GetCurrentComputeBuffer(compute, isComputeBufferDirtied);
 
 	assert(pip_ != nullptr);
-	assert(compute != nullptr);
 
 	auto pip = static_cast<PipelineStateDX12*>(pip_);
-	auto computeBuffer = static_cast<BufferDX12*>(compute);
 
 	if (pip != nullptr)
 	{
@@ -735,7 +732,7 @@ void CommandListDX12::Dispatch(int32_t x, int32_t y, int32_t z)
 		currentCommandList_->SetPipelineState(p);
 	}
 
-	int32_t requiredCBDescriptorCount = 2;
+	int32_t requiredCBDescriptorCount = 1 + NumComputeBuffer;
 
 	ID3D12DescriptorHeap* heapConstant = nullptr;
 
@@ -785,51 +782,26 @@ void CommandListDX12::Dispatch(int32_t x, int32_t y, int32_t z)
 	}
 
 	// UAV
+	for (int32_t unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)
 	{
+		BindingComputeBuffer compute;
+		GetCurrentComputeBuffer(unit_ind, compute);
+
+		if (compute.computeBuffer == nullptr)
+			continue;
+
+		auto computeBuffer = static_cast<BufferDX12*>(compute.computeBuffer);
 		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 
 		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
 		uavDesc.Format = DXGI_FORMAT_UNKNOWN;
 
-		uint32_t stride = 0;
-		for (int i = 0; i < pip->VertexLayoutCount; i++)
-		{
-			if (pip->VertexLayouts[i] == VertexLayoutFormat::R32_FLOAT)
-			{
-				stride += sizeof(float) * 1;
-			}
-			else if (pip->VertexLayouts[i] == VertexLayoutFormat::R32G32_FLOAT)
-			{
-				stride += sizeof(float) * 2;
-			}
-			else if (pip->VertexLayouts[i] == VertexLayoutFormat::R32G32B32_FLOAT)
-			{
-				stride += sizeof(float) * 3;
-			}
-			else if (pip->VertexLayouts[i] == VertexLayoutFormat::R32G32B32A32_FLOAT)
-			{
-				stride += sizeof(float) * 4;
-			}
-			else if (pip->VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UNORM)
-			{
-				stride += sizeof(float) * 1;
-			}
-			else if (pip->VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UINT)
-			{
-				stride += sizeof(float) * 1;
-			}
-			else
-			{
-				Log(LogType::Error, "Unimplemented VertexLoayoutFormat");
-				return;
-			}
-		}
-		uavDesc.Buffer.StructureByteStride = stride;
-		uavDesc.Buffer.NumElements = computeBuffer->GetSize() / stride;
+		uavDesc.Buffer.StructureByteStride = compute.stride;
+		uavDesc.Buffer.NumElements = computeBuffer->GetSize() / compute.stride;
 		uavDesc.Buffer.FirstElement = 0;
 		uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 
-		auto cpuHandle = cpuDescriptorHandleConstant[1];
+		auto cpuHandle = cpuDescriptorHandleConstant[1 + unit_ind];
 		graphics_->GetDevice()->CreateUnorderedAccessView(computeBuffer->Get(), nullptr, &uavDesc, cpuHandle);
 	}
 

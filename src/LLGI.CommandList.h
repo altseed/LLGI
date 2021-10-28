@@ -6,6 +6,7 @@
 namespace LLGI
 {
 static constexpr int NumTexture = TextureSlotMax;
+static constexpr int NumComputeBuffer = TextureSlotMax;
 
 class VertexBuffer;
 class IndexBuffer;
@@ -45,6 +46,12 @@ protected:
 		TextureMinMagFilter minMagFilter = TextureMinMagFilter::Nearest;
 	};
 
+	struct BindingComputeBuffer
+	{
+		Buffer* computeBuffer = nullptr;
+		int32_t stride = 0;
+	};
+
 private:
 	struct SwapObject
 	{
@@ -62,12 +69,11 @@ private:
 
 	bool isVertexBufferDirtied = true;
 	bool isCurrentIndexBufferDirtied = true;
-	bool isCurrentComputeBufferDirtied = true;
 	bool isPipelineDirtied = true;
 	bool doesBeginWithPlatform_ = false;
 
 	std::array<Buffer*, static_cast<int>(ShaderStageType::Max)> constantBuffers;
-	Buffer* computeBuffer_ = nullptr;
+	std::array<BindingComputeBuffer, NumComputeBuffer> computeBuffers_;
 
 protected:
 	bool isInRenderPass_ = false;
@@ -80,7 +86,7 @@ protected:
 	void GetCurrentIndexBuffer(BindingIndexBuffer& buffer, bool& isDirtied);
 	void GetCurrentPipelineState(PipelineState*& pipelineState, bool& isDirtied);
 	void GetCurrentConstantBuffer(ShaderStageType type, Buffer*& buffer);
-	void GetCurrentComputeBuffer(Buffer*& buffer, bool& isDirtied);
+	void GetCurrentComputeBuffer(int32_t unit, BindingComputeBuffer& buffer);
 	void RegisterReferencedObject(ReferenceObject* referencedObject);
 
 public:
@@ -111,7 +117,7 @@ public:
 	virtual void SetIndexBuffer(Buffer* indexBuffer, int32_t stride, int32_t offset = 0);
 	virtual void SetPipelineState(PipelineState* pipelineState);
 	virtual void SetConstantBuffer(Buffer* constantBuffer, ShaderStageType shaderStage);
-	virtual void SetComputeBuffer(Buffer* computeBuffer);
+	virtual void SetComputeBuffer(Buffer* computeBuffer, int32_t stride, int32_t unit);
 
 	/**
 		@brief	copy a texture

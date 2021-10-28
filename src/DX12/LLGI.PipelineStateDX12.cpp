@@ -133,9 +133,9 @@ bool PipelineStateDX12::CreateComputeRootSignature()
 	ranges[0].RegisterSpace = 0;
 	ranges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	// descriptor range for shader resorce view
+	// descriptor range for uav
 	ranges[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
-	ranges[1].NumDescriptors = 1;
+	ranges[1].NumDescriptors = NumComputeBuffer;
 	ranges[1].BaseShaderRegister = 0;
 	ranges[1].RegisterSpace = 0;
 	ranges[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
