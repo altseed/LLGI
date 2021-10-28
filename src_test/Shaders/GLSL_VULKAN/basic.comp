@@ -9,13 +9,18 @@ layout(set = 0, binding = 0, std140) uniform CB
     float offset;
 } _23;
 
-layout(set = 0, binding = 1, std430) buffer ComputeBuffer
+layout(set = 0, binding = 1, std430) buffer ComputeBuffer0
 {
-    VS_INPUT real[];
+    VS_INPUT read[];
+};
+
+layout(set = 0, binding = 2, std430) buffer ComputeBuffer1
+{
+    VS_INPUT write[];
 };
 
 void main()
 {
   uvec3 dtid = gl_GlobalInvocationID;
-  real[dtid.x].value = real[dtid.x].value * real[dtid.x].value + _23.offset;
+  write[dtid.x].value = read[dtid.x].value * read[dtid.x].value + _23.offset;
 }

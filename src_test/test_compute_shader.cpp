@@ -35,17 +35,20 @@ void test_compute_shader(LLGI::DeviceType deviceType)
 
 	int dataSize = 256;
 
-	std::shared_ptr<LLGI::Buffer> computeBuffer;
-	computeBuffer = LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Compute, sizeof(ComputeData) * dataSize));
+	std::shared_ptr<LLGI::Buffer> read;
+	read = LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Compute, sizeof(ComputeData) * dataSize));
 
 	{
-		auto data = (ComputeData*)computeBuffer->Lock();
+		auto data = (ComputeData*)read->Lock();
 		for (int i = 0; i < dataSize; i++)
 		{
 			data[i].value = (float)i;
 		}
-		computeBuffer->Unlock();
+		read->Unlock();
 	}
+
+	std::shared_ptr<LLGI::Buffer> write;
+	write = LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Compute, sizeof(ComputeData) * dataSize));
 
 	std::shared_ptr<LLGI::Buffer> constantBuffer;
 	constantBuffer = LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Constant, sizeof(float)));
@@ -63,25 +66,34 @@ void test_compute_shader(LLGI::DeviceType deviceType)
 
 	auto commandList = commandListPool->Get();
 	commandList->Begin();
-	commandList->UploadBuffer(computeBuffer.get());
+	commandList->UploadBuffer(read.get());
 	commandList->UploadBuffer(constantBuffer.get());
 	commandList->BeginComputePass();
 	commandList->SetPipelineState(pip.get());
-	commandList->SetComputeBuffer(computeBuffer.get());
+	commandList->SetComputeBuffer(read.get(), 0);
+	commandList->SetComputeBuffer(write.get(), 1);
 	commandList->SetConstantBuffer(constantBuffer.get(), LLGI::ShaderStageType::Compute);
 	commandList->Dispatch(dataSize, 1, 1);
 	commandList->EndComputePass();
-	commandList->ReadBackBuffer(computeBuffer.get());
+	commandList->ReadBackBuffer(read.get());
+	commandList->ReadBackBuffer(write.get());
 	commandList->End();
 
 	graphics->Execute(commandList);
 	graphics->WaitFinish();
 
 	{
-		auto data = (ComputeData*)computeBuffer->Read();
+		auto data = (ComputeData*)read->Read();
 		for (int i = 0; i < dataSize; i++)
 		{
-			std::cout << "data[" << i << "] = " << data[i].value << std::endl;
+			std::cout << "read[" << i << "] = " << data[i].value << std::endl;
+		}
+	}
+	{
+		auto data = (ComputeData*)write->Read();
+		for (int i = 0; i < dataSize; i++)
+		{
+			std::cout << "write[" << i << "] = " << data[i].value << std::endl;
 		}
 	}
 
