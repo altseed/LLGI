@@ -27,11 +27,7 @@ void CommandList::GetCurrentPipelineState(PipelineState*& pipelineState, bool& i
 
 void CommandList::GetCurrentConstantBuffer(ShaderStageType type, Buffer*& buffer) { buffer = constantBuffers[static_cast<int>(type)]; }
 
-void CommandList::GetCurrentComputeBuffer(int32_t unit, BindingComputeBuffer& buffer)
-{
-	assert(unit < computeBuffers_.size());
-	buffer = computeBuffers_[unit];
-}
+void CommandList::GetCurrentComputeBuffer(int32_t unit, BindingComputeBuffer& buffer) { buffer = computeBuffers_[unit]; }
 
 void CommandList::RegisterReferencedObject(ReferenceObject* referencedObject)
 {
@@ -257,10 +253,7 @@ bool CommandList::BeginRenderPassWithPlatformPtr(void* platformPtr)
 	return true;
 }
 
-void CommandList::Dispatch(int32_t x, int32_t y, int32_t z)
-{
-	isPipelineDirtied = false;
-}
+void CommandList::Dispatch(int32_t x, int32_t y, int32_t z) { isPipelineDirtied = false; }
 
 void CommandList::SetImageData2D(Texture* texture, int32_t x, int32_t y, int32_t width, int32_t height, const void* data)
 {
