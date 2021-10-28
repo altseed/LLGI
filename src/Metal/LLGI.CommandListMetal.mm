@@ -460,24 +460,28 @@ void CommandListMetal::EndComputePass()
 
 void CommandListMetal::Dispatch(int32_t x, int32_t y, int32_t z)
 {
-	Buffer* bcb = nullptr;
 	PipelineState* bpip = nullptr;
 
-	bool isCBDirtied = false;
 	bool isPipDirtied = false;
 
-	GetCurrentComputeBuffer(bcb, isCBDirtied);
 	GetCurrentPipelineState(bpip, isPipDirtied);
 
-	assert(bcb != nullptr);
 	assert(bpip != nullptr);
 	assert(computeEncoder_ != nullptr);
 
-	auto cb = static_cast<BufferMetal*>(bcb);
 	auto pip = static_cast<PipelineStateMetal*>(bpip);
-
-	[computeEncoder_ setBuffer:cb->GetBuffer() offset:cb->GetOffset() atIndex:1];
-
+    
+    for (int unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)
+    {
+        BindingComputeBuffer bcb;
+        GetCurrentComputeBuffer(unit_ind, bcb);
+        if (bcb.computeBuffer == nullptr)
+            continue;
+        
+        auto cb = static_cast<BufferMetal*>(bcb.computeBuffer);
+        [computeEncoder_ setBuffer:cb->GetBuffer() offset:cb->GetOffset() atIndex:1 + unit_ind];
+    }
+    
 	// assign constant buffer
 	Buffer* ccb = nullptr;
 	GetCurrentConstantBuffer(ShaderStageType::Compute, ccb);
