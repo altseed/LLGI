@@ -794,13 +794,13 @@ void CommandListVulkan::Dispatch(int32_t x, int32_t y, int32_t z)
 	// compute buffer
 	for (int unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)
 	{
-		Buffer* cb_ = nullptr;
+		BindingComputeBuffer cb_;
 		GetCurrentComputeBuffer(unit_ind, cb_);
 
-		if (cb_ == nullptr)
+		if (cb_.computeBuffer == nullptr)
 			continue;
 
-		auto cb = static_cast<BufferVulkan*>(cb_);
+		auto cb = static_cast<BufferVulkan*>(cb_.computeBuffer);
 
 		descriptorBufferInfos[descriptorBufferIndex].buffer = cb->GetBuffer();
 		descriptorBufferInfos[descriptorBufferIndex].offset = cb->GetOffset();

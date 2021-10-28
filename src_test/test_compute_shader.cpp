@@ -4,7 +4,13 @@
 #include <LLGI.Buffer.h>
 #include <Utils/LLGI.CommandListPool.h>
 
-struct ComputeData
+struct InputData
+{
+	float value1;
+	float value2;
+};
+
+struct OutputData
 {
 	float value;
 };
@@ -27,28 +33,26 @@ void test_compute_shader(LLGI::DeviceType deviceType)
 	TestHelper::CreateComputeShader(graphics.get(), deviceType, "basic.comp", shader_cs);
 
 	auto pip = LLGI::CreateSharedPtr(graphics->CreatePiplineState());
-	pip->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32_FLOAT;
-	pip->VertexLayoutNames[0] = "value";
-	pip->VertexLayoutCount = 1;
 	pip->SetShader(LLGI::ShaderStageType::Compute, shader_cs.get());
 	pip->Compile();
 
 	int dataSize = 256;
 
 	std::shared_ptr<LLGI::Buffer> read;
-	read = LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Compute, sizeof(ComputeData) * dataSize));
+	read = LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Compute, sizeof(InputData) * dataSize));
 
 	{
-		auto data = (ComputeData*)read->Lock();
+		auto data = (InputData*)read->Lock();
 		for (int i = 0; i < dataSize; i++)
 		{
-			data[i].value = (float)i;
+			data[i].value1 = (float)i * 2;
+			data[i].value2 = (float)i * 2 + 1;
 		}
 		read->Unlock();
 	}
 
 	std::shared_ptr<LLGI::Buffer> write;
-	write = LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Compute, sizeof(ComputeData) * dataSize));
+	write = LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Compute, sizeof(OutputData) * dataSize));
 
 	std::shared_ptr<LLGI::Buffer> constantBuffer;
 	constantBuffer = LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Constant, sizeof(float)));
@@ -70,8 +74,8 @@ void test_compute_shader(LLGI::DeviceType deviceType)
 	commandList->UploadBuffer(constantBuffer.get());
 	commandList->BeginComputePass();
 	commandList->SetPipelineState(pip.get());
-	commandList->SetComputeBuffer(read.get(), 0);
-	commandList->SetComputeBuffer(write.get(), 1);
+	commandList->SetComputeBuffer(read.get(), sizeof(InputData), 0);
+	commandList->SetComputeBuffer(write.get(), sizeof(OutputData), 1);
 	commandList->SetConstantBuffer(constantBuffer.get(), LLGI::ShaderStageType::Compute);
 	commandList->Dispatch(dataSize, 1, 1);
 	commandList->EndComputePass();
@@ -83,14 +87,14 @@ void test_compute_shader(LLGI::DeviceType deviceType)
 	graphics->WaitFinish();
 
 	{
-		auto data = (ComputeData*)read->Read();
+		auto data = (InputData*)read->Read();
 		for (int i = 0; i < dataSize; i++)
 		{
-			std::cout << "read[" << i << "] = " << data[i].value << std::endl;
+			std::cout << "read[" << i << "] = " << data[i].value1 << "," << data[i].value2 << std::endl;
 		}
 	}
 	{
-		auto data = (ComputeData*)write->Read();
+		auto data = (OutputData*)write->Read();
 		for (int i = 0; i < dataSize; i++)
 		{
 			std::cout << "write[" << i << "] = " << data[i].value << std::endl;

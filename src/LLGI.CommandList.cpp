@@ -27,7 +27,7 @@ void CommandList::GetCurrentPipelineState(PipelineState*& pipelineState, bool& i
 
 void CommandList::GetCurrentConstantBuffer(ShaderStageType type, Buffer*& buffer) { buffer = constantBuffers[static_cast<int>(type)]; }
 
-void CommandList::GetCurrentComputeBuffer(int32_t unit, Buffer*& buffer)
+void CommandList::GetCurrentComputeBuffer(int32_t unit, BindingComputeBuffer& buffer)
 {
 	assert(unit < computeBuffers_.size());
 	buffer = computeBuffers_[unit];
@@ -46,7 +46,11 @@ void CommandList::RegisterReferencedObject(ReferenceObject* referencedObject)
 CommandList::CommandList(int32_t swapCount) : swapCount_(swapCount)
 {
 	constantBuffers.fill(nullptr);
-	computeBuffers_.fill(nullptr);
+
+	for (auto& t : computeBuffers_)
+	{
+		t.computeBuffer = nullptr;
+	}
 
 	for (auto& t : currentTextures)
 	{
@@ -85,7 +89,7 @@ CommandList::~CommandList()
 
 	for (auto& c : computeBuffers_)
 	{
-		SafeRelease(c);
+		SafeRelease(c.computeBuffer);
 	}
 }
 
@@ -205,9 +209,10 @@ void CommandList::SetConstantBuffer(Buffer* constantBuffer, ShaderStageType shad
 	RegisterReferencedObject(constantBuffer);
 }
 
-void CommandList::SetComputeBuffer(Buffer* computeBuffer, int32_t unit)
+void CommandList::SetComputeBuffer(Buffer* computeBuffer, int32_t stride, int32_t unit)
 {
-	SafeAssign(computeBuffers_[unit], computeBuffer);
+	SafeAssign(computeBuffers_[unit].computeBuffer, computeBuffer);
+	computeBuffers_[unit].stride = stride;
 	RegisterReferencedObject(computeBuffer);
 }
 

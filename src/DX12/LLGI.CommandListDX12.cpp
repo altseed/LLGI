@@ -784,53 +784,20 @@ void CommandListDX12::Dispatch(int32_t x, int32_t y, int32_t z)
 	// UAV
 	for (int32_t unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)
 	{
-		Buffer* compute = nullptr;
+		BindingComputeBuffer compute;
 		GetCurrentComputeBuffer(unit_ind, compute);
 
-		if (compute == nullptr)
+		if (compute.computeBuffer == nullptr)
 			continue;
 
-		auto computeBuffer = static_cast<BufferDX12*>(compute);
+		auto computeBuffer = static_cast<BufferDX12*>(compute.computeBuffer);
 		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 
 		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
 		uavDesc.Format = DXGI_FORMAT_UNKNOWN;
 
-		uint32_t stride = 0;
-		for (int i = 0; i < pip->VertexLayoutCount; i++)
-		{
-			if (pip->VertexLayouts[i] == VertexLayoutFormat::R32_FLOAT)
-			{
-				stride += sizeof(float) * 1;
-			}
-			else if (pip->VertexLayouts[i] == VertexLayoutFormat::R32G32_FLOAT)
-			{
-				stride += sizeof(float) * 2;
-			}
-			else if (pip->VertexLayouts[i] == VertexLayoutFormat::R32G32B32_FLOAT)
-			{
-				stride += sizeof(float) * 3;
-			}
-			else if (pip->VertexLayouts[i] == VertexLayoutFormat::R32G32B32A32_FLOAT)
-			{
-				stride += sizeof(float) * 4;
-			}
-			else if (pip->VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UNORM)
-			{
-				stride += sizeof(float) * 1;
-			}
-			else if (pip->VertexLayouts[i] == VertexLayoutFormat::R8G8B8A8_UINT)
-			{
-				stride += sizeof(float) * 1;
-			}
-			else
-			{
-				Log(LogType::Error, "Unimplemented VertexLoayoutFormat");
-				return;
-			}
-		}
-		uavDesc.Buffer.StructureByteStride = stride;
-		uavDesc.Buffer.NumElements = computeBuffer->GetSize() / stride;
+		uavDesc.Buffer.StructureByteStride = compute.stride;
+		uavDesc.Buffer.NumElements = computeBuffer->GetSize() / compute.stride;
 		uavDesc.Buffer.FirstElement = 0;
 		uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 
