@@ -1,4 +1,4 @@
-﻿
+
 #pragma once
 
 #include <stdint.h>
@@ -83,11 +83,11 @@ class SPIRVToGLSLTranspiler : public SPIRVTranspiler
 private:
 	bool isVulkanMode_ = false;
 	bool isES_ = false;
-	int32_t shaderModel_ = 420;
+	int32_t shaderModel_ = 430;
 	bool plain_ = false;
 
 public:
-	SPIRVToGLSLTranspiler(bool isVulkanMode, int32_t shaderModel = 420, bool isES = false, bool plain = false)
+	SPIRVToGLSLTranspiler(bool isVulkanMode, int32_t shaderModel = 430, bool isES = false, bool plain = false)
 		: isVulkanMode_(isVulkanMode), isES_(isES), shaderModel_(shaderModel), plain_(plain)
 	{
 	}

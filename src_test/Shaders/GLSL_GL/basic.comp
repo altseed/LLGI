@@ -12,24 +12,24 @@ struct CS_INPUT
     float value2;
 };
 
-layout(set = 0, binding = 2, std430) buffer write
+layout(binding = 1, std430) buffer write
 {
     CS_OUTPUT _data[];
 } write_1;
 
-layout(set = 0, binding = 1, std430) buffer read
+layout(binding = 0, std430) buffer read
 {
     CS_INPUT _data[];
 } read_1;
 
-layout(set = 0, binding = 0, std140) uniform CB
+layout(binding = 0, std140) uniform CB
 {
     float offset;
-} _43;
+} CBCS0;
 
 void _main(uvec3 dtid)
 {
-    write_1._data[dtid.x].value = (read_1._data[dtid.x].value1 * read_1._data[dtid.x].value2) + _43.offset;
+    write_1._data[dtid.x].value = (read_1._data[dtid.x].value1 * read_1._data[dtid.x].value2) + CBCS0.offset;
 }
 
 void main()

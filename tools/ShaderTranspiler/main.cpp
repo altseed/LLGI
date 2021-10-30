@@ -47,6 +47,11 @@ int main(int argc, char* argv[])
 			shaderStage = LLGI::ShaderStageType::Pixel;
 			i += 1;
 		}
+		else if (args[i] == "--comp")
+		{
+			shaderStage = LLGI::ShaderStageType::Compute;
+			i += 1;
+		}
 		else if (args[i] == "-G")
 		{
 			outputType = OutputType::GLSL;
@@ -174,7 +179,7 @@ int main(int argc, char* argv[])
 
 	if (outputType == OutputType::GLSL)
 	{
-		transpiler = std::make_shared<LLGI::SPIRVToGLSLTranspiler>(false, shaderModel != 0 ? shaderModel : 420, isES, plain);
+		transpiler = std::make_shared<LLGI::SPIRVToGLSLTranspiler>(false, shaderModel != 0 ? shaderModel : 430, isES, plain);
 	}
 	else if (outputType == OutputType::VULKAN_GLSL)
 	{

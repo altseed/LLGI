@@ -5,15 +5,25 @@
 
 using namespace metal;
 
+struct CS_OUTPUT
+{
+    float value;
+};
+
+struct write
+{
+    CS_OUTPUT _data[1];
+};
+
 struct CS_INPUT
 {
     float value1;
     float value2;
 };
 
-struct CS_OUTPUT
+struct read
 {
-    float value;
+    CS_INPUT _data[1];
 };
 
 struct CB
@@ -21,7 +31,16 @@ struct CB
     float offset;
 };
 
-kernel void main0(constant CB& v_23 [[buffer(0)]], device CS_INPUT *read [[buffer(1)]], device CS_OUTPUT *write [[buffer(2)]], uint3 dtid [[thread_position_in_grid]])
+static inline __attribute__((always_inline))
+void _main(thread const uint3& dtid, device write& write_1, device read& read_1, constant CB& v_43)
 {
-    write[dtid.x].value = read[dtid.x].value1 * read[dtid.x].value2 + v_23.offset;
+    write_1._data[dtid.x].value = (read_1._data[dtid.x].value1 * read_1._data[dtid.x].value2) + v_43.offset;
 }
+
+kernel void main0(device write& write_1 [[buffer(2)]], device read& read_1 [[buffer(1)]], constant CB& v_43 [[buffer(0)]], uint3 gl_GlobalInvocationID [[thread_position_in_grid]])
+{
+    uint3 dtid = gl_GlobalInvocationID;
+    uint3 param = dtid;
+    _main(param, write_1, read_1, v_43);
+}
+

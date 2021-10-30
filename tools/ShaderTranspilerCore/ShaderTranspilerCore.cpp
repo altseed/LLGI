@@ -11,7 +11,7 @@
 
 #include <functional>
 
-#if(ENABLE_SPIRVCROSS_WITHOUT_INSTALL)
+#if (ENABLE_SPIRVCROSS_WITHOUT_INSTALL)
 #include <spirv_cross.hpp>
 #include <spirv_glsl.hpp>
 #include <spirv_hlsl.hpp>
@@ -157,6 +157,8 @@ EShLanguage GetGlslangShaderStage(ShaderStageType type)
 		return EShLanguage::EShLangVertex;
 	if (type == ShaderStageType::Pixel)
 		return EShLanguage::EShLangFragment;
+	if (type == ShaderStageType::Compute)
+		return EShLanguage::EShLangCompute;
 	throw std::string("Unimplemented ShaderStage");
 }
 } // namespace
@@ -208,13 +210,15 @@ bool SPIRVToHLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 		{
 			if (spirv->GetStage() == ShaderStageType::Vertex)
 			{
-
 				compiler.set_decoration(resource.id, spv::DecorationBinding, 0);
 			}
 			else if (spirv->GetStage() == ShaderStageType::Pixel)
 			{
-
 				compiler.set_decoration(resource.id, spv::DecorationBinding, 1);
+			}
+			else if (spirv->GetStage() == ShaderStageType::Compute)
+			{
+				compiler.set_decoration(resource.id, spv::DecorationBinding, 0);
 			}
 		}
 	}
@@ -226,12 +230,14 @@ bool SPIRVToHLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 		{
 			if (spirv->GetStage() == ShaderStageType::Vertex)
 			{
-
 				compiler.set_decoration(resource.id, spv::DecorationBinding, 0);
 			}
 			else if (spirv->GetStage() == ShaderStageType::Pixel)
 			{
-
+				compiler.set_decoration(resource.id, spv::DecorationBinding, 0);
+			}
+			else if (spirv->GetStage() == ShaderStageType::Compute)
+			{
 				compiler.set_decoration(resource.id, spv::DecorationBinding, 0);
 			}
 		}
@@ -269,6 +275,7 @@ bool SPIRVToMSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 
 	std::vector<std::pair<std::string, int>> remapping_texture;
 	std::vector<std::pair<std::string, int>> remapping_sampler;
+	std::vector<std::pair<std::string, int>> remapping_buffer;
 
 	{
 		spirv_cross::ShaderResources resources = compiler.get_shader_resources();
@@ -285,6 +292,13 @@ bool SPIRVToMSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 			auto name = sampler.name;
 			auto location = compiler.get_decoration(sampler.id, spv::DecorationBinding);
 			remapping_sampler.push_back(std::make_pair(name, location));
+		}
+
+		for (const auto& buffer : resources.storage_buffers)
+		{
+			auto name = buffer.name;
+			auto location = compiler.get_decoration(buffer.id, spv::DecorationBinding);
+			remapping_buffer.push_back(std::make_pair(name, location + 1));
 		}
 	}
 
@@ -312,6 +326,21 @@ bool SPIRVToMSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 		auto dst = nr.first + " [[sampler(" + std::to_string(nr.second) + ")]]";
 		code_ = Replace(code_, src, dst);
 		ind++;
+	}
+
+	ind = 0;
+	for (auto nr : remapping_buffer)
+	{
+		auto src = nr.first + "_1 [[buffer(" + std::to_string(ind) + ")]]";
+		auto dst = nr.first + "_1 [[buffer(" + std::to_string(nr.second) + ")]]";
+		code_ = Replace(code_, src, dst);
+		ind++;
+	}
+
+	{
+		auto src = "v_43 [[buffer(" + std::to_string(ind) + ")]]";
+		auto dst = "v_43 [[buffer(0)]]";
+		code_ = Replace(code_, src, dst);
 	}
 
 	return true;
@@ -378,6 +407,10 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 			{
 				compiler.set_name(resource.id, "CBPS" + std::to_string(cb_ind));
 			}
+			else if (spirv->GetStage() == ShaderStageType::Compute)
+			{
+				compiler.set_name(resource.id, "CBCS" + std::to_string(cb_ind));
+			}
 		}
 
 		if (spirv->GetStage() == ShaderStageType::Vertex)
@@ -396,8 +429,28 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 				compiler.set_decoration(resource.id, spv::DecorationDescriptorSet, 1);
 			}
 		}
-
+		else if (spirv->GetStage() == ShaderStageType::Compute)
+		{
+			if (isVulkanMode_)
+			{
+				compiler.set_decoration(resource.id, spv::DecorationBinding, 0);
+				compiler.set_decoration(resource.id, spv::DecorationDescriptorSet, 0);
+			}
+		}
 		cb_ind++;
+	}
+
+	if (spirv->GetStage() == ShaderStageType::Compute)
+	{
+		if (isVulkanMode_)
+		{
+			for (auto& resource : resources.storage_buffers)
+			{
+				auto i = compiler.get_decoration(resource.id, spv::DecorationBinding);
+				compiler.set_decoration(resource.id, spv::DecorationBinding, binding_offset + i);
+				compiler.set_decoration(resource.id, spv::DecorationDescriptorSet, 0);
+			}
+		}
 	}
 
 	spirv_cross::CompilerGLSL::Options options;
