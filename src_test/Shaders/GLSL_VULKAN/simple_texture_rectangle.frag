@@ -1,4 +1,4 @@
-#version 420
+#version 430
 
 struct PS_INPUT
 {
@@ -7,7 +7,7 @@ struct PS_INPUT
     vec4 Color;
 };
 
-layout(set = 1, binding = 1) uniform sampler2D Sampler_smp;
+layout(location = 0, set = 1, binding = 1) uniform sampler2D Sampler_smp;
 
 layout(location = 0) in vec2 input_UV;
 layout(location = 1) in vec4 input_Color;

@@ -1,4 +1,4 @@
-#version 420
+#version 430
 
 struct VS_INPUT
 {
@@ -13,7 +13,7 @@ struct VS_OUTPUT
     vec4 g_color;
 };
 
-layout(set = 0, binding = 1) uniform sampler2D Sampler_smp;
+layout(location = 0, set = 0, binding = 1) uniform sampler2D Sampler_smp;
 
 layout(location = 0) in vec3 input_g_position;
 layout(location = 1) in vec2 input_g_uv;
