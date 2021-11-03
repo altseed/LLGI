@@ -168,6 +168,7 @@ public:
 	*/
 	virtual bool EndRenderPassWithPlatformPtr() { return false; }
 
+	virtual void ResetComputeBuffer();
 	virtual void BeginComputePass() {}
 	virtual void EndComputePass() {}
 	virtual void Dispatch(int32_t x, int32_t y, int32_t z);

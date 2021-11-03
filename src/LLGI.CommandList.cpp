@@ -98,6 +98,7 @@ void CommandList::Begin()
 	isCurrentIndexBufferDirtied = true;
 	isPipelineDirtied = true;
 	ResetTextures();
+	ResetComputeBuffer();
 
 	swapIndex_ = (swapIndex_ + 1) % swapCount_;
 
@@ -119,6 +120,7 @@ bool CommandList::BeginWithPlatform(void* platformContextPtr)
 	isCurrentIndexBufferDirtied = true;
 	isPipelineDirtied = true;
 	ResetTextures();
+	ResetComputeBuffer();
 
 	swapIndex_ = (swapIndex_ + 1) % swapCount_;
 
@@ -254,6 +256,15 @@ bool CommandList::BeginRenderPassWithPlatformPtr(void* platformPtr)
 }
 
 void CommandList::Dispatch(int32_t x, int32_t y, int32_t z) { isPipelineDirtied = false; }
+
+void CommandList::ResetComputeBuffer()
+{
+	for (auto& cb : computeBuffers_)
+	{
+		SafeRelease(cb.computeBuffer);
+		cb.stride = 0;
+	}
+}
 
 void CommandList::SetImageData2D(Texture* texture, int32_t x, int32_t y, int32_t width, int32_t height, const void* data)
 {
