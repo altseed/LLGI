@@ -300,6 +300,12 @@ bool SPIRVToMSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 			auto location = compiler.get_decoration(buffer.id, spv::DecorationBinding);
 			remapping_buffer.push_back(std::make_pair(name, location + 1));
 		}
+
+		for (const auto& buffer : resources.uniform_buffers)
+		{
+			auto name = buffer.name;
+			compiler.set_decoration(buffer.id, spv::DecorationBinding, 0);
+		}
 	}
 
 	spirv_cross::CompilerGLSL::Options options;
@@ -335,12 +341,6 @@ bool SPIRVToMSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 		auto dst = nr.first + "_1 [[buffer(" + std::to_string(nr.second) + ")]]";
 		code_ = Replace(code_, src, dst);
 		ind++;
-	}
-
-	{
-		auto src = "v_43 [[buffer(" + std::to_string(ind) + ")]]";
-		auto dst = "v_43 [[buffer(0)]]";
-		code_ = Replace(code_, src, dst);
 	}
 
 	return true;
