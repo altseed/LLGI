@@ -273,32 +273,14 @@ bool SPIRVToMSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 
 	spirv_cross::CompilerMSL compiler(spirv->GetData());
 
-	std::vector<std::pair<std::string, int>> remapping_texture;
-	std::vector<std::pair<std::string, int>> remapping_sampler;
-	std::vector<std::pair<std::string, int>> remapping_buffer;
-
 	{
 		spirv_cross::ShaderResources resources = compiler.get_shader_resources();
-
-		for (const auto& image : resources.separate_images)
-		{
-			auto name = image.name;
-			auto location = compiler.get_decoration(image.id, spv::DecorationBinding);
-			remapping_texture.push_back(std::make_pair(name, location));
-		}
-
-		for (const auto& sampler : resources.separate_samplers)
-		{
-			auto name = sampler.name;
-			auto location = compiler.get_decoration(sampler.id, spv::DecorationBinding);
-			remapping_sampler.push_back(std::make_pair(name, location));
-		}
 
 		for (const auto& buffer : resources.storage_buffers)
 		{
 			auto name = buffer.name;
 			auto location = compiler.get_decoration(buffer.id, spv::DecorationBinding);
-			remapping_buffer.push_back(std::make_pair(name, location + 1));
+			compiler.set_decoration(buffer.id, spv::DecorationBinding, location + 1);
 		}
 
 		for (const auto& buffer : resources.uniform_buffers)
@@ -312,36 +294,10 @@ bool SPIRVToMSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 	compiler.set_common_options(options);
 
 	spirv_cross::CompilerMSL::Options targetOptions;
+	targetOptions.enable_decoration_binding = true;
 	compiler.set_msl_options(targetOptions);
 
 	code_ = compiler.compile();
-
-	int32_t ind = 0;
-	for (auto nr : remapping_texture)
-	{
-		auto src = nr.first + " [[texture(" + std::to_string(ind) + ")]]";
-		auto dst = nr.first + " [[texture(" + std::to_string(nr.second) + ")]]";
-		code_ = Replace(code_, src, dst);
-		ind++;
-	}
-
-	ind = 0;
-	for (auto nr : remapping_sampler)
-	{
-		auto src = nr.first + " [[sampler(" + std::to_string(ind) + ")]]";
-		auto dst = nr.first + " [[sampler(" + std::to_string(nr.second) + ")]]";
-		code_ = Replace(code_, src, dst);
-		ind++;
-	}
-
-	ind = 0;
-	for (auto nr : remapping_buffer)
-	{
-		auto src = nr.first + "_1 [[buffer(" + std::to_string(ind) + ")]]";
-		auto dst = nr.first + "_1 [[buffer(" + std::to_string(nr.second) + ")]]";
-		code_ = Replace(code_, src, dst);
-		ind++;
-	}
 
 	return true;
 }
