@@ -359,7 +359,7 @@ void CommandListMetal::BeginRenderPass(RenderPass* renderPass)
 			rpd.depthAttachment.clearDepth = 1.0;
 
 			if (rp->depthStencilFormat != MTLPixelFormatDepth32Float_Stencil8
-#if TARGET_OS_MACOS
+#if TARGET_OS_MAC
 				&& rp->depthStencilFormat != MTLPixelFormatDepth24Unorm_Stencil8
 #endif
 			)
