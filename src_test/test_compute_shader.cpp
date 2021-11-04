@@ -77,7 +77,7 @@ void test_compute_shader(LLGI::DeviceType deviceType)
 	commandList->SetComputeBuffer(read.get(), sizeof(InputData), 0);
 	commandList->SetComputeBuffer(write.get(), sizeof(OutputData), 1);
 	commandList->SetConstantBuffer(constantBuffer.get(), LLGI::ShaderStageType::Compute);
-	commandList->Dispatch(dataSize, 1, 1);
+	commandList->Dispatch(dataSize, 1, 1, 1, 1, 1);
 	commandList->EndComputePass();
 	commandList->ReadBackBuffer(read.get());
 	commandList->ReadBackBuffer(write.get());
