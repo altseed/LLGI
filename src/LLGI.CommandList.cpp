@@ -255,7 +255,10 @@ bool CommandList::BeginRenderPassWithPlatformPtr(void* platformPtr)
 	return true;
 }
 
-void CommandList::Dispatch(int32_t x, int32_t y, int32_t z) { isPipelineDirtied = false; }
+void CommandList::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, int32_t threadX, int32_t threadY, int32_t threadZ)
+{
+	isPipelineDirtied = false;
+}
 
 void CommandList::ResetComputeBuffer()
 {

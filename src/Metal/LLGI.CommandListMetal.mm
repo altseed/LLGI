@@ -458,7 +458,7 @@ void CommandListMetal::EndComputePass()
 	}
 }
 
-void CommandListMetal::Dispatch(int32_t x, int32_t y, int32_t z)
+void CommandListMetal::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, int32_t threadX, int32_t threadY, int32_t threadZ)
 {
 	PipelineState* bpip = nullptr;
 
@@ -496,9 +496,9 @@ void CommandListMetal::Dispatch(int32_t x, int32_t y, int32_t z)
 		[computeEncoder_ setComputePipelineState:pip->GetComputePipelineState()];
 	}
 
-	[computeEncoder_ dispatchThreadgroups:{1, 1, 1} threadsPerThreadgroup:{(uint32_t)x, (uint32_t)y, (uint32_t)z}];
+	[computeEncoder_ dispatchThreadgroups:{(uint32_t)groupX, (uint32_t)groupY, (uint32_t)groupZ} threadsPerThreadgroup:{(uint32_t)threadX, (uint32_t)threadY, (uint32_t)threadZ}];
 
-	CommandList::Dispatch(x, y, z);
+	CommandList::Dispatch(groupX, groupY, groupZ, threadX, threadY, threadZ);
 }
 
 void CommandListMetal::UploadBuffer(Buffer* buffer) {

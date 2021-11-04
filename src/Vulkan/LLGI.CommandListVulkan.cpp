@@ -735,7 +735,7 @@ void CommandListVulkan::BeginComputePass() {}
 
 void CommandListVulkan::EndComputePass() {}
 
-void CommandListVulkan::Dispatch(int32_t x, int32_t y, int32_t z)
+void CommandListVulkan::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, int32_t threadX, int32_t threadY, int32_t threadZ)
 {
 	PipelineState* pip_ = nullptr;
 
@@ -837,9 +837,9 @@ void CommandListVulkan::Dispatch(int32_t x, int32_t y, int32_t z)
 		currentCommandBuffer_.bindPipeline(vk::PipelineBindPoint::eCompute, pip->GetComputePipeline());
 	}
 
-	currentCommandBuffer_.dispatch(x, y, z);
+	currentCommandBuffer_.dispatch(groupX, groupY, groupZ);
 
-	CommandList::Dispatch(x, y, z);
+	CommandList::Dispatch(groupX, groupY, groupZ, threadX, threadY, threadZ);
 }
 
 void CommandListVulkan::WaitUntilCompleted()

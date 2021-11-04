@@ -171,7 +171,7 @@ public:
 	virtual void ResetComputeBuffer();
 	virtual void BeginComputePass() {}
 	virtual void EndComputePass() {}
-	virtual void Dispatch(int32_t x, int32_t y, int32_t z);
+	virtual void Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, int32_t threadX, int32_t threadY, int32_t threadZ);
 
 	virtual void UploadBuffer(Buffer* buffer) {}
 	virtual void ReadBackBuffer(Buffer* buffer) {}

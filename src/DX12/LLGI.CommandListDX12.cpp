@@ -711,7 +711,7 @@ void CommandListDX12::BeginComputePass() {}
 
 void CommandListDX12::EndComputePass() {}
 
-void CommandListDX12::Dispatch(int32_t x, int32_t y, int32_t z)
+void CommandListDX12::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, int32_t threadX, int32_t threadY, int32_t threadZ)
 {
 	assert(currentCommandList_ != nullptr);
 	PipelineState* pip_ = nullptr;
@@ -805,9 +805,9 @@ void CommandListDX12::Dispatch(int32_t x, int32_t y, int32_t z)
 		graphics_->GetDevice()->CreateUnorderedAccessView(computeBuffer->Get(), nullptr, &uavDesc, cpuHandle);
 	}
 
-	currentCommandList_->Dispatch(x, y, z);
+	currentCommandList_->Dispatch(groupX, groupY, groupZ);
 
-	CommandList::Dispatch(x, y, z);
+	CommandList::Dispatch(groupX, groupY, groupZ, threadX, threadY, threadZ);
 }
 
 void CommandListDX12::Clear(const Color8& color)
