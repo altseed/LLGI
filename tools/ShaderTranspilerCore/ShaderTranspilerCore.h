@@ -103,6 +103,8 @@ public:
 	std::vector<ShaderReflectionUniform> Uniforms;
 
 	std::vector<ShaderReflectionTexture> Textures;
+
+	Vec3I NumThreads;
 };
 
 class SPIRVGeneratorMacro

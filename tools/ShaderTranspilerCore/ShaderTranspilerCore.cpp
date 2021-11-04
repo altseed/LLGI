@@ -289,7 +289,6 @@ bool SPIRVToMSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 			compiler.set_decoration(buffer.id, spv::DecorationBinding, 0);
 		}
 	}
-
 	spirv_cross::CompilerGLSL::Options options;
 	compiler.set_common_options(options);
 
@@ -493,6 +492,26 @@ bool SPIRVReflection::Transpile(const std::shared_ptr<SPIRV>& spirv)
 			u.Size = static_cast<int32_t>(compiler.get_declared_struct_member_size(spirvType, static_cast<uint32_t>(i)));
 			u.Offset = compiler.get_member_decoration(resource.base_type_id, static_cast<uint32_t>(i), spv::DecorationOffset);
 			Uniforms.push_back(u);
+		}
+	}
+
+	// NumThreads
+	if (spirv->GetStage() == ShaderStageType::Compute)
+	{
+		auto entries = compiler.get_entry_points_and_stages();
+		for (auto& e : entries)
+		{
+			const auto& spv_entry = compiler.get_entry_point(e.name, e.execution_model);
+
+			spirv_cross::SpecializationConstant spec_x, spec_y, spec_z;
+			compiler.get_work_group_size_specialization_constants(spec_x, spec_y, spec_z);
+
+			if (e.name == "main")
+			{
+				NumThreads.X = spec_x.id != spirv_cross::ID(0) ? spec_x.constant_id : spv_entry.workgroup_size.x;
+				NumThreads.Y = spec_y.id != spirv_cross::ID(0) ? spec_y.constant_id : spv_entry.workgroup_size.y;
+				NumThreads.Z = spec_z.id != spirv_cross::ID(0) ? spec_z.constant_id : spv_entry.workgroup_size.z;
+			}
 		}
 	}
 
