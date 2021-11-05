@@ -360,7 +360,7 @@ void CommandListMetal::BeginRenderPass(RenderPass* renderPass)
 			rpd.depthAttachment.clearDepth = 1.0;
 
 			if (rp->depthStencilFormat != MTLPixelFormatDepth32Float_Stencil8
-#if TARGET_OS_MAC
+#if !(TARGET_OS_IPHONE) && !(TARGET_OS_SIMULATOR)
 				&& rp->depthStencilFormat != MTLPixelFormatDepth24Unorm_Stencil8
 #endif
 			)
