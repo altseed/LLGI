@@ -7,6 +7,7 @@
 #include "LLGI.TextureMetal.h"
 
 #import <MetalKit/MetalKit.h>
+#include <TargetConditionals.h>
 
 namespace LLGI
 {
