@@ -196,9 +196,9 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 		[renderEncoder_ setFragmentBuffer:pcb_->GetBuffer() offset:pcb_->GetOffset() atIndex:0];
 	}
 
-	// Assign textures
 	for (int stage_ind = 0; stage_ind < 2; stage_ind++)
 	{
+		// Assign textures
 		for (int unit_ind = 0; unit_ind < currentTextures[stage_ind].size(); unit_ind++)
 		{
 			if (currentTextures[stage_ind][unit_ind].texture == nullptr)
@@ -224,6 +224,17 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 				[renderEncoder_ setFragmentTexture:texture->GetTexture() atIndex:unit_ind];
 				[renderEncoder_ setFragmentSamplerState:samplerStates_[wm][mm][pm] atIndex:unit_ind];
 			}
+		}
+
+		for (int unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)
+		{
+			BindingComputeBuffer bcb;
+			GetCurrentComputeBuffer(unit_ind, (ShaderStageType)stage_ind, bcb);
+			if (bcb.computeBuffer == nullptr)
+				continue;
+			
+			auto cb = static_cast<BufferMetal*>(bcb.computeBuffer);
+			[computeEncoder_ setBuffer:cb->GetBuffer() offset:cb->GetOffset() atIndex:1 + unit_ind];
 		}
 	}
 
@@ -475,7 +486,7 @@ void CommandListMetal::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, 
     for (int unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)
     {
         BindingComputeBuffer bcb;
-        GetCurrentComputeBuffer(unit_ind, bcb);
+        GetCurrentComputeBuffer(unit_ind, ShaderStageType::Compute, bcb);
         if (bcb.computeBuffer == nullptr)
             continue;
         

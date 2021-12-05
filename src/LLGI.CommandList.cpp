@@ -27,7 +27,11 @@ void CommandList::GetCurrentPipelineState(PipelineState*& pipelineState, bool& i
 
 void CommandList::GetCurrentConstantBuffer(ShaderStageType type, Buffer*& buffer) { buffer = constantBuffers[static_cast<int>(type)]; }
 
-void CommandList::GetCurrentComputeBuffer(int32_t unit, BindingComputeBuffer& buffer) { buffer = computeBuffers_[unit]; }
+void CommandList::GetCurrentComputeBuffer(int32_t unit, ShaderStageType shaderStage, BindingComputeBuffer& buffer)
+{
+	auto ind = static_cast<int>(shaderStage);
+	buffer = computeBuffers_[ind][unit];
+}
 
 void CommandList::RegisterReferencedObject(ReferenceObject* referencedObject)
 {
@@ -43,9 +47,12 @@ CommandList::CommandList(int32_t swapCount) : swapCount_(swapCount)
 {
 	constantBuffers.fill(nullptr);
 
-	for (auto& t : computeBuffers_)
+	for (auto& cbs : computeBuffers_)
 	{
-		t.computeBuffer = nullptr;
+		for (auto& c : cbs)
+		{
+			c.computeBuffer = nullptr;
+		}
 	}
 
 	for (auto& t : currentTextures)
@@ -83,9 +90,12 @@ CommandList::~CommandList()
 		so.referencedObjects.clear();
 	}
 
-	for (auto& c : computeBuffers_)
+	for (auto& cbs : computeBuffers_)
 	{
-		SafeRelease(c.computeBuffer);
+		for (auto& c : cbs)
+		{
+			SafeRelease(c.computeBuffer);
+		}
 	}
 }
 
@@ -207,10 +217,11 @@ void CommandList::SetConstantBuffer(Buffer* constantBuffer, ShaderStageType shad
 	RegisterReferencedObject(constantBuffer);
 }
 
-void CommandList::SetComputeBuffer(Buffer* computeBuffer, int32_t stride, int32_t unit)
+void CommandList::SetComputeBuffer(Buffer* computeBuffer, int32_t stride, int32_t unit, ShaderStageType shaderStage)
 {
-	SafeAssign(computeBuffers_[unit].computeBuffer, computeBuffer);
-	computeBuffers_[unit].stride = stride;
+	auto ind = static_cast<int>(shaderStage);
+	SafeAssign(computeBuffers_[ind][unit].computeBuffer, computeBuffer);
+	computeBuffers_[ind][unit].stride = stride;
 	RegisterReferencedObject(computeBuffer);
 }
 
@@ -262,10 +273,13 @@ void CommandList::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, int32
 
 void CommandList::ResetComputeBuffer()
 {
-	for (auto& cb : computeBuffers_)
+	for (auto& cbs : computeBuffers_)
 	{
-		SafeRelease(cb.computeBuffer);
-		cb.stride = 0;
+		for (auto& cb : cbs)
+		{
+			SafeRelease(cb.computeBuffer);
+			cb.stride = 0;
+		}
 	}
 }
 

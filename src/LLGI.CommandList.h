@@ -73,7 +73,7 @@ private:
 	bool doesBeginWithPlatform_ = false;
 
 	std::array<Buffer*, static_cast<int>(ShaderStageType::Max)> constantBuffers;
-	std::array<BindingComputeBuffer, NumComputeBuffer> computeBuffers_;
+	std::array<std::array<BindingComputeBuffer, NumComputeBuffer>, static_cast<int>(ShaderStageType::Max)> computeBuffers_;
 
 protected:
 	bool isInRenderPass_ = false;
@@ -86,7 +86,7 @@ protected:
 	void GetCurrentIndexBuffer(BindingIndexBuffer& buffer, bool& isDirtied);
 	void GetCurrentPipelineState(PipelineState*& pipelineState, bool& isDirtied);
 	void GetCurrentConstantBuffer(ShaderStageType type, Buffer*& buffer);
-	void GetCurrentComputeBuffer(int32_t unit, BindingComputeBuffer& buffer);
+	void GetCurrentComputeBuffer(int32_t unit, ShaderStageType shaderStage, BindingComputeBuffer& buffer);
 	void RegisterReferencedObject(ReferenceObject* referencedObject);
 
 public:
@@ -117,7 +117,7 @@ public:
 	virtual void SetIndexBuffer(Buffer* indexBuffer, int32_t stride, int32_t offset = 0);
 	virtual void SetPipelineState(PipelineState* pipelineState);
 	virtual void SetConstantBuffer(Buffer* constantBuffer, ShaderStageType shaderStage);
-	virtual void SetComputeBuffer(Buffer* computeBuffer, int32_t stride, int32_t unit);
+	virtual void SetComputeBuffer(Buffer* computeBuffer, int32_t stride, int32_t unit, ShaderStageType shaderStage);
 
 	/**
 		@brief	copy a texture
