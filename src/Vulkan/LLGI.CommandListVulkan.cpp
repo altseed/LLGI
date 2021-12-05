@@ -334,10 +334,10 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 	std::vector<vk::DescriptorSet> descriptorSets = graphics_->GetDevice().allocateDescriptorSets(allocateInfo);
 	*/
 
-	std::array<vk::WriteDescriptorSet, NumTexture * 2 + 2> writeDescriptorSets;
+	std::array<vk::WriteDescriptorSet, NumComputeBuffer * 2 + NumTexture * 2 + 2> writeDescriptorSets;
 	int writeDescriptorIndex = 0;
 
-	std::array<vk::DescriptorBufferInfo, NumTexture * 2 + 2> descriptorBufferInfos;
+	std::array<vk::DescriptorBufferInfo, NumComputeBuffer * 2 + NumTexture * 2 + 2> descriptorBufferInfos;
 	int descriptorBufferIndex = 0;
 
 	std::array<vk::DescriptorImageInfo, NumTexture * 2 + 2> descriptorImageInfos;
@@ -393,9 +393,9 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 		writeDescriptorIndex++;
 	}
 
-	// Assign textures
 	for (int stage_ind = 0; stage_ind < 2; stage_ind++)
 	{
+		// Assign textures
 		for (int unit_ind = 0; unit_ind < static_cast<int32_t>(currentTextures[stage_ind].size()); unit_ind++)
 		{
 			if (currentTextures[stage_ind][unit_ind].texture == nullptr)
@@ -434,6 +434,35 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 			writeDescriptorSets[writeDescriptorIndex] = desc;
 
 			descriptorImageIndex++;
+			writeDescriptorIndex++;
+		}
+
+		// compute buffer
+		for (int unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)
+		{
+			BindingComputeBuffer cb_;
+			GetCurrentComputeBuffer(unit_ind, (ShaderStageType)stage_ind, cb_);
+
+			if (cb_.computeBuffer == nullptr)
+				continue;
+
+			auto cb = static_cast<BufferVulkan*>(cb_.computeBuffer);
+
+			descriptorBufferInfos[descriptorBufferIndex].buffer = cb->GetBuffer();
+			descriptorBufferInfos[descriptorBufferIndex].offset = cb->GetOffset();
+			descriptorBufferInfos[descriptorBufferIndex].range = cb->GetSize();
+
+			vk::WriteDescriptorSet desc;
+			desc.descriptorType = vk::DescriptorType::eStorageBufferDynamic;
+			desc.dstSet = descriptorSets[stage_ind];
+			desc.dstBinding = unit_ind + 1 + NumTexture;
+			desc.dstArrayElement = 0;
+			desc.pBufferInfo = &(descriptorBufferInfos[descriptorBufferIndex]);
+			desc.descriptorCount = 1;
+
+			writeDescriptorSets[writeDescriptorIndex] = desc;
+
+			descriptorBufferIndex++;
 			writeDescriptorIndex++;
 		}
 	}
@@ -795,7 +824,7 @@ void CommandListVulkan::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ,
 	for (int unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)
 	{
 		BindingComputeBuffer cb_;
-		GetCurrentComputeBuffer(unit_ind, cb_);
+		GetCurrentComputeBuffer(unit_ind, ShaderStageType::Compute, cb_);
 
 		if (cb_.computeBuffer == nullptr)
 			continue;
@@ -828,8 +857,13 @@ void CommandListVulkan::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ,
 	std::array<uint32_t, 1 + NumComputeBuffer> offsets;
 	offsets.fill(0);
 
-	currentCommandBuffer_.bindDescriptorSets(
-		vk::PipelineBindPoint::eCompute, pip->GetComputePipelineLayout(), 0, 1, descriptorSets.data(), 1 + NumComputeBuffer, offsets.data());
+	currentCommandBuffer_.bindDescriptorSets(vk::PipelineBindPoint::eCompute,
+											 pip->GetComputePipelineLayout(),
+											 0,
+											 1,
+											 descriptorSets.data(),
+											 1 + NumComputeBuffer,
+											 offsets.data());
 
 	// assign a pipeline
 	if (isPipDirtied)

@@ -312,8 +312,9 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 	}
 
 	// count descriptor
-	int32_t requiredCBDescriptorCount = 2;
+	int32_t requiredCBDescriptorCount = 18;
 	int32_t requiredSamplerDescriptorCount = 1;
+	int32_t requiredComputeDescriptorCount = 0;
 
 	for (int stage_ind = 0; stage_ind < 2; stage_ind++)
 	{
@@ -321,20 +322,29 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 		{
 			if (currentTextures[stage_ind][unit_ind].texture != nullptr)
 			{
-				requiredSamplerDescriptorCount = std::max(requiredSamplerDescriptorCount, static_cast<int32_t>(unit_ind) + 1);
+				requiredSamplerDescriptorCount =
+					std::max(requiredSamplerDescriptorCount, static_cast<int32_t>(unit_ind) + 1);
+			}
+
+			BindingComputeBuffer compute;
+			GetCurrentComputeBuffer(static_cast<int32_t>(unit_ind), (ShaderStageType)stage_ind, compute);
+			if (compute.computeBuffer != nullptr)
+			{
+				requiredComputeDescriptorCount =
+					std::max(requiredComputeDescriptorCount, static_cast<int32_t>(unit_ind) + 1);
 			}
 		}
 	}
 
-	requiredCBDescriptorCount += requiredSamplerDescriptorCount;
+	requiredCBDescriptorCount += requiredComputeDescriptorCount;
 
 	ID3D12DescriptorHeap* heapSampler = nullptr;
 	ID3D12DescriptorHeap* heapConstant = nullptr;
 
-	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 16> cpuDescriptorHandleSampler;
-	std::array<D3D12_GPU_DESCRIPTOR_HANDLE, 16> gpuDescriptorHandleSampler;
-	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 16> cpuDescriptorHandleConstant;
-	std::array<D3D12_GPU_DESCRIPTOR_HANDLE, 16> gpuDescriptorHandleConstant;
+	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 32> cpuDescriptorHandleSampler;
+	std::array<D3D12_GPU_DESCRIPTOR_HANDLE, 32> gpuDescriptorHandleSampler;
+	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 32> cpuDescriptorHandleConstant;
+	std::array<D3D12_GPU_DESCRIPTOR_HANDLE, 32> gpuDescriptorHandleConstant;
 
 	if (!samplerDescriptorHeap_->Allocate(
 			heapSampler, cpuDescriptorHandleSampler, gpuDescriptorHandleSampler, requiredSamplerDescriptorCount))
@@ -496,6 +506,30 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 						graphics_->GetDevice()->CreateSampler(&samplerDesc, cpuHandle);
 					}
 				}
+			}
+
+			// UAV
+			for (int32_t unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)
+			{
+				BindingComputeBuffer compute;
+				GetCurrentComputeBuffer(unit_ind, (ShaderStageType)stage_ind, compute);
+
+				if (compute.computeBuffer == nullptr)
+					continue;
+
+				auto computeBuffer = static_cast<BufferDX12*>(compute.computeBuffer);
+				D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+
+				uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+				uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+
+				uavDesc.Buffer.StructureByteStride = compute.stride;
+				uavDesc.Buffer.NumElements = computeBuffer->GetSize() / compute.stride;
+				uavDesc.Buffer.FirstElement = 0;
+				uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+
+				auto cpuHandle = cpuDescriptorHandleConstant[18 + unit_ind];
+				graphics_->GetDevice()->CreateUnorderedAccessView(computeBuffer->Get(), nullptr, &uavDesc, cpuHandle);
 			}
 		}
 	}
@@ -736,10 +770,11 @@ void CommandListDX12::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, i
 
 	ID3D12DescriptorHeap* heapConstant = nullptr;
 
-	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 16> cpuDescriptorHandleConstant;
-	std::array<D3D12_GPU_DESCRIPTOR_HANDLE, 16> gpuDescriptorHandleConstant;
+	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 32> cpuDescriptorHandleConstant;
+	std::array<D3D12_GPU_DESCRIPTOR_HANDLE, 32> gpuDescriptorHandleConstant;
 
-	if (!cbDescriptorHeap_->Allocate(heapConstant, cpuDescriptorHandleConstant, gpuDescriptorHandleConstant, requiredCBDescriptorCount))
+	if (!cbDescriptorHeap_->Allocate(
+			heapConstant, cpuDescriptorHandleConstant, gpuDescriptorHandleConstant, requiredCBDescriptorCount))
 	{
 		Log(LogType::Error, "Failed to draw because of descriptors.");
 		return;
@@ -785,7 +820,7 @@ void CommandListDX12::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, i
 	for (int32_t unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)
 	{
 		BindingComputeBuffer compute;
-		GetCurrentComputeBuffer(unit_ind, compute);
+		GetCurrentComputeBuffer(unit_ind, ShaderStageType::Compute, compute);
 
 		if (compute.computeBuffer == nullptr)
 			continue;

@@ -52,7 +52,7 @@ bool PipelineStateDX12::Compile()
 
 bool PipelineStateDX12::CreateRootSignature()
 {
-	D3D12_DESCRIPTOR_RANGE ranges[3] = {{}, {}, {}};
+	D3D12_DESCRIPTOR_RANGE ranges[4] = {{}, {}, {}, {}};
 	D3D12_ROOT_PARAMETER rootParameters[2] = {{}, {}};
 
 	// descriptor range for constant buffer view
@@ -69,23 +69,30 @@ bool PipelineStateDX12::CreateRootSignature()
 	ranges[1].RegisterSpace = 0;
 	ranges[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	// descriptor range for sampler
-	ranges[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
-	ranges[2].NumDescriptors = NumTexture * 2;
+	// descriptor range for uav
+	ranges[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+	ranges[2].NumDescriptors = NumComputeBuffer * 2;
 	ranges[2].BaseShaderRegister = 0;
 	ranges[2].RegisterSpace = 0;
 	ranges[2].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	// descriptor table for CBV/SRV
+	// descriptor range for sampler
+	ranges[3].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
+	ranges[3].NumDescriptors = NumTexture * 2;
+	ranges[3].BaseShaderRegister = 0;
+	ranges[3].RegisterSpace = 0;
+	ranges[3].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+	// descriptor table for CBV/SRV/UAV
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParameters[0].DescriptorTable.NumDescriptorRanges = 2;
+	rootParameters[0].DescriptorTable.NumDescriptorRanges = 3;
 	rootParameters[0].DescriptorTable.pDescriptorRanges = &ranges[0];
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 	// descriptor table for sampler
 	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	rootParameters[1].DescriptorTable.NumDescriptorRanges = 1;
-	rootParameters[1].DescriptorTable.pDescriptorRanges = &ranges[2];
+	rootParameters[1].DescriptorTable.pDescriptorRanges = &ranges[3];
 	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 	D3D12_ROOT_SIGNATURE_DESC desc = {};

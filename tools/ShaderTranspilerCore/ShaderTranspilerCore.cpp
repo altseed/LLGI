@@ -395,16 +395,17 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 		cb_ind++;
 	}
 
-	if (spirv->GetStage() == ShaderStageType::Compute)
+	if (isVulkanMode_)
 	{
-		if (isVulkanMode_)
+		if (spirv->GetStage() != ShaderStageType::Compute)
 		{
-			for (auto& resource : resources.storage_buffers)
-			{
-				auto i = compiler.get_decoration(resource.id, spv::DecorationBinding);
-				compiler.set_decoration(resource.id, spv::DecorationBinding, binding_offset + i);
-				compiler.set_decoration(resource.id, spv::DecorationDescriptorSet, 0);
-			}
+			binding_offset += 8;
+		}
+		for (auto& resource : resources.storage_buffers)
+		{
+			auto i = compiler.get_decoration(resource.id, spv::DecorationBinding);
+			compiler.set_decoration(resource.id, spv::DecorationBinding, binding_offset + i);
+			compiler.set_decoration(resource.id, spv::DecorationDescriptorSet, 0);
 		}
 	}
 
