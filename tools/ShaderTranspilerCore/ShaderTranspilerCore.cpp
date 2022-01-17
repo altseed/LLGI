@@ -25,6 +25,8 @@
 #include <spirv_cross/spirv_reflect.hpp>
 #endif
 
+#include <iostream>
+
 #include "ResourceLimits.h"
 
 namespace LLGI
@@ -151,6 +153,15 @@ protected:
 
 namespace
 {
+
+class CustomCompilerGLSL : public spirv_cross::CompilerGLSL
+{
+public:
+	explicit CustomCompilerGLSL(std::vector<uint32_t> spirv_) : spirv_cross::CompilerGLSL(std::move(spirv_)) {}
+
+	spirv_cross::SmallVector<spirv_cross::CombinedImageSampler>& get_mutable_combined_image_samplers() { return combined_image_samplers; }
+};
+
 EShLanguage GetGlslangShaderStage(ShaderStageType type)
 {
 	if (type == ShaderStageType::Vertex)
@@ -303,9 +314,10 @@ bool SPIRVToMSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 
 bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 {
-	spirv_cross::CompilerGLSL compiler(spirv->GetData());
+	CustomCompilerGLSL compiler(spirv->GetData());
 
 	// to combine a sampler and a texture
+	auto dummySamplerId = compiler.build_dummy_sampler_for_combined_images();
 	compiler.build_combined_image_samplers();
 
 	spirv_cross::ShaderResources resources = compiler.get_shader_resources();
@@ -315,6 +327,58 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 	if (isVulkanMode_)
 	{
 		binding_offset += 1;
+	}
+
+	if (dummySamplerId != spirv_cross::VariableID(0))
+	{
+		const auto showStatus = true;
+
+		if (showStatus)
+		{
+			std::cout << "- Samplers" << std::endl;
+			for (const auto& resource : resources.separate_samplers)
+			{
+				const auto dec = compiler.get_decoration(resource.id, spv::DecorationBinding);
+				std::cout << resource.name << ", " << resource.id << ", " << dec << std::endl;
+			}
+
+			std::cout << "- Images" << std::endl;
+			for (const auto& resource : resources.separate_images)
+			{
+				const auto dec = compiler.get_decoration(resource.id, spv::DecorationBinding);
+				std::cout << resource.name << ", " << resource.id << ", " << dec << std::endl;
+			}
+
+			std::cout << "- Combined image samplers" << std::endl;
+			for (const auto& remap : compiler.get_combined_image_samplers())
+			{
+				const auto dec = compiler.get_decoration(remap.combined_id, spv::DecorationBinding);
+				std::cout << remap.combined_id << ", " << remap.image_id << ", " << remap.sampler_id << ", " << dec << std::endl;
+			}
+
+			const auto getSamplerIdFromImageIdWithBinding = [&](spirv_cross::ID imageId) {
+				const auto dec = compiler.get_decoration(imageId, spv::DecorationBinding);
+				for (const auto& resource : resources.separate_samplers)
+				{
+					const auto samplerDec = compiler.get_decoration(resource.id, spv::DecorationBinding);
+					if (dec == samplerDec)
+					{
+						return resource.id;
+					}
+				}
+
+				return spirv_cross::ID(0);
+			};
+
+			for (auto& remap : compiler.get_mutable_combined_image_samplers())
+			{
+				if (remap.sampler_id == dummySamplerId)
+				{
+					remap.combined_id = compiler.get_mutable_combined_image_samplers().begin()->combined_id;
+					//remap.sampler_id = static_cast<spirv_cross::VariableID>(getSamplerIdFromImageIdWithBinding(remap.image_id));
+				}
+			}
+		}
 	}
 
 	if (shaderModel_ <= 420 || isVulkanMode_)
