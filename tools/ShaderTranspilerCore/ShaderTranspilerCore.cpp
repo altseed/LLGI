@@ -154,14 +154,6 @@ protected:
 namespace
 {
 
-class CustomCompilerGLSL : public spirv_cross::CompilerGLSL
-{
-public:
-	explicit CustomCompilerGLSL(std::vector<uint32_t> spirv_) : spirv_cross::CompilerGLSL(std::move(spirv_)) {}
-
-	spirv_cross::SmallVector<spirv_cross::CombinedImageSampler>& get_mutable_combined_image_samplers() { return combined_image_samplers; }
-};
-
 EShLanguage GetGlslangShaderStage(ShaderStageType type)
 {
 	if (type == ShaderStageType::Vertex)
@@ -314,7 +306,7 @@ bool SPIRVToMSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 
 bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 {
-	CustomCompilerGLSL compiler(spirv->GetData());
+	spirv_cross::CompilerGLSL compiler(spirv->GetData());
 
 	// to combine a sampler and a texture
 	auto dummySamplerId = compiler.build_dummy_sampler_for_combined_images();
@@ -329,9 +321,31 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 		binding_offset += 1;
 	}
 
+	const auto getSamplerIdFromImageIdWithBinding = [&](spirv_cross::ID imageId)
+	{
+		const auto dec = compiler.get_decoration(imageId, spv::DecorationBinding);
+		for (const auto& resource : resources.separate_samplers)
+		{
+			const auto samplerDec = compiler.get_decoration(resource.id, spv::DecorationBinding);
+			if (dec == samplerDec)
+			{
+				return resource.id;
+			}
+		}
+
+		return spirv_cross::ID(0);
+	};
+
+	const auto assignCombinedSamplerImageVariables = [&](spirv_cross::VariableID combinedId, spirv_cross::ID samplerId)
+	{
+		compiler.set_name(combinedId, spirv_cross::join("Sampler_", compiler.get_name(samplerId)));
+		auto location = compiler.get_decoration(samplerId, spv::DecorationBinding);
+		compiler.set_decoration(combinedId, spv::DecorationLocation, location);
+	};
+
 	if (dummySamplerId != spirv_cross::VariableID(0))
 	{
-		const auto showStatus = true;
+		const auto showStatus = false;
 
 		if (showStatus)
 		{
@@ -355,28 +369,39 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 				const auto dec = compiler.get_decoration(remap.combined_id, spv::DecorationBinding);
 				std::cout << remap.combined_id << ", " << remap.image_id << ", " << remap.sampler_id << ", " << dec << std::endl;
 			}
+		}
 
-			const auto getSamplerIdFromImageIdWithBinding = [&](spirv_cross::ID imageId) {
-				const auto dec = compiler.get_decoration(imageId, spv::DecorationBinding);
-				for (const auto& resource : resources.separate_samplers)
+		{
+			std::map<spirv_cross::ID, spirv_cross::ID> image2sampler;
+
+			for (auto& remap : compiler.get_combined_image_samplers())
+			{
+				const auto found = image2sampler.find(remap.image_id);
+				if (found == image2sampler.end())
 				{
-					const auto samplerDec = compiler.get_decoration(resource.id, spv::DecorationBinding);
-					if (dec == samplerDec)
+					image2sampler[remap.image_id] = remap.sampler_id;
+				}
+				else
+				{
+					if (found->second != remap.sampler_id)
 					{
-						return resource.id;
+						throw compiler.get_name(remap.image_id) + " : " + std::string("Multiple samplers are assigned.");
 					}
 				}
+			}
+		}
 
-				return spirv_cross::ID(0);
-			};
-
-			for (auto& remap : compiler.get_mutable_combined_image_samplers())
+		for (auto& remap : compiler.get_combined_image_samplers())
+		{
+			if (remap.sampler_id == dummySamplerId)
 			{
-				if (remap.sampler_id == dummySamplerId)
+				const auto samplerId = getSamplerIdFromImageIdWithBinding(remap.image_id);
+				if (samplerId == spirv_cross::ID(0))
 				{
-					remap.combined_id = compiler.get_mutable_combined_image_samplers().begin()->combined_id;
-					//remap.sampler_id = static_cast<spirv_cross::VariableID>(getSamplerIdFromImageIdWithBinding(remap.image_id));
+					throw compiler.get_name(remap.image_id) + " : " + std::string("Matched Sampier is not found.");
 				}
+
+				assignCombinedSamplerImageVariables(remap.combined_id, samplerId);
 			}
 		}
 	}
@@ -385,9 +410,12 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 	{
 		for (auto& remap : compiler.get_combined_image_samplers())
 		{
-			compiler.set_name(remap.combined_id, spirv_cross::join("Sampler_", compiler.get_name(remap.sampler_id)));
-			auto location = compiler.get_decoration(remap.sampler_id, spv::DecorationBinding);
-			compiler.set_decoration(remap.combined_id, spv::DecorationLocation, location);
+			if (remap.sampler_id == dummySamplerId)
+			{
+				continue;
+			}
+
+			assignCombinedSamplerImageVariables(remap.combined_id, remap.sampler_id);
 		}
 	}
 
@@ -484,6 +512,8 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 			options.separate_shader_objects = true;
 		}
 	}
+
+	options.separate_shader_objects = false;
 
 	options.emit_uniform_buffer_as_plain_uniforms = plain_;
 	options.vulkan_semantics = isVulkanMode_;

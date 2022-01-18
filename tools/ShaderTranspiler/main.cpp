@@ -151,7 +151,8 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
-	auto loadFunc = [](std::string s) -> std::vector<uint8_t> {
+	auto loadFunc = [](std::string s) -> std::vector<uint8_t>
+	{
 		std::ifstream file(s, std::ios_base::binary | std::ios_base::ate);
 		if (file)
 		{
@@ -195,10 +196,18 @@ int main(int argc, char* argv[])
 	}
 
 	std::cout << inputPath << " -> " << outputPath << " ShaderModel=" << shaderModel << std::endl;
-	if (!transpiler->Transpile(spirv))
+
+	try
 	{
-		std::cout << transpiler->GetErrorCode() << std::endl;
-		return 0;
+		if (!transpiler->Transpile(spirv))
+		{
+			std::cout << transpiler->GetErrorCode() << std::endl;
+			return 0;
+		}
+	}
+	catch (std::string e)
+	{
+		std::cout << "Error : " << e << std::endl;
 	}
 
 	std::ofstream outputfile(outputPath);

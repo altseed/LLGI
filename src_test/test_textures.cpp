@@ -210,12 +210,20 @@ void test_textures(LLGI::DeviceType deviceType)
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get(), 2);
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
+
 		commandList->SetTexture(
 			texDst1.get(), LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
 		commandList->SetTexture(
 			texDst2.get(), LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 1, LLGI::ShaderStageType::Pixel);
 		commandList->SetTexture(
 			texDst3.get(), LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 2, LLGI::ShaderStageType::Pixel);
+		commandList->SetTexture(
+			texDst1.get(), LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 3, LLGI::ShaderStageType::Pixel);
+		commandList->SetTexture(
+			texDst2.get(), LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 4, LLGI::ShaderStageType::Pixel);
+		commandList->SetTexture(
+			texDst3.get(), LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 5, LLGI::ShaderStageType::Pixel);
+
 		commandList->Draw(2);
 
 		commandList->EndRenderPass();
