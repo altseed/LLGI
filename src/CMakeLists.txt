@@ -28,6 +28,12 @@ if(BUILD_VULKAN)
   add_definitions(-DENABLE_VULKAN)
 endif()
 
+if(BUILD_WEBGPU)
+  file(GLOB files_webgpu WebGPU/*.h WebGPU/*.cpp)
+  list(APPEND files ${files_webgpu})
+  add_definitions(-DENABLE_WEBGPU)
+endif()
+
 if(APPLE)
   file(GLOB files_metal Metal/*.h Metal/*.cpp Metal/*.mm)
   list(APPEND files ${files_metal})
@@ -84,6 +90,10 @@ if(BUILD_VULKAN)
   endif()
 endif()
 
+if(BUILD_WEBGPU)
+  target_link_libraries(LLGI PRIVATE dawncpp dawn_native)
+endif()
+
 if(WIN32)
 
 elseif(APPLE)
@@ -101,19 +111,22 @@ endif()
 # --------------------
 # Install
 
-install(
-  TARGETS LLGI
-  EXPORT LLGI-export
-  INCLUDES
-  DESTINATION include/LLGI
-  PUBLIC_HEADER DESTINATION include/LLGI
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib)
+# Because dawn doesn't specify export
+if(NOT BUILD_WEBGPU)
+  install(
+    TARGETS LLGI
+    EXPORT LLGI-export
+    INCLUDES
+    DESTINATION include/LLGI
+    PUBLIC_HEADER DESTINATION include/LLGI
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib)
 
-install(
-  EXPORT LLGI-export
-  FILE LLGI-config.cmake
-  DESTINATION lib/cmake
-  EXPORT_LINK_INTERFACE_LIBRARIES)
+  install(
+    EXPORT LLGI-export
+    FILE LLGI-config.cmake
+    DESTINATION lib/cmake
+    EXPORT_LINK_INTERFACE_LIBRARIES)
+endif()
 
 clang_format(LLGI)
