@@ -7,7 +7,7 @@ struct PS_INPUT
     vec4 Color;
 };
 
-layout(binding = 0) uniform sampler2D _61;
+layout(binding = 0) uniform sampler2D Sampler_smp;
 
 layout(location = 0) in vec2 input_UV;
 layout(location = 1) in vec4 input_Color;
@@ -15,7 +15,7 @@ layout(location = 0) out vec4 _entryPointOutput;
 
 vec4 _main(PS_INPUT _input)
 {
-    vec4 c = texture(_61, _input.UV);
+    vec4 c = texture(Sampler_smp, _input.UV);
     c.w = 255.0;
     return c;
 }

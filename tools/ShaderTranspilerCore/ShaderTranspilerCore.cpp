@@ -321,6 +321,8 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 		binding_offset += 1;
 	}
 
+	const bool changeLocation = shaderModel_ <= 420 || isVulkanMode_;
+
 	const auto getSamplerIdFromImageIdWithBinding = [&](spirv_cross::ID imageId)
 	{
 		const auto dec = compiler.get_decoration(imageId, spv::DecorationBinding);
@@ -340,7 +342,13 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 	{
 		compiler.set_name(combinedId, spirv_cross::join("Sampler_", compiler.get_name(samplerId)));
 		auto location = compiler.get_decoration(samplerId, spv::DecorationBinding);
-		compiler.set_decoration(combinedId, spv::DecorationLocation, location);
+
+		if (changeLocation)
+		{
+			compiler.set_decoration(combinedId, spv::DecorationLocation, location);
+		}
+
+		// compiler.set_decoration(combinedId, spv::DecorationBinding, location);
 	};
 
 	if (dummySamplerId != spirv_cross::VariableID(0))
@@ -406,17 +414,14 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 		}
 	}
 
-	if (shaderModel_ <= 420 || isVulkanMode_)
+	for (auto& remap : compiler.get_combined_image_samplers())
 	{
-		for (auto& remap : compiler.get_combined_image_samplers())
+		if (remap.sampler_id == dummySamplerId)
 		{
-			if (remap.sampler_id == dummySamplerId)
-			{
-				continue;
-			}
-
-			assignCombinedSamplerImageVariables(remap.combined_id, remap.sampler_id);
+			continue;
 		}
+
+		assignCombinedSamplerImageVariables(remap.combined_id, remap.sampler_id);
 	}
 
 	for (auto& resource : resources.sampled_images)
@@ -512,8 +517,6 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 			options.separate_shader_objects = true;
 		}
 	}
-
-	options.separate_shader_objects = false;
 
 	options.emit_uniform_buffer_as_plain_uniforms = plain_;
 	options.vulkan_semantics = isVulkanMode_;
