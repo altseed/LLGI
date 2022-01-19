@@ -1,0 +1,59 @@
+struct CS_OUTPUT {
+  /* @offset(0) */
+  value : f32,
+}
+
+alias RTArr = array<CS_OUTPUT>;
+
+struct write {
+  /* @offset(0) */
+  x_data : RTArr,
+}
+
+struct CS_INPUT {
+  /* @offset(0) */
+  value1 : f32,
+  /* @offset(4) */
+  value2 : f32,
+}
+
+alias RTArr_1 = array<CS_INPUT>;
+
+struct read {
+  /* @offset(0) */
+  x_data : RTArr_1,
+}
+
+struct CB {
+  /* @offset(0) */
+  offset : f32,
+}
+
+@internal(disable_validation__binding_point_collision) @group(2) @binding(1) var<storage, read_write> write_1 : write;
+
+@internal(disable_validation__binding_point_collision) @group(2) @binding(0) var<storage, read_write> read_1 : read;
+
+@internal(disable_validation__binding_point_collision) @group(0) @binding(0) var<uniform> x_43 : CB;
+
+var<private> dtid_2 : vec3u;
+
+fn x_main_vu3_(dtid : ptr<function, vec3u>) {
+  let x_24 = (*(dtid)).x;
+  write_1.x_data[x_24].value = ((read_1.x_data[(*(dtid)).x].value1 * read_1.x_data[(*(dtid)).x].value2) + x_43.offset);
+  return;
+}
+
+fn main_1() {
+  var dtid_1 : vec3u;
+  var param : vec3u;
+  dtid_1 = dtid_2;
+  param = dtid_1;
+  x_main_vu3_(&(param));
+  return;
+}
+
+@compute @workgroup_size(1i, 1i, 1i)
+fn main(@builtin(global_invocation_id) dtid_2_param : vec3u) {
+  dtid_2 = dtid_2_param;
+  main_1();
+}

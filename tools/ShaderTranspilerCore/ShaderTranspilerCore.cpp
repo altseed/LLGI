@@ -25,6 +25,16 @@
 #include <spirv_cross/spirv_reflect.hpp>
 #endif
 
+#if (ENABLE_WEBGPU)
+#include "src/tint/api/common/binding_point.h"
+#include "src/tint/lang/wgsl/ast/transform/binding_remapper.h"
+#include "src/tint/lang/wgsl/ast/transform/manager.h"
+#include "src/tint/lang/wgsl/inspector/inspector.h"
+#include <tint/tint.h>
+#endif
+
+#include <iostream>
+
 namespace LLGI
 {
 
@@ -391,6 +401,91 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI:
 	return true;
 }
 
+SPIRVToWGSLTranspiler::SPIRVToWGSLTranspiler()
+{
+#if (ENABLE_WEBGPU)
+	tint::Initialize();
+#endif
+}
+
+SPIRVToWGSLTranspiler::~SPIRVToWGSLTranspiler()
+{
+#if (ENABLE_WEBGPU)
+	tint::Shutdown();
+#endif
+}
+
+bool SPIRVToWGSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI::ShaderStageType shaderStageType)
+{
+#if (ENABLE_WEBGPU)
+	tint::spirv::reader::Options read_options;
+	auto program = tint::spirv::reader::Read(spirv->GetData(), read_options);
+	tint::inspector::Inspector inspector(program);
+
+	// TODO : tint remapper has many bugs. Inspector and remapper breaks some shaders and export empty code without an error.
+	tint::ast::transform::BindingRemapper::BindingPoints binding_points;
+	auto entry_points = inspector.GetEntryPoints();
+	for (auto& entry_point : entry_points)
+	{
+		auto bindings = inspector.GetResourceBindings(entry_point.name);
+		for (auto& binding : bindings)
+		{
+			tint::ast::transform::BindingPoint src = {binding.bind_group, binding.binding};
+			if (binding.resource_type == tint::inspector::ResourceBinding::ResourceType::kUniformBuffer)
+			{
+				binding_points.emplace(src, tint::ast::transform::BindingPoint{0, binding.binding % 100});
+			}
+			else if (binding.resource_type == tint::inspector::ResourceBinding::ResourceType::kStorageBuffer)
+			{
+				binding_points.emplace(src, tint::ast::transform::BindingPoint{2, binding.binding % 100});
+			}
+			else if (binding.resource_type == tint::inspector::ResourceBinding::ResourceType::kReadOnlyStorageBuffer)
+			{
+				binding_points.emplace(src, tint::ast::transform::BindingPoint{1, binding.binding % 100});
+			}
+			else if (binding.resource_type == tint::inspector::ResourceBinding::ResourceType::kSampler)
+			{
+				binding_points.emplace(src, tint::ast::transform::BindingPoint{4, binding.binding % 100});
+			}
+			else if (binding.resource_type == tint::inspector::ResourceBinding::ResourceType::kSampledTexture)
+			{
+				binding_points.emplace(src, tint::ast::transform::BindingPoint{1, binding.binding % 100});
+			}
+			else
+			{
+				std::cout << "This binding is not supported." << std::endl;
+				std::cout << (int)binding.resource_type << ", " << binding.bind_group << ", " << binding.binding << std::endl;
+				binding_points.emplace(src, tint::ast::transform::BindingPoint{binding.bind_group, binding.binding});
+			}
+		}
+	}
+
+	if (!binding_points.empty())
+	{
+		tint::ast::transform::Manager manager;
+		tint::ast::transform::DataMap inputs;
+		tint::ast::transform::DataMap outputs;
+		inputs.Add<tint::ast::transform::BindingRemapper::Remappings>(
+			std::move(binding_points), tint::ast::transform::BindingRemapper::AccessControls{}, true);
+		manager.Add<tint::ast::transform::BindingRemapper>();
+		program = manager.Run(program, inputs, outputs);
+	}
+
+	tint::wgsl::writer::Options gen_options;
+	auto result = tint::wgsl::writer::Generate(program, gen_options);
+	if (!result)
+	{
+		errorCode_ = result.Failure().reason.str();
+		return false;
+	}
+
+	code_ = result->wgsl;
+	return true;
+#else
+	return false;
+#endif
+}
+
 class ReflectionCompiler : public spirv_cross::Compiler
 {
 public:
@@ -478,7 +573,8 @@ std::shared_ptr<SPIRV> SPIRVGenerator::Generate(const char* path,
 												std::vector<std::string> includeDirs,
 												std::vector<SPIRVGeneratorMacro> macros,
 												ShaderStageType shaderStageType,
-												bool isYInverted)
+												bool isYInverted,
+												bool addBindingOffset)
 {
 	std::string codeStr(code);
 	glslang::TProgram program;
@@ -506,11 +602,19 @@ std::shared_ptr<SPIRV> SPIRVGenerator::Generate(const char* path,
 	}
 
 	shader.setPreamble(macro.c_str());
-	// shader->setAutoMapBindings(true);
-	// shader->setAutoMapLocations(true);
+
+	if (addBindingOffset)
+	{
+		shader.setShiftBinding(glslang::TResourceType::EResSampler, 0);
+		shader.setShiftBinding(glslang::TResourceType::EResTexture, 100);
+		shader.setShiftBinding(glslang::TResourceType::EResImage, 200);
+		shader.setShiftBinding(glslang::TResourceType::EResUbo, 300);
+		shader.setShiftBinding(glslang::TResourceType::EResSsbo, 400);
+		shader.setShiftBinding(glslang::TResourceType::EResUav, 500);
+	}
 
 	shader.setStrings(shaderStrings, 1);
-	const auto messages = static_cast<EShMessages>(EShMsgSpvRules | EShMsgVulkanRules | EShMsgReadHlsl | EShOptFull);
+	const auto messages = static_cast<EShMessages>(EShMsgSpvRules | EShMsgVulkanRules | EShMsgReadHlsl | EShOptFull | EShMsgHlslOffsets);
 
 	DirStackFileIncluder includer(onLoad_);
 	includer.pushExternalLocalDirectory(dirnameOf(path));
@@ -531,6 +635,14 @@ std::shared_ptr<SPIRV> SPIRVGenerator::Generate(const char* path,
 	if (!program.link(messages))
 	{
 		return std::make_shared<SPIRV>(program.getInfoLog());
+	}
+
+	if (addBindingOffset)
+	{
+		if (!program.mapIO())
+		{
+			return std::make_shared<SPIRV>(program.getInfoLog());
+		}
 	}
 
 	std::vector<unsigned int> spirv;

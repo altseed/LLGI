@@ -11,6 +11,7 @@ if(UNIX AND NOT APPLE)
   set(LINUX TRUE)
 endif()
 
+option(BUILD_WEBGPU "build webgpu backend" OFF)
 option(BUILD_VULKAN "build vulkan" OFF)
 option(BUILD_VULKAN_COMPILER "build vulkan compiler" OFF)
 option(BUILD_TEST "build test" OFF)
@@ -27,7 +28,7 @@ option(SPIRVCROSS_WITHOUT_INSTALL "Compile with spirv-cross without install"
        OFF)
 option(USE_CREATE_COMPILER_FUNCTION "Whether LLGI::CreateCompiler is used." ON)
 
-if(LINUX)
+if(LINUX AND NOT BUILD_WEBGPU)
   set(BUILD_VULKAN TRUE)
 endif()
 
@@ -241,6 +242,10 @@ if(BUILD_VULKAN)
   if(BUILD_VULKAN_COMPILER)
     add_compile_definitions(ENABLE_VULKAN_COMPILER)
   endif()
+endif()
+
+if(BUILD_WEBGPU)
+  add_subdirectory(thirdparty/dawn/)
 endif()
 
 if(APPLE)

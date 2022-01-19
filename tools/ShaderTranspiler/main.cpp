@@ -11,13 +11,13 @@ enum class OutputType
 	VULKAN_GLSL,
 	MSL,
 	HLSL,
+	WGSL,
 	SPV,
 	Max,
 };
 
 int main(int argc, char* argv[])
 {
-
 	std::vector<std::string> args;
 
 	for (int i = 1; i < argc; i++)
@@ -72,6 +72,11 @@ int main(int argc, char* argv[])
 		else if (args[i] == "-V")
 		{
 			outputType = OutputType::VULKAN_GLSL;
+			i += 1;
+		}
+		else if (args[i] == "-W")
+		{
+			outputType = OutputType::WGSL;
 			i += 1;
 		}
 		else if (args[i] == "-S")
@@ -180,7 +185,7 @@ int main(int argc, char* argv[])
 
 	auto generator = std::make_shared<LLGI::SPIRVGenerator>(loadFunc);
 
-	auto spirv = generator->Generate(inputPath.c_str(), code.c_str(), includeDir, macros, shaderStage, outputType == OutputType::VULKAN_GLSL);
+	auto spirv = generator->Generate(inputPath.c_str(), code.c_str(), includeDir, macros, shaderStage, outputType == OutputType::VULKAN_GLSL, outputType == OutputType::WGSL);
 
 	if (spirv->GetData().size() == 0)
 	{
@@ -205,6 +210,10 @@ int main(int argc, char* argv[])
 	else if (outputType == OutputType::HLSL)
 	{
 		transpiler = std::make_shared<LLGI::SPIRVToHLSLTranspiler>(shaderModel != 0 ? shaderModel : 40, isDX12);
+	}
+	else if (outputType == OutputType::WGSL)
+	{
+		transpiler = std::make_shared<LLGI::SPIRVToWGSLTranspiler>();
 	}
 
 	std::cout << inputPath << " -> " << outputPath << " ShaderModel=" << shaderModel << std::endl;
@@ -236,7 +245,7 @@ int main(int argc, char* argv[])
 	}
 	catch (const std::runtime_error& e)
 	{
-		std::cout << e.what() << std::endl;
+		std::cout << "Error : " << e.what() << std::endl;
 		return 0;
 	}
 
@@ -245,6 +254,12 @@ int main(int argc, char* argv[])
 	{
 		std::cout << "Invald output" << std::endl;
 		return 0;
+	}
+
+	if (transpiler->GetCode() == "")
+	{
+		std::cout << "No code is generated." << std::endl;
+		return 1;
 	}
 
 	outputfile << transpiler->GetCode();

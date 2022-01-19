@@ -95,6 +95,14 @@ public:
 	bool Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI::ShaderStageType shaderStageType) override;
 };
 
+class SPIRVToWGSLTranspiler : public SPIRVTranspiler
+{
+public:
+	SPIRVToWGSLTranspiler();
+	~SPIRVToWGSLTranspiler() override;
+	bool Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI::ShaderStageType shaderStageType) override;
+};
+
 class SPIRVReflection : public SPIRVTranspiler
 {
 public:
@@ -133,7 +141,8 @@ public:
 									std::vector<std::string> includeDirs,
 									std::vector<SPIRVGeneratorMacro> macros,
 									ShaderStageType shaderStageType,
-									bool isYInverted);
+									bool isYInverted,
+									bool addBindingOffset);
 };
 
 } // namespace LLGI
