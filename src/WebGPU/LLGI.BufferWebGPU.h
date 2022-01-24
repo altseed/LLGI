@@ -8,7 +8,13 @@ namespace LLGI
     
 class BufferWebGPU : public Buffer
 {
-    wgpu::Buffer* buffer_ = nullptr;
+    wgpu::Buffer buffer_ = nullptr;
+	int32_t size_ = 0;
+
+public:
+	bool Initialize(wgpu::Device& device, const BufferUsageType usage, const int32_t size);
+
+	int32_t GetSize() override;
 };
 
 /*
