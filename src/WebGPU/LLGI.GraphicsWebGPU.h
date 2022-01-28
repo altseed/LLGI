@@ -9,9 +9,13 @@ namespace LLGI
 
 class GraphicsWebGPU : public Graphics
 {
-    
-public:
+private:
+	wgpu::Device device_;
+	wgpu::Queue queue_;
 
+public:
+	wgpu::Device& GetDevice() { return device_; }
+	wgpu::Queue& GetQueue() { return queue_; }
 };
 
-}
+} // namespace LLGI

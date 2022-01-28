@@ -3,6 +3,99 @@
 namespace LLGI
 {
 
+wgpu::CompareFunction Convert(CompareFuncType type)
+{
+	if (type == CompareFuncType::Always)
+		return wgpu::CompareFunction::Always;
+
+	if (type == CompareFuncType::Equal)
+		return wgpu::CompareFunction::Equal;
+
+	if (type == CompareFuncType::Greater)
+		return wgpu::CompareFunction::Greater;
+
+	if (type == CompareFuncType::GreaterEqual)
+		return wgpu::CompareFunction::GreaterEqual;
+
+	if (type == CompareFuncType::Less)
+		return wgpu::CompareFunction::Less;
+
+	if (type == CompareFuncType::LessEqual)
+		return wgpu::CompareFunction::LessEqual;
+
+	if (type == CompareFuncType::Never)
+		return wgpu::CompareFunction::Never;
+
+	if (type == CompareFuncType::NotEqual)
+		return wgpu::CompareFunction::NotEqual;
+
+	throw "Not implemented";
+}
+
+wgpu::CullMode Convert(CullingMode mode)
+{
+	if (mode == CullingMode::Clockwise)
+		return wgpu::CullMode::Back;
+
+	if (mode == CullingMode::CounterClockwise)
+		return wgpu::CullMode::Front;
+
+	if (mode == CullingMode::DoubleSide)
+		return wgpu::CullMode::None;
+
+	throw "Not implemented";
+}
+
+wgpu::VertexFormat Convert(VertexLayoutFormat format)
+{
+	if (format == VertexLayoutFormat::R32_FLOAT)
+		return wgpu::VertexFormat::Float32;
+
+	if (format == VertexLayoutFormat::R32G32_FLOAT)
+		return wgpu::VertexFormat::Float32x2;
+
+	if (format == VertexLayoutFormat::R32G32B32_FLOAT)
+		return wgpu::VertexFormat::Float32x3;
+
+	if (format == VertexLayoutFormat::R32G32B32_FLOAT)
+		return wgpu::VertexFormat::Float32x3;
+
+	if (format == VertexLayoutFormat::R8G8B8A8_UNORM)
+		return wgpu::VertexFormat::Unorm8x4;
+
+	if (format == VertexLayoutFormat::R8G8B8A8_UINT)
+		return wgpu::VertexFormat::Uint8x4;
+
+	throw "Not implemented";
+}
+
+wgpu::StencilOperation Convert(StencilOperatorType type)
+{
+	if(type == StencilOperatorType::Keep)
+		return wgpu::StencilOperation::Keep;
+
+	if(type == StencilOperatorType::Zero)
+		return wgpu::StencilOperation::Zero;
+
+	if(type == StencilOperatorType::Replace)
+		return wgpu::StencilOperation::Replace;
+
+	if(type == StencilOperatorType::Invert)
+		return wgpu::StencilOperation::Invert;
+
+	if(type == StencilOperatorType::IncClamp)
+		return wgpu::StencilOperation::IncrementClamp;
+
+	if(type == StencilOperatorType::DecClamp)
+		return wgpu::StencilOperation::DecrementClamp;
+
+	if(type == StencilOperatorType::IncRepeat)
+		return wgpu::StencilOperation::IncrementWrap;
+
+	if(type == StencilOperatorType::DecRepeat)
+		return wgpu::StencilOperation::DecrementWrap;
+}
+
 wgpu::TextureFormat ConvertFormat(TextureFormatType format)
 {
 	if (format == TextureFormatType::R8G8B8A8_UNORM)
