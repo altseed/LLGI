@@ -8,6 +8,8 @@
 namespace LLGI
 {
 
+wgpu::PrimitiveTopology Convert(TopologyType type);
+
 wgpu::CompareFunction Convert(CompareFuncType type);
 
 wgpu::CullMode Convert(CullingMode mode);
@@ -19,5 +21,7 @@ wgpu::StencilOperation Convert(StencilOperatorType type);
 wgpu::TextureFormat ConvertFormat(TextureFormatType format);
 
 TextureFormatType ConvertFormat(wgpu::TextureFormat format);
+
+int32_t GetSize(VertexLayoutFormat format);
 
 } // namespace std

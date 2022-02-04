@@ -3,6 +3,18 @@
 namespace LLGI
 {
 
+wgpu::PrimitiveTopology Convert(TopologyType type)
+{
+	if (type == TopologyType::Point)
+		return wgpu::PrimitiveTopology::PointList;
+
+	if (type == TopologyType::Line)
+		return wgpu::PrimitiveTopology::LineList;
+
+	if (type == TopologyType::Triangle)
+		return wgpu::PrimitiveTopology::TriangleList;
+}
+
 wgpu::CompareFunction Convert(CompareFuncType type)
 {
 	if (type == CompareFuncType::Always)
@@ -71,28 +83,28 @@ wgpu::VertexFormat Convert(VertexLayoutFormat format)
 
 wgpu::StencilOperation Convert(StencilOperatorType type)
 {
-	if(type == StencilOperatorType::Keep)
+	if (type == StencilOperatorType::Keep)
 		return wgpu::StencilOperation::Keep;
 
-	if(type == StencilOperatorType::Zero)
+	if (type == StencilOperatorType::Zero)
 		return wgpu::StencilOperation::Zero;
 
-	if(type == StencilOperatorType::Replace)
+	if (type == StencilOperatorType::Replace)
 		return wgpu::StencilOperation::Replace;
 
-	if(type == StencilOperatorType::Invert)
+	if (type == StencilOperatorType::Invert)
 		return wgpu::StencilOperation::Invert;
 
-	if(type == StencilOperatorType::IncClamp)
+	if (type == StencilOperatorType::IncClamp)
 		return wgpu::StencilOperation::IncrementClamp;
 
-	if(type == StencilOperatorType::DecClamp)
+	if (type == StencilOperatorType::DecClamp)
 		return wgpu::StencilOperation::DecrementClamp;
 
-	if(type == StencilOperatorType::IncRepeat)
+	if (type == StencilOperatorType::IncRepeat)
 		return wgpu::StencilOperation::IncrementWrap;
 
-	if(type == StencilOperatorType::DecRepeat)
+	if (type == StencilOperatorType::DecRepeat)
 		return wgpu::StencilOperation::DecrementWrap;
 }
 
@@ -200,6 +212,39 @@ TextureFormatType ConvertFormat(wgpu::TextureFormat format)
 		return TextureFormatType::Unknown;
 
 	throw "Not implemented";
+}
+
+int32_t GetSize(VertexLayoutFormat format)
+{
+	if (format == VertexLayoutFormat::R32G32B32_FLOAT)
+	{
+		return sizeof(float) * 3;
+	}
+	else if (format == VertexLayoutFormat::R32G32B32A32_FLOAT)
+	{
+		return sizeof(float) * 4;
+	}
+	else if (format == VertexLayoutFormat::R32_FLOAT)
+	{
+		return sizeof(float) * 1;
+	}
+	else if (format == VertexLayoutFormat::R32G32_FLOAT)
+	{
+		return sizeof(float) * 2;
+	}
+	else if (format == VertexLayoutFormat::R8G8B8A8_UINT)
+	{
+		return sizeof(float);
+	}
+	else if (format == VertexLayoutFormat::R8G8B8A8_UNORM)
+	{
+		return sizeof(float);
+	}
+	else
+	{
+		Log(LogType::Error, "Unimplemented VertexLoayoutFormat");
+		return 0;
+	}
 }
 
 } // namespace LLGI
