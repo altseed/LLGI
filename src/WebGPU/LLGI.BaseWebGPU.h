@@ -8,9 +8,15 @@
 namespace LLGI
 {
 
+wgpu::BlendOperation Convert(BlendEquationType type);
+
+wgpu::BlendFactor Convert(BlendFuncType type);
+
 wgpu::PrimitiveTopology Convert(TopologyType type);
 
 wgpu::CompareFunction Convert(CompareFuncType type);
+
+wgpu::CompareFunction Convert(DepthFuncType type);
 
 wgpu::CullMode Convert(CullingMode mode);
 

@@ -1,5 +1,6 @@
 #include "LLGI.PipelineStateWebGPU.h"
 #include "LLGI.ShaderWebGPU.h"
+#include "LLGI.RenderPassPipelineStateWebGPU.h"
 #include <limits>
 
 namespace LLGI
@@ -63,8 +64,110 @@ bool PipelineStateWebGPU::Compile()
 
 	auto pixelShader = static_cast<ShaderWebGPU*>(shaders_[static_cast<int>(ShaderStageType::Pixel)]);
 
+	// TODO : support blend enabled
 	wgpu::BlendState blendState;
-	// blendState.color.srcFactor = Convert(BlendSrcFunc);
+	blendState.color.srcFactor = Convert(BlendSrcFunc);
+	blendState.color.dstFactor = Convert(BlendDstFunc);
+	blendState.color.operation = Convert(BlendEquationRGB);
+	blendState.color.srcFactor = Convert(BlendSrcFuncAlpha);
+	blendState.color.dstFactor = Convert(BlendDstFuncAlpha);
+	blendState.color.operation = Convert(BlendEquationAlpha);
+
+	std::array<wgpu::ColorTargetState, RenderTargetMax> colorTargetStates;
+
+	for(size_t i = 0; i < renderPassPipelineState_->Key.RenderTargetFormats.size(); i++) {
+		colorTargetStates[i].blend = &blendState;
+		colorTargetStates[i].format = ConvertFormat(renderPassPipelineState_->Key.RenderTargetFormats.at(i)); 
+		colorTargetStates[i].writeMask = wgpu::ColorWriteMask::All;
+	}
+
+	wgpu::FragmentState fragmentState = {};
+	fragmentState.targetCount = static_cast<uint32_t>(renderPassPipelineState_->Key.RenderTargetFormats.size());
+	fragmentState.targets = colorTargetStates.data();
+	fragmentState.entryPoint = entryPointName;
+	fragmentState.module = pixelShader->GetShaderModule();
+	
+	desc.fragment = &fragmentState;
+
+	wgpu::DepthStencilState depthStencilState = {};
+	depthStencilState.depthWriteEnabled = IsDepthWriteEnabled;
+
+	if(IsDepthTestEnabled)
+	{
+		depthStencilState.depthCompare = Convert(DepthFunc);
+	}
+	else
+	{
+		depthStencilState.depthCompare = wgpu::CompareFunction::Always;
+	}
+
+	/*
+	// setup a depthstencil
+		vk::PipelineDepthStencilStateCreateInfo depthStencilInfo;
+
+		// DepthTest flag must be enabled because DepthWrite and Stencil are depended on DepthTestFlag
+		depthStencilInfo.depthTestEnable = true;
+
+		depthStencilInfo.depthWriteEnable = IsDepthWriteEnabled;
+
+		std::array<vk::CompareOp, 10> compareOps;
+		compareOps[static_cast<int>(DepthFuncType::Never)] = vk::CompareOp::eNever;
+		compareOps[static_cast<int>(DepthFuncType::Less)] = vk::CompareOp::eLess;
+		compareOps[static_cast<int>(DepthFuncType::Equal)] = vk::CompareOp::eEqual;
+		compareOps[static_cast<int>(DepthFuncType::LessEqual)] = vk::CompareOp::eLessOrEqual;
+		compareOps[static_cast<int>(DepthFuncType::Greater)] = vk::CompareOp::eGreater;
+		compareOps[static_cast<int>(DepthFuncType::NotEqual)] = vk::CompareOp::eNotEqual;
+		compareOps[static_cast<int>(DepthFuncType::GreaterEqual)] = vk::CompareOp::eGreaterOrEqual;
+		compareOps[static_cast<int>(DepthFuncType::Always)] = vk::CompareOp::eAlways;
+
+		depthStencilInfo.depthCompareOp = compareOps[static_cast<int>(DepthFunc)];
+
+		if (!IsDepthTestEnabled)
+		{
+			depthStencilInfo.depthCompareOp = vk::CompareOp::eAlways;
+		}
+
+		vk::StencilOpState stencil;
+		depthStencilInfo.stencilTestEnable = true;
+
+		std::array<vk::StencilOp, 8> stencilOps;
+		stencilOps[static_cast<int>(StencilOperatorType::Keep)] = vk::StencilOp::eKeep;
+		stencilOps[static_cast<int>(StencilOperatorType::Zero)] = vk::StencilOp::eZero;
+		stencilOps[static_cast<int>(StencilOperatorType::Replace)] = vk::StencilOp::eReplace;
+		stencilOps[static_cast<int>(StencilOperatorType::IncClamp)] = vk::StencilOp::eIncrementAndClamp;
+		stencilOps[static_cast<int>(StencilOperatorType::DecClamp)] = vk::StencilOp::eDecrementAndClamp;
+		stencilOps[static_cast<int>(StencilOperatorType::Invert)] = vk::StencilOp::eInvert;
+		stencilOps[static_cast<int>(StencilOperatorType::IncRepeat)] = vk::StencilOp::eIncrementAndWrap;
+		stencilOps[static_cast<int>(StencilOperatorType::DecRepeat)] = vk::StencilOp::eDecrementAndWrap;
+
+		if (IsStencilTestEnabled)
+		{
+			stencil.depthFailOp = stencilOps[static_cast<int>(StencilDepthFailOp)];
+			stencil.failOp = stencilOps[static_cast<int>(StencilFailOp)];
+			stencil.passOp = stencilOps[static_cast<int>(StencilPassOp)];
+			stencil.compareOp = compareOps[static_cast<int>(StencilCompareFunc)];
+			stencil.writeMask = StencilWriteMask;
+			stencil.compareMask = StencilReadMask;
+			stencil.reference = StencilRef;
+		}
+		else
+		{
+			stencil.depthFailOp = vk::StencilOp::eKeep;
+			stencil.failOp = vk::StencilOp::eKeep;
+			stencil.passOp = vk::StencilOp::eReplace;
+			stencil.compareOp = vk::CompareOp::eAlways;
+			stencil.writeMask = 0xff;
+			stencil.compareMask = 0xff;
+			stencil.reference = 0xff;
+		}
+
+		depthStencilInfo.front = stencil;
+		depthStencilInfo.back = stencil;
+
+		depthStencilInfo.minDepthBounds = 0.0f;
+		depthStencilInfo.maxDepthBounds = 1.0f;
+		depthStencilInfo.depthBoundsTestEnable = false;
+	*/
 
 	throw "Unimpleneted";
 
@@ -134,71 +237,7 @@ bool PipelineStateWebGPU::Compile()
 
 		graphicsPipelineInfo.pMultisampleState = &multisampleStateInfo;
 
-		// setup a depthstencil
-		vk::PipelineDepthStencilStateCreateInfo depthStencilInfo;
-
-		// DepthTest flag must be enabled because DepthWrite and Stencil are depended on DepthTestFlag
-		depthStencilInfo.depthTestEnable = true;
-
-		depthStencilInfo.depthWriteEnable = IsDepthWriteEnabled;
-
-		std::array<vk::CompareOp, 10> compareOps;
-		compareOps[static_cast<int>(DepthFuncType::Never)] = vk::CompareOp::eNever;
-		compareOps[static_cast<int>(DepthFuncType::Less)] = vk::CompareOp::eLess;
-		compareOps[static_cast<int>(DepthFuncType::Equal)] = vk::CompareOp::eEqual;
-		compareOps[static_cast<int>(DepthFuncType::LessEqual)] = vk::CompareOp::eLessOrEqual;
-		compareOps[static_cast<int>(DepthFuncType::Greater)] = vk::CompareOp::eGreater;
-		compareOps[static_cast<int>(DepthFuncType::NotEqual)] = vk::CompareOp::eNotEqual;
-		compareOps[static_cast<int>(DepthFuncType::GreaterEqual)] = vk::CompareOp::eGreaterOrEqual;
-		compareOps[static_cast<int>(DepthFuncType::Always)] = vk::CompareOp::eAlways;
-
-		depthStencilInfo.depthCompareOp = compareOps[static_cast<int>(DepthFunc)];
-
-		if (!IsDepthTestEnabled)
-		{
-			depthStencilInfo.depthCompareOp = vk::CompareOp::eAlways;
-		}
-
-		vk::StencilOpState stencil;
-		depthStencilInfo.stencilTestEnable = true;
-
-		std::array<vk::StencilOp, 8> stencilOps;
-		stencilOps[static_cast<int>(StencilOperatorType::Keep)] = vk::StencilOp::eKeep;
-		stencilOps[static_cast<int>(StencilOperatorType::Zero)] = vk::StencilOp::eZero;
-		stencilOps[static_cast<int>(StencilOperatorType::Replace)] = vk::StencilOp::eReplace;
-		stencilOps[static_cast<int>(StencilOperatorType::IncClamp)] = vk::StencilOp::eIncrementAndClamp;
-		stencilOps[static_cast<int>(StencilOperatorType::DecClamp)] = vk::StencilOp::eDecrementAndClamp;
-		stencilOps[static_cast<int>(StencilOperatorType::Invert)] = vk::StencilOp::eInvert;
-		stencilOps[static_cast<int>(StencilOperatorType::IncRepeat)] = vk::StencilOp::eIncrementAndWrap;
-		stencilOps[static_cast<int>(StencilOperatorType::DecRepeat)] = vk::StencilOp::eDecrementAndWrap;
-
-		if (IsStencilTestEnabled)
-		{
-			stencil.depthFailOp = stencilOps[static_cast<int>(StencilDepthFailOp)];
-			stencil.failOp = stencilOps[static_cast<int>(StencilFailOp)];
-			stencil.passOp = stencilOps[static_cast<int>(StencilPassOp)];
-			stencil.compareOp = compareOps[static_cast<int>(StencilCompareFunc)];
-			stencil.writeMask = StencilWriteMask;
-			stencil.compareMask = StencilReadMask;
-			stencil.reference = StencilRef;
-		}
-		else
-		{
-			stencil.depthFailOp = vk::StencilOp::eKeep;
-			stencil.failOp = vk::StencilOp::eKeep;
-			stencil.passOp = vk::StencilOp::eReplace;
-			stencil.compareOp = vk::CompareOp::eAlways;
-			stencil.writeMask = 0xff;
-			stencil.compareMask = 0xff;
-			stencil.reference = 0xff;
-		}
-
-		depthStencilInfo.front = stencil;
-		depthStencilInfo.back = stencil;
-
-		depthStencilInfo.minDepthBounds = 0.0f;
-		depthStencilInfo.maxDepthBounds = 1.0f;
-		depthStencilInfo.depthBoundsTestEnable = false;
+		
 
 		graphicsPipelineInfo.pDepthStencilState = &depthStencilInfo;
 
@@ -247,19 +286,6 @@ bool PipelineStateWebGPU::Compile()
 				blendInfo.blendEnable = false;
 			}
 		}
-
-		vk::PipelineColorBlendStateCreateInfo colorBlendInfo;
-		colorBlendInfo.logicOpEnable = VK_FALSE;
-		colorBlendInfo.logicOp = vk::LogicOp::eCopy;
-		colorBlendInfo.attachmentCount = renderPassPipelineState->RenderTargetCount;
-		colorBlendInfo.pAttachments = blendInfos.data();
-		colorBlendInfo.blendConstants[0] = 0.0f;
-		colorBlendInfo.blendConstants[1] = 0.0f;
-		colorBlendInfo.blendConstants[2] = 0.0f;
-		colorBlendInfo.blendConstants[3] = 0.0f;
-
-		graphicsPipelineInfo.pColorBlendState = &colorBlendInfo;
-
 		// dynamic state
 		vk::DynamicState dynamicStates[] = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
 

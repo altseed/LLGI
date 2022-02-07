@@ -3,6 +3,48 @@
 namespace LLGI
 {
 
+wgpu::BlendOperation Convert(BlendEquationType type)
+{
+	if (type == BlendEquationType::Add)
+		return wgpu::BlendOperation::Add;
+	if (type == BlendEquationType::Max)
+		return wgpu::BlendOperation::Max;
+	if (type == BlendEquationType::Min)
+		return wgpu::BlendOperation::Min;
+	if (type == BlendEquationType::ReverseSub)
+		return wgpu::BlendOperation::ReverseSubtract;
+	if (type == BlendEquationType::Sub)
+		return wgpu::BlendOperation::Subtract;
+
+	throw "Not implemented";
+}
+
+wgpu::BlendFactor Convert(BlendFuncType type)
+{
+	if (type == BlendFuncType::Zero)
+		return wgpu::BlendFactor::Zero;
+	if (type == BlendFuncType::One)
+		return wgpu::BlendFactor::One;
+	if (type == BlendFuncType::SrcColor)
+		return wgpu::BlendFactor::Src;
+	if (type == BlendFuncType::OneMinusSrcColor)
+		return wgpu::BlendFactor::OneMinusSrc;
+	if (type == BlendFuncType::SrcAlpha)
+		return wgpu::BlendFactor::SrcAlpha;
+	if (type == BlendFuncType::OneMinusSrcAlpha)
+		return wgpu::BlendFactor::OneMinusSrcAlpha;
+	if (type == BlendFuncType::DstAlpha)
+		return wgpu::BlendFactor::DstAlpha;
+	if (type == BlendFuncType::OneMinusDstAlpha)
+		return wgpu::BlendFactor::OneMinusDstAlpha;
+	if (type == BlendFuncType::DstColor)
+		return wgpu::BlendFactor::Dst;
+	if (type == BlendFuncType::OneMinusDstColor)
+		return wgpu::BlendFactor::OneMinusDst;
+
+	throw "Not implemented";
+}
+
 wgpu::PrimitiveTopology Convert(TopologyType type)
 {
 	if (type == TopologyType::Point)
@@ -13,6 +55,8 @@ wgpu::PrimitiveTopology Convert(TopologyType type)
 
 	if (type == TopologyType::Triangle)
 		return wgpu::PrimitiveTopology::TriangleList;
+
+	throw "Not implemented";
 }
 
 wgpu::CompareFunction Convert(CompareFuncType type)
@@ -43,6 +87,36 @@ wgpu::CompareFunction Convert(CompareFuncType type)
 
 	throw "Not implemented";
 }
+
+wgpu::CompareFunction Convert(DepthFuncType type)
+{
+	if (type == DepthFuncType::Always)
+		return wgpu::CompareFunction::Always;
+
+	if (type == DepthFuncType::Equal)
+		return wgpu::CompareFunction::Equal;
+
+	if (type == DepthFuncType::Greater)
+		return wgpu::CompareFunction::Greater;
+
+	if (type == DepthFuncType::GreaterEqual)
+		return wgpu::CompareFunction::GreaterEqual;
+
+	if (type == DepthFuncType::Less)
+		return wgpu::CompareFunction::Less;
+
+	if (type == DepthFuncType::LessEqual)
+		return wgpu::CompareFunction::LessEqual;
+
+	if (type == DepthFuncType::Never)
+		return wgpu::CompareFunction::Never;
+
+	if (type == DepthFuncType::NotEqual)
+		return wgpu::CompareFunction::NotEqual;
+
+	throw "Not implemented";
+}
+
 
 wgpu::CullMode Convert(CullingMode mode)
 {
