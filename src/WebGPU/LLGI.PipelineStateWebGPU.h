@@ -10,10 +10,12 @@ class PipelineStateWebGPU : public PipelineState
 {
 	std::array<Shader*, static_cast<int>(ShaderStageType::Max)> shaders_;
 
+	wgpu::Device device_;
+
     wgpu::RenderPipeline renderPipeline_;
 
 public:
-	PipelineStateWebGPU();
+	PipelineStateWebGPU(wgpu::Device device);
 	~PipelineStateWebGPU() override;
 	
 	void SetShader(ShaderStageType stage, Shader* shader) override;
