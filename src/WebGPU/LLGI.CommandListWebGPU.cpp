@@ -1,4 +1,6 @@
 #include "LLGI.CommandListWebGPU.h"
+#include "LLGI.BufferWebGPU.h"
+#include "LLGI.PipelineStateWebGPU.h"
 #include "LLGI.RenderPassWebGPU.h"
 #include "LLGI.TextureWebGPU.h"
 
@@ -26,11 +28,6 @@ void CommandListWebGPU::BeginRenderPass(RenderPass* renderPass)
 	const auto& desc = rp->GetDescriptor();
 
 	renderPassEncorder_ = commandEncorder_.BeginRenderPass(&desc);
-
-	// TODO
-	// Set render targets
-	throw "Not implemented";
-
 	CommandList::BeginRenderPass(renderPass);
 }
 
@@ -45,7 +42,40 @@ void CommandListWebGPU::EndRenderPass()
 	throw "Not implemented";
 }
 
-void CommandListWebGPU::Draw(int32_t primitiveCount, int32_t instanceCount) { throw "Not implemented"; }
+void CommandListWebGPU::Draw(int32_t primitiveCount, int32_t instanceCount)
+{
+
+	BindingVertexBuffer bvb;
+	BindingIndexBuffer bib;
+	PipelineState* bpip = nullptr;
+
+	const int mipmapFilter = 1;
+
+	bool isVBDirtied = false;
+	bool isIBDirtied = false;
+	bool isPipDirtied = false;
+
+	GetCurrentVertexBuffer(bvb, isVBDirtied);
+	GetCurrentIndexBuffer(bib, isIBDirtied);
+	GetCurrentPipelineState(bpip, isPipDirtied);
+
+	assert(bvb.vertexBuffer != nullptr);
+	assert(bib.indexBuffer != nullptr);
+	assert(bpip != nullptr);
+
+	auto vb = static_cast<BufferWebGPU*>(bvb.vertexBuffer);
+	auto ib = static_cast<BufferWebGPU*>(bib.indexBuffer);
+	auto pip = static_cast<PipelineStateWebGPU*>(bpip);
+
+	// renderPassEncorder_.SetViewport
+	// renderPassEncorder_.SetVertexBuffer
+	// renderPassEncorder_.SetIndexBuffer
+	// renderPassEncorder_.SetBindGroup
+	// renderPassEncorder_.SetStencilReference
+	// renderPassEncorder_.DrawIndexed
+
+	throw "Not implemented";
+}
 
 void CommandListWebGPU::SetScissor(int32_t x, int32_t y, int32_t width, int32_t height)
 {

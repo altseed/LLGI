@@ -12,11 +12,8 @@ class RenderPassWebGPU : public RenderPass
 	wgpu::RenderPassDescriptor descriptor_;
 
 public:
-	RenderPassWebGPU(TextureWebGPU** textures,
-					 int numTextures,
-					 TextureWebGPU* depthTexture,
-					 TextureWebGPU* resolvedRenderTexture,
-					 TextureWebGPU* resolvedDepthTexture);
+	bool
+	Initialize(Texture** textures, int textureCount, Texture* depthTexture, Texture* resolvedRenderTexture, Texture* resolvedDepthTexture);
 
 	const wgpu::RenderPassDescriptor& GetDescriptor() const { return descriptor_; }
 };

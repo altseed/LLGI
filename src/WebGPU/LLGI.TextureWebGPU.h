@@ -19,6 +19,8 @@ public:
 	const TextureParameter& GetParameter() const { return parameter_; }
 
 	wgpu::Texture GetTexture() const { return texture_; }
+
+	wgpu::TextureView GetTextureView() const { return textureView_; }
 };
 
 } // namespace LLGI
