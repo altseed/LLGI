@@ -12,17 +12,17 @@ class PipelineStateWebGPU : public PipelineState
 
 	wgpu::Device device_;
 
-    wgpu::RenderPipeline renderPipeline_;
+	wgpu::RenderPipeline renderPipeline_;
 
 public:
 	PipelineStateWebGPU(wgpu::Device device);
 	~PipelineStateWebGPU() override;
-	
+
 	void SetShader(ShaderStageType stage, Shader* shader) override;
 
-	void SetRenderPassPipelineState(RenderPassPipelineState* renderPassPipelineState) override;
-
 	bool Compile() override;
+
+	wgpu::RenderPipeline GetRenderPipeline() { return renderPipeline_; }
 };
 
-}
+} // namespace LLGI

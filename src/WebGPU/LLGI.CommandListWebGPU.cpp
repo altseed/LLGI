@@ -6,6 +6,44 @@
 
 namespace LLGI
 {
+
+CommandListWebGPU::CommandListWebGPU(wgpu::Device device) {
+
+	for (int w = 0; w < 2; w++)
+	{
+		for (int f = 0; f < 2; f++)
+		{
+			vk::Filter filters[2];
+			filters[0] = vk::Filter::eNearest;
+			filters[1] = vk::Filter::eLinear;
+
+			vk::SamplerAddressMode am[2];
+			am[0] = vk::SamplerAddressMode::eClampToEdge;
+			am[1] = vk::SamplerAddressMode::eRepeat;
+
+			vk::SamplerCreateInfo samplerInfo;
+			samplerInfo.magFilter = filters[f];
+			samplerInfo.minFilter = filters[f];
+			samplerInfo.anisotropyEnable = false;
+			samplerInfo.maxAnisotropy = 1;
+			samplerInfo.addressModeU = am[w];
+			samplerInfo.addressModeV = am[w];
+			samplerInfo.addressModeW = am[w];
+			samplerInfo.borderColor = vk::BorderColor::eIntOpaqueBlack;
+			samplerInfo.unnormalizedCoordinates = false;
+			samplerInfo.compareEnable = false;
+			samplerInfo.compareOp = vk::CompareOp::eAlways;
+			samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+			samplerInfo.mipLodBias = 0.0f;
+			samplerInfo.minLod = 0.0f;
+			samplerInfo.maxLod = 8.0f;
+
+			samplers_[w][f] = graphics_->GetDevice().createSampler(samplerInfo);
+		}
+	}
+
+}
+
 void CommandListWebGPU::Begin()
 {
 	wgpu::CommandEncoderDescriptor desc = {};
@@ -28,6 +66,8 @@ void CommandListWebGPU::BeginRenderPass(RenderPass* renderPass)
 	const auto& desc = rp->GetDescriptor();
 
 	renderPassEncorder_ = commandEncorder_.BeginRenderPass(&desc);
+	renderPassEncorder_.SetViewport(0, 0, rp->GetScreenSize().X, rp->GetScreenSize().Y, 0.0f, 1.0f);
+
 	CommandList::BeginRenderPass(renderPass);
 }
 
@@ -67,14 +107,95 @@ void CommandListWebGPU::Draw(int32_t primitiveCount, int32_t instanceCount)
 	auto ib = static_cast<BufferWebGPU*>(bib.indexBuffer);
 	auto pip = static_cast<PipelineStateWebGPU*>(bpip);
 
-	// renderPassEncorder_.SetViewport
-	// renderPassEncorder_.SetVertexBuffer
-	// renderPassEncorder_.SetIndexBuffer
-	// renderPassEncorder_.SetBindGroup
-	// renderPassEncorder_.SetStencilReference
-	// renderPassEncorder_.DrawIndexed
+	if (vb != nullptr)
+	{
+		renderPassEncorder_.SetVertexBuffer(0, vb->GetBuffer(), bvb.offset, bvb.vertexBuffer->GetSize() - bvb.offset);
+	}
 
-	throw "Not implemented";
+	if (ib != nullptr)
+	{
+		const auto format = bib.stride == 2 ? wgpu::IndexFormat::Uint16 : wgpu::IndexFormat::Uint32;
+		renderPassEncorder_.SetIndexBuffer(ib->GetBuffer(), format, bib.offset, ib->GetSize() - bib.offset);
+	}
+
+	if (pip != nullptr)
+	{
+		renderPassEncorder_.SetPipeline(pip->GetRenderPipeline());
+		renderPassEncorder_.SetStencilReference(pip->StencilRef);
+	}
+
+	throw "Not implemented (Constant buffer)";
+
+	wgpu::BindGroupLayoutDescriptor layoutDesc = {};
+	std::array<wgpu::BindGroupLayoutEntry, NumTexture * 2> layoutEntries;
+	throw "Not implemented (Cache layout)";
+
+	for (uint32_t i = 0; i < NumTexture; i++)
+	{
+		layoutEntries[i].visibility = wgpu::ShaderStage::Vertex;
+		layoutEntries[i].binding = i;
+		layoutEntries[i + NumTexture].visibility = wgpu::ShaderStage::Fragment;
+		layoutEntries[i + NumTexture].binding = i;
+	}
+
+	layoutDesc.entryCount = NumTexture * 2;
+	layoutDesc.entries = layoutEntries.data();
+
+	auto bindLayout = device_.CreateBindGroupLayout(&layoutDesc);
+
+	wgpu::BindGroupDescriptor groupDesc = {};
+	std::array<wgpu::BindGroupEntry, NumTexture * 2> groupEntries;
+
+	for (int stage_ind = 0; stage_ind < 2; stage_ind++)
+	{
+		for (size_t unit_ind = 0; unit_ind < currentTextures[stage_ind].size(); unit_ind++)
+		{
+			if (currentTextures[stage_ind][unit_ind].texture != nullptr)
+			{
+				auto texture = static_cast<TextureWebGPU*>(currentTextures[stage_ind][unit_ind].texture);
+				auto wrapMode = currentTextures[stage_ind][unit_ind].wrapMode;
+				auto minMagFilter = currentTextures[stage_ind][unit_ind].minMagFilter;
+
+				auto& groupEntry = groupEntries[unit_ind + stage_ind * NumTexture];
+
+				groupEntry.binding = unit_ind;
+				groupEntry.textureView = texture->GetTextureView();
+
+				// TODO : sampler
+				// groupEntry.sampler
+				throw "Not implemented (Sampler)";
+			}
+		}
+	}
+
+	groupDesc.layout = bindLayout;
+	groupDesc.entries = groupEntries.data();
+	groupDesc.entryCount = NumTexture * 2;
+
+	auto bindGroup = device_.CreateBindGroup(&groupDesc);
+	renderPassEncorder_.SetBindGroup(0, bindGroup);
+
+	int indexPerPrim = 0;
+
+	if (pip->Topology == TopologyType::Triangle)
+	{
+		indexPerPrim = 3;
+	}
+	else if (pip->Topology == TopologyType::Line)
+	{
+		indexPerPrim = 2;
+	}
+	else if (pip->Topology == TopologyType::Point)
+	{
+		indexPerPrim = 1;
+	}
+	else
+	{
+		assert(0);
+	}
+
+	renderPassEncorder_.DrawIndexed(primitiveCount * indexPerPrim, instanceCount, 0, 0, 0);
+	CommandList::Draw(primitiveCount, instanceCount);
 }
 
 void CommandListWebGPU::SetScissor(int32_t x, int32_t y, int32_t width, int32_t height)

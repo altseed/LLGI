@@ -23,8 +23,6 @@ void PipelineStateWebGPU::SetShader(ShaderStageType stage, Shader* shader)
 	shaders_[static_cast<int>(stage)] = shader;
 }
 
-void PipelineStateWebGPU::SetRenderPassPipelineState(RenderPassPipelineState* renderPassPipelineState) { throw "Unimpleneted"; }
-
 bool PipelineStateWebGPU::Compile()
 {
 	wgpu::RenderPipelineDescriptor desc{};

@@ -8,13 +8,16 @@ namespace LLGI
 
 class CommandListWebGPU : public CommandList
 {
-    wgpu::Device device_;
-    wgpu::CommandBuffer commandBuffer_;
+	wgpu::Device device_;
+	wgpu::CommandBuffer commandBuffer_;
 	wgpu::CommandEncoder commandEncorder_;
 	wgpu::RenderPassEncoder renderPassEncorder_;
 	wgpu::ComputePassEncoder computePassEncorder_;
+	wgpu::Sampler samplers_[2][2];
 
 public:
+	CommandListWebGPU(wgpu::Device device);
+
 	void Begin() override;
 
 	void End() override;

@@ -85,6 +85,8 @@ bool TextureWebGPU::Initialize(wgpu::Device& device, const TextureParameter& par
 
 	mipmapCount_ = parameter.MipLevelCount;
 
+	throw "Not implemented (Copy cpu to gpu)";
+
 	return texture_ != nullptr && textureView_ != nullptr;
 }
 
