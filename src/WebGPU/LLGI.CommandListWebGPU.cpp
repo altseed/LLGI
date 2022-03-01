@@ -13,35 +13,25 @@ CommandListWebGPU::CommandListWebGPU(wgpu::Device device) {
 	{
 		for (int f = 0; f < 2; f++)
 		{
-			vk::Filter filters[2];
-			filters[0] = vk::Filter::eNearest;
-			filters[1] = vk::Filter::eLinear;
+			std::array<wgpu::FilterMode, 2> filters;
+			filters[0] = wgpu::FilterMode::Nearest;
+			filters[1] = wgpu::FilterMode::Linear;
+			
+			std::array<wgpu::AddressMode, 2> am;
+			am[0] = wgpu::AddressMode::ClampToEdge;
+			am[1] = wgpu::AddressMode::Repeat;
 
-			vk::SamplerAddressMode am[2];
-			am[0] = vk::SamplerAddressMode::eClampToEdge;
-			am[1] = vk::SamplerAddressMode::eRepeat;
+			wgpu::SamplerDescriptor samplerDesc;
 
-			vk::SamplerCreateInfo samplerInfo;
-			samplerInfo.magFilter = filters[f];
-			samplerInfo.minFilter = filters[f];
-			samplerInfo.anisotropyEnable = false;
-			samplerInfo.maxAnisotropy = 1;
-			samplerInfo.addressModeU = am[w];
-			samplerInfo.addressModeV = am[w];
-			samplerInfo.addressModeW = am[w];
-			samplerInfo.borderColor = vk::BorderColor::eIntOpaqueBlack;
-			samplerInfo.unnormalizedCoordinates = false;
-			samplerInfo.compareEnable = false;
-			samplerInfo.compareOp = vk::CompareOp::eAlways;
-			samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
-			samplerInfo.mipLodBias = 0.0f;
-			samplerInfo.minLod = 0.0f;
-			samplerInfo.maxLod = 8.0f;
-
-			samplers_[w][f] = graphics_->GetDevice().createSampler(samplerInfo);
+			samplerDesc.magFilter = filters[f];
+			samplerDesc.minFilter = filters[f];
+			samplerDesc.maxAnisotropy = 1;
+			samplerDesc.addressModeU = am[w];
+			samplerDesc.addressModeV = am[w];
+			samplerDesc.addressModeW = am[w];
+			samplers_[w][f] = device.CreateSampler(&samplerDesc);
 		}
 	}
-
 }
 
 void CommandListWebGPU::Begin()
@@ -84,12 +74,9 @@ void CommandListWebGPU::EndRenderPass()
 
 void CommandListWebGPU::Draw(int32_t primitiveCount, int32_t instanceCount)
 {
-
 	BindingVertexBuffer bvb;
 	BindingIndexBuffer bib;
 	PipelineState* bpip = nullptr;
-
-	const int mipmapFilter = 1;
 
 	bool isVBDirtied = false;
 	bool isIBDirtied = false;
@@ -153,17 +140,14 @@ void CommandListWebGPU::Draw(int32_t primitiveCount, int32_t instanceCount)
 			if (currentTextures[stage_ind][unit_ind].texture != nullptr)
 			{
 				auto texture = static_cast<TextureWebGPU*>(currentTextures[stage_ind][unit_ind].texture);
-				auto wrapMode = currentTextures[stage_ind][unit_ind].wrapMode;
-				auto minMagFilter = currentTextures[stage_ind][unit_ind].minMagFilter;
+				auto wm = (int32_t)currentTextures[stage_ind][unit_ind].wrapMode;
+				auto mm = (int32_t)currentTextures[stage_ind][unit_ind].minMagFilter;
 
 				auto& groupEntry = groupEntries[unit_ind + stage_ind * NumTexture];
 
 				groupEntry.binding = unit_ind;
 				groupEntry.textureView = texture->GetTextureView();
-
-				// TODO : sampler
-				// groupEntry.sampler
-				throw "Not implemented (Sampler)";
+				groupEntry.sampler = samplers_[wm][mm];
 			}
 		}
 	}

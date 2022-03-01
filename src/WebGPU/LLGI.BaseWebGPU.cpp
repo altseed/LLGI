@@ -180,6 +180,8 @@ wgpu::StencilOperation Convert(StencilOperatorType type)
 
 	if (type == StencilOperatorType::DecRepeat)
 		return wgpu::StencilOperation::DecrementWrap;
+
+	throw "Not implemented";
 }
 
 wgpu::TextureFormat ConvertFormat(TextureFormatType format)

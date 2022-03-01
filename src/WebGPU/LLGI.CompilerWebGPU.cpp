@@ -17,8 +17,8 @@ void CompilerWebGPU::Compile(CompilerResult& result, const char* code, ShaderSta
 	buffer.push_back('d');
 	buffer.push_back('e');
 
-	auto len = strlen(code) + 1;
-	for (int i = 0; i < len; i++)
+	const auto len = strlen(code) + 1;
+	for (size_t i = 0; i < len; i++)
 	{
 		buffer.push_back(code[i]);
 	}
