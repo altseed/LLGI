@@ -4,12 +4,14 @@
 #include "LLGI.CommandListWebGPU.h"
 #include "LLGI.PipelineStateWebGPU.h"
 #include "LLGI.RenderPassPipelineStateWebGPU.h"
+#include "LLGI.RenderPassWebGPU.h"
 #include "LLGI.ShaderWebGPU.h"
 #include "LLGI.TextureWebGPU.h"
-#include "LLGI.RenderPassWebGPU.h"
 
 namespace LLGI
 {
+
+GraphicsWebGPU::GraphicsWebGPU(wgpu::Device device) : device_(device) { queue_ = device.queue(); }
 
 void GraphicsWebGPU::SetWindowSize(const Vec2I& windowSize) { throw "Not implemented"; }
 
@@ -104,10 +106,7 @@ GraphicsWebGPU::CreateRenderPass(Texture* texture, Texture* resolvedTexture, Tex
 	return renderPass;
 }
 
-Texture* GraphicsWebGPU::CreateTexture(uint64_t id)
-{
-	throw "Not implemented";
-}
+Texture* GraphicsWebGPU::CreateTexture(uint64_t id) { throw "Not implemented"; }
 
 Texture* GraphicsWebGPU::CreateTexture(const TextureParameter& parameter)
 {
@@ -160,10 +159,7 @@ Texture* GraphicsWebGPU::CreateDepthTexture(const DepthTextureInitializationPara
 	return CreateTexture(param);
 }
 
-std::vector<uint8_t> GraphicsWebGPU::CaptureRenderTarget(Texture* renderTarget)
-{
-		throw "Not implemented";
-}
+std::vector<uint8_t> GraphicsWebGPU::CaptureRenderTarget(Texture* renderTarget) { throw "Not implemented"; }
 
 RenderPassPipelineState* GraphicsWebGPU::CreateRenderPassPipelineState(RenderPass* renderPass)
 {

@@ -20,6 +20,8 @@ private:
 
 public:
 
+	GraphicsWebGPU(wgpu::Device device);
+
 	void SetWindowSize(const Vec2I& windowSize) override;
 
 	void Execute(CommandList* commandList) override;
