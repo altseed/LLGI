@@ -57,9 +57,11 @@ void test_compute_shader(LLGI::DeviceType deviceType)
 	std::shared_ptr<LLGI::Buffer> constantBuffer;
 	constantBuffer = LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Constant, sizeof(float)));
 
+	const int offsetValue = 100;
+
 	{
 		auto data = (float*)constantBuffer->Lock();
-		data[0] = 100;
+		data[0] = offsetValue;
 		constantBuffer->Unlock();
 	}
 
@@ -87,17 +89,16 @@ void test_compute_shader(LLGI::DeviceType deviceType)
 	graphics->WaitFinish();
 
 	{
-		auto data = (InputData*)read->Read();
+		auto src = (InputData*)read->Read();
+		auto dst = (OutputData*)write->Read();
 		for (int i = 0; i < dataSize; i++)
 		{
-			std::cout << "read[" << i << "] = " << data[i].value1 << "," << data[i].value2 << std::endl;
-		}
-	}
-	{
-		auto data = (OutputData*)write->Read();
-		for (int i = 0; i < dataSize; i++)
-		{
-			std::cout << "write[" << i << "] = " << data[i].value << std::endl;
+			const auto expected = src[i].value1 * src[i].value2 + offsetValue;
+			const auto actual = dst[i].value;
+			if (expected != actual)
+			{
+				throw "Invalid compute shader";
+			}
 		}
 	}
 
