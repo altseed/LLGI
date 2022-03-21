@@ -242,7 +242,7 @@ void test_index_offset(LLGI::DeviceType deviceType)
 		commandList->UploadBuffer(ib.get());
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib.get(), 2 * 3);
+		commandList->SetIndexBuffer(ib.get(), 2, 3 * 2);
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
 		commandList->Draw(1);
 		commandList->EndRenderPass();
