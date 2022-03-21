@@ -109,7 +109,10 @@ void test_simple_rectangle(LLGI::DeviceType deviceType, SingleRectangleTestMode 
 			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs.get());
 			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps.get());
 			pip->SetRenderPassPipelineState(renderPassPipelineState.get());
-			pip->Compile();
+			if (!pip->Compile())
+			{
+				throw "Failed to compile";
+			}
 
 			pips[renderPassPipelineState] = LLGI::CreateSharedPtr(pip);
 		}
@@ -242,7 +245,7 @@ void test_index_offset(LLGI::DeviceType deviceType)
 		commandList->UploadBuffer(ib.get());
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
-		commandList->SetIndexBuffer(ib.get(), 2 * 3);
+		commandList->SetIndexBuffer(ib.get(), 2, 3 * 2);
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
 		commandList->Draw(1);
 		commandList->EndRenderPass();

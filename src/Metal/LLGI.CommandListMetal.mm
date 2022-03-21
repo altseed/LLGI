@@ -275,6 +275,7 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 		assert(0);
 	}
 
+	assert(bib.stride == 2 || bib.stride == 4);
 	if (bib.stride == 2)
 	{
 		indexType = MTLIndexTypeUInt16;

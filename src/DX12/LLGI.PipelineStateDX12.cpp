@@ -41,13 +41,18 @@ void PipelineStateDX12::SetShader(ShaderStageType stage, Shader* shader)
 
 bool PipelineStateDX12::Compile()
 {
-	auto res = CreateRootSignature();
-	res &= CreateComputeRootSignature();
-
-	res &= CreatePipelineState();
-	res &= CreateComputePipelineState();
-
-	return res;
+	if (shaders_[static_cast<int>(ShaderStageType::Compute)] != nullptr)
+	{
+		auto res = CreateComputeRootSignature();
+		res &= CreateComputePipelineState();
+		return res;
+	}
+	else
+	{
+		auto res = CreateRootSignature();
+		res &= CreatePipelineState();
+		return res;
+	}
 }
 
 bool PipelineStateDX12::CreateRootSignature()

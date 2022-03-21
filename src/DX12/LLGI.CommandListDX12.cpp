@@ -299,6 +299,8 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 		D3D12_INDEX_BUFFER_VIEW indexView;
 		indexView.BufferLocation = ib->Get()->GetGPUVirtualAddress() + ib_.offset;
 		indexView.SizeInBytes = ib->GetActualSize() - ib_.offset;
+
+		assert(ib_.stride == 2 || ib_.stride == 4);
 		indexView.Format = ib_.stride == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
 		currentCommandList_->IASetIndexBuffer(&indexView);
 	}

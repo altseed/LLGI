@@ -310,10 +310,15 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 		vk::DeviceSize indexOffset = ib_.offset;
 		vk::IndexType indexType = vk::IndexType::eUint16;
 
+		assert(ib_.stride == 2 || ib_.stride == 4);
 		if (ib_.stride == 2)
+		{
 			indexType = vk::IndexType::eUint16;
-		if (ib_.stride == 4)
+		}
+		else if (ib_.stride == 4)
+		{
 			indexType = vk::IndexType::eUint32;
+		}
 
 		currentCommandBuffer_.bindIndexBuffer(ib->GetBuffer(), indexOffset, indexType);
 	}
