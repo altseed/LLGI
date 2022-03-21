@@ -34,7 +34,10 @@ void test_compute_shader(LLGI::DeviceType deviceType)
 
 	auto pip = LLGI::CreateSharedPtr(graphics->CreatePiplineState());
 	pip->SetShader(LLGI::ShaderStageType::Compute, shader_cs.get());
-	pip->Compile();
+	if (!pip->Compile())
+	{
+		throw "Failed to compile";
+	}
 
 	int dataSize = 256;
 

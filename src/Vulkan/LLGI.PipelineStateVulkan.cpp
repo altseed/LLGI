@@ -80,10 +80,12 @@ void PipelineStateVulkan::SetShader(ShaderStageType stage, Shader* shader)
 
 bool PipelineStateVulkan::Compile()
 {
-	auto res = CreateGraphicsPipeline();
-	res |= CreateComputePipeline();
+	if (shaders[static_cast<int>(ShaderStageType::Compute)] != nullptr)
+	{
+		return CreateComputePipeline();
+	}
 
-	return res;
+	return CreateGraphicsPipeline();
 }
 
 bool PipelineStateVulkan::CreateGraphicsPipeline()

@@ -11,8 +11,14 @@ namespace LLGI
 
 bool PipelineStateMetal::Compile(PipelineState* self, Graphics* graphics)
 {
-	auto res = CreateRenderPipelineState(self, graphics);
-	res |= CreateComputePipelineState(self, graphics);
+	if(pipstate->GetShaders()[static_cast<int>(ShaderStageType::Compute)])
+	{
+		return CreateComputePipelineState(self, graphics);
+	}
+	else
+	{
+		return CreateRenderPipelineState(self, graphics);
+	}
 
 	return res;
 }

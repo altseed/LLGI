@@ -109,7 +109,10 @@ void test_simple_rectangle(LLGI::DeviceType deviceType, SingleRectangleTestMode 
 			pip->SetShader(LLGI::ShaderStageType::Vertex, shader_vs.get());
 			pip->SetShader(LLGI::ShaderStageType::Pixel, shader_ps.get());
 			pip->SetRenderPassPipelineState(renderPassPipelineState.get());
-			pip->Compile();
+			if (!pip->Compile())
+			{
+				throw "Failed to compile";
+			}
 
 			pips[renderPassPipelineState] = LLGI::CreateSharedPtr(pip);
 		}
