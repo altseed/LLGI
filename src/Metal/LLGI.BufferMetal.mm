@@ -28,30 +28,26 @@ BufferMetal::~BufferMetal()
 		[buffer_ release];
 		buffer_ = nullptr;
 	}
-    
-    if (stagingBuffer_ != nullptr)
-    {
-        [stagingBuffer_ release];
-        stagingBuffer_ = nullptr;
-    }
-    
-    if (readbackBuffer_ != nullptr)
-    {
-        [readbackBuffer_ release];
-        readbackBuffer_ = nullptr;
-    }
-    
 }
 
 bool BufferMetal::Initialize(Graphics* graphics, BufferUsageType usage, int32_t size)
 {
+	if (!VerifyUsage(usage))
+	{
+		return false;
+	}
+
     auto g = static_cast<GraphicsMetal*>(graphics);
-    buffer_ = [g->GetDevice() newBufferWithLength:size options:MTLResourceStorageModePrivate];
     
-    stagingBuffer_ = [g->GetDevice() newBufferWithLength:size options:MTLResourceStorageModeShared];
-    
-    readbackBuffer_ = [g->GetDevice() newBufferWithLength:size options:MTLResourceStorageModeShared];
-    
+    if(BitwiseContains(usage, BufferUsageType::MapWrite) || BitwiseContains(usage, BufferUsageType::MapRead))
+    {
+        buffer_ = [g->GetDevice() newBufferWithLength:size options:MTLResourceStorageModeShared];
+    }
+    else
+    {
+        buffer_ = [g->GetDevice() newBufferWithLength:size options:MTLResourceStorageModePrivate];
+    }
+        
     size_ = size;
     
     return true;
@@ -60,35 +56,29 @@ bool BufferMetal::Initialize(Graphics* graphics, BufferUsageType usage, int32_t 
 bool BufferMetal::InitializeAsShortTime(BufferMetal* buffer, int32_t offset, int32_t size)
 {
     buffer_ = buffer->GetBuffer();
-    stagingBuffer_ = buffer->GetStagingBuffer();
-    readbackBuffer_ = buffer->GetReadbackBuffer();
-    
     size_ = size;
     offset_ = offset;
     isExternalResource_ = true;
-    
     return true;
 }
 
 void* BufferMetal::Lock()
 {
-    auto buffer = static_cast<uint8_t*>(stagingBuffer_.contents);
+    auto buffer = static_cast<uint8_t*>(buffer_.contents);
     buffer += offset_;
     return buffer;
 }
 
 void* BufferMetal::Lock(int32_t offset, int32_t size)
 {
-    NSCAssert(0 <= offset && offset + offset_ + size <= GetStagingBufferSize(), @"Run off the buffer");
+    NSCAssert(0 <= offset && offset + offset_ + size <= GetBufferSize(), @"Run off the buffer");
 
-    auto buffer = static_cast<uint8_t*>(stagingBuffer_.contents);
+    auto buffer = static_cast<uint8_t*>(buffer_.contents);
     buffer += offset + offset_;
     return buffer;
 }
 
 void BufferMetal::Unlock() {}
-
-void* const BufferMetal::Read() { return readbackBuffer_.contents; }
 
 int32_t BufferMetal::GetSize() { return size_; }
 

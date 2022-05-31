@@ -12,8 +12,8 @@ bool InternalSingleFrameMemoryPoolVulkan::Initialize(GraphicsVulkan* graphics, i
 {
 	constantBufferSize_ = (constantBufferPoolSize + 255) & ~255; // buffer size should be multiple of 256
 
-	buffer_ =
-		std::unique_ptr<BufferVulkan>(static_cast<BufferVulkan*>(graphics->CreateBuffer(BufferUsageType::Constant, constantBufferSize_)));
+	buffer_ = std::unique_ptr<BufferVulkan>(
+		static_cast<BufferVulkan*>(graphics->CreateBuffer(BufferUsageType::Constant | BufferUsageType::MapWrite, constantBufferSize_)));
 
 	return true;
 }

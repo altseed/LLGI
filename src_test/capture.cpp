@@ -160,8 +160,6 @@ void test_capture(LLGI::DeviceType deviceType, LLGI::Vec2I windowSize)
 
 		auto commandList = commandListPool->Get();
 		commandList->Begin();
-		commandList->UploadBuffer(vb.get());
-		commandList->UploadBuffer(ib.get());
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get(), 2);

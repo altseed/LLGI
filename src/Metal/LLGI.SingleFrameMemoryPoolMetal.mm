@@ -12,7 +12,7 @@ InternalSingleFrameMemoryPoolMetal::InternalSingleFrameMemoryPoolMetal(GraphicsM
 {
 	constantBufferSize_ = static_cast<int32_t>(GetAlignedSize(static_cast<size_t>(constantBufferPoolSize), 256));
     buffer_ = new BufferMetal();
-    buffer_->Initialize(graphics, BufferUsageType::Constant, constantBufferSize_);
+    buffer_->Initialize(graphics, BufferUsageType::Constant | BufferUsageType::MapWrite, constantBufferSize_);
 }
 
 InternalSingleFrameMemoryPoolMetal::~InternalSingleFrameMemoryPoolMetal() { SafeRelease(buffer_); }

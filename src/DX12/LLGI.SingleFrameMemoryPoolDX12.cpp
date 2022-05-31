@@ -10,7 +10,7 @@ InternalSingleFrameMemoryPoolDX12::InternalSingleFrameMemoryPoolDX12(GraphicsDX1
 																	 int32_t drawingCount)
 {
 	constantBufferSize_ = (constantBufferPoolSize + 255) & ~255; // buffer size should be multiple of 256
-	buffer_ = static_cast<BufferDX12*>(graphics->CreateBuffer(BufferUsageType::Constant, constantBufferSize_));
+	buffer_ = static_cast<BufferDX12*>(graphics->CreateBuffer(BufferUsageType::Constant | BufferUsageType::MapWrite, constantBufferSize_));
 }
 
 InternalSingleFrameMemoryPoolDX12 ::~InternalSingleFrameMemoryPoolDX12() { SafeRelease(buffer_); }

@@ -199,9 +199,6 @@ void test_textures(LLGI::DeviceType deviceType)
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
 
-		commandList->UploadBuffer(vb.get());
-		commandList->UploadBuffer(ib.get());
-
 		commandList->CopyTexture(texSrc1.get(), texDst1.get(), {0, 0, 0}, {0, 0, 0}, {1, 1, 1}, 0, 0);
 		commandList->CopyTexture(texSrc2.get(), texDst2.get(), {0, 0, 0}, {0, 0, 0}, {1, 1, 1}, 0, 1);
 		commandList->CopyTexture(texSrc3.get(), texDst3.get(), {0, 0, 0}, {0, 0, 1}, {1, 1, 1}, 0, 0);

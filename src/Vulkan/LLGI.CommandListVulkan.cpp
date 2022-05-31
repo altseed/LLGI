@@ -611,34 +611,6 @@ void CommandListVulkan::GenerateMipMap(Texture* src)
 	srcTex->ResourceBarrior(currentCommandBuffer_, vk::ImageLayout::eShaderReadOnlyOptimal);
 }
 
-void CommandListVulkan::UploadBuffer(Buffer* buffer)
-{
-	auto buf = static_cast<BufferVulkan*>(buffer);
-
-	auto gpuBuf = buf->GetBuffer();
-	auto stagingBuf = buf->GetStagingBuffer();
-
-	vk::BufferCopy copyRegion;
-	copyRegion.srcOffset = buf->GetOffset();
-	copyRegion.dstOffset = buf->GetOffset();
-	copyRegion.size = buf->GetSize();
-	currentCommandBuffer_.copyBuffer(stagingBuf, gpuBuf, copyRegion);
-}
-
-void CommandListVulkan::ReadBackBuffer(Buffer* buffer)
-{
-	auto buf = static_cast<BufferVulkan*>(buffer);
-
-	auto gpuBuf = buf->GetBuffer();
-	auto readbackBuf = buf->GetReadbackBuffer();
-
-	vk::BufferCopy copyRegion;
-	copyRegion.srcOffset = buf->GetOffset();
-	copyRegion.dstOffset = buf->GetOffset();
-	copyRegion.size = buf->GetSize();
-	currentCommandBuffer_.copyBuffer(gpuBuf, readbackBuf, copyRegion);
-}
-
 void CommandListVulkan::CopyBuffer(Buffer* src, Buffer* dst)
 {
 	auto srcBuf = static_cast<BufferVulkan*>(src);

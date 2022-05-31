@@ -127,7 +127,8 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 	std::shared_ptr<LLGI::Buffer> vb2;
 	{
 
-		vb2 = LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Vertex, sizeof(SimpleVertex) * 4));
+		vb2 = LLGI::CreateSharedPtr(
+			graphics->CreateBuffer(LLGI::BufferUsageType::Vertex | LLGI::BufferUsageType::MapWrite, sizeof(SimpleVertex) * 4));
 		auto vb_buf = (SimpleVertex*)vb2->Lock();
 		vb_buf[0].Pos = LLGI::Vec3F(-0.5f, 0.5f, 0.5f);
 		vb_buf[1].Pos = LLGI::Vec3F(0.5f, 0.5f, 0.5f);
@@ -174,10 +175,6 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
-
-		commandList->UploadBuffer(vb.get());
-		commandList->UploadBuffer(vb2.get());
-		commandList->UploadBuffer(ib.get());
 
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb2.get(), sizeof(SimpleVertex), 0);
@@ -510,11 +507,6 @@ void test_multiRenderPass(LLGI::DeviceType deviceType)
 
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
-
-		commandList->UploadBuffer(vb.get());
-		commandList->UploadBuffer(ib.get());
-		commandList->UploadBuffer(vb2.get());
-		commandList->UploadBuffer(ib2.get());
 
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
