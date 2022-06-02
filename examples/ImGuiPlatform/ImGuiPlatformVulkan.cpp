@@ -22,8 +22,7 @@ ImguiPlatformVulkan::ImguiPlatformVulkan(LLGI::Graphics* g, LLGI::Platform* p)
 		pool_info.maxSets = 1000 * IM_ARRAYSIZE(pool_sizes);
 		pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
 		pool_info.pPoolSizes = pool_sizes;
-		vkCreateDescriptorPool(g_->GetDevice(), &pool_info, nullptr, &descriptorPool_);
-		assert(descriptorPool_ != nullptr);
+		vkCreateDescriptorPool(static_cast<VkDevice>(g_->GetDevice()), &pool_info, nullptr, &descriptorPool_);
 	}
 
 	LLGI::RenderPassPipelineStateKey psk;
@@ -35,19 +34,19 @@ ImguiPlatformVulkan::ImguiPlatformVulkan(LLGI::Graphics* g, LLGI::Platform* p)
 	ps_ = static_cast<LLGI::RenderPassPipelineStateVulkan*>(g_->CreateRenderPassPipelineState(psk));
 
 	ImGui_ImplVulkan_InitInfo info{};
-	info.Instance = p_->GetInstance();
-	info.PhysicalDevice = p_->GetPhysicalDevice();
-	info.Device = g_->GetDevice();
+	info.Instance = static_cast<VkInstance>(p_->GetInstance());
+	info.PhysicalDevice = static_cast<VkPhysicalDevice>(p_->GetPhysicalDevice());
+	info.Device = static_cast<VkDevice>(g_->GetDevice());
 	info.QueueFamily = p_->GetQueueFamilyIndex();
-	info.Queue = p_->GetQueue();
-	info.PipelineCache = p_->GetPipelineCache();
+	info.Queue = static_cast<VkQueue>(p_->GetQueue());
+	info.PipelineCache = static_cast<VkPipelineCache>(p_->GetPipelineCache());
 	info.DescriptorPool = descriptorPool_;
 	info.MinImageCount = p_->GetSwapBufferCountMin();
 	info.ImageCount = p_->GetSwapBufferCount();
 	info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 	info.Allocator = nullptr;
 
-	ImGui_ImplVulkan_Init(&info, ps_->GetRenderPass());
+	ImGui_ImplVulkan_Init(&info, static_cast<VkRenderPass>(ps_->GetRenderPass()));
 
 	// update fonts
 	auto sfm = g_->CreateSingleFrameMemoryPool(1024 * 128, 128);
@@ -56,7 +55,7 @@ ImguiPlatformVulkan::ImguiPlatformVulkan(LLGI::Graphics* g, LLGI::Platform* p)
 	sfm->NewFrame();
 	cl->Begin();
 
-	ImGui_ImplVulkan_CreateFontsTexture(cl->GetCommandBuffer());
+	ImGui_ImplVulkan_CreateFontsTexture(static_cast<VkCommandBuffer>(cl->GetCommandBuffer()));
 
 	cl->End();
 	g_->Execute(cl);
@@ -123,10 +122,10 @@ ImguiPlatformVulkan::~ImguiPlatformVulkan()
 	for (auto& it : textures_)
 	{
 		VkDescriptorSet ds = (VkDescriptorSet)it.second.id;
-		vkFreeDescriptorSets(g_->GetDevice(), descriptorPool_, 1, &ds);
+		vkFreeDescriptorSets(static_cast<VkDevice>(g_->GetDevice()), descriptorPool_, 1, &ds);
 	}
 
-	vkDestroyDescriptorPool(g_->GetDevice(), descriptorPool_, nullptr);
+	vkDestroyDescriptorPool(static_cast<VkDevice>(g_->GetDevice()), descriptorPool_, nullptr);
 
 	if (defaultSampler_)
 	{
@@ -144,7 +143,7 @@ void ImguiPlatformVulkan::NewFrame(LLGI::RenderPass* renderPass)
 		if (it->second.life == 0)
 		{
 			VkDescriptorSet ds = (VkDescriptorSet)it->second.id;
-			vkFreeDescriptorSets(g_->GetDevice(), descriptorPool_, 1, &ds);
+			vkFreeDescriptorSets(static_cast<VkDevice>(g_->GetDevice()), descriptorPool_, 1, &ds);
 			it = textures_.erase(it);
 		}
 		else
@@ -167,7 +166,9 @@ ImTextureID ImguiPlatformVulkan::GetTextureIDToRender(LLGI::Texture* texture, LL
 	}
 
 	auto textureVulkan = static_cast<LLGI::TextureVulkan*>(texture);
-	auto id = ImGui_ImplVulkan_AddTexture(defaultSampler_, textureVulkan->GetView(), (VkImageLayout)textureVulkan->GetImageLayouts()[0]);
+	auto id = ImGui_ImplVulkan_AddTexture(static_cast<VkSampler>(defaultSampler_),
+										  static_cast<VkImageView>(textureVulkan->GetView()),
+										  (VkImageLayout)textureVulkan->GetImageLayouts()[0]);
 
 	TextureHolder th;
 	th.texture = LLGI::CreateSharedPtr(texture, true);
@@ -186,7 +187,7 @@ void ImguiPlatformVulkan::CreateFont()
 	sfm->NewFrame();
 	cl->Begin();
 
-	ImGui_ImplVulkan_CreateFontsTexture(cl->GetCommandBuffer());
+	ImGui_ImplVulkan_CreateFontsTexture(static_cast<VkCommandBuffer>(cl->GetCommandBuffer()));
 
 	cl->End();
 	g_->Execute(cl);
@@ -202,6 +203,6 @@ void ImguiPlatformVulkan::DisposeFont()
 {
 	ImGuiIO& io = ImGui::GetIO();
 	VkDescriptorSet ds = (VkDescriptorSet)io.Fonts->TexID;
-	vkFreeDescriptorSets(g_->GetDevice(), descriptorPool_, 1, &ds);
+	vkFreeDescriptorSets(static_cast<VkDevice>(g_->GetDevice()), descriptorPool_, 1, &ds);
 	io.Fonts->TexID = nullptr;
 }
