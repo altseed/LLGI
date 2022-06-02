@@ -124,7 +124,7 @@ private:
 
 	std::vector<const char*> GetOptimalLayers(const std::vector<VkLayerProperties>& properties) const;
 
-	bool IsSwapchainValid() const { return swapchain_ != nullptr; }
+	bool IsSwapchainValid() const { return static_cast<bool>(swapchain_); }
 
 public:
 	PlatformVulkan();
