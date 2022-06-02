@@ -307,7 +307,7 @@ std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
 	auto dstFootprint = texture->GetFootprint().Footprint;
 
 	BufferDX12 dstBuffer;
-	if (!dstBuffer.Initialize(this, BufferUsageType::Index, dstFootprint.RowPitch * dstFootprint.Height))
+	if (!dstBuffer.Initialize(this, BufferUsageType::CopyDst | BufferUsageType::MapRead, dstFootprint.RowPitch * dstFootprint.Height))
 	{
 		auto msg = (std::string("Error : ") + std::string(__FILE__) + " : " + std::to_string(__LINE__) + std::string(" : "));
 		::LLGI::Log(::LLGI::LogType::Error, msg.c_str());
@@ -344,7 +344,7 @@ std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
 	src.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
 	src.SubresourceIndex = 0;
 
-	dst.pResource = dstBuffer.GetReadback();
+	dst.pResource = dstBuffer.Get();
 	dst.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
 	dst.PlacedFootprint = footprint;
 
@@ -361,22 +361,28 @@ std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
 	SafeRelease(commandList);
 	SafeRelease(commandAllocator);
 
-	if (GetTextureMemorySize(renderTarget->GetFormat(), rtSize3) != dstBuffer.GetSize())
-	{
-		result.resize(GetTextureMemorySize(renderTarget->GetFormat(), rtSize3));
-		auto raw = static_cast<uint8_t*>(dstBuffer.Read());
+	auto locked = dstBuffer.Lock();
 
-		for (int32_t y = 0; y < renderTarget->GetSizeAs2D().Y; y++)
-		{
-			auto pitch = GetTextureMemorySize(renderTarget->GetFormat(), rtSize3) / renderTarget->GetSizeAs2D().Y;
-			memcpy(result.data() + pitch * y, raw + dstFootprint.RowPitch * y, pitch);
-		}
-	}
-	else
+	if (locked)
 	{
-		result.resize(dstBuffer.GetSize());
-		auto raw = dstBuffer.Read();
-		memcpy(result.data(), raw, result.size());
+		auto raw = static_cast<uint8_t*>(locked);
+
+		if (GetTextureMemorySize(renderTarget->GetFormat(), rtSize3) != dstBuffer.GetSize())
+		{
+			result.resize(GetTextureMemorySize(renderTarget->GetFormat(), rtSize3));
+
+			for (int32_t y = 0; y < renderTarget->GetSizeAs2D().Y; y++)
+			{
+				auto pitch = GetTextureMemorySize(renderTarget->GetFormat(), rtSize3) / renderTarget->GetSizeAs2D().Y;
+				memcpy(result.data() + pitch * y, raw + dstFootprint.RowPitch * y, pitch);
+			}
+		}
+		else
+		{
+			result.resize(dstBuffer.GetSize());
+			memcpy(result.data(), raw, result.size());
+		}
+		dstBuffer.Unlock();
 	}
 
 	return result;

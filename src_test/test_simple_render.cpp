@@ -119,8 +119,6 @@ void test_simple_rectangle(LLGI::DeviceType deviceType, SingleRectangleTestMode 
 
 		auto commandList = commandListPool->Get();
 		commandList->Begin();
-		commandList->UploadBuffer(vb.get());
-		commandList->UploadBuffer(ib.get());
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get(), 2);
@@ -241,8 +239,6 @@ void test_index_offset(LLGI::DeviceType deviceType)
 
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
-		commandList->UploadBuffer(vb.get());
-		commandList->UploadBuffer(ib.get());
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get(), 2, 3 * 2);
@@ -432,8 +428,8 @@ void main()
 
 	if (type == LLGI::ConstantBufferType::LongTime)
 	{
-		cb_vs = graphics->CreateBuffer(LLGI::BufferUsageType::Constant, sizeof(float) * 4);
-		cb_ps = graphics->CreateBuffer(LLGI::BufferUsageType::Constant, sizeof(float) * 4);
+		cb_vs = graphics->CreateBuffer(LLGI::BufferUsageType::Constant | LLGI::BufferUsageType::MapWrite, sizeof(float) * 4);
+		cb_ps = graphics->CreateBuffer(LLGI::BufferUsageType::Constant | LLGI::BufferUsageType::MapWrite, sizeof(float) * 4);
 
 		auto cb_vs_buf = (float*)cb_vs->Lock();
 		cb_vs_buf[0] = 0.2f;
@@ -511,11 +507,6 @@ void main()
 
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
-
-		commandList->UploadBuffer(vb.get());
-		commandList->UploadBuffer(ib.get());
-		commandList->UploadBuffer(cb_vs);
-		commandList->UploadBuffer(cb_ps);
 
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
@@ -782,8 +773,6 @@ void main()
 
 		auto commandList = commandLists[count % commandLists.size()];
 		commandList->Begin();
-		commandList->UploadBuffer(vb.get());
-		commandList->UploadBuffer(ib.get());
 		commandList->BeginRenderPass(renderPass);
 		// commandList->SetConstantBuffer(dummy_cb.get(), LLGI::ShaderStageType::Vertex);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
@@ -873,7 +862,8 @@ void test_instancing(LLGI::DeviceType deviceType)
 								vb,
 								ib);
 
-	auto cb = LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Constant, sizeof(float) * 4 * 10));
+	auto cb = LLGI::CreateSharedPtr(
+		graphics->CreateBuffer(LLGI::BufferUsageType::Constant | LLGI::BufferUsageType::MapWrite, sizeof(float) * 4 * 10));
 
 	if (auto buf = static_cast<float*>(cb->Lock()))
 	{
@@ -926,10 +916,6 @@ void test_instancing(LLGI::DeviceType deviceType)
 
 		auto commandList = commandListPool->Get();
 		commandList->Begin();
-
-		commandList->UploadBuffer(vb.get());
-		commandList->UploadBuffer(ib.get());
-		commandList->UploadBuffer(cb.get());
 
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
@@ -1044,9 +1030,6 @@ void test_vtf(LLGI::DeviceType deviceType)
 
 		auto commandList = commandListPool->Get();
 		commandList->Begin();
-
-		commandList->UploadBuffer(vb.get());
-		commandList->UploadBuffer(ib.get());
 
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);

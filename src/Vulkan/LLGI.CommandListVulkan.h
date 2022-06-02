@@ -65,8 +65,6 @@ public:
 
 	void GenerateMipMap(Texture* src) override;
 
-	void UploadBuffer(Buffer* buffer) override;
-	void ReadBackBuffer(Buffer* buffer) override;
 	void CopyBuffer(Buffer* src, Buffer* dst) override;
 
 	void BeginRenderPass(RenderPass* renderPass) override;

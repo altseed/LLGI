@@ -41,24 +41,42 @@ void test_compute_shader(LLGI::DeviceType deviceType)
 
 	int dataSize = 256;
 
-	std::shared_ptr<LLGI::Buffer> read;
-	read = LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Compute, sizeof(InputData) * dataSize));
-
+	std::vector<InputData> inputData;
+	inputData.resize(dataSize);
+	for (int i = 0; i < dataSize; i++)
 	{
-		auto data = (InputData*)read->Lock();
-		for (int i = 0; i < dataSize; i++)
-		{
-			data[i].value1 = (float)i * 2;
-			data[i].value2 = (float)i * 2 + 1;
-		}
-		read->Unlock();
+		inputData[i].value1 = (float)i * 2;
+		inputData[i].value2 = (float)i * 2 + 1;
 	}
 
-	std::shared_ptr<LLGI::Buffer> write;
-	write = LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Compute, sizeof(OutputData) * dataSize));
+	std::shared_ptr<LLGI::Buffer> inputBuffer;
+	inputBuffer = LLGI::CreateSharedPtr(
+		graphics->CreateBuffer(LLGI::BufferUsageType::MapWrite | LLGI::BufferUsageType::CopySrc, sizeof(InputData) * dataSize));
+
+	{
+		auto data = (InputData*)inputBuffer->Lock();
+		for (int i = 0; i < dataSize; i++)
+		{
+			data[i] = inputData[i];
+		}
+		inputBuffer->Unlock();
+	}
+
+	std::shared_ptr<LLGI::Buffer> outputBuffer;
+	outputBuffer = LLGI::CreateSharedPtr(
+		graphics->CreateBuffer(LLGI::BufferUsageType::MapRead | LLGI::BufferUsageType::CopyDst, sizeof(OutputData) * dataSize));
+
+	std::shared_ptr<LLGI::Buffer> inputComputeBuffer;
+	inputComputeBuffer = LLGI::CreateSharedPtr(
+		graphics->CreateBuffer(LLGI::BufferUsageType::Compute | LLGI::BufferUsageType::CopyDst, sizeof(InputData) * dataSize));
+
+	std::shared_ptr<LLGI::Buffer> outputComputeBuffer;
+	outputComputeBuffer = LLGI::CreateSharedPtr(
+		graphics->CreateBuffer(LLGI::BufferUsageType::Compute | LLGI::BufferUsageType::CopySrc, sizeof(OutputData) * dataSize));
 
 	std::shared_ptr<LLGI::Buffer> constantBuffer;
-	constantBuffer = LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Constant, sizeof(float)));
+	constantBuffer =
+		LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Constant | LLGI::BufferUsageType::MapWrite, sizeof(float)));
 
 	const int offsetValue = 100;
 
@@ -75,34 +93,38 @@ void test_compute_shader(LLGI::DeviceType deviceType)
 
 	auto commandList = commandListPool->Get();
 	commandList->Begin();
-	commandList->UploadBuffer(read.get());
-	commandList->UploadBuffer(constantBuffer.get());
+	commandList->CopyBuffer(inputBuffer.get(), inputComputeBuffer.get());
 	commandList->BeginComputePass();
 	commandList->SetPipelineState(pip.get());
-	commandList->SetComputeBuffer(read.get(), sizeof(InputData), 0, LLGI::ShaderStageType::Compute);
-	commandList->SetComputeBuffer(write.get(), sizeof(OutputData), 1, LLGI::ShaderStageType::Compute);
+	commandList->SetComputeBuffer(inputComputeBuffer.get(), sizeof(InputData), 0, LLGI::ShaderStageType::Compute);
+	commandList->SetComputeBuffer(outputComputeBuffer.get(), sizeof(OutputData), 1, LLGI::ShaderStageType::Compute);
 	commandList->SetConstantBuffer(constantBuffer.get(), LLGI::ShaderStageType::Compute);
 	commandList->Dispatch(dataSize, 1, 1, 1, 1, 1);
 	commandList->EndComputePass();
-	commandList->ReadBackBuffer(read.get());
-	commandList->ReadBackBuffer(write.get());
+	commandList->CopyBuffer(outputComputeBuffer.get(), outputBuffer.get());
 	commandList->End();
 
 	graphics->Execute(commandList);
 	graphics->WaitFinish();
 
 	{
-		auto src = (InputData*)read->Read();
-		auto dst = (OutputData*)write->Read();
+		auto dst = (OutputData*)outputBuffer->Lock();
+		if (dst == nullptr)
+		{
+			throw "Failed to unlock";
+		}
+
 		for (int i = 0; i < dataSize; i++)
 		{
-			const auto expected = src[i].value1 * src[i].value2 + offsetValue;
+			const auto expected = inputData[i].value1 * inputData[i].value2 + offsetValue;
 			const auto actual = dst[i].value;
 			if (expected != actual)
 			{
 				throw "Invalid compute shader";
 			}
 		}
+
+		outputBuffer->Unlock();
 	}
 
 	platform->Present();

@@ -289,6 +289,10 @@ enum class BufferUsageType : uint32_t
 	Vertex = 1 << 1,
 	Constant = 1 << 2,
 	Compute = 1 << 3,
+	MapRead = 1 << 4,
+	MapWrite = 1 << 5,
+	CopySrc = 1 << 6,
+	CopyDst = 1 << 7,
 };
 
 inline BufferUsageType operator|(BufferUsageType lhs, BufferUsageType rhs)
@@ -374,6 +378,8 @@ template <class T> void SafeDelete(T& t)
 		t = NULL;
 	}
 }
+
+template <typename T> bool BitwiseContains(T value, T elm) { return (value & elm) == elm; }
 
 class ReferenceObject
 {

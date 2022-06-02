@@ -514,33 +514,6 @@ void CommandListMetal::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, 
 	CommandList::Dispatch(groupX, groupY, groupZ, threadX, threadY, threadZ);
 }
 
-void CommandListMetal::UploadBuffer(Buffer* buffer) {
-    auto buf = static_cast<BufferMetal*>(buffer);
-
-    auto gpuBuf = buf->GetBuffer();
-    auto stagingBuf = buf->GetStagingBuffer();
-    
-    auto encoder = [commandBuffer_ blitCommandEncoder];
-    [encoder retain];
-    [encoder copyFromBuffer:stagingBuf sourceOffset:buf->GetOffset() toBuffer:gpuBuf destinationOffset:buf->GetOffset() size:buf->GetSize()];
-    [encoder endEncoding];
-    [encoder release];
-}
-
-void CommandListMetal::ReadBackBuffer(Buffer* buffer)
-{
-    auto buf = static_cast<BufferMetal*>(buffer);
-
-    auto gpuBuf = buf->GetBuffer();
-    auto readbackBuf = buf->GetReadbackBuffer();
-
-    auto encoder = [commandBuffer_ blitCommandEncoder];
-    [encoder retain];
-    [encoder copyFromBuffer:gpuBuf sourceOffset:buf->GetOffset() toBuffer:readbackBuf destinationOffset:buf->GetOffset() size:buf->GetSize()];
-    [encoder endEncoding];
-    [encoder release];
-}
-
 void CommandListMetal::CopyBuffer(Buffer* src, Buffer* dst)
 {
     auto srcBuf = static_cast<BufferMetal*>(src);

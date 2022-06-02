@@ -59,9 +59,7 @@ public:
 	void Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, int32_t threadX, int32_t threadY, int32_t threadZ) override;
 
 	bool GetIsCompleted() { return isCompleted_; }
-    
-    void UploadBuffer(Buffer* buffer) override;
-    void ReadBackBuffer(Buffer* buffer) override;
+
     void CopyBuffer(Buffer* src, Buffer* dst) override;
     
 	void ResetCompleted() { isCompleted_ = false; }

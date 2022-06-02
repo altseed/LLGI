@@ -324,16 +324,14 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 		{
 			if (currentTextures[stage_ind][unit_ind].texture != nullptr)
 			{
-				requiredSamplerDescriptorCount =
-					std::max(requiredSamplerDescriptorCount, static_cast<int32_t>(unit_ind) + 1);
+				requiredSamplerDescriptorCount = std::max(requiredSamplerDescriptorCount, static_cast<int32_t>(unit_ind) + 1);
 			}
 
 			BindingComputeBuffer compute;
 			GetCurrentComputeBuffer(static_cast<int32_t>(unit_ind), (ShaderStageType)stage_ind, compute);
 			if (compute.computeBuffer != nullptr)
 			{
-				requiredComputeDescriptorCount =
-					std::max(requiredComputeDescriptorCount, static_cast<int32_t>(unit_ind) + 1);
+				requiredComputeDescriptorCount = std::max(requiredComputeDescriptorCount, static_cast<int32_t>(unit_ind) + 1);
 			}
 		}
 	}
@@ -619,72 +617,6 @@ void CommandListDX12::CopyTexture(
 	RegisterReferencedObject(dst);
 }
 
-void CommandListDX12::UploadBuffer(Buffer* buffer)
-{
-	auto buf = static_cast<BufferDX12*>(buffer);
-
-	auto resource = buf->Get();
-	auto stagingResource = buf->GetStaging();
-	auto state = buf->GetResourceState();
-
-	{
-		D3D12_RESOURCE_BARRIER barrier = {};
-		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.Transition.pResource = resource;
-		barrier.Transition.StateBefore = state;
-		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
-		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		currentCommandList_->ResourceBarrier(1, &barrier);
-	}
-
-	currentCommandList_->CopyBufferRegion(resource, buf->GetOffset(), stagingResource, buf->GetOffset(), buf->GetActualSize());
-
-	{
-		D3D12_RESOURCE_BARRIER barrier = {};
-		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.Transition.pResource = resource;
-		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
-		barrier.Transition.StateAfter = state;
-		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		currentCommandList_->ResourceBarrier(1, &barrier);
-	}
-}
-
-void CommandListDX12::ReadBackBuffer(Buffer* buffer)
-{
-	auto buf = static_cast<BufferDX12*>(buffer);
-
-	auto resource = buf->Get();
-	auto readbackResource = buf->GetReadback();
-	auto state = buf->GetResourceState();
-
-	{
-		D3D12_RESOURCE_BARRIER barrier = {};
-		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.Transition.pResource = resource;
-		barrier.Transition.StateBefore = state;
-		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_SOURCE;
-		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		currentCommandList_->ResourceBarrier(1, &barrier);
-	}
-
-	currentCommandList_->CopyBufferRegion(readbackResource, buf->GetOffset(), resource, buf->GetOffset(), buf->GetActualSize());
-
-	{
-		D3D12_RESOURCE_BARRIER barrier = {};
-		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.Transition.pResource = resource;
-		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_SOURCE;
-		barrier.Transition.StateAfter = state;
-		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		currentCommandList_->ResourceBarrier(1, &barrier);
-	}
-}
-
 void CommandListDX12::CopyBuffer(Buffer* src, Buffer* dst)
 {
 	auto srcBuf = static_cast<BufferDX12*>(src);
@@ -693,9 +625,14 @@ void CommandListDX12::CopyBuffer(Buffer* src, Buffer* dst)
 	auto srcResource = srcBuf->Get();
 	auto srcState = srcBuf->GetResourceState();
 
+	auto requireChangeSrcState = !BitwiseContains(srcState, D3D12_RESOURCE_STATE_COPY_SOURCE);
+
 	auto dstResource = dstBuf->Get();
 	auto dstState = dstBuf->GetResourceState();
 
+	auto requireChangeDstState = !BitwiseContains(dstState, D3D12_RESOURCE_STATE_COPY_DEST);
+
+	if (requireChangeSrcState)
 	{
 		D3D12_RESOURCE_BARRIER barrier = {};
 		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -707,6 +644,7 @@ void CommandListDX12::CopyBuffer(Buffer* src, Buffer* dst)
 		currentCommandList_->ResourceBarrier(1, &barrier);
 	}
 
+	if (requireChangeDstState)
 	{
 		D3D12_RESOURCE_BARRIER barrier = {};
 		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -720,6 +658,7 @@ void CommandListDX12::CopyBuffer(Buffer* src, Buffer* dst)
 
 	currentCommandList_->CopyBufferRegion(dstResource, dstBuf->GetOffset(), srcResource, srcBuf->GetOffset(), srcBuf->GetActualSize());
 
+	if (requireChangeSrcState)
 	{
 		D3D12_RESOURCE_BARRIER barrier = {};
 		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -731,6 +670,7 @@ void CommandListDX12::CopyBuffer(Buffer* src, Buffer* dst)
 		currentCommandList_->ResourceBarrier(1, &barrier);
 	}
 
+	if (requireChangeDstState)
 	{
 		D3D12_RESOURCE_BARRIER barrier = {};
 		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -775,8 +715,7 @@ void CommandListDX12::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, i
 	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 32> cpuDescriptorHandleConstant;
 	std::array<D3D12_GPU_DESCRIPTOR_HANDLE, 32> gpuDescriptorHandleConstant;
 
-	if (!cbDescriptorHeap_->Allocate(
-			heapConstant, cpuDescriptorHandleConstant, gpuDescriptorHandleConstant, requiredCBDescriptorCount))
+	if (!cbDescriptorHeap_->Allocate(heapConstant, cpuDescriptorHandleConstant, gpuDescriptorHandleConstant, requiredCBDescriptorCount))
 	{
 		Log(LogType::Error, "Failed to draw because of descriptors.");
 		return;

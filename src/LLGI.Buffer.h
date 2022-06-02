@@ -10,6 +10,8 @@ class Buffer : public ReferenceObject
 protected:
 	BufferUsageType usage_ = BufferUsageType::Index;
 
+	static bool VerifyUsage(BufferUsageType usage);
+
 public:
 	Buffer() = default;
 	~Buffer() override = default;
@@ -17,8 +19,6 @@ public:
 	virtual void* Lock();
 	virtual void* Lock(int32_t offset, int32_t size);
 	virtual void Unlock();
-
-	virtual void* const Read();
 
 	virtual int32_t GetSize();
 
