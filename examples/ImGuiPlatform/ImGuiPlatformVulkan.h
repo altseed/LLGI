@@ -51,7 +51,7 @@ public:
 	void RenderDrawData(ImDrawData* draw_data, LLGI::CommandList* commandList) override
 	{
 		auto cl = static_cast<LLGI::CommandListVulkan*>(commandList);
-		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cl->GetCommandBuffer());
+		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), static_cast<VkCommandBuffer>(cl->GetCommandBuffer()));
 	}
 
 	ImTextureID GetTextureIDToRender(LLGI::Texture* texture, LLGI::CommandList* commandList) override;
