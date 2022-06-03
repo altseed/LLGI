@@ -258,10 +258,25 @@ void CommandListVulkan::EndWithPlatform()
 	CommandList::EndWithPlatform();
 }
 
+bool CommandListVulkan::BeginRenderPassWithPlatformPtr(void* platformPtr)
+{
+	isInRenderPass_ = true;
+	isInValidRenderPass_ = true;
+	return true;
+}
+
+bool CommandListVulkan::EndRenderPassWithPlatformPtr()
+{
+	isInRenderPass_ = false;
+	isInValidRenderPass_ = false;
+	return true;
+}
+
 void CommandListVulkan::SetScissor(int32_t x, int32_t y, int32_t width, int32_t height)
 {
 	if (!isInValidRenderPass_)
 	{
+		Log(LogType::Warning, "SetScissor must be called in RenderPass.");
 		return;
 	}
 
@@ -273,6 +288,7 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 {
 	if (!isInValidRenderPass_)
 	{
+		Log(LogType::Warning, "Draw must be called in RenderPass.");
 		return;
 	}
 

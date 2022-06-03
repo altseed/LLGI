@@ -26,15 +26,15 @@ bool BufferVulkan::Initialize(GraphicsVulkan* graphics, BufferUsageType usage, i
 
 	vk::BufferUsageFlags vkUsage = {};
 
-	vk::MemoryPropertyFlagBits memoryProperty = vk::MemoryPropertyFlagBits::eDeviceLocal;
+	vk::MemoryPropertyFlags memoryProperty = vk::MemoryPropertyFlagBits::eDeviceLocal;
 	if (BitwiseContains(usage, BufferUsageType::MapWrite))
 	{
-		memoryProperty = vk::MemoryPropertyFlagBits::eHostVisible;
+		memoryProperty = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;
 	}
 
 	if (BitwiseContains(usage, BufferUsageType::MapRead))
 	{
-		memoryProperty = vk::MemoryPropertyFlagBits::eHostVisible;
+		memoryProperty = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;
 	}
 
 	if (BitwiseContains(usage, BufferUsageType::CopyDst))

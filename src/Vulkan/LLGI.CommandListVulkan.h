@@ -57,6 +57,10 @@ public:
 	bool BeginWithPlatform(void* platformContextPtr) override;
 	void EndWithPlatform() override;
 
+	bool BeginRenderPassWithPlatformPtr(void* platformPtr) override;
+
+	bool EndRenderPassWithPlatformPtr() override;
+
 	void SetScissor(int32_t x, int32_t y, int32_t width, int32_t height) override;
 	void Draw(int32_t primitiveCount, int32_t instanceCount) override;
 	void CopyTexture(Texture* src, Texture* dst) override;
