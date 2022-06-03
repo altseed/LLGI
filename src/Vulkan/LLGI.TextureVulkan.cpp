@@ -223,7 +223,14 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics,
 		submitInfos[0].commandBufferCount = 1;
 		submitInfos[0].pCommandBuffers = &(cmdBuffers[0].get());
 
-		graphics_->GetQueue().submit(static_cast<uint32_t>(submitInfos.size()), submitInfos.data(), vk::Fence());
+		const auto submitResult = graphics_->GetQueue().submit(static_cast<uint32_t>(submitInfos.size()), submitInfos.data(), vk::Fence());
+
+		if (submitResult != vk::Result::eSuccess)
+		{
+			LLGI::Log(LogType::Error, "Failed to submit");
+			return false;
+		}
+
 		graphics_->GetQueue().waitIdle();
 	}
 
@@ -351,7 +358,14 @@ void TextureVulkan::Unlock()
 	copySubmitInfos[0].commandBufferCount = 1;
 	copySubmitInfos[0].pCommandBuffers = &copyCommandBuffer;
 
-	graphics_->GetQueue().submit(static_cast<uint32_t>(copySubmitInfos.size()), copySubmitInfos.data(), vk::Fence());
+	const auto submitResult =
+		graphics_->GetQueue().submit(static_cast<uint32_t>(copySubmitInfos.size()), copySubmitInfos.data(), vk::Fence());
+	if (submitResult != vk::Result::eSuccess)
+	{
+		LLGI::Log(LogType::Error, "Failed to submit");
+		return;
+	}
+
 	graphics_->GetQueue().waitIdle();
 
 	graphics_->GetDevice().freeCommandBuffers(graphics_->GetCommandPool(), copyCommandBuffer);

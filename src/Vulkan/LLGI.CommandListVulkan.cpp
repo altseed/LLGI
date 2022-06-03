@@ -218,7 +218,12 @@ void CommandListVulkan::Begin()
 		fences_[currentSwapBufferIndex_] = graphics_->GetDevice().createFence(vk::FenceCreateFlags());
 	}
 
-	graphics_->GetDevice().resetFences(1, &(fences_[currentSwapBufferIndex_]));
+	const auto recetFencesResult = graphics_->GetDevice().resetFences(1, &(fences_[currentSwapBufferIndex_]));
+	if (recetFencesResult != vk::Result::eSuccess)
+	{
+		LLGI::Log(LogType::Error, "Failed to resetFences");
+		return;
+	}
 
 	currentCommandBuffer_ = commandBuffers_[currentSwapBufferIndex_];
 	currentCommandBuffer_.reset(vk::CommandBufferResetFlagBits::eReleaseResources);

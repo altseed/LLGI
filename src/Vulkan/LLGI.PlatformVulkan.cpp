@@ -787,7 +787,12 @@ Graphics* PlatformVulkan::CreateGraphics()
 		std::array<vk::SubmitInfo, 1> copySubmitInfos;
 		copySubmitInfos[0].commandBufferCount = 1;
 		copySubmitInfos[0].pCommandBuffers = &commandBuffer;
-		vkQueue.submit(static_cast<uint32_t>(copySubmitInfos.size()), copySubmitInfos.data(), fence);
+		const auto submitResult = vkQueue.submit(static_cast<uint32_t>(copySubmitInfos.size()), copySubmitInfos.data(), fence);
+		if (submitResult != vk::Result::eSuccess)
+		{
+			LLGI::Log(LogType::Error, "Failed to submit");
+			return;
+		}
 
 		this->executedCommandCount++;
 	};
