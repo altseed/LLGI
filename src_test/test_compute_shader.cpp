@@ -36,7 +36,7 @@ void test_compute_shader(LLGI::DeviceType deviceType)
 	pip->SetShader(LLGI::ShaderStageType::Compute, shader_cs.get());
 	if (!pip->Compile())
 	{
-		throw "Failed to compile";
+		abort();
 	}
 
 	int dataSize = 256;
@@ -111,7 +111,7 @@ void test_compute_shader(LLGI::DeviceType deviceType)
 		auto dst = (OutputData*)outputBuffer->Lock();
 		if (dst == nullptr)
 		{
-			throw "Failed to unlock";
+			abort();
 		}
 
 		for (int i = 0; i < dataSize; i++)
@@ -120,7 +120,7 @@ void test_compute_shader(LLGI::DeviceType deviceType)
 			const auto actual = dst[i].value;
 			if (expected != actual)
 			{
-				throw "Invalid compute shader";
+				abort();
 			}
 		}
 
