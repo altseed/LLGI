@@ -91,3 +91,10 @@ private:
 	int width_;
 	int height_;
 };
+
+#define VERIFY(x)                                                                                                                          \
+	if (!(x))                                                                                                                              \
+	{                                                                                                                                      \
+		printf("Abort on %s : %d\n", __FILE__, __LINE__);                                                                                  \
+		abort();                                                                                                                           \
+	}
