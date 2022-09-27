@@ -185,9 +185,6 @@ void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 		auto renderPassSc = platform->GetCurrentScreen(color2, true);
 		auto renderPassPipelineStateSc = LLGI::CreateSharedPtr(graphics->CreateRenderPassPipelineState(renderPassSc));
 
-		VERIFY(renderPassPipelineState != nullptr);
-		VERIFY(renderPassPipelineStateSc != nullptr);
-
 		if (pips.count(renderPassPipelineState) == 0)
 		{
 			auto pip = graphics->CreatePiplineState();
