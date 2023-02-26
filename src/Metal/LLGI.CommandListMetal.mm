@@ -5,6 +5,7 @@
 #include "LLGI.PipelineStateMetal.h"
 #include "LLGI.RenderPassMetal.h"
 #include "LLGI.TextureMetal.h"
+#include "LLGI.QueryMetal.h"
 
 #import <MetalKit/MetalKit.h>
 #include <TargetConditionals.h>
@@ -565,5 +566,50 @@ void CommandListMetal::CopyBuffer(Buffer* src, Buffer* dst)
     [encoder endEncoding];
     [encoder release];
 }
+
+
+bool CommandListMetal::ResetQuery(Query* query)
+{
+	return true;
+}
+
+bool CommandListMetal::BeginQuery(Query* query, uint32_t queryIndex)
+{
+	return false;
+}
+
+bool CommandListMetal::EndQuery(Query* query, uint32_t queryIndex)
+{
+	return false;
+}
+
+bool CommandListMetal::RecordTimestamp(Query* query, uint32_t queryIndex)
+{
+	auto query_ = static_cast<QueryMetal*>(query);
+	if (query_ == nullptr)
+	{
+		return false;
+	}
+
+	if (query_->GetQueryType() == QueryType::Timestamp)
+	{
+		id<MTLCounterSampleBuffer> buffer = query_->GetTimestampBuffer();
+		if (buffer == nil)
+		{
+			return false;
+		}
+		if (computeEncoder_)
+		{
+			[computeEncoder_ sampleCountersInBuffer:buffer atSampleIndex:queryIndex withBarrier:TRUE];
+		}
+		else if (renderEncoder_)
+		{
+			[renderEncoder_ sampleCountersInBuffer:buffer atSampleIndex:queryIndex withBarrier:TRUE];
+		}
+		return true;
+	}
+	return false;
+}
+
 
 }

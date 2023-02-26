@@ -7,6 +7,7 @@
 #include "LLGI.ShaderDX12.h"
 #include "LLGI.SingleFrameMemoryPoolDX12.h"
 #include "LLGI.TextureDX12.h"
+#include "LLGI.QueryDX12.h"
 
 namespace LLGI
 {
@@ -31,6 +32,9 @@ GraphicsDX12::GraphicsDX12(ID3D12Device* device,
 	HRESULT hr;
 	// Create Command Allocator
 	hr = device->CreateCommandAllocator(commandListType_, IID_PPV_ARGS(&commandAllocator_));
+	assert(SUCCEEDED(hr));
+
+	hr = commandQueue_->GetTimestampFrequency(&timestampFrequency_);
 	assert(SUCCEEDED(hr));
 }
 
@@ -390,6 +394,23 @@ std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
 FAILED_EXIT:
 	SafeRelease(commandList);
 	return std::vector<uint8_t>();
+}
+
+Query* GraphicsDX12::CreateQuery(QueryType queryType, int32_t queryCount)
+{
+	auto obj = new QueryDX12();
+	if (!obj->Initialize(this, queryType, queryCount))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
+
+	return obj;
+}
+
+uint64_t GraphicsDX12::TimestampToMicroseconds(uint64_t timestamp) const
+{
+	return timestamp * 1000000 / timestampFrequency_;
 }
 
 } // namespace LLGI

@@ -63,6 +63,11 @@ public:
 
 	void CopyBuffer(Buffer* src, Buffer* dst) override;
 
+	bool ResetQuery(Query* query) override;
+	bool BeginQuery(Query* query, uint32_t queryIndex) override;
+	bool EndQuery(Query* query, uint32_t queryIndex) override;
+	bool RecordTimestamp(Query* query, uint32_t queryIndex) override;
+
 	void BeginComputePass() override;
 	void EndComputePass() override;
 	void Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, int32_t threadX, int32_t threadY, int32_t threadZ) override;

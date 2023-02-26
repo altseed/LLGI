@@ -5,6 +5,7 @@
 #include "LLGI.PipelineStateDX12.h"
 #include "LLGI.RenderPassDX12.h"
 #include "LLGI.TextureDX12.h"
+#include "LLGI.QueryDX12.h"
 
 namespace LLGI
 {
@@ -737,6 +738,52 @@ void CommandListDX12::CopyBuffer(Buffer* src, Buffer* dst)
 		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 		currentCommandList_->ResourceBarrier(1, &barrier);
 	}
+}
+
+bool CommandListDX12::ResetQuery(Query* query)
+{
+	return true;
+}
+
+bool CommandListDX12::BeginQuery(Query* query, uint32_t queryIndex)
+{
+	auto query_ = static_cast<QueryDX12*>(query);
+	if (query_ == nullptr)
+	{
+		return false;
+	}
+
+	currentCommandList_->BeginQuery(query_->GetQueryHeap(), query_->GetQueryTypeDX12(), queryIndex);
+
+	return true;
+}
+
+bool CommandListDX12::EndQuery(Query* query, uint32_t queryIndex)
+{
+	auto query_ = static_cast<QueryDX12*>(query);
+	if (query_ == nullptr)
+	{
+		return false;
+	}
+
+	currentCommandList_->EndQuery(query_->GetQueryHeap(), query_->GetQueryTypeDX12(), queryIndex);
+
+	return true;
+}
+
+bool CommandListDX12::RecordTimestamp(Query* query, uint32_t queryIndex)
+{
+	auto query_ = static_cast<QueryDX12*>(query);
+	if (query_ == nullptr)
+	{
+		return false;
+	}
+
+	currentCommandList_->EndQuery(query_->GetQueryHeap(), D3D12_QUERY_TYPE_TIMESTAMP, queryIndex);
+
+	currentCommandList_->ResolveQueryData(query_->GetQueryHeap(), D3D12_QUERY_TYPE_TIMESTAMP, queryIndex, 1, query_->GetBuffer(), queryIndex * sizeof(uint64_t));
+
+	return true;
 }
 
 void CommandListDX12::BeginComputePass() {}

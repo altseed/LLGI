@@ -175,7 +175,7 @@ bool PlatformVulkan::CreateDepthBuffer(Vec2I windowSize)
 
 	TextureParameter param;
 	param.Dimension = 2;
-	param.Format = TextureFormatType::D24S8;
+	param.Format = TextureFormatType::D32;
 	param.MipLevelCount = 1;
 	param.SampleCount = 1;
 	param.Size = {windowSize.X, windowSize.Y, 1};

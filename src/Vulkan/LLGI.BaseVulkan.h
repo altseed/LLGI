@@ -48,6 +48,7 @@ class PipelineStateVulkan;
 class TextureVulkan;
 class RenderPassVulkan;
 class RenderPassPipelineStateCacheVulkan;
+class QueryVulkan;
 
 struct VulkanImageInfo
 {

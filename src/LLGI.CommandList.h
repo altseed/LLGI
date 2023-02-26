@@ -165,6 +165,11 @@ public:
 	*/
 	virtual bool EndRenderPassWithPlatformPtr() { return false; }
 
+	virtual bool ResetQuery(Query* query) { return false; }
+	virtual bool BeginQuery(Query* query, uint32_t queryIndex) { return false; }
+	virtual bool EndQuery(Query* query, uint32_t queryIndex) { return false; }
+	virtual bool RecordTimestamp(Query* query, uint32_t queryIndex) { return false; }
+
 	virtual void ResetComputeBuffer();
 	virtual void BeginComputePass() {}
 	virtual void EndComputePass() {}

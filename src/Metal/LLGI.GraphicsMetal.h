@@ -75,6 +75,10 @@ public:
 
 	std::vector<uint8_t> CaptureRenderTarget(Texture* renderTarget) override;
 
+	Query* CreateQuery(QueryType queryType, int32_t queryCount) override;
+	
+	uint64_t TimestampToMicroseconds(uint64_t timestamp) const override;
+	
 	RenderPassMetal* GetRenderPass() const { return renderPass_.get(); }
 
 	id<MTLDevice>& GetDevice();

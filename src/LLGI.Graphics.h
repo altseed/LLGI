@@ -295,6 +295,19 @@ public:
 	virtual std::vector<uint8_t> CaptureRenderTarget(Texture* renderTarget);
 
 	/**
+		@brief	create a Query
+		@note
+		This is a function to create an object.
+		But it is very fast. So it can call it in everyframe.
+	*/
+	virtual Query* CreateQuery(QueryType queryType, int32_t queryCount) { return nullptr; }
+
+	/**
+		@brief	convert a timestamp difference to microseconds
+	*/
+	virtual uint64_t TimestampToMicroseconds(uint64_t timestamp) const { return 0; }
+
+	/**
 		@brief	specify a function which is called when this instance is disposed.
 		@param	disposed	called function
 	*/
