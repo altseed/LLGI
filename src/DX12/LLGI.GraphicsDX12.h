@@ -31,6 +31,8 @@ private:
 	std::unordered_map<RenderPassPipelineStateKey, std::shared_ptr<RenderPassPipelineStateDX12>, RenderPassPipelineStateKey::Hash>
 		renderPassPipelineStates_;
 
+	uint64_t timestampFrequency_ = 0;
+
 public:
 	GraphicsDX12(ID3D12Device* device,
 				 std::function<std::tuple<D3D12_CPU_DESCRIPTOR_HANDLE, Texture*>()> getScreenFunc,
@@ -86,6 +88,9 @@ public:
 
 	//! ResolvingDepth is only supported on the latestet Nvidia video card and driver
 	bool IsResolvedDepthSupported() const override { return false; }
+
+	Query* CreateQuery(QueryType queryType, int32_t queryCount) override;
+	uint64_t TimestampToMicroseconds(uint64_t timestamp) const override;
 };
 
 } // namespace LLGI

@@ -6,6 +6,7 @@
 #include "LLGI.ShaderVulkan.h"
 #include "LLGI.SingleFrameMemoryPoolVulkan.h"
 #include "LLGI.TextureVulkan.h"
+#include "LLGI.QueryVulkan.h"
 
 namespace LLGI
 {
@@ -35,6 +36,8 @@ GraphicsVulkan::GraphicsVulkan(const vk::Device& device,
 	{
 		renderPassPipelineStateCache_ = new RenderPassPipelineStateCacheVulkan(device, nullptr);
 	}
+
+	timestampPeriod_ = vkPysicalDevice_.getProperties().limits.timestampPeriod;
 }
 
 GraphicsVulkan::~GraphicsVulkan()
@@ -348,6 +351,23 @@ RenderPassPipelineState* GraphicsVulkan::CreateRenderPassPipelineState(RenderPas
 RenderPassPipelineState* GraphicsVulkan::CreateRenderPassPipelineState(const RenderPassPipelineStateKey& key)
 {
 	return renderPassPipelineStateCache_->Create(key);
+}
+
+Query* GraphicsVulkan::CreateQuery(QueryType queryType, int32_t queryCount)
+{
+	auto obj = new QueryVulkan();
+	if (!obj->Initialize(this, queryType, queryCount))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
+
+	return obj;
+}
+
+uint64_t GraphicsVulkan::TimestampToMicroseconds(uint64_t timestamp) const
+{
+	return static_cast<uint64_t>(timestamp * timestampPeriod_ / 1000);
 }
 
 int32_t GraphicsVulkan::GetSwapBufferCount() const { return swapBufferCount_; }

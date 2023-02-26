@@ -3,6 +3,7 @@
 #include "LLGI.GraphicsVulkan.h"
 #include "LLGI.PipelineStateVulkan.h"
 #include "LLGI.TextureVulkan.h"
+#include "LLGI.QueryVulkan.h"
 
 namespace LLGI
 {
@@ -784,6 +785,59 @@ void CommandListVulkan::EndRenderPass()
 vk::CommandBuffer CommandListVulkan::GetCommandBuffer() const { return currentCommandBuffer_; }
 
 vk::Fence CommandListVulkan::GetFence() const { return fences_[currentSwapBufferIndex_]; }
+
+bool CommandListVulkan::ResetQuery(Query* query)
+{
+	auto query_ = static_cast<QueryVulkan*>(query);
+	if (query_ == nullptr)
+	{
+		return false;
+	}
+
+	currentCommandBuffer_.resetQueryPool(query_->GetQueryPool(), 0, query_->GetQueryCount());
+
+	return true;
+}
+
+bool CommandListVulkan::BeginQuery(Query* query, uint32_t queryIndex)
+{
+	auto query_ = static_cast<QueryVulkan*>(query);
+	if (query_ == nullptr)
+	{
+		return false;
+	}
+
+	currentCommandBuffer_.beginQuery(query_->GetQueryPool(), queryIndex, vk::QueryControlFlagBits::ePrecise);
+
+	return true;
+}
+
+bool CommandListVulkan::EndQuery(Query* query, uint32_t queryIndex)
+{
+	auto query_ = static_cast<QueryVulkan*>(query);
+	if (query_ == nullptr)
+	{
+		return false;
+	}
+
+	currentCommandBuffer_.endQuery(query_->GetQueryPool(), queryIndex);
+
+	return true;
+}
+
+bool CommandListVulkan::RecordTimestamp(Query* query, uint32_t queryIndex)
+{
+	auto query_ = static_cast<QueryVulkan*>(query);
+	if (query_ == nullptr)
+	{
+		return false;
+	}
+
+	auto pipelineStage = (queryIndex % 2 == 0) ? vk::PipelineStageFlagBits::eTopOfPipe : vk::PipelineStageFlagBits::eBottomOfPipe;
+	currentCommandBuffer_.writeTimestamp(pipelineStage, query_->GetQueryPool(), queryIndex);
+
+	return true;
+}
 
 void CommandListVulkan::BeginComputePass() {}
 

@@ -7,6 +7,7 @@
 #include "LLGI.ShaderMetal.h"
 #include "LLGI.SingleFrameMemoryPoolMetal.h"
 #include "LLGI.TextureMetal.h"
+#include "LLGI.QueryMetal.h"
 #import <MetalKit/MetalKit.h>
 
 #include <TargetConditionals.h>
@@ -333,6 +334,23 @@ std::vector<uint8_t> GraphicsMetal::CaptureRenderTarget(Texture* renderTarget)
 	[texture getBytes:data.data() bytesPerRow:bytesPerRow fromRegion:region mipmapLevel:0];
 
 	return data;
+}
+
+Query* GraphicsMetal::CreateQuery(QueryType queryType, int32_t queryCount)
+{
+	auto obj = new QueryMetal();
+	if (!obj->Initialize(this, queryType, queryCount))
+	{
+		SafeRelease(obj);
+		return nullptr;
+	}
+
+	return obj;
+}
+
+uint64_t GraphicsMetal::TimestampToMicroseconds(uint64_t timestamp) const
+{
+	return static_cast<uint64_t>(timestamp / 1000);
 }
 
 id<MTLDevice>& GraphicsMetal::GetDevice() { return device_; }

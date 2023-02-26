@@ -59,6 +59,11 @@ public:
 	bool BeginRenderPassWithPlatformPtr(void* platformPtr) override;
 	bool EndRenderPassWithPlatformPtr() override;
 
+	bool ResetQuery(Query* query) override;
+	bool BeginQuery(Query* query, uint32_t queryIndex) override;
+	bool EndQuery(Query* query, uint32_t queryIndex) override;
+	bool RecordTimestamp(Query* query, uint32_t queryIndex) override;
+
 	void BeginComputePass() override;
 	void EndComputePass() override;
 	

@@ -27,6 +27,7 @@ private:
 	std::function<void(vk::CommandBuffer, vk::Fence)> addCommand_;
 	RenderPassPipelineStateCacheVulkan* renderPassPipelineStateCache_ = nullptr;
 	ReferenceObject* owner_ = nullptr;
+	float timestampPeriod_ = 1.0f;
 
 public:
 	GraphicsVulkan(const vk::Device& device,
@@ -78,6 +79,9 @@ public:
 
 	VkCommandBuffer BeginSingleTimeCommands();
 	bool EndSingleTimeCommands(VkCommandBuffer commandBuffer);
+
+	Query* CreateQuery(QueryType queryType, int32_t queryCount) override;
+	uint64_t TimestampToMicroseconds(uint64_t timestamp) const override;
 };
 
 } // namespace LLGI

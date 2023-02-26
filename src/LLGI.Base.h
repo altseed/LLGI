@@ -352,6 +352,12 @@ struct DataStructure
 	int32_t Size;
 };
 
+enum class QueryType
+{
+	Timestamp,
+	Occulusion,
+};
+
 template <class T> void SafeAddRef(T& t)
 {
 	if (t != NULL)
@@ -464,6 +470,7 @@ class CommandList;
 class Compiler;
 class RenderPass;
 class RenderPassPipelineState;
+class Query;
 
 enum class LogType
 {
