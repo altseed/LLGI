@@ -40,7 +40,7 @@ jobs:
 
   - job: MacOS
     pool:
-      vmImage: 'macOS-10.15'
+      vmImage: 'macos-11'
     steps:
       - task: PowerShell@2
         inputs:
@@ -72,7 +72,7 @@ jobs:
 
   - job: MacOS_iOS
     pool:
-      vmImage: 'macOS-10.15'
+      vmImage: 'macos-11'
     steps:
       - task: PowerShell@2
         inputs:
@@ -92,17 +92,15 @@ jobs:
 
   - job: Linux
     pool:
-      vmImage: 'ubuntu-18.04'
+      vmImage: 'ubuntu-20.04'
 
     steps:
       - task: Bash@3
         inputs:
           targetType: 'inline'
           script: |
-            wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
-            sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.1.126-bionic.list https://packages.lunarg.com/vulkan/1.1.126/lunarg-vulkan-1.1.126-bionic.list
             sudo apt update
-            sudo apt install vulkan-sdk
+            sudo apt install libvulkan-dev
 
       - task: Bash@3
         inputs:
