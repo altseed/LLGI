@@ -40,7 +40,7 @@ jobs:
 
   - job: MacOS
     pool:
-      vmImage: 'macOS-10.15'
+      vmImage: 'macos-11'
     steps:
       - task: PowerShell@2
         inputs:
@@ -72,7 +72,7 @@ jobs:
 
   - job: MacOS_iOS
     pool:
-      vmImage: 'macOS-10.15'
+      vmImage: 'macos-11'
     steps:
       - task: PowerShell@2
         inputs:
@@ -92,7 +92,7 @@ jobs:
 
   - job: Linux
     pool:
-      vmImage: 'ubuntu-18.04'
+      vmImage: 'ubuntu-20.04'
 
     steps:
       - task: Bash@3
