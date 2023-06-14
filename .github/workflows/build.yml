@@ -56,27 +56,27 @@ jobs:
         run: |
           if [ "${{ matrix.name }}" = "mac_mac" ];
           then
-            cmake -s . -B build -DBUILD_TEST=ON -DBUILD_EXAMPLE=ON
+            cmake -S . -B build -DBUILD_TEST=ON -DBUILD_EXAMPLE=ON
           fi
 
           if [ "${{ matrix.name }}" = "mac_ios" ];
           then
-            cmake -s . -B build -DCMAKE_SYSTEM_NAME=iOS -DIPHONEOS_DEPLOYMENT_TARGET=12.0 "-DCMAKE_OSX_ARCHITECTURES=armv7;armv7s;arm64;i386;x86_64"
+            cmake -S . -B build -DCMAKE_SYSTEM_NAME=iOS -DIPHONEOS_DEPLOYMENT_TARGET=12.0 "-DCMAKE_OSX_ARCHITECTURES=armv7;armv7s;arm64;i386;x86_64"
           fi
 
           if [ "${{ matrix.name }}" = "linux" ];
           then
-            cmake -s . -B build -DBUILD_TEST=ON -DBUILD_VULKAN=ON -DBUILD_VULKAN_COMPILER=ON -DBUILD_EXAMPLE=ON -DBUILD_TOOL=ON
+            cmake -S . -B build -DBUILD_TEST=ON -DBUILD_VULKAN=ON -DBUILD_VULKAN_COMPILER=ON -DBUILD_EXAMPLE=ON -DBUILD_TOOL=ON
           fi
 
           if [ "${{ matrix.name }}" = "windows_x86" ];
           then
-            cmake -s . -B build -A Win32 -DBUILD_TEST=ON -DBUILD_EXAMPLE=ON
+            cmake -S . -B build -A Win32 -DBUILD_TEST=ON -DBUILD_EXAMPLE=ON
           fi
 
           if [ "${{ matrix.name }}" = "windows_x64" ];
           then
-            cmake -s . -B build -DBUILD_TEST=ON -DBUILD_EXAMPLE=ON
+            cmake -S . -B build -DBUILD_TEST=ON -DBUILD_EXAMPLE=ON
           fi
 
           cmake --build build --config Release
