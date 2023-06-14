@@ -71,7 +71,7 @@ jobs:
 
           if [ "${{ matrix.name }}" = "windows_x86" ];
           then
-            cmake -S . -B build -A Win32 -DBUILD_TEST=ON -DBUILD_EXAMPLE=ON
+            cmake -S . -B build -A Win32 -DBUILD_TEST=ON -DBUILD_EXAMPLE=OFF
           fi
 
           if [ "${{ matrix.name }}" = "windows_x64" ];
