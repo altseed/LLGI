@@ -224,8 +224,8 @@ void CommandListDX12::EndRenderPass()
 			return;
 		}
 
-		src->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_RESOLVE_SOURCE);
-		dst->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_RESOLVE_DEST);
+		src->ResourceBarrier(currentCommandList_, D3D12_RESOURCE_STATE_RESOLVE_SOURCE);
+		dst->ResourceBarrier(currentCommandList_, D3D12_RESOURCE_STATE_RESOLVE_DEST);
 
 		currentCommandList_->ResolveSubresource(dst->Get(), 0, src->Get(), 0, dst->GetDXGIFormat());
 	}
@@ -248,8 +248,8 @@ void CommandListDX12::EndRenderPass()
 			return;
 		}
 
-		src->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_RESOLVE_SOURCE);
-		dst->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_RESOLVE_DEST);
+		src->ResourceBarrier(currentCommandList_, D3D12_RESOURCE_STATE_RESOLVE_SOURCE);
+		dst->ResourceBarrier(currentCommandList_, D3D12_RESOURCE_STATE_RESOLVE_DEST);
 
 		currentCommandList_->ResolveSubresource(dst->Get(), 0, src->Get(), 0, DirectX12::GetShaderResourceViewFormat(dst->GetDXGIFormat()));
 	}
@@ -409,16 +409,16 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 					auto wrapMode = currentTextures[stage_ind][unit_ind].wrapMode;
 					auto minMagFilter = currentTextures[stage_ind][unit_ind].minMagFilter;
 
-					// Make barrior to use a render target
+					// Make barrier to use a render target
 					if (texture->GetType() == TextureType::Render)
 					{
 						if (stage_ind == static_cast<int>(ShaderStageType::Pixel))
 						{
-							texture->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+							texture->ResourceBarrier(currentCommandList_, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 						}
 						else
 						{
-							texture->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+							texture->ResourceBarrier(currentCommandList_, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 						}
 					}
 
@@ -597,8 +597,8 @@ void CommandListDX12::CopyTexture(
 
 	auto srcState = srcTex->GetState();
 
-	srcTex->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_COPY_SOURCE);
-	dstTex->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_COPY_DEST);
+	srcTex->ResourceBarrier(currentCommandList_, D3D12_RESOURCE_STATE_COPY_SOURCE);
+	dstTex->ResourceBarrier(currentCommandList_, D3D12_RESOURCE_STATE_COPY_DEST);
 
 	D3D12_BOX srcBox;
 	srcBox.left = srcPos[0];
@@ -610,8 +610,8 @@ void CommandListDX12::CopyTexture(
 
 	currentCommandList_->CopyTextureRegion(&dstLoc, dstPos[0], dstPos[1], dstPos[2], &srcLoc, &srcBox);
 
-	dstTex->ResourceBarrior(currentCommandList_, D3D12_RESOURCE_STATE_GENERIC_READ);
-	srcTex->ResourceBarrior(currentCommandList_, srcState);
+	dstTex->ResourceBarrier(currentCommandList_, D3D12_RESOURCE_STATE_GENERIC_READ);
+	srcTex->ResourceBarrier(currentCommandList_, srcState);
 
 	RegisterReferencedObject(src);
 	RegisterReferencedObject(dst);

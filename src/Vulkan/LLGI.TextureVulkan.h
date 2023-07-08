@@ -72,9 +72,9 @@ public:
 
 	void ChangeImageLayout(int32_t mipLevel, const vk::ImageLayout& imageLayout);
 
-	void ResourceBarrior(vk::CommandBuffer& commandBuffer, const vk::ImageLayout& imageLayout);
+	void ResourceBarrier(vk::CommandBuffer& commandBuffer, const vk::ImageLayout& imageLayout);
 
-	void ResourceBarrior(int32_t mipLevel, vk::CommandBuffer& commandBuffer, const vk::ImageLayout& imageLayout);
+	void ResourceBarrier(int32_t mipLevel, vk::CommandBuffer& commandBuffer, const vk::ImageLayout& imageLayout);
 };
 
 } // namespace LLGI

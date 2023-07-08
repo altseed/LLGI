@@ -448,7 +448,7 @@ bool PlatformDX12::NewFrame()
 	commandAllocators.at(0)->Reset();
 	commandListStart->Reset(commandAllocators.at(0), nullptr);
 
-	renderTargets_[frameIndex]->ResourceBarrior(commandListStart, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	renderTargets_[frameIndex]->ResourceBarrier(commandListStart, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	commandListStart->OMSetRenderTargets(1, &(handleRTV[frameIndex]), FALSE, nullptr);
 	commandListStart->Close();
@@ -464,7 +464,7 @@ void PlatformDX12::Present()
 {
 	commandListPresent->Reset(commandAllocators.at(0), nullptr);
 
-	renderTargets_[frameIndex]->ResourceBarrior(commandListPresent, D3D12_RESOURCE_STATE_PRESENT);
+	renderTargets_[frameIndex]->ResourceBarrier(commandListPresent, D3D12_RESOURCE_STATE_PRESENT);
 
 	commandListPresent->Close();
 

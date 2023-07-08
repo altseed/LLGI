@@ -246,7 +246,7 @@ std::vector<uint8_t> GraphicsVulkan::CaptureRenderTarget(Texture* renderTarget)
 		VkCommandBuffer commandBuffer = BeginSingleTimeCommands();
 		vk::CommandBuffer commandBufferCpp = static_cast<vk::CommandBuffer>(commandBuffer);
 		auto oldLayout = texture->GetImageLayouts()[0];
-		texture->ResourceBarrior(commandBufferCpp, vk::ImageLayout::eTransferSrcOptimal);
+		texture->ResourceBarrier(commandBufferCpp, vk::ImageLayout::eTransferSrcOptimal);
 
 		/*
 		// Swapchain image (VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) -> copy source (VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL)
@@ -289,7 +289,7 @@ std::vector<uint8_t> GraphicsVulkan::CaptureRenderTarget(Texture* renderTarget)
 		}
 
 		// Undo layout
-		texture->ResourceBarrior(commandBufferCpp, oldLayout);
+		texture->ResourceBarrier(commandBufferCpp, oldLayout);
 		/*
 		{
 			VkImageMemoryBarrier imageMemoryBarrier = {};

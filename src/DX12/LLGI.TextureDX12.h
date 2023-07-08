@@ -62,7 +62,7 @@ public:
 
 	D3D12_RESOURCE_STATES GetState() const { return state_; }
 
-	//! set a resource barrior and change a state
-	void ResourceBarrior(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES state);
+	//! set a resource barrier and change a state
+	void ResourceBarrier(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES state);
 };
 } // namespace LLGI

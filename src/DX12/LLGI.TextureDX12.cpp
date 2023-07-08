@@ -263,11 +263,11 @@ void TextureDX12::Unlock()
 	dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
 	dst.SubresourceIndex = 0;
 
-	ResourceBarrior(commandList, D3D12_RESOURCE_STATE_COPY_DEST);
+	ResourceBarrier(commandList, D3D12_RESOURCE_STATE_COPY_DEST);
 
 	commandList->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
 
-	ResourceBarrior(commandList, D3D12_RESOURCE_STATE_GENERIC_READ);
+	ResourceBarrier(commandList, D3D12_RESOURCE_STATE_GENERIC_READ);
 
 	commandList->Close();
 	ID3D12CommandList* list[] = {commandList};
@@ -291,7 +291,7 @@ FAILED_EXIT:
 
 Vec2I TextureDX12::GetSizeAs2D() const { return Vec2I{textureSize_.X, textureSize_.Y}; }
 
-void TextureDX12::ResourceBarrior(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES state)
+void TextureDX12::ResourceBarrier(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES state)
 {
 	if (state_ == state)
 		return;

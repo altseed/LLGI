@@ -118,8 +118,8 @@ bool RenderPassDX12::ReinitializeRenderTargetViews(CommandListDX12* commandList,
 		device_->CreateRenderTargetView(renderTargets_[i].renderPass_, &desc, cpuHandle);
 		handleRTV_[i] = cpuHandle;
 
-		// memory barrior to make a rendertarget
-		renderTargets_[i].texture_->ResourceBarrior(commandList->GetCommandList(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+		// memory barrier to make a rendertarget
+		renderTargets_[i].texture_->ResourceBarrier(commandList->GetCommandList(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 	}
 
 	if (GetHasDepthTexture())
@@ -142,7 +142,7 @@ bool RenderPassDX12::ReinitializeRenderTargetViews(CommandListDX12* commandList,
 		device_->CreateDepthStencilView(depthTexture->Get(), &desc, cpuHandle);
 		handleDSV_ = cpuHandle;
 
-		depthTexture->ResourceBarrior(commandList->GetCommandList(), D3D12_RESOURCE_STATE_DEPTH_WRITE);
+		depthTexture->ResourceBarrier(commandList->GetCommandList(), D3D12_RESOURCE_STATE_DEPTH_WRITE);
 	}
 
 	return true;

@@ -721,8 +721,8 @@ void PlatformVulkan::Present()
 
 	if (swapBuffers[frameIndex].texture->GetImageLayouts()[0] != vk::ImageLayout::ePresentSrcKHR)
 	{
-		swapBuffers[frameIndex].texture->ResourceBarrior(cmdBuffer, vk::ImageLayout::eColorAttachmentOptimal);
-		swapBuffers[frameIndex].texture->ResourceBarrior(cmdBuffer, vk::ImageLayout::ePresentSrcKHR);
+		swapBuffers[frameIndex].texture->ResourceBarrier(cmdBuffer, vk::ImageLayout::eColorAttachmentOptimal);
+		swapBuffers[frameIndex].texture->ResourceBarrier(cmdBuffer, vk::ImageLayout::ePresentSrcKHR);
 	}
 
 	cmdBuffer.end();

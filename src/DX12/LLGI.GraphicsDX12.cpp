@@ -348,9 +348,9 @@ std::vector<uint8_t> GraphicsDX12::CaptureRenderTarget(Texture* renderTarget)
 	dst.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
 	dst.PlacedFootprint = footprint;
 
-	texture->ResourceBarrior(commandList, D3D12_RESOURCE_STATE_COPY_SOURCE);
+	texture->ResourceBarrier(commandList, D3D12_RESOURCE_STATE_COPY_SOURCE);
 	commandList->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
-	texture->ResourceBarrior(commandList, D3D12_RESOURCE_STATE_GENERIC_READ);
+	texture->ResourceBarrier(commandList, D3D12_RESOURCE_STATE_GENERIC_READ);
 
 	commandList->Close();
 	ID3D12CommandList* list[] = {commandList};

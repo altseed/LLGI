@@ -77,7 +77,7 @@ void ImguiPlatformDX12::RenderDrawData(ImDrawData* draw_data, LLGI::CommandList*
 
 		if (t->GetType() == LLGI::TextureType::Render)
 		{
-			t->ResourceBarrior(cl->GetCommandList(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+			t->ResourceBarrier(cl->GetCommandList(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 		}
 	}
 
