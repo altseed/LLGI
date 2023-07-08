@@ -24,7 +24,7 @@ struct main0_in
 };
 
 static inline __attribute__((always_inline))
-float4 _main(PS_Input Input, thread texture2d<float> g_texture1, thread sampler g_sampler1, thread texture2d_array<float> g_texture2, thread sampler g_sampler2, thread texture3d<float> g_texture3, thread sampler g_sampler3)
+float4 _main(PS_Input Input, texture2d<float> g_texture1, sampler g_sampler1, texture2d_array<float> g_texture2, sampler g_sampler2, texture3d<float> g_texture3, sampler g_sampler3)
 {
     if (Input.UV.x < 0.300000011920928955078125)
     {
@@ -35,7 +35,7 @@ float4 _main(PS_Input Input, thread texture2d<float> g_texture1, thread sampler 
         if (Input.UV.x < 0.60000002384185791015625)
         {
             float3 _56 = float3(Input.UV, 1.0);
-            return g_texture2.sample(g_sampler2, _56.xy, uint(round(_56.z)));
+            return g_texture2.sample(g_sampler2, _56.xy, uint(rint(_56.z)));
         }
     }
     return g_texture3.sample(g_sampler3, float3(Input.UV, 0.5));

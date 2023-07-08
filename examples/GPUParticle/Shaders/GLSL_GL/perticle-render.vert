@@ -1,4 +1,4 @@
-#version 420
+#version 430
 #ifdef GL_ARB_shader_draw_parameters
 #extension GL_ARB_shader_draw_parameters : enable
 #endif
@@ -41,6 +41,8 @@ uniform int SPIRV_Cross_BaseInstance;
 layout(location = 0) out vec2 _entryPointOutput_UV;
 layout(location = 1) out vec4 _entryPointOutput_Color;
 
+mat4 spvWorkaroundRowMajor(mat4 wrap) { return wrap; }
+
 VS_OUTPUT _main(VS_INPUT _input)
 {
     vec2 texelPos = vec2(mod(float(_input.InstanceId), CBVS0.TextureResolution.x), float(_input.InstanceId) / CBVS0.TextureResolution.x);
@@ -50,7 +52,7 @@ VS_OUTPUT _main(VS_INPUT _input)
     vec3 posOffset = positionAndLocalTime.xyz;
     vec3 worldPos = _input.Position + posOffset;
     VS_OUTPUT _output;
-    _output.Position = vec4(worldPos, 1.0) * CBVS0.ViewProjMatrix;
+    _output.Position = vec4(worldPos, 1.0) * spvWorkaroundRowMajor(CBVS0.ViewProjMatrix);
     _output.UV = _input.UV;
     _output.Color = vec4(1.0, 1.0, 1.0, 1.0 - (positionAndLocalTime.w / (velocityAndLifeTime.w + 9.9999997473787516355514526367188e-06)));
     return _output;

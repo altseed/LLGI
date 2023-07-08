@@ -5,6 +5,13 @@
 
 using namespace metal;
 
+// Implementation of the GLSL mod() function, which is slightly different than Metal fmod()
+template<typename Tx, typename Ty>
+inline Tx mod(Tx x, Ty y)
+{
+    return x - y * floor(x / y);
+}
+
 struct VS_INPUT
 {
     float2 ParticleIDAndLifeTime;
@@ -39,21 +46,14 @@ struct main0_in
     float3 input_Velocity [[attribute(2)]];
 };
 
-// Implementation of the GLSL mod() function, which is slightly different than Metal fmod()
-template<typename Tx, typename Ty>
-inline Tx mod(Tx x, Ty y)
-{
-    return x - y * floor(x / y);
-}
-
 static inline __attribute__((always_inline))
-VS_OUTPUT _main(thread const VS_INPUT& _input, constant GPUParticleTextureInfo& v_23)
+VS_OUTPUT _main(thread const VS_INPUT& _input, constant GPUParticleTextureInfo& _23)
 {
-    float2 HalfPixelOffsetInClipSpace = float2(1.0 / v_23.TextureSize.x, (-1.0) / v_23.TextureSize.y);
+    float2 HalfPixelOffsetInClipSpace = float2(1.0 / _23.TextureSize.x, (-1.0) / _23.TextureSize.y);
     float particleID = _input.ParticleIDAndLifeTime.x;
     float lifeTime = _input.ParticleIDAndLifeTime.y;
-    float2 texelPos = float2(mod(particleID, v_23.TextureSize.x), particleID / v_23.TextureSize.x);
-    float2 svPos = (texelPos / float2(v_23.TextureSize.xy)) * 2.0;
+    float2 texelPos = float2(mod(particleID, _23.TextureSize.x), particleID / _23.TextureSize.x);
+    float2 svPos = (texelPos / float2(_23.TextureSize.xy)) * 2.0;
     svPos += float2(-1.0);
     svPos.y *= (-1.0);
     svPos += HalfPixelOffsetInClipSpace;
@@ -64,7 +64,7 @@ VS_OUTPUT _main(thread const VS_INPUT& _input, constant GPUParticleTextureInfo& 
     return _output;
 }
 
-vertex main0_out main0(main0_in in [[stage_in]], constant GPUParticleTextureInfo& v_23 [[buffer(0)]])
+vertex main0_out main0(main0_in in [[stage_in]], constant GPUParticleTextureInfo& _23 [[buffer(0)]])
 {
     main0_out out = {};
     VS_INPUT _input;
@@ -72,7 +72,7 @@ vertex main0_out main0(main0_in in [[stage_in]], constant GPUParticleTextureInfo
     _input.Position = in.input_Position;
     _input.Velocity = in.input_Velocity;
     VS_INPUT param = _input;
-    VS_OUTPUT flattenTemp = _main(param, v_23);
+    VS_OUTPUT flattenTemp = _main(param, _23);
     out._entryPointOutput_PositionData = flattenTemp.PositionData;
     out._entryPointOutput_VelocityAndLifeTimeData = flattenTemp.VelocityAndLifeTimeData;
     out.gl_Position = flattenTemp.Position;

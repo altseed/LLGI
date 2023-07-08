@@ -1,4 +1,4 @@
-#version 420
+#version 430
 
 struct VS_INPUT
 {
@@ -20,8 +20,8 @@ layout(set = 0, binding = 0, std140) uniform GPUParticleTextureInfo
     layout(row_major) mat4 ViewProjMatrix;
 } _29;
 
-layout(set = 0, binding = 1) uniform sampler2D Sampler_PositionSamplerState_;
-layout(set = 0, binding = 2) uniform sampler2D Sampler_VelocitySamplerState_;
+layout(location = 0, set = 0, binding = 1) uniform sampler2D Sampler_PositionSamplerState_;
+layout(location = 1, set = 0, binding = 2) uniform sampler2D Sampler_VelocitySamplerState_;
 
 layout(location = 0) in vec3 input_Position;
 layout(location = 1) in vec2 input_UV;

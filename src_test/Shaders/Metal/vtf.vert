@@ -32,7 +32,7 @@ struct main0_in
 };
 
 static inline __attribute__((always_inline))
-VS_OUTPUT _main(thread const VS_INPUT& _input, thread texture2d<float> txt, thread sampler smp)
+VS_OUTPUT _main(thread const VS_INPUT& _input, texture2d<float> txt, sampler smp)
 {
     float4 c = txt.sample(smp, _input.g_uv, level(0.0));
     VS_OUTPUT _output;
