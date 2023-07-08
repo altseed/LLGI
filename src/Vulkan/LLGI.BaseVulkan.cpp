@@ -382,7 +382,7 @@ bool CreateDepthBuffer(vk::Image& image,
 		subresourceRange.aspectMask = aspect;
 		subresourceRange.levelCount = 1;
 		subresourceRange.layerCount = 1;
-		// SetImageBarrior(
+		// SetImageBarrier(
 		SetImageLayout(
 			*commandBuffer, image, vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal, subresourceRange);
 	}

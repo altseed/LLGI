@@ -112,7 +112,7 @@ private:
 	*/
 	vk::Result Present(vk::Semaphore semaphore);
 
-	// void SetImageBarrior(vk::CommandBuffer cmdbuffer,
+	// void SetImageBarrier(vk::CommandBuffer cmdbuffer,
 	//					vk::Image image,
 	//					vk::ImageLayout oldImageLayout,
 	//					vk::ImageLayout newImageLayout,

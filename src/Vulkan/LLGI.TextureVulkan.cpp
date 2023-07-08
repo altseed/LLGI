@@ -217,7 +217,7 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics,
 		// a texture state must starts from undefined, so the states must be changed with a command buffer
 		vk::CommandBufferBeginInfo cmdBufferBeginInfo;
 		cmdBuffers[0]->begin(cmdBufferBeginInfo);
-		ResourceBarrior(cmdBuffers[0].get(), vk::ImageLayout::eShaderReadOnlyOptimal);
+		ResourceBarrier(cmdBuffers[0].get(), vk::ImageLayout::eShaderReadOnlyOptimal);
 		cmdBuffers[0]->end();
 		std::array<vk::SubmitInfo, 1> submitInfos;
 		submitInfos[0].commandBufferCount = 1;
@@ -348,9 +348,9 @@ void TextureVulkan::Unlock()
 	colorSubRange.layerCount = isArray ? parameter_.Size.Z : 1;
 
 	vk::ImageLayout imageLayout = vk::ImageLayout::eTransferDstOptimal;
-	ResourceBarrior(copyCommandBuffer, imageLayout);
+	ResourceBarrier(copyCommandBuffer, imageLayout);
 	copyCommandBuffer.copyBufferToImage(cpuBuf->buffer(), image_, imageLayout, imageBufferCopy);
-	ResourceBarrior(copyCommandBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
+	ResourceBarrier(copyCommandBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
 	copyCommandBuffer.end();
 
 	// submit and wait to execute command
@@ -385,15 +385,15 @@ void TextureVulkan::ChangeImageLayout(const vk::ImageLayout& imageLayout)
 
 void TextureVulkan::ChangeImageLayout(int32_t mipLevel, const vk::ImageLayout& imageLayout) { imageLayouts_[mipLevel] = imageLayout; }
 
-void TextureVulkan::ResourceBarrior(vk::CommandBuffer& commandBuffer, const vk::ImageLayout& imageLayout)
+void TextureVulkan::ResourceBarrier(vk::CommandBuffer& commandBuffer, const vk::ImageLayout& imageLayout)
 {
 	for (int32_t i = 0; i < mipmapCount_; i++)
 	{
-		ResourceBarrior(i, commandBuffer, imageLayout);
+		ResourceBarrier(i, commandBuffer, imageLayout);
 	}
 }
 
-void TextureVulkan::ResourceBarrior(int32_t mipLevel, vk::CommandBuffer& commandBuffer, const vk::ImageLayout& imageLayout)
+void TextureVulkan::ResourceBarrier(int32_t mipLevel, vk::CommandBuffer& commandBuffer, const vk::ImageLayout& imageLayout)
 {
 	if (imageLayouts_[mipLevel] == imageLayout)
 	{

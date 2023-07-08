@@ -436,12 +436,12 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 			vk::DescriptorImageInfo imageInfo;
 			if (texture->GetType() == TextureType::Depth)
 			{
-				//	texture->ResourceBarrior(cmdBuffer, vk::ImageLayout::eDepthStencilReadOnlyOptimal);
+				//	texture->ResourceBarrier(cmdBuffer, vk::ImageLayout::eDepthStencilReadOnlyOptimal);
 				imageInfo.imageLayout = vk::ImageLayout::eDepthStencilReadOnlyOptimal;
 			}
 			else
 			{
-				//	texture->ResourceBarrior(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
+				//	texture->ResourceBarrier(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
 				imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 			}
 
@@ -580,12 +580,12 @@ void CommandListVulkan::CopyTexture(
 	imageCopy[0].dstSubresource.layerCount = 1;
 	imageCopy[0].dstSubresource.baseArrayLayer = dstLayer;
 
-	srcTex->ResourceBarrior(currentCommandBuffer_, vk::ImageLayout::eTransferSrcOptimal);
-	dstTex->ResourceBarrior(currentCommandBuffer_, vk::ImageLayout::eTransferDstOptimal);
+	srcTex->ResourceBarrier(currentCommandBuffer_, vk::ImageLayout::eTransferSrcOptimal);
+	dstTex->ResourceBarrier(currentCommandBuffer_, vk::ImageLayout::eTransferDstOptimal);
 	currentCommandBuffer_.copyImage(
 		srcTex->GetImage(), srcTex->GetImageLayouts()[0], dstTex->GetImage(), dstTex->GetImageLayouts()[0], imageCopy);
-	dstTex->ResourceBarrior(currentCommandBuffer_, vk::ImageLayout::eShaderReadOnlyOptimal);
-	srcTex->ResourceBarrior(currentCommandBuffer_, vk::ImageLayout::eShaderReadOnlyOptimal);
+	dstTex->ResourceBarrier(currentCommandBuffer_, vk::ImageLayout::eShaderReadOnlyOptimal);
+	srcTex->ResourceBarrier(currentCommandBuffer_, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 	RegisterReferencedObject(src);
 	RegisterReferencedObject(dst);
@@ -600,8 +600,8 @@ void CommandListVulkan::GenerateMipMap(Texture* src)
 
 	for (int32_t i = 1; i < src->GetMipmapCount(); i++)
 	{
-		srcTex->ResourceBarrior(i - 1, currentCommandBuffer_, vk::ImageLayout::eTransferSrcOptimal);
-		srcTex->ResourceBarrior(i, currentCommandBuffer_, vk::ImageLayout::eTransferDstOptimal);
+		srcTex->ResourceBarrier(i - 1, currentCommandBuffer_, vk::ImageLayout::eTransferSrcOptimal);
+		srcTex->ResourceBarrier(i, currentCommandBuffer_, vk::ImageLayout::eTransferDstOptimal);
 
 		vk::ImageBlit blit{};
 		blit.srcOffsets[0] = vk::Offset3D(0, 0, 0);
@@ -629,7 +629,7 @@ void CommandListVulkan::GenerateMipMap(Texture* src)
 		mipHeight = mipHeight > 1 ? mipHeight / 2 : 1;
 	}
 
-	srcTex->ResourceBarrior(currentCommandBuffer_, vk::ImageLayout::eShaderReadOnlyOptimal);
+	srcTex->ResourceBarrier(currentCommandBuffer_, vk::ImageLayout::eShaderReadOnlyOptimal);
 }
 
 void CommandListVulkan::CopyBuffer(Buffer* src, Buffer* dst)
@@ -695,7 +695,7 @@ void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
 	if (renderPass_->GetHasDepthTexture())
 	{
 		auto t = static_cast<TextureVulkan*>(renderPass_->GetDepthTexture());
-		t->ResourceBarrior(currentCommandBuffer_, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+		t->ResourceBarrier(currentCommandBuffer_, vk::ImageLayout::eDepthStencilAttachmentOptimal);
 	}
 
 	// begin renderpass
