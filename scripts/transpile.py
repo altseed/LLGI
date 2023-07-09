@@ -1,8 +1,8 @@
-import os, subprocess, shutil, glob, platform, argparse
-
 # Usage: python scripts/transpile.py {target}
 # e.g. python scripts/transpile.py src_test/Shaders/
 #      python scripts/transpile.py examples/GPUParticle/Shaders/
+
+import os, subprocess, shutil, glob, platform, argparse
 
 aparser = argparse.ArgumentParser()
 aparser.add_argument('target', help='target directory')
