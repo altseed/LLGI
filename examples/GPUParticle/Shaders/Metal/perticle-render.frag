@@ -23,7 +23,7 @@ struct main0_in
 };
 
 static inline __attribute__((always_inline))
-float4 _main(thread const PS_INPUT& _input, thread texture2d<float> ParticleTexture_, thread sampler ParticleSamplerState_)
+float4 _main(thread const PS_INPUT& _input, texture2d<float> ParticleTexture_, sampler ParticleSamplerState_)
 {
     if (_input.Color.w <= 0.0)
     {
@@ -33,7 +33,7 @@ float4 _main(thread const PS_INPUT& _input, thread texture2d<float> ParticleText
     return color * _input.Color;
 }
 
-fragment main0_out main0(main0_in in [[stage_in]], texture2d<float> ParticleTexture_ [[texture(0)]], sampler ParticleSamplerState_ [[sampler(0)]])
+fragment main0_out main0(main0_in in [[stage_in]], texture2d<float> ParticleTexture_ [[texture(2)]], sampler ParticleSamplerState_ [[sampler(2)]])
 {
     main0_out out = {};
     PS_INPUT _input;

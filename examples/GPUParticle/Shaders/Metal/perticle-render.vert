@@ -5,6 +5,13 @@
 
 using namespace metal;
 
+// Implementation of the GLSL mod() function, which is slightly different than Metal fmod()
+template<typename Tx, typename Ty>
+inline Tx mod(Tx x, Ty y)
+{
+    return x - y * floor(x / y);
+}
+
 struct VS_INPUT
 {
     float3 Position;
@@ -38,30 +45,23 @@ struct main0_in
     float2 input_UV [[attribute(1)]];
 };
 
-// Implementation of the GLSL mod() function, which is slightly different than Metal fmod()
-template<typename Tx, typename Ty>
-inline Tx mod(Tx x, Ty y)
-{
-    return x - y * floor(x / y);
-}
-
 static inline __attribute__((always_inline))
-VS_OUTPUT _main(thread const VS_INPUT& _input, constant GPUParticleTextureInfo& v_29, thread texture2d<float> PositionTexture_, thread sampler PositionSamplerState_, thread texture2d<float> VelocityTexture_, thread sampler VelocitySamplerState_)
+VS_OUTPUT _main(thread const VS_INPUT& _input, constant GPUParticleTextureInfo& _29, texture2d<float> PositionTexture_, sampler PositionSamplerState_, texture2d<float> VelocityTexture_, sampler VelocitySamplerState_)
 {
-    float2 texelPos = float2(mod(float(_input.InstanceId), v_29.TextureResolution.x), float(_input.InstanceId) / v_29.TextureResolution.x);
-    float2 fetchUV = texelPos * v_29.TextureResolution.zw;
+    float2 texelPos = float2(mod(float(_input.InstanceId), _29.TextureResolution.x), float(_input.InstanceId) / _29.TextureResolution.x);
+    float2 fetchUV = texelPos * _29.TextureResolution.zw;
     float4 positionAndLocalTime = PositionTexture_.sample(PositionSamplerState_, fetchUV, level(0.0));
     float4 velocityAndLifeTime = VelocityTexture_.sample(VelocitySamplerState_, fetchUV, level(0.0));
     float3 posOffset = positionAndLocalTime.xyz;
     float3 worldPos = _input.Position + posOffset;
     VS_OUTPUT _output;
-    _output.Position = v_29.ViewProjMatrix * float4(worldPos, 1.0);
+    _output.Position = _29.ViewProjMatrix * float4(worldPos, 1.0);
     _output.UV = _input.UV;
     _output.Color = float4(1.0, 1.0, 1.0, 1.0 - (positionAndLocalTime.w / (velocityAndLifeTime.w + 9.9999997473787516355514526367188e-06)));
     return _output;
 }
 
-vertex main0_out main0(main0_in in [[stage_in]], constant GPUParticleTextureInfo& v_29 [[buffer(0)]], texture2d<float> PositionTexture_ [[texture(0)]], texture2d<float> VelocityTexture_ [[texture(1)]], sampler PositionSamplerState_ [[sampler(0)]], sampler VelocitySamplerState_ [[sampler(1)]], uint gl_InstanceIndex [[instance_id]])
+vertex main0_out main0(main0_in in [[stage_in]], constant GPUParticleTextureInfo& _29 [[buffer(0)]], texture2d<float> PositionTexture_ [[texture(0)]], texture2d<float> VelocityTexture_ [[texture(1)]], sampler PositionSamplerState_ [[sampler(0)]], sampler VelocitySamplerState_ [[sampler(1)]], uint gl_InstanceIndex [[instance_id]])
 {
     main0_out out = {};
     VS_INPUT _input;
@@ -69,7 +69,7 @@ vertex main0_out main0(main0_in in [[stage_in]], constant GPUParticleTextureInfo
     _input.UV = in.input_UV;
     _input.InstanceId = gl_InstanceIndex;
     VS_INPUT param = _input;
-    VS_OUTPUT flattenTemp = _main(param, v_29, PositionTexture_, PositionSamplerState_, VelocityTexture_, VelocitySamplerState_);
+    VS_OUTPUT flattenTemp = _main(param, _29, PositionTexture_, PositionSamplerState_, VelocityTexture_, VelocitySamplerState_);
     out._entryPointOutput_UV = flattenTemp.UV;
     out._entryPointOutput_Color = flattenTemp.Color;
     out.gl_Position = flattenTemp.Position;

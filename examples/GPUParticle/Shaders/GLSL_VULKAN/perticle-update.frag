@@ -1,4 +1,4 @@
-#version 420
+#version 430
 
 struct PS_INPUT
 {
@@ -11,8 +11,8 @@ struct PS_OUTPUT
     vec4 VelocityAndLifeTime;
 };
 
-layout(set = 1, binding = 1) uniform sampler2D Sampler_PositionSamplerState_;
-layout(set = 1, binding = 2) uniform sampler2D Sampler_VelocitySamplerState_;
+layout(location = 0, set = 1, binding = 1) uniform sampler2D Sampler_PositionSamplerState_;
+layout(location = 1, set = 1, binding = 2) uniform sampler2D Sampler_VelocitySamplerState_;
 
 layout(location = 0) in vec2 input_UV;
 layout(location = 0) out vec4 _entryPointOutput_PositionAndLocalTime;

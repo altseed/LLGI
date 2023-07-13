@@ -28,7 +28,7 @@ struct main0_in
 };
 
 static inline __attribute__((always_inline))
-PS_OUTPUT _main(thread const PS_INPUT& _input, thread texture2d<float> PositionTexture_, thread sampler PositionSamplerState_, thread texture2d<float> VelocityTexture_, thread sampler VelocitySamplerState_)
+PS_OUTPUT _main(thread const PS_INPUT& _input, texture2d<float> PositionTexture_, sampler PositionSamplerState_, texture2d<float> VelocityTexture_, sampler VelocitySamplerState_)
 {
     float4 positionAndLocalTime = PositionTexture_.sample(PositionSamplerState_, _input.UV);
     float4 velocityAndLifeTime = VelocityTexture_.sample(VelocitySamplerState_, _input.UV);
