@@ -1,0 +1,99 @@
+struct Particle
+{
+    float2 Current;
+    float2 Next;
+    float2 Velocity;
+    float Pscl;
+    bool IsFix;
+};
+
+#define EMPTY_CELL 0x7fffffff
+
+int GetHash(int2 gridPos, int num)
+{
+    return gridPos.x + gridPos.y * num;
+}
+
+int2 GetGridPos(float2 pos, float2 gridSize)
+{
+    return pos / gridSize;
+}
+
+cbuffer CB : register(b0)
+{
+    int2 GridNum;
+    int2 GridSize;
+    float EffectiveRadius;
+    float Density;
+    float Eps;
+    float Dt;
+    float Wpoly6;
+    float GWspiky;
+};
+
+RWStructuredBuffer<Particle> particles : register(u0);
+RWStructuredBuffer<int2> gridTable : register(u1);
+RWStructuredBuffer<int2> gridIndicesTable : register(u2);
+
+float2 CalcPositionCorrectionCell(int2 gridPos, int i, float2 pos0)
+{
+    int gridHash = GetHash(gridPos, GridNum.x);
+    int startIndex = gridIndicesTable[gridHash].x;
+    float h = EffectiveRadius;
+    float r0 = Density;
+    float2 dp = float2(0.0f, 0.0f);
+    float dt = Dt;
+    float si = particles[i].Pscl;
+    if(startIndex != EMPTY_CELL){ // セルが空でないかのチェック
+        // セル内のパーティクルで反復
+        uint endIndex = gridIndicesTable[gridHash].y;
+        for(uint j = startIndex; j < endIndex; ++j){
+            if(gridTable[j].y == i) continue;
+            float2 pos1 = particles[gridTable[j].y].Next;
+            float2 rij = pos0 - pos1;
+            float r = length(rij);
+            if(r <= h && r > 0.0){
+                float scorr = 0;
+                {
+                    float q = h * h - r * r;
+                    float q2 = h * h - 0.04 * h * h;
+                    float ww = Wpoly6 * q * q * q / (Wpoly6 * q2 * q2 * q2);
+                    scorr = -0.1 * pow(ww, 4) * dt * dt;
+                }
+                {
+                    float q = h - r;
+                    float sj = particles[gridTable[j].y].Pscl;
+                    // Spikyカーネルで位置修正量を計算
+                    dp += (si + sj + scorr) * (GWspiky * q * q * rij / r) / r0;
+                }
+            }
+        }
+    }
+    return dp;
+}
+
+float2 CalcPositionCorrection(int id)
+{
+    float2 pos = particles[id].Next; // パーティクル位置
+    float h = EffectiveRadius;
+    // パーティクル周囲のグリッド
+    int2 grid_pos0 = GetGridPos(pos - h, GridSize.xy);
+    int2 grid_pos1 = GetGridPos(pos + h, GridSize.xy);
+    // 周囲のグリッドも含めて近傍探索，位置修正量を計算
+    float2 dpij = float2(0.0f, 0.0f);
+    for(int y = grid_pos0.y; y <= grid_pos1.y; ++y){
+        for(int x = grid_pos0.x; x <= grid_pos1.x; ++x){
+            int2 n_grid_pos = int2(x, y);
+            dpij += CalcPositionCorrectionCell(n_grid_pos, id, pos);
+        }
+    }
+    return dpij;
+}
+
+[numthreads(1, 1, 1)]
+void main(uint3 dtid : SV_DispatchThreadID)
+{
+    int id = dtid.x;
+    if (particles[id].IsFix) return;
+    particles[id].Next += CalcPositionCorrection(id);
+}

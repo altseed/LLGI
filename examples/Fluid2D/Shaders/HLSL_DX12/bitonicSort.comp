@@ -1,0 +1,28 @@
+cbuffer CB : register(b0)
+{
+    float Inc;
+    float Dir;
+};
+
+RWStructuredBuffer<int2> gridTable : register(u0);
+
+[numthreads(1, 1, 1)]
+void main(uint3 dtid : SV_DispatchThreadID)
+{
+    int inc = (int)Inc;
+    int dir = (int)Dir;
+    int t = dtid.x;
+    int low = t & (inc - 1);
+    int i = (t << 1) - low;
+    bool reverse = ((dir & i) == 0);
+
+    int2 x0 = gridTable[i];
+    int2 x1 = gridTable[inc + i];
+
+    int2 auxa = x0;
+    int2 auxb = x1;
+    if ((x0.x < x1.x) ^ reverse) { x0 = auxb; x1 = auxa; }
+    // Store
+    gridTable[i] = x0;
+    gridTable[inc + i] = x1;
+}
