@@ -26,7 +26,7 @@ if(BUILD_VULKAN_COMPILER AND USE_THIRDPARTY_DIRECTORY)
   target_link_directories(LLGI_Test PRIVATE
                           ${LLGI_THIRDPARTY_LIBRARY_DIRECTORIES})
   target_link_libraries(LLGI_Test PRIVATE ${LLGI_THIRDPARTY_LIBRARIES})
-
+  add_dependencies(LLGI_Test EP_glslang EP_SPIRV-Cross)
 endif()
 
 if(MSVC)
