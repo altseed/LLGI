@@ -1,0 +1,151 @@
+#version 430
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+struct Particle
+{
+    vec2 Current;
+    vec2 Next;
+    vec2 Velocity;
+    float Pscl;
+    uint IsFix;
+};
+
+layout(binding = 0, std140) uniform CB
+{
+    ivec2 GridNum;
+    ivec2 GridSize;
+    float EffectiveRadius;
+    float Density;
+    float Eps;
+    float Dt;
+    float Wpoly6;
+    float GWspiky;
+} CBCS0;
+
+layout(binding = 2, std430) buffer gridIndicesTable
+{
+    ivec2 _data[];
+} gridIndicesTable_1;
+
+layout(binding = 0, std430) buffer particles
+{
+    Particle _data[];
+} particles_1;
+
+layout(binding = 1, std430) buffer gridTable
+{
+    ivec2 _data[];
+} gridTable_1;
+
+ivec2 GetGridPos(vec2 pos, vec2 gridSize)
+{
+    return ivec2(pos / gridSize);
+}
+
+int GetHash(ivec2 gridPos, int num)
+{
+    return gridPos.x + (gridPos.y * num);
+}
+
+vec2 CalcDensityCellPB(ivec2 gridPos, int i, vec2 pos0)
+{
+    ivec2 param = gridPos;
+    int param_1 = CBCS0.GridNum.x;
+    int gridHash = GetHash(param, param_1);
+    int startIndex = gridIndicesTable_1._data[gridHash].x;
+    float h2 = CBCS0.EffectiveRadius * CBCS0.EffectiveRadius;
+    float dens = 0.0;
+    if (startIndex != 2147483647)
+    {
+        int endIndex = gridIndicesTable_1._data[gridHash].y;
+        for (int j = startIndex; j < endIndex; j++)
+        {
+            vec2 pos1 = particles_1._data[gridTable_1._data[j].y].Next;
+            float r2 = dot(pos0 - pos1, pos0 - pos1);
+            if (r2 <= h2)
+            {
+                float q = h2 - r2;
+                dens += (((CBCS0.Wpoly6 * q) * q) * q);
+            }
+        }
+    }
+    return vec2(dens);
+}
+
+float CalcScalingFactorCell(ivec2 gridPos, int i, vec2 pos0)
+{
+    ivec2 param = gridPos;
+    int param_1 = CBCS0.GridNum.x;
+    int gridHash = GetHash(param, param_1);
+    int startIndex = gridIndicesTable_1._data[gridHash].x;
+    float h = CBCS0.EffectiveRadius;
+    float r0 = CBCS0.Density;
+    float sd = 0.0;
+    vec2 sd2 = vec2(0.0);
+    if (startIndex != 2147483647)
+    {
+        uint endIndex = uint(gridIndicesTable_1._data[gridHash].y);
+        uint _195 = uint(startIndex);
+        for (uint j = _195; j < endIndex; j++)
+        {
+            vec2 pos1 = particles_1._data[gridTable_1._data[j].y].Next;
+            vec2 rij = pos0 - pos1;
+            float r = length(rij);
+            if ((r <= h) && (r > 0.0))
+            {
+                float q = h - r;
+                vec2 dp = ((rij * ((CBCS0.GWspiky * q) * q)) / vec2(r)) / vec2(r0);
+                sd2 += dp;
+                sd += dot(dp, dp);
+            }
+        }
+    }
+    return sd + dot(sd2, sd2);
+}
+
+void CalcScalingFactor(int id)
+{
+    vec2 pos = particles_1._data[id].Next;
+    float h = CBCS0.EffectiveRadius;
+    float r0 = CBCS0.Density;
+    vec2 param = pos - vec2(h, h);
+    vec2 param_1 = vec2(CBCS0.GridSize);
+    ivec2 grid_pos0 = GetGridPos(param, param_1);
+    vec2 param_2 = pos + vec2(h, h);
+    vec2 param_3 = vec2(CBCS0.GridSize);
+    ivec2 grid_pos1 = GetGridPos(param_2, param_3);
+    float dens = 0.0;
+    float sd = 0.0;
+    for (int y = grid_pos0.y; y <= grid_pos1.y; y++)
+    {
+        for (int x = grid_pos0.x; x <= grid_pos1.x; x++)
+        {
+            ivec2 n_grid_pos = ivec2(x, y);
+            ivec2 param_4 = n_grid_pos;
+            int param_5 = id;
+            vec2 param_6 = pos;
+            dens += CalcDensityCellPB(param_4, param_5, param_6).x;
+            ivec2 param_7 = n_grid_pos;
+            int param_8 = id;
+            vec2 param_9 = pos;
+            sd += CalcScalingFactorCell(param_7, param_8, param_9);
+        }
+    }
+    float C = (dens / r0) - 1.0;
+    particles_1._data[id].Pscl = (-C) / (sd + CBCS0.Eps);
+}
+
+void _main(uvec3 dtid)
+{
+    int id = int(dtid.x);
+    int param = id;
+    CalcScalingFactor(param);
+}
+
+void main()
+{
+    uvec3 dtid = gl_GlobalInvocationID;
+    uvec3 param = dtid;
+    _main(param);
+}
+

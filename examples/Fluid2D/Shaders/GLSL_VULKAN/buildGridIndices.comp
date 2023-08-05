@@ -1,0 +1,50 @@
+#version 430
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(set = 0, binding = 0, std140) uniform CB
+{
+    int ParticlesCount;
+} _22;
+
+layout(set = 0, binding = 1, std430) buffer gridTable
+{
+    ivec2 _data[];
+} gridTable_1;
+
+layout(set = 0, binding = 2, std430) buffer gridIndicesTable
+{
+    ivec2 _data[];
+} gridIndicesTable_1;
+
+int getValidId(int id)
+{
+    return int(mod(float(id + _22.ParticlesCount), float(_22.ParticlesCount)));
+}
+
+void _main(uvec3 dtid)
+{
+    int id = int(dtid.x);
+    int param = id - 1;
+    int idPrev = getValidId(param);
+    int param_1 = id + 1;
+    int idNext = getValidId(param_1);
+    int cell = gridTable_1._data[id].x;
+    int cellPrev = gridTable_1._data[idPrev].x;
+    int cellNext = gridTable_1._data[idNext].x;
+    if (cell != cellPrev)
+    {
+        gridIndicesTable_1._data[cell].x = id;
+    }
+    if (cell != cellNext)
+    {
+        gridIndicesTable_1._data[cell].y = id + 1;
+    }
+}
+
+void main()
+{
+    uvec3 dtid = gl_GlobalInvocationID;
+    uvec3 param = dtid;
+    _main(param);
+}
+

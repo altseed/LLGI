@@ -1,0 +1,64 @@
+#version 430
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+struct Particle
+{
+    vec2 Current;
+    vec2 Next;
+    vec2 Velocity;
+    float Pscl;
+    uint IsFix;
+};
+
+layout(set = 0, binding = 0, std140) uniform CB
+{
+    ivec2 GridNum;
+    ivec2 GridSize;
+    int ParticlesCount;
+} _52;
+
+layout(set = 0, binding = 2, std430) buffer gridTable
+{
+    ivec2 _data[];
+} gridTable_1;
+
+layout(set = 0, binding = 1, std430) buffer particles
+{
+    Particle _data[];
+} particles_1;
+
+ivec2 GetGridPos(vec2 pos, vec2 gridSize)
+{
+    return ivec2(pos / gridSize);
+}
+
+int GetHash(ivec2 gridPos, int num)
+{
+    return gridPos.x + (gridPos.y * num);
+}
+
+void _main(uvec3 dtid)
+{
+    if (dtid.x < uint(_52.ParticlesCount))
+    {
+        vec2 param = particles_1._data[dtid.x].Next;
+        vec2 param_1 = vec2(_52.GridSize);
+        ivec2 param_2 = GetGridPos(param, param_1);
+        int param_3 = _52.GridNum.x;
+        gridTable_1._data[dtid.x].x = GetHash(param_2, param_3);
+        gridTable_1._data[dtid.x].y = int(dtid.x);
+    }
+    else
+    {
+        gridTable_1._data[dtid.x].x = 2147483647;
+        gridTable_1._data[dtid.x].y = int(dtid.x);
+    }
+}
+
+void main()
+{
+    uvec3 dtid = gl_GlobalInvocationID;
+    uvec3 param = dtid;
+    _main(param);
+}
+

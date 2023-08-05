@@ -1,0 +1,93 @@
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+
+#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+struct CB
+{
+    float ParticleRadius;
+    float4 Color;
+    float4 FixedColor;
+};
+
+struct Particle
+{
+    float2 Current;
+    float2 Next;
+    float2 Velocity;
+    float Pscl;
+    uint IsFix;
+};
+
+struct particles
+{
+    Particle _data[1];
+};
+
+struct Vertex
+{
+    packed_float3 Position;
+    int Color;
+    float2 UV1;
+    float2 UV2;
+};
+
+struct vertex_
+{
+    Vertex _data[1];
+};
+
+struct index
+{
+    int _data[1];
+};
+
+static inline __attribute__((always_inline))
+int DecodeFloatRGBA(thread const float4& rgba)
+{
+    int res = 0;
+    res += int(rgba.w * 255.0);
+    res = res << 8;
+    res += int(rgba.z * 255.0);
+    res = res << 8;
+    res += int(rgba.y * 255.0);
+    res = res << 8;
+    res += int(rgba.x * 255.0);
+    return res;
+}
+
+static inline __attribute__((always_inline))
+void _main(thread const uint3& dtid, constant CB& _67, device particles& particles_1, device vertex_& vertex_1, device index& index_1)
+{
+    float4 param = mix(_67.Color, _67.FixedColor, float4(float(particles_1._data[dtid.x].IsFix != 0u)));
+    int c = DecodeFloatRGBA(param);
+    for (int i = 0; i < 4; i++)
+    {
+        vertex_1._data[(dtid.x * 4u) + uint(i)].Color = c;
+    }
+    float3 pos = float3(particles_1._data[dtid.x].Current, 0.5);
+    vertex_1._data[dtid.x * 4u].Position = pos + ((float3(-1.0, -1.0, 0.0) * _67.ParticleRadius) * 3.0);
+    vertex_1._data[(dtid.x * 4u) + 1u].Position = pos + ((float3(1.0, -1.0, 0.0) * _67.ParticleRadius) * 3.0);
+    vertex_1._data[(dtid.x * 4u) + 2u].Position = pos + ((float3(1.0, 1.0, 0.0) * _67.ParticleRadius) * 3.0);
+    vertex_1._data[(dtid.x * 4u) + 3u].Position = pos + ((float3(-1.0, 1.0, 0.0) * _67.ParticleRadius) * 3.0);
+    vertex_1._data[dtid.x * 4u].UV1 = float2(0.0);
+    vertex_1._data[(dtid.x * 4u) + 1u].UV1 = float2(1.0, 0.0);
+    vertex_1._data[(dtid.x * 4u) + 2u].UV1 = float2(1.0);
+    vertex_1._data[(dtid.x * 4u) + 3u].UV1 = float2(0.0, 1.0);
+    index_1._data[dtid.x * 6u] = int(dtid.x * 4u);
+    index_1._data[(dtid.x * 6u) + 1u] = int((dtid.x * 4u) + 1u);
+    index_1._data[(dtid.x * 6u) + 2u] = int((dtid.x * 4u) + 2u);
+    index_1._data[(dtid.x * 6u) + 3u] = int(dtid.x * 4u);
+    index_1._data[(dtid.x * 6u) + 4u] = int((dtid.x * 4u) + 2u);
+    index_1._data[(dtid.x * 6u) + 5u] = int((dtid.x * 4u) + 3u);
+}
+
+kernel void main0(constant CB& _67 [[buffer(0)]], device particles& particles_1 [[buffer(1)]], device vertex_& vertex_1 [[buffer(2)]], device index& index_1 [[buffer(3)]], uint3 gl_GlobalInvocationID [[thread_position_in_grid]])
+{
+    uint3 dtid = gl_GlobalInvocationID;
+    uint3 param = dtid;
+    _main(param, _67, particles_1, vertex_1, index_1);
+}
+

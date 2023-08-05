@@ -1,0 +1,58 @@
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+
+#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+// Implementation of the GLSL mod() function, which is slightly different than Metal fmod()
+template<typename Tx, typename Ty>
+inline Tx mod(Tx x, Ty y)
+{
+    return x - y * floor(x / y);
+}
+
+struct CB
+{
+    int ParticlesCount;
+};
+
+struct gridTable
+{
+    int2 _data[1];
+};
+
+static inline __attribute__((always_inline))
+int getValidId(thread const int& id, constant CB& _22)
+{
+    return int(mod(float(id + _22.ParticlesCount), float(_22.ParticlesCount)));
+}
+
+static inline __attribute__((always_inline))
+void _main(thread const uint3& dtid, constant CB& _22, device gridTable& gridTable_1, device gridTable& gridIndicesTable)
+{
+    int id = int(dtid.x);
+    int param = id - 1;
+    int idPrev = getValidId(param, _22);
+    int param_1 = id + 1;
+    int idNext = getValidId(param_1, _22);
+    int cell = ((device int*)&gridTable_1._data[id])[0u];
+    int cellPrev = ((device int*)&gridTable_1._data[idPrev])[0u];
+    int cellNext = ((device int*)&gridTable_1._data[idNext])[0u];
+    if (cell != cellPrev)
+    {
+        ((device int*)&gridIndicesTable._data[cell])[0u] = id;
+    }
+    if (cell != cellNext)
+    {
+        ((device int*)&gridIndicesTable._data[cell])[1u] = id + 1;
+    }
+}
+
+kernel void main0(constant CB& _22 [[buffer(0)]], device gridTable& gridTable_1 [[buffer(1)]], device gridTable& gridIndicesTable [[buffer(2)]], uint3 gl_GlobalInvocationID [[thread_position_in_grid]])
+{
+    uint3 dtid = gl_GlobalInvocationID;
+    uint3 param = dtid;
+    _main(param, _22, gridTable_1, gridIndicesTable);
+}
+
