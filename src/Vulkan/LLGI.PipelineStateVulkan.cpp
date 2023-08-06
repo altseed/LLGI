@@ -10,9 +10,9 @@ namespace LLGI
 PipelineStateVulkan::PipelineStateVulkan()
 {
 	shaders.fill(0);
-	for (size_t i = 0; i < descriptorSetLayouts.size(); i++)
+	for (size_t i = 0; i < descriptorSetLayouts_.size(); i++)
 	{
-		descriptorSetLayouts[i] = nullptr;
+		descriptorSetLayouts_[i] = nullptr;
 	}
 }
 
@@ -23,10 +23,10 @@ PipelineStateVulkan ::~PipelineStateVulkan()
 		SafeRelease(shader);
 	}
 
-	for (size_t i = 0; i < descriptorSetLayouts.size(); i++)
+	for (size_t i = 0; i < descriptorSetLayouts_.size(); i++)
 	{
-		graphics_->GetDevice().destroyDescriptorSetLayout(descriptorSetLayouts[i]);
-		descriptorSetLayouts[i] = nullptr;
+		graphics_->GetDevice().destroyDescriptorSetLayout(descriptorSetLayouts_[i]);
+		descriptorSetLayouts_[i] = nullptr;
 	}
 
 	if (pipelineLayout_)
@@ -41,10 +41,10 @@ PipelineStateVulkan ::~PipelineStateVulkan()
 		pipeline_ = nullptr;
 	}
 
-	for (size_t i = 0; i < computeDescriptorSetLayouts.size(); i++)
+	for (size_t i = 0; i < computeDescriptorSetLayouts_.size(); i++)
 	{
-		graphics_->GetDevice().destroyDescriptorSetLayout(computeDescriptorSetLayouts[i]);
-		computeDescriptorSetLayouts[i] = nullptr;
+		graphics_->GetDevice().destroyDescriptorSetLayout(computeDescriptorSetLayouts_[i]);
+		computeDescriptorSetLayouts_[i] = nullptr;
 	}
 
 	if (computePipelineLayout_)
@@ -435,33 +435,56 @@ bool PipelineStateVulkan::CreateGraphicsPipeline()
 
 	graphicsPipelineInfo.renderPass = renderPass;
 
-	// uniform layout info
-	std::array<vk::DescriptorSetLayoutBinding, TextureSlotMax + 1> uboLayoutBindings;
-	uboLayoutBindings[0].binding = 0;
-	uboLayoutBindings[0].descriptorType = vk::DescriptorType::eUniformBufferDynamic;
-	uboLayoutBindings[0].descriptorCount = 1;
-	uboLayoutBindings[0].stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
-	uboLayoutBindings[0].pImmutableSamplers = nullptr;
+	auto stageFlag = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
 
-	for (size_t i = 1; i < uboLayoutBindings.size(); i++)
+	// uniform layout info
+	std::array<vk::DescriptorSetLayoutBinding, 4> uboLayoutBindings;
+	for (size_t i = 0; i < uboLayoutBindings.size(); i++)
 	{
-		uboLayoutBindings[i].binding = static_cast<uint32_t>(i);
-		uboLayoutBindings[i].descriptorType = vk::DescriptorType::eCombinedImageSampler;
+		uboLayoutBindings[i].binding = static_cast<int>(i);
+		uboLayoutBindings[i].descriptorType = vk::DescriptorType::eUniformBufferDynamic;
 		uboLayoutBindings[i].descriptorCount = 1;
-		uboLayoutBindings[i].stageFlags = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment;
+		uboLayoutBindings[i].stageFlags = stageFlag;
 		uboLayoutBindings[i].pImmutableSamplers = nullptr;
 	}
 
-	vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutInfo;
-	descriptorSetLayoutInfo.bindingCount = static_cast<int32_t>(uboLayoutBindings.size());
-	descriptorSetLayoutInfo.pBindings = uboLayoutBindings.data();
+	std::array<vk::DescriptorSetLayoutBinding, TextureSlotMax> textureLayoutBindings;
 
-	descriptorSetLayouts[0] = graphics_->GetDevice().createDescriptorSetLayout(descriptorSetLayoutInfo);
-	descriptorSetLayouts[1] = graphics_->GetDevice().createDescriptorSetLayout(descriptorSetLayoutInfo);
+	for (size_t i = 0; i < textureLayoutBindings.size(); i++)
+	{
+		textureLayoutBindings[i].binding = static_cast<uint32_t>(i);
+		textureLayoutBindings[i].descriptorType = vk::DescriptorType::eCombinedImageSampler;
+		textureLayoutBindings[i].descriptorCount = 1;
+		textureLayoutBindings[i].stageFlags = stageFlag;
+		textureLayoutBindings[i].pImmutableSamplers = nullptr;
+	}
+
+	std::array<vk::DescriptorSetLayoutBinding, 8> computeLayoutBindings;
+
+	for (size_t i = 0; i < computeLayoutBindings.size(); i++)
+	{
+		computeLayoutBindings[i].binding = static_cast<uint32_t>(i);
+		computeLayoutBindings[i].descriptorType = vk::DescriptorType::eStorageBufferDynamic;
+		computeLayoutBindings[i].descriptorCount = 1;
+		computeLayoutBindings[i].stageFlags = stageFlag;
+		computeLayoutBindings[i].pImmutableSamplers = nullptr;
+	}
+
+	vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutInfos[3];
+	descriptorSetLayoutInfos[0].bindingCount = static_cast<int32_t>(uboLayoutBindings.size());
+	descriptorSetLayoutInfos[0].pBindings = textureLayoutBindings.data();
+	descriptorSetLayoutInfos[1].bindingCount = static_cast<int32_t>(textureLayoutBindings.size());
+	descriptorSetLayoutInfos[1].pBindings = textureLayoutBindings.data();
+	descriptorSetLayoutInfos[2].bindingCount = static_cast<int32_t>(computeLayoutBindings.size());
+	descriptorSetLayoutInfos[2].pBindings = computeLayoutBindings.data();
+
+	descriptorSetLayouts_[0] = graphics_->GetDevice().createDescriptorSetLayout(descriptorSetLayoutInfos[0]);
+	descriptorSetLayouts_[1] = graphics_->GetDevice().createDescriptorSetLayout(descriptorSetLayoutInfos[1]);
+	descriptorSetLayouts_[2] = graphics_->GetDevice().createDescriptorSetLayout(descriptorSetLayoutInfos[2]);
 
 	vk::PipelineLayoutCreateInfo layoutInfo = {};
-	layoutInfo.setLayoutCount = 2;
-	layoutInfo.pSetLayouts = descriptorSetLayouts.data();
+	layoutInfo.setLayoutCount = 3;
+	layoutInfo.pSetLayouts = descriptorSetLayouts_.data();
 	layoutInfo.pushConstantRangeCount = 0;
 	layoutInfo.pPushConstantRanges = nullptr;
 
@@ -503,32 +526,57 @@ bool PipelineStateVulkan::CreateComputePipeline()
 	computePipelineInfo.stage = info;
 
 	// uniform layout info
-	std::array<vk::DescriptorSetLayoutBinding, 1 + TextureSlotMax> uboLayoutBindings;
 
-	uboLayoutBindings[0].binding = 0;
-	uboLayoutBindings[0].descriptorType = vk::DescriptorType::eUniformBufferDynamic;
-	uboLayoutBindings[0].descriptorCount = 1;
-	uboLayoutBindings[0].stageFlags = vk::ShaderStageFlagBits::eCompute;
-	uboLayoutBindings[0].pImmutableSamplers = nullptr;
+	auto stageFlag = vk::ShaderStageFlagBits::eCompute;
 
-	for (size_t i = 1; i < uboLayoutBindings.size(); i++)
+	// uniform layout info
+	std::array<vk::DescriptorSetLayoutBinding, 4> uboLayoutBindings;
+	for (size_t i = 0; i < uboLayoutBindings.size(); i++)
 	{
-		uboLayoutBindings[i].binding = static_cast<uint32_t>(i);
-		uboLayoutBindings[i].descriptorType = vk::DescriptorType::eStorageBufferDynamic;
+		uboLayoutBindings[i].binding = static_cast<int>(i);
+		uboLayoutBindings[i].descriptorType = vk::DescriptorType::eUniformBufferDynamic;
 		uboLayoutBindings[i].descriptorCount = 1;
-		uboLayoutBindings[i].stageFlags = vk::ShaderStageFlagBits::eCompute;
+		uboLayoutBindings[i].stageFlags = stageFlag;
 		uboLayoutBindings[i].pImmutableSamplers = nullptr;
 	}
 
-	vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutInfo;
-	descriptorSetLayoutInfo.bindingCount = static_cast<int32_t>(uboLayoutBindings.size());
-	descriptorSetLayoutInfo.pBindings = uboLayoutBindings.data();
+	std::array<vk::DescriptorSetLayoutBinding, TextureSlotMax> textureLayoutBindings;
 
-	computeDescriptorSetLayouts[0] = graphics_->GetDevice().createDescriptorSetLayout(descriptorSetLayoutInfo);
+	for (size_t i = 0; i < textureLayoutBindings.size(); i++)
+	{
+		textureLayoutBindings[i].binding = static_cast<uint32_t>(i);
+		textureLayoutBindings[i].descriptorType = vk::DescriptorType::eCombinedImageSampler;
+		textureLayoutBindings[i].descriptorCount = 1;
+		textureLayoutBindings[i].stageFlags = stageFlag;
+		textureLayoutBindings[i].pImmutableSamplers = nullptr;
+	}
+
+	std::array<vk::DescriptorSetLayoutBinding, 8> computeLayoutBindings;
+
+	for (size_t i = 0; i < computeLayoutBindings.size(); i++)
+	{
+		computeLayoutBindings[i].binding = static_cast<uint32_t>(i);
+		computeLayoutBindings[i].descriptorType = vk::DescriptorType::eStorageBufferDynamic;
+		computeLayoutBindings[i].descriptorCount = 1;
+		computeLayoutBindings[i].stageFlags = stageFlag;
+		computeLayoutBindings[i].pImmutableSamplers = nullptr;
+	}
+
+	vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutInfos[3];
+	descriptorSetLayoutInfos[0].bindingCount = static_cast<int32_t>(uboLayoutBindings.size());
+	descriptorSetLayoutInfos[0].pBindings = textureLayoutBindings.data();
+	descriptorSetLayoutInfos[1].bindingCount = static_cast<int32_t>(textureLayoutBindings.size());
+	descriptorSetLayoutInfos[1].pBindings = textureLayoutBindings.data();
+	descriptorSetLayoutInfos[2].bindingCount = static_cast<int32_t>(computeLayoutBindings.size());
+	descriptorSetLayoutInfos[2].pBindings = computeLayoutBindings.data();
+
+	computeDescriptorSetLayouts_[0] = graphics_->GetDevice().createDescriptorSetLayout(descriptorSetLayoutInfos[0]);
+	computeDescriptorSetLayouts_[1] = graphics_->GetDevice().createDescriptorSetLayout(descriptorSetLayoutInfos[1]);
+	computeDescriptorSetLayouts_[2] = graphics_->GetDevice().createDescriptorSetLayout(descriptorSetLayoutInfos[2]);
 
 	vk::PipelineLayoutCreateInfo layoutInfo = {};
-	layoutInfo.setLayoutCount = 1;
-	layoutInfo.pSetLayouts = computeDescriptorSetLayouts.data();
+	layoutInfo.setLayoutCount = 3;
+	layoutInfo.pSetLayouts = computeDescriptorSetLayouts_.data();
 	layoutInfo.pushConstantRangeCount = 0;
 	layoutInfo.pPushConstantRanges = nullptr;
 

@@ -12,12 +12,12 @@ struct CS_INPUT
     float value2;
 };
 
-layout(set = 0, binding = 2, std430) buffer write
+layout(set = 2, binding = 1, std430) buffer write
 {
     CS_OUTPUT _data[];
 } write_1;
 
-layout(set = 0, binding = 1, std430) buffer read
+layout(set = 2, binding = 0, std430) buffer read
 {
     CS_INPUT _data[];
 } read_1;

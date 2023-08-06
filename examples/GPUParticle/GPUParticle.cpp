@@ -1,4 +1,5 @@
 
+#include "GPUParticle.h"
 #include <LLGI.Buffer.h>
 #include <LLGI.CommandList.h>
 #include <LLGI.Compiler.h>
@@ -7,7 +8,6 @@
 #include <LLGI.Platform.h>
 #include <LLGI.Shader.h>
 #include <LLGI.Texture.h>
-#include "GPUParticle.h"
 
 //==============================================================================
 // Matrix44
@@ -279,7 +279,7 @@ void GPUParticleEmitPass::Render(LLGI::CommandList* commandList, const std::vect
 
 	commandList->SetVertexBuffer(currentVB, sizeof(EmitDataVertex), 0);
 	commandList->SetIndexBuffer(emitDataIndexBuffer_.get(), 2);
-	commandList->SetConstantBuffer(context_->GetTextureInfoConstantBuffer(), LLGI::ShaderStageType::Vertex);
+	commandList->SetConstantBuffer(context_->GetTextureInfoConstantBuffer(), 0);
 	commandList->SetPipelineState(pipelineState_[bufferIndex].get());
 	commandList->Draw(particleDataCount);
 
@@ -348,9 +348,9 @@ void GPUParticleUpdatePass::Render(LLGI::CommandList* commandList)
 	commandList->SetVertexBuffer(vertexBuffer_.get(), sizeof(RectangleVertex), 0);
 	commandList->SetIndexBuffer(indexBuffer_.get(), 2);
 	commandList->SetTexture(
-		srcBuffer->GetPositionTexture(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+		srcBuffer->GetPositionTexture(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Nearest, 0);
 	commandList->SetTexture(
-		srcBuffer->GetVelocityTexture(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Nearest, 1, LLGI::ShaderStageType::Pixel);
+		srcBuffer->GetVelocityTexture(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Nearest, 1);
 	commandList->SetPipelineState(pipelineState_[srcBufferIndex].get());
 	commandList->Draw(2);
 
@@ -431,19 +431,17 @@ void GPUParticleRenderPass::Render(LLGI::RenderPass* renderPass, LLGI::CommandLi
 	commandList->BeginRenderPass(renderPass);
 	commandList->SetVertexBuffer(vb_.get(), sizeof(SimpleVertex), 0);
 	commandList->SetIndexBuffer(ib_.get(), 2);
-	commandList->SetConstantBuffer(context_->GetTextureInfoConstantBuffer(), LLGI::ShaderStageType::Vertex);
+	commandList->SetConstantBuffer(context_->GetTextureInfoConstantBuffer(), 0);
 	commandList->SetTexture(particleDataBuffer->GetPositionTexture(),
 							LLGI::TextureWrapMode::Clamp,
 							LLGI::TextureMinMagFilter::Nearest,
-							0,
-							LLGI::ShaderStageType::Vertex);
+							0);
 	commandList->SetTexture(particleDataBuffer->GetVelocityTexture(),
 							LLGI::TextureWrapMode::Clamp,
 							LLGI::TextureMinMagFilter::Nearest,
-							1,
-							LLGI::ShaderStageType::Vertex);
+							1);
 	commandList->SetTexture(
-		context_->GetParticleTexture(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Linear, 2, LLGI::ShaderStageType::Pixel);
+		context_->GetParticleTexture(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Linear, 2);
 	commandList->SetPipelineState(pipeline.get());
 	commandList->Draw(2, context_->GetMaxParticles());
 	commandList->EndRenderPass();

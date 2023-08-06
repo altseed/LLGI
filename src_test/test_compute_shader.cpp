@@ -96,9 +96,9 @@ void test_compute_shader(LLGI::DeviceType deviceType)
 	commandList->CopyBuffer(inputBuffer.get(), inputComputeBuffer.get());
 	commandList->BeginComputePass();
 	commandList->SetPipelineState(pip.get());
-	commandList->SetComputeBuffer(inputComputeBuffer.get(), sizeof(InputData), 0, LLGI::ShaderStageType::Compute);
-	commandList->SetComputeBuffer(outputComputeBuffer.get(), sizeof(OutputData), 1, LLGI::ShaderStageType::Compute);
-	commandList->SetConstantBuffer(constantBuffer.get(), LLGI::ShaderStageType::Compute);
+	commandList->SetComputeBuffer(inputComputeBuffer.get(), sizeof(InputData), 0);
+	commandList->SetComputeBuffer(outputComputeBuffer.get(), sizeof(OutputData), 1);
+	commandList->SetConstantBuffer(constantBuffer.get(), 0);
 	commandList->Dispatch(dataSize, 1, 1, 1, 1, 1);
 	commandList->EndComputePass();
 	commandList->CopyBuffer(outputComputeBuffer.get(), outputBuffer.get());

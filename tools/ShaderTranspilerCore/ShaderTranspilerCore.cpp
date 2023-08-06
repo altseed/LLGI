@@ -202,47 +202,6 @@ bool SPIRVToHLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 		}
 	}
 
-	if (isDX12_)
-	{
-		spirv_cross::ShaderResources resources = compiler.get_shader_resources();
-
-		for (auto& resource : resources.uniform_buffers)
-		{
-			if (spirv->GetStage() == ShaderStageType::Vertex)
-			{
-				compiler.set_decoration(resource.id, spv::DecorationBinding, 0);
-			}
-			else if (spirv->GetStage() == ShaderStageType::Pixel)
-			{
-				compiler.set_decoration(resource.id, spv::DecorationBinding, 1);
-			}
-			else if (spirv->GetStage() == ShaderStageType::Compute)
-			{
-				compiler.set_decoration(resource.id, spv::DecorationBinding, 0);
-			}
-		}
-	}
-	else
-	{
-		spirv_cross::ShaderResources resources = compiler.get_shader_resources();
-
-		for (auto& resource : resources.uniform_buffers)
-		{
-			if (spirv->GetStage() == ShaderStageType::Vertex)
-			{
-				compiler.set_decoration(resource.id, spv::DecorationBinding, 0);
-			}
-			else if (spirv->GetStage() == ShaderStageType::Pixel)
-			{
-				compiler.set_decoration(resource.id, spv::DecorationBinding, 0);
-			}
-			else if (spirv->GetStage() == ShaderStageType::Compute)
-			{
-				compiler.set_decoration(resource.id, spv::DecorationBinding, 0);
-			}
-		}
-	}
-
 	spirv_cross::CompilerGLSL::Options options;
 	options.separate_shader_objects = true;
 	compiler.set_common_options(options);
@@ -270,8 +229,9 @@ bool SPIRVToHLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 
 bool SPIRVToMSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 {
-
 	spirv_cross::CompilerMSL compiler(spirv->GetData());
+
+	int storage_buffer_offset = 10;
 
 	{
 		spirv_cross::ShaderResources resources = compiler.get_shader_resources();
@@ -280,13 +240,7 @@ bool SPIRVToMSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 		{
 			auto name = buffer.name;
 			auto location = compiler.get_decoration(buffer.id, spv::DecorationBinding);
-			compiler.set_decoration(buffer.id, spv::DecorationBinding, location + 1);
-		}
-
-		for (const auto& buffer : resources.uniform_buffers)
-		{
-			auto name = buffer.name;
-			compiler.set_decoration(buffer.id, spv::DecorationBinding, 0);
+			compiler.set_decoration(buffer.id, spv::DecorationBinding, location + storage_buffer_offset);
 		}
 	}
 	spirv_cross::CompilerGLSL::Options options;
@@ -310,13 +264,6 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 
 	spirv_cross::ShaderResources resources = compiler.get_shader_resources();
 
-	int32_t binding_offset = 0;
-
-	if (isVulkanMode_)
-	{
-		binding_offset += 1;
-	}
-
 	if (shaderModel_ <= 420 || isVulkanMode_)
 	{
 		for (auto& remap : compiler.get_combined_image_samplers())
@@ -330,21 +277,11 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 	for (auto& resource : resources.sampled_images)
 	{
 		auto i = compiler.get_decoration(resource.id, spv::DecorationLocation);
-		compiler.set_decoration(resource.id, spv::DecorationBinding, binding_offset + i);
+		compiler.set_decoration(resource.id, spv::DecorationBinding, i);
 
-		if (spirv->GetStage() == ShaderStageType::Vertex)
+		if (isVulkanMode_)
 		{
-			if (isVulkanMode_)
-			{
-				compiler.set_decoration(resource.id, spv::DecorationDescriptorSet, 0);
-			}
-		}
-		else if (spirv->GetStage() == ShaderStageType::Pixel)
-		{
-			if (isVulkanMode_)
-			{
-				compiler.set_decoration(resource.id, spv::DecorationDescriptorSet, 1);
-			}
+			compiler.set_decoration(resource.id, spv::DecorationDescriptorSet, 1);
 		}
 	}
 
@@ -368,44 +305,18 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 			}
 		}
 
-		if (spirv->GetStage() == ShaderStageType::Vertex)
+		if (isVulkanMode_)
 		{
-			if (isVulkanMode_)
-			{
-				compiler.set_decoration(resource.id, spv::DecorationBinding, 0);
-				compiler.set_decoration(resource.id, spv::DecorationDescriptorSet, 0);
-			}
-		}
-		else if (spirv->GetStage() == ShaderStageType::Pixel)
-		{
-			if (isVulkanMode_)
-			{
-				compiler.set_decoration(resource.id, spv::DecorationBinding, 0);
-				compiler.set_decoration(resource.id, spv::DecorationDescriptorSet, 1);
-			}
-		}
-		else if (spirv->GetStage() == ShaderStageType::Compute)
-		{
-			if (isVulkanMode_)
-			{
-				compiler.set_decoration(resource.id, spv::DecorationBinding, 0);
-				compiler.set_decoration(resource.id, spv::DecorationDescriptorSet, 0);
-			}
+			compiler.set_decoration(resource.id, spv::DecorationDescriptorSet, 0);
 		}
 		cb_ind++;
 	}
 
 	if (isVulkanMode_)
 	{
-		if (spirv->GetStage() != ShaderStageType::Compute)
-		{
-			binding_offset += 8;
-		}
 		for (auto& resource : resources.storage_buffers)
 		{
-			auto i = compiler.get_decoration(resource.id, spv::DecorationBinding);
-			compiler.set_decoration(resource.id, spv::DecorationBinding, binding_offset + i);
-			compiler.set_decoration(resource.id, spv::DecorationDescriptorSet, 0);
+			compiler.set_decoration(resource.id, spv::DecorationDescriptorSet, 2);
 		}
 	}
 

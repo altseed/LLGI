@@ -205,39 +205,33 @@ void test_mipmap(LLGI::DeviceType deviceType)
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get(), 2);
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
-		commandList->SetTexture(
-			textureDrawnMipmap, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+		commandList->SetTexture(textureDrawnMipmap, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0);
 		commandList->Draw(2);
 
 		commandList->SetVertexBuffer(vb2.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib2.get(), 2);
-		commandList->SetTexture(
-			textureDrawnMipmap, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+		commandList->SetTexture(textureDrawnMipmap, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0);
 		commandList->Draw(2);
 
 		commandList->SetVertexBuffer(vb3.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib3.get(), 2);
-		commandList->SetTexture(
-			textureDrawnMipmap, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+		commandList->SetTexture(textureDrawnMipmap, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0);
 		commandList->Draw(2);
 
 		commandList->SetVertexBuffer(vb4.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib4.get(), 2);
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
-		commandList->SetTexture(
-			textureDrawn, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+		commandList->SetTexture(textureDrawn, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0);
 		commandList->Draw(2);
 
 		commandList->SetVertexBuffer(vb5.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib5.get(), 2);
-		commandList->SetTexture(
-			textureDrawn, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+		commandList->SetTexture(textureDrawn, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0);
 		commandList->Draw(2);
 
 		commandList->SetVertexBuffer(vb6.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib6.get(), 2);
-		commandList->SetTexture(
-			textureDrawn, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+		commandList->SetTexture(textureDrawn, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0);
 		commandList->Draw(2);
 
 		commandList->EndRenderPass();

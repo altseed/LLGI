@@ -36,7 +36,7 @@ float4 _main(thread const PS_INPUT& _input, constant CB& _23)
     return c;
 }
 
-fragment main0_out main0(main0_in in [[stage_in]], constant CB& _23 [[buffer(0)]], float4 gl_FragCoord [[position]])
+fragment main0_out main0(main0_in in [[stage_in]], constant CB& _23 [[buffer(1)]], float4 gl_FragCoord [[position]])
 {
     main0_out out = {};
     PS_INPUT _input;

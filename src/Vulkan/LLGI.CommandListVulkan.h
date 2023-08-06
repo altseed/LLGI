@@ -21,7 +21,7 @@ private:
 	std::vector<std::vector<vk::DescriptorSet>> computeCache;
 
 public:
-	DescriptorPoolVulkan(std::shared_ptr<GraphicsVulkan> graphics, int32_t size, int stage);
+	DescriptorPoolVulkan(std::shared_ptr<GraphicsVulkan> graphics, int32_t slot_size_max, int32_t constant_size, int32_t texture_size, int32_t storage_size);
 	virtual ~DescriptorPoolVulkan();
 	const std::vector<vk::DescriptorSet>& Get(PipelineStateVulkan* pip);
 	const std::vector<vk::DescriptorSet>& GetCompute(PipelineStateVulkan* pip);

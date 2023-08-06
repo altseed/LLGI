@@ -1,7 +1,8 @@
 #pragma once
-#include <string.h>
-#include <memory>
+#include <LLGI.Base.h>
 #include <iostream>
+#include <memory>
+#include <string.h>
 #include <unordered_map>
 
 class Shader;
@@ -13,7 +14,6 @@ struct Matrix44
 {
 public:
 	float Values[4][4];
-
 
 	Matrix44& LookAtRH(const LLGI::Vec3F& eye, const LLGI::Vec3F& at, const LLGI::Vec3F& up);
 
@@ -44,11 +44,7 @@ struct alignas(16) GPUParticleTextureInfo
 class Shader
 {
 public:
-	Shader(
-		LLGI::Graphics* graphics,
-		LLGI::DeviceType deviceType,
-		const char* vsBinaryPath,
-		const char* psBinaryPath);
+	Shader(LLGI::Graphics* graphics, LLGI::DeviceType deviceType, const char* vsBinaryPath, const char* psBinaryPath);
 
 	LLGI::Shader* vertexShader() const { return m_vs.get(); }
 	LLGI::Shader* pixelShader() const { return m_ps.get(); }
@@ -104,7 +100,6 @@ private:
 
 	std::array<std::shared_ptr<LLGI::PipelineState>, 2> pipelineState_;
 
-
 	std::unordered_map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pipelineCache_;
 };
 
@@ -122,7 +117,6 @@ private:
 	std::shared_ptr<LLGI::Buffer> indexBuffer_;
 	std::array<std::shared_ptr<LLGI::PipelineState>, 2> pipelineState_;
 };
-
 
 class GPUParticleRenderPass
 {
@@ -143,7 +137,6 @@ private:
 	std::shared_ptr<LLGI::Buffer> vb_;
 	std::shared_ptr<LLGI::Buffer> ib_;
 	std::unordered_map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pipelineCache_;
-
 };
 
 class GPUParticleContext
@@ -151,13 +144,12 @@ class GPUParticleContext
 public:
 	static const int kMaxOneFrameEmitCount = 1024;
 
-	GPUParticleContext(
-		LLGI::Graphics* graphics,
-		LLGI::DeviceType deviceType,
-		int frameCount,
-		int textureSize,
-		LLGI::Texture* particleTexture,
-		GPUParticleShaders shaders);
+	GPUParticleContext(LLGI::Graphics* graphics,
+					   LLGI::DeviceType deviceType,
+					   int frameCount,
+					   int textureSize,
+					   LLGI::Texture* particleTexture,
+					   GPUParticleShaders shaders);
 
 	LLGI::Graphics* GetGraphcis() const { return graphcis_; }
 
@@ -217,5 +209,3 @@ private:
 	std::unique_ptr<GPUParticleUpdatePass> particleUpdatePass_;
 	std::unique_ptr<GPUParticleRenderPass> particleRenderPass_;
 };
-
-

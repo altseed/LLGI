@@ -252,13 +252,11 @@ void test_depth_stencil(LLGI::DeviceType deviceType, DepthStencilTestMode mode)
 
 		if (mode == DepthStencilTestMode::DepthAsTexture)
 		{
-			commandList->SetTexture(
-				depthBuffer.get(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Linear, 0, LLGI::ShaderStageType::Pixel);
+			commandList->SetTexture(depthBuffer.get(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Linear, 0);
 		}
 		else
 		{
-			commandList->SetTexture(
-				colorBuffer.get(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Linear, 0, LLGI::ShaderStageType::Pixel);
+			commandList->SetTexture(colorBuffer.get(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Linear, 0);
 		}
 
 		commandList->SetPipelineState(screenPips[screenRenderPassPipelineState].get());
@@ -309,6 +307,6 @@ TestRegister DepthStencil_Depth("DepthStencil.Depth",
 TestRegister DepthStencil_Stencil("DepthStencil.Stencil",
 								  [](LLGI::DeviceType device) -> void { test_depth_stencil(device, DepthStencilTestMode::Stencil); });
 
-TestRegister DepthStencil_DepthAsTexture("DepthStencil.DepthAsTexture", [](LLGI::DeviceType device) -> void {
-	test_depth_stencil(device, DepthStencilTestMode::DepthAsTexture);
-});
+TestRegister DepthStencil_DepthAsTexture("DepthStencil.DepthAsTexture",
+										 [](LLGI::DeviceType device) -> void
+										 { test_depth_stencil(device, DepthStencilTestMode::DepthAsTexture); });

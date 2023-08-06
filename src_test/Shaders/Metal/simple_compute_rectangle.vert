@@ -48,7 +48,7 @@ VS_OUTPUT _main(thread const VS_INPUT& _input, const device compute& compute0)
     return _output;
 }
 
-vertex main0_out main0(main0_in in [[stage_in]], const device compute& compute0 [[buffer(1)]])
+vertex main0_out main0(main0_in in [[stage_in]], const device compute& compute0 [[buffer(10)]])
 {
     main0_out out = {};
     VS_INPUT _input;

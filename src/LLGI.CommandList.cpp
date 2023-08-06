@@ -25,13 +25,7 @@ void CommandList::GetCurrentPipelineState(PipelineState*& pipelineState, bool& i
 	isDirtied = isPipelineDirtied;
 }
 
-void CommandList::GetCurrentConstantBuffer(ShaderStageType type, Buffer*& buffer) { buffer = constantBuffers[static_cast<int>(type)]; }
-
-void CommandList::GetCurrentComputeBuffer(int32_t unit, ShaderStageType shaderStage, BindingComputeBuffer& buffer)
-{
-	auto ind = static_cast<int>(shaderStage);
-	buffer = computeBuffers_[ind][unit];
-}
+void CommandList::GetCurrentComputeBuffer(int32_t unit, BindingComputeBuffer& buffer) { buffer = computeBuffers_[unit]; }
 
 void CommandList::RegisterReferencedObject(ReferenceObject* referencedObject)
 {
@@ -45,22 +39,16 @@ void CommandList::RegisterReferencedObject(ReferenceObject* referencedObject)
 
 CommandList::CommandList(int32_t swapCount) : swapCount_(swapCount)
 {
-	constantBuffers.fill(nullptr);
+	constantBuffers_.fill(nullptr);
 
 	for (auto& cbs : computeBuffers_)
 	{
-		for (auto& c : cbs)
-		{
-			c.computeBuffer = nullptr;
-		}
+		cbs.computeBuffer = nullptr;
 	}
 
-	for (auto& t : currentTextures)
+	for (auto& t : currentTextures_)
 	{
-		for (auto& bt : t)
-		{
-			bt.texture = nullptr;
-		}
+		t.texture = nullptr;
 	}
 
 	swapObjects.resize(swapCount_);
@@ -68,17 +56,14 @@ CommandList::CommandList(int32_t swapCount) : swapCount_(swapCount)
 
 CommandList::~CommandList()
 {
-	for (auto& c : constantBuffers)
+	for (auto& c : constantBuffers_)
 	{
 		SafeRelease(c);
 	}
 
-	for (auto& t : currentTextures)
+	for (auto& t : currentTextures_)
 	{
-		for (auto& bt : t)
-		{
-			SafeRelease(bt.texture);
-		}
+		SafeRelease(t.texture);
 	}
 
 	for (auto& so : swapObjects)
@@ -90,12 +75,9 @@ CommandList::~CommandList()
 		so.referencedObjects.clear();
 	}
 
-	for (auto& cbs : computeBuffers_)
+	for (auto& cb : computeBuffers_)
 	{
-		for (auto& c : cbs)
-		{
-			SafeRelease(c.computeBuffer);
-		}
+		SafeRelease(cb.computeBuffer);
 	}
 }
 
@@ -209,43 +191,36 @@ void CommandList::SetPipelineState(PipelineState* pipelineState)
 	RegisterReferencedObject(pipelineState);
 }
 
-void CommandList::SetConstantBuffer(Buffer* constantBuffer, ShaderStageType shaderStage)
+void CommandList::SetConstantBuffer(Buffer* constantBuffer, int32_t unit)
 {
-	auto ind = static_cast<int>(shaderStage);
-	SafeAssign(constantBuffers[ind], constantBuffer);
+	SafeAssign(constantBuffers_[unit], constantBuffer);
 
 	RegisterReferencedObject(constantBuffer);
 }
 
-void CommandList::SetComputeBuffer(Buffer* computeBuffer, int32_t stride, int32_t unit, ShaderStageType shaderStage)
+void CommandList::SetComputeBuffer(Buffer* computeBuffer, int32_t stride, int32_t unit)
 {
-	auto ind = static_cast<int>(shaderStage);
-	SafeAssign(computeBuffers_[ind][unit].computeBuffer, computeBuffer);
-	computeBuffers_[ind][unit].stride = stride;
+	SafeAssign(computeBuffers_[unit].computeBuffer, computeBuffer);
+	computeBuffers_[unit].stride = stride;
 	RegisterReferencedObject(computeBuffer);
 }
 
-void CommandList::SetTexture(
-	Texture* texture, TextureWrapMode wrapMode, TextureMinMagFilter minmagFilter, int32_t unit, ShaderStageType shaderStage)
+void CommandList::SetTexture(Texture* texture, TextureWrapMode wrapMode, TextureMinMagFilter minmagFilter, int32_t unit)
 {
-	auto ind = static_cast<int>(shaderStage);
-	SafeAssign(currentTextures[ind][unit].texture, texture);
-	currentTextures[ind][unit].wrapMode = wrapMode;
-	currentTextures[ind][unit].minMagFilter = minmagFilter;
+	SafeAssign(currentTextures_[unit].texture, texture);
+	currentTextures_[unit].wrapMode = wrapMode;
+	currentTextures_[unit].minMagFilter = minmagFilter;
 
 	RegisterReferencedObject(texture);
 }
 
 void CommandList::ResetTextures()
 {
-	for (auto& texture : currentTextures)
+	for (auto& texture : currentTextures_)
 	{
-		for (auto& t : texture)
-		{
-			SafeRelease(t.texture);
-			t.wrapMode = TextureWrapMode::Clamp;
-			t.minMagFilter = TextureMinMagFilter::Nearest;
-		}
+		SafeRelease(texture.texture);
+		texture.wrapMode = TextureWrapMode::Clamp;
+		texture.minMagFilter = TextureMinMagFilter::Nearest;
 	}
 }
 
@@ -273,13 +248,10 @@ void CommandList::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, int32
 
 void CommandList::ResetComputeBuffer()
 {
-	for (auto& cbs : computeBuffers_)
+	for (auto& cb : computeBuffers_)
 	{
-		for (auto& cb : cbs)
-		{
-			SafeRelease(cb.computeBuffer);
-			cb.stride = 0;
-		}
+		SafeRelease(cb.computeBuffer);
+		cb.stride = 0;
 	}
 }
 

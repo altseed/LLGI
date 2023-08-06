@@ -7,7 +7,7 @@ struct PS_INPUT
     vec4 Color;
 };
 
-layout(set = 1, binding = 0, std140) uniform CB
+layout(set = 0, binding = 1, std140) uniform CB
 {
     vec4 offset;
 } _23;

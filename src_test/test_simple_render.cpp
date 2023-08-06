@@ -512,8 +512,8 @@ void main()
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get(), 2);
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
-		commandList->SetConstantBuffer(cb_vs, LLGI::ShaderStageType::Vertex);
-		commandList->SetConstantBuffer(cb_ps, LLGI::ShaderStageType::Pixel);
+		commandList->SetConstantBuffer(cb_vs, 0);
+		commandList->SetConstantBuffer(cb_ps, 1);
 		commandList->Draw(2);
 
 		commandList->EndRenderPass();
@@ -778,8 +778,7 @@ void main()
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get(), 2);
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
-		commandList->SetTexture(
-			textureDrawn, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0, LLGI::ShaderStageType::Pixel);
+		commandList->SetTexture(textureDrawn, LLGI::TextureWrapMode::Repeat, LLGI::TextureMinMagFilter::Nearest, 0);
 		commandList->Draw(2);
 		commandList->EndRenderPass();
 		commandList->End();
@@ -921,7 +920,7 @@ void test_instancing(LLGI::DeviceType deviceType)
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get(), 2);
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
-		commandList->SetConstantBuffer(cb.get(), LLGI::ShaderStageType::Vertex);
+		commandList->SetConstantBuffer(cb.get(), 0);
 		commandList->Draw(2, 5);
 		commandList->EndRenderPass();
 		commandList->End();
@@ -1034,8 +1033,7 @@ void test_vtf(LLGI::DeviceType deviceType)
 		commandList->BeginRenderPass(renderPass);
 		commandList->SetVertexBuffer(vb.get(), sizeof(SimpleVertex), 0);
 		commandList->SetIndexBuffer(ib.get(), 2);
-		commandList->SetTexture(
-			textureDrawn.get(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Linear, 0, LLGI::ShaderStageType::Vertex);
+		commandList->SetTexture(textureDrawn.get(), LLGI::TextureWrapMode::Clamp, LLGI::TextureMinMagFilter::Linear, 0);
 		commandList->SetPipelineState(pips[renderPassPipelineState].get());
 		commandList->Draw(2, 5);
 		commandList->EndRenderPass();
