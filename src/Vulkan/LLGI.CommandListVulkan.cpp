@@ -76,10 +76,11 @@ const std::vector<vk::DescriptorSet>& DescriptorPoolVulkan::Get(PipelineStateVul
 	}
 
 	// TODO : improve it
+	auto& layout = pip->GetDescriptorSetLayout();
 	vk::DescriptorSetAllocateInfo allocateInfo;
 	allocateInfo.descriptorPool = descriptorPool_;
-	allocateInfo.descriptorSetCount = 1;
-	allocateInfo.pSetLayouts = (pip->GetDescriptorSetLayout().data());
+	allocateInfo.descriptorSetCount = static_cast<int>(layout.size());
+	allocateInfo.pSetLayouts = layout.data();
 
 	std::vector<vk::DescriptorSet> descriptorSets = graphics_->GetDevice().allocateDescriptorSets(allocateInfo);
 	cache.push_back(descriptorSets);
@@ -102,10 +103,11 @@ const std::vector<vk::DescriptorSet>& DescriptorPoolVulkan::GetCompute(PipelineS
 	}
 
 	// TODO : improve it
+	auto& layout = pip->GetComputeDescriptorSetLayout();
 	vk::DescriptorSetAllocateInfo allocateInfo;
 	allocateInfo.descriptorPool = computeDescriptorPool_;
-	allocateInfo.descriptorSetCount = 1;
-	allocateInfo.pSetLayouts = (pip->GetComputeDescriptorSetLayout().data());
+	allocateInfo.descriptorSetCount = static_cast<int>(layout.size());
+	allocateInfo.pSetLayouts = layout.data();
 
 	std::vector<vk::DescriptorSet> descriptorSets = graphics_->GetDevice().allocateDescriptorSets(allocateInfo);
 	computeCache.push_back(descriptorSets);
@@ -356,31 +358,28 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 	{
 		return;
 	}
-	/*
-	vk::DescriptorSetAllocateInfo allocateInfo;
-	allocateInfo.descriptorPool = descriptorPool;
-	allocateInfo.descriptorSetCount = 2;
-	allocateInfo.pSetLayouts = (pip->GetDescriptorSetLayout().data());
 
-	std::vector<vk::DescriptorSet> descriptorSets = graphics_->GetDevice().allocateDescriptorSets(allocateInfo);
-	*/
-
-	std::array<vk::WriteDescriptorSet, NumComputeBuffer + NumTexture + +NumConstantBuffer> writeDescriptorSets;
+	std::array<vk::WriteDescriptorSet, NumComputeBuffer + NumTexture + NumConstantBuffer> writeDescriptorSets;
 	int writeDescriptorIndex = 0;
 
 	std::array<vk::DescriptorBufferInfo, NumComputeBuffer + NumTexture + NumConstantBuffer> descriptorBufferInfos;
 	int descriptorBufferIndex = 0;
 
-	std::array<vk::DescriptorImageInfo, NumTexture + +NumConstantBuffer> descriptorImageInfos;
+	std::array<vk::DescriptorImageInfo, NumTexture> descriptorImageInfos;
 	int descriptorImageIndex = 0;
 
 	for (size_t unit_ind = 0; unit_ind < constantBuffers_.size(); unit_ind++)
 	{
 		Buffer* cb = constantBuffers_[unit_ind];
+		if (cb == nullptr)
+		{
+			continue;
+		}
 
-		descriptorBufferInfos[descriptorBufferIndex].buffer = (static_cast<BufferVulkan*>(cb)->GetBuffer());
-		descriptorBufferInfos[descriptorBufferIndex].offset = static_cast<BufferVulkan*>(cb)->GetOffset();
-		descriptorBufferInfos[descriptorBufferIndex].range = cb->GetSize();
+		vk::DescriptorBufferInfo descriptorBufferInfo;
+		descriptorBufferInfo.buffer = (static_cast<BufferVulkan*>(cb)->GetBuffer());
+		descriptorBufferInfo.offset = static_cast<BufferVulkan*>(cb)->GetOffset();
+		descriptorBufferInfo.range = cb->GetSize();
 
 		vk::WriteDescriptorSet desc;
 		desc.descriptorType = vk::DescriptorType::eUniformBufferDynamic;
@@ -423,7 +422,7 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 		descriptorImageInfos[descriptorImageIndex] = imageInfo;
 
 		vk::WriteDescriptorSet desc;
-		desc.dstSet = descriptorSets[0];
+		desc.dstSet = descriptorSets[1];
 		desc.dstBinding = unit_ind;
 		desc.dstArrayElement = 0;
 		desc.pImageInfo = &descriptorImageInfos[descriptorImageIndex];
@@ -453,7 +452,7 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 
 		vk::WriteDescriptorSet desc;
 		desc.descriptorType = vk::DescriptorType::eStorageBufferDynamic;
-		desc.dstSet = descriptorSets[0];
+		desc.dstSet = descriptorSets[2];
 		desc.dstBinding = unit_ind;
 		desc.dstArrayElement = 0;
 		desc.pBufferInfo = &(descriptorBufferInfos[descriptorBufferIndex]);
@@ -470,11 +469,11 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 		graphics_->GetDevice().updateDescriptorSets(writeDescriptorIndex, writeDescriptorSets.data(), 0, nullptr);
 	}
 
-	std::array<uint32_t, 2> offsets;
+	std::array<uint32_t, 3> offsets;
 	offsets.fill(0);
 
 	currentCommandBuffer_.bindDescriptorSets(
-		vk::PipelineBindPoint::eGraphics, pip->GetPipelineLayout(), 0, 2, descriptorSets.data(), 2, offsets.data());
+		vk::PipelineBindPoint::eGraphics, pip->GetPipelineLayout(), 0, 3, descriptorSets.data(), 3, offsets.data());
 
 	// assign a pipeline
 	if (isPipDirtied)
@@ -750,24 +749,21 @@ void CommandListVulkan::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ,
 	{
 		return;
 	}
-	/*
-	vk::DescriptorSetAllocateInfo allocateInfo;
-	allocateInfo.descriptorPool = descriptorPool;
-	allocateInfo.descriptorSetCount = 2;
-	allocateInfo.pSetLayouts = (pip->GetDescriptorSetLayout().data());
 
-	std::vector<vk::DescriptorSet> descriptorSets = graphics_->GetDevice().allocateDescriptorSets(allocateInfo);
-	*/
-
-	std::array<vk::WriteDescriptorSet, NumConstantBuffer + NumComputeBuffer> writeDescriptorSets;
+	std::array<vk::WriteDescriptorSet, NumConstantBuffer + NumTexture + NumComputeBuffer> writeDescriptorSets;
 	int writeDescriptorIndex = 0;
 
-	std::array<vk::DescriptorBufferInfo, NumConstantBuffer + NumComputeBuffer> descriptorBufferInfos;
+	std::array<vk::DescriptorBufferInfo, NumConstantBuffer + NumTexture + NumComputeBuffer> descriptorBufferInfos;
 	int descriptorBufferIndex = 0;
 
 	for (size_t unit_ind = 0; unit_ind < constantBuffers_.size(); unit_ind++)
 	{
 		Buffer* cb = constantBuffers_[unit_ind];
+		if (cb == nullptr)
+		{
+			continue;
+		}
+
 		descriptorBufferInfos[descriptorBufferIndex].buffer = (static_cast<BufferVulkan*>(cb)->GetBuffer());
 		descriptorBufferInfos[descriptorBufferIndex].offset = static_cast<BufferVulkan*>(cb)->GetOffset();
 		descriptorBufferInfos[descriptorBufferIndex].range = cb->GetSize();
@@ -803,7 +799,7 @@ void CommandListVulkan::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ,
 
 		vk::WriteDescriptorSet desc;
 		desc.descriptorType = vk::DescriptorType::eStorageBufferDynamic;
-		desc.dstSet = descriptorSets[0];
+		desc.dstSet = descriptorSets[2];
 		desc.dstBinding = unit_ind;
 		desc.dstArrayElement = 0;
 		desc.pBufferInfo = &(descriptorBufferInfos[descriptorBufferIndex]);
@@ -820,16 +816,11 @@ void CommandListVulkan::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ,
 		graphics_->GetDevice().updateDescriptorSets(writeDescriptorIndex, writeDescriptorSets.data(), 0, nullptr);
 	}
 
-	std::array<uint32_t, 1 + NumComputeBuffer> offsets;
+	std::array<uint32_t, 3> offsets;
 	offsets.fill(0);
 
-	currentCommandBuffer_.bindDescriptorSets(vk::PipelineBindPoint::eCompute,
-											 pip->GetComputePipelineLayout(),
-											 0,
-											 1,
-											 descriptorSets.data(),
-											 1 + NumComputeBuffer,
-											 offsets.data());
+	currentCommandBuffer_.bindDescriptorSets(
+		vk::PipelineBindPoint::eCompute, pip->GetComputePipelineLayout(), 0, 3, descriptorSets.data(), 3, offsets.data());
 
 	// assign a pipeline
 	if (isPipDirtied)
