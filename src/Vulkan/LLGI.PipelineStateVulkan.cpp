@@ -472,7 +472,7 @@ bool PipelineStateVulkan::CreateGraphicsPipeline()
 
 	vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutInfos[3];
 	descriptorSetLayoutInfos[0].bindingCount = static_cast<int32_t>(uboLayoutBindings.size());
-	descriptorSetLayoutInfos[0].pBindings = textureLayoutBindings.data();
+	descriptorSetLayoutInfos[0].pBindings = uboLayoutBindings.data();
 	descriptorSetLayoutInfos[1].bindingCount = static_cast<int32_t>(textureLayoutBindings.size());
 	descriptorSetLayoutInfos[1].pBindings = textureLayoutBindings.data();
 	descriptorSetLayoutInfos[2].bindingCount = static_cast<int32_t>(computeLayoutBindings.size());
@@ -483,7 +483,7 @@ bool PipelineStateVulkan::CreateGraphicsPipeline()
 	descriptorSetLayouts_[2] = graphics_->GetDevice().createDescriptorSetLayout(descriptorSetLayoutInfos[2]);
 
 	vk::PipelineLayoutCreateInfo layoutInfo = {};
-	layoutInfo.setLayoutCount = 3;
+	layoutInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts_.size());
 	layoutInfo.pSetLayouts = descriptorSetLayouts_.data();
 	layoutInfo.pushConstantRangeCount = 0;
 	layoutInfo.pPushConstantRanges = nullptr;
@@ -564,7 +564,7 @@ bool PipelineStateVulkan::CreateComputePipeline()
 
 	vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutInfos[3];
 	descriptorSetLayoutInfos[0].bindingCount = static_cast<int32_t>(uboLayoutBindings.size());
-	descriptorSetLayoutInfos[0].pBindings = textureLayoutBindings.data();
+	descriptorSetLayoutInfos[0].pBindings = uboLayoutBindings.data();
 	descriptorSetLayoutInfos[1].bindingCount = static_cast<int32_t>(textureLayoutBindings.size());
 	descriptorSetLayoutInfos[1].pBindings = textureLayoutBindings.data();
 	descriptorSetLayoutInfos[2].bindingCount = static_cast<int32_t>(computeLayoutBindings.size());

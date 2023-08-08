@@ -1,9 +1,9 @@
 
 #pragma once
 
+#include <LLGI.Buffer.h>
 #include <LLGI.CommandList.h>
 #include <LLGI.Compiler.h>
-#include <LLGI.Buffer.h>
 #include <LLGI.Graphics.h>
 #include <LLGI.PipelineState.h>
 #include <LLGI.Platform.h>

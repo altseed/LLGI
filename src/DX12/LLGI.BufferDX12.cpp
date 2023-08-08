@@ -10,10 +10,7 @@ BufferDX12::BufferDX12()
 	state_ = D3D12_RESOURCE_STATE_COMMON;
 }
 
-BufferDX12::~BufferDX12()
-{
-	SafeRelease(buffer_);
-}
+BufferDX12::~BufferDX12() { SafeRelease(buffer_); }
 
 bool BufferDX12::Initialize(GraphicsDX12* graphics, const BufferUsageType usage, const int32_t size)
 {
