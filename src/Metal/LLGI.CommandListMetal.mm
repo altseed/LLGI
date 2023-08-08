@@ -179,64 +179,48 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
 		[renderEncoder_ setVertexBuffer:vb->GetBuffer() offset:bvb.offset atIndex:VertexBufferIndex];
 	}
 
-	// assign constant buffer
-	Buffer* vcb = nullptr;
-	GetCurrentConstantBuffer(ShaderStageType::Vertex, vcb);
-	if (vcb != nullptr)
-	{
-		auto vcb_ = static_cast<BufferMetal*>(vcb);
-		[renderEncoder_ setVertexBuffer:vcb_->GetBuffer() offset:vcb_->GetOffset() atIndex:0];
-	}
+	// assign constant buffers
+    for(size_t i = 0; i < constantBuffers_.size(); i++)
+    {
+        auto cb = static_cast<BufferMetal*>(constantBuffers_[i]);
+        if(cb != nullptr)
+        {
+            [renderEncoder_ setVertexBuffer:cb->GetBuffer() offset:cb->GetOffset() atIndex:i];
+            [renderEncoder_ setFragmentBuffer:cb->GetBuffer() offset:cb->GetOffset() atIndex:i];
+        }
+    }
+    
+    // Assign textures
+    for (int unit_ind = 0; unit_ind < currentTextures_.size(); unit_ind++)
+    {
+        if (currentTextures_[unit_ind].texture == nullptr)
+            continue;
 
-	Buffer* pcb = nullptr;
-	GetCurrentConstantBuffer(ShaderStageType::Pixel, pcb);
-	if (pcb != nullptr)
-	{
-		auto pcb_ = static_cast<BufferMetal*>(pcb);
-		[renderEncoder_ setFragmentBuffer:pcb_->GetBuffer() offset:pcb_->GetOffset() atIndex:0];
-	}
-
-	for (int stage_ind = 0; stage_ind < 2; stage_ind++)
-	{
-		// Assign textures
-		for (int unit_ind = 0; unit_ind < currentTextures[stage_ind].size(); unit_ind++)
-		{
-			if (currentTextures[stage_ind][unit_ind].texture == nullptr)
-				continue;
-
-			auto texture = (TextureMetal*)currentTextures[stage_ind][unit_ind].texture;
-			auto wm = (int32_t)currentTextures[stage_ind][unit_ind].wrapMode;
-			auto mm = (int32_t)currentTextures[stage_ind][unit_ind].minMagFilter;
-			auto pm = 0;
-			if (texture->GetTexture().mipmapLevelCount >= 2)
-			{
-				pm = mipmapFilter;
-			}
-
-			if (stage_ind == (int32_t)ShaderStageType::Vertex)
-			{
-				[renderEncoder_ setVertexTexture:texture->GetTexture() atIndex:unit_ind];
-				[renderEncoder_ setVertexSamplerState:samplerStates_[wm][mm][pm] atIndex:unit_ind];
-			}
-
-			if (stage_ind == (int32_t)ShaderStageType::Pixel)
-			{
-				[renderEncoder_ setFragmentTexture:texture->GetTexture() atIndex:unit_ind];
-				[renderEncoder_ setFragmentSamplerState:samplerStates_[wm][mm][pm] atIndex:unit_ind];
-			}
-		}
-
-		for (int unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)
-		{
-			BindingComputeBuffer bcb;
-			GetCurrentComputeBuffer(unit_ind, (ShaderStageType)stage_ind, bcb);
-			if (bcb.computeBuffer == nullptr)
-				continue;
+        auto texture = (TextureMetal*)currentTextures_[unit_ind].texture;
+        auto wm = (int32_t)currentTextures_[unit_ind].wrapMode;
+        auto mm = (int32_t)currentTextures_[unit_ind].minMagFilter;
+        auto pm = 0;
+        if (texture->GetTexture().mipmapLevelCount >= 2)
+        {
+            pm = mipmapFilter;
+        }
+        
+        [renderEncoder_ setVertexTexture:texture->GetTexture() atIndex:unit_ind];
+        [renderEncoder_ setVertexSamplerState:samplerStates_[wm][mm][pm] atIndex:unit_ind];
+        [renderEncoder_ setFragmentTexture:texture->GetTexture() atIndex:unit_ind];
+        [renderEncoder_ setFragmentSamplerState:samplerStates_[wm][mm][pm] atIndex:unit_ind];
+    }
+	
+    for (int unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)
+    {
+        BindingComputeBuffer bcb;
+        GetCurrentComputeBuffer(unit_ind, bcb);
+        if (bcb.computeBuffer == nullptr)
+            continue;
 			
-			auto cb = static_cast<BufferMetal*>(bcb.computeBuffer);
-			[computeEncoder_ setBuffer:cb->GetBuffer() offset:cb->GetOffset() atIndex:1 + unit_ind];
-		}
-	}
+        auto cb = static_cast<BufferMetal*>(bcb.computeBuffer);
+        [computeEncoder_ setBuffer:cb->GetBuffer() offset:cb->GetOffset() atIndex:unit_ind];
+    }
 
 	if (isPipDirtied)
 	{
@@ -487,7 +471,7 @@ void CommandListMetal::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, 
     for (int unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)
     {
         BindingComputeBuffer bcb;
-        GetCurrentComputeBuffer(unit_ind, ShaderStageType::Compute, bcb);
+        GetCurrentComputeBuffer(unit_ind, bcb);
         if (bcb.computeBuffer == nullptr)
             continue;
         
@@ -495,15 +479,17 @@ void CommandListMetal::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, 
         [computeEncoder_ setBuffer:cb->GetBuffer() offset:cb->GetOffset() atIndex:1 + unit_ind];
     }
     
-	// assign constant buffer
-	Buffer* ccb = nullptr;
-	GetCurrentConstantBuffer(ShaderStageType::Compute, ccb);
-	if (ccb != nullptr)
-	{
-		auto ccb_ = static_cast<BufferMetal*>(ccb);
-		[computeEncoder_ setBuffer:ccb_->GetBuffer() offset:ccb_->GetOffset() atIndex:0];
-	}
+    // assign constant buffers
+    for(size_t i = 0; i < constantBuffers_.size(); i++)
+    {
+        auto cb = static_cast<BufferMetal*>(constantBuffers_[i]);
+        if(cb != nullptr)
+        {
+            [computeEncoder_ setBuffer:cb->GetBuffer() offset:cb->GetOffset() atIndex:i];
+        }
+    }
 
+    
 	if (isPipDirtied)
 	{
 		[computeEncoder_ setComputePipelineState:pip->GetComputePipelineState()];
