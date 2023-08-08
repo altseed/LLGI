@@ -211,6 +211,8 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
         [renderEncoder_ setFragmentSamplerState:samplerStates_[wm][mm][pm] atIndex:unit_ind];
     }
 	
+    const int compute_offset = 10;
+    
     for (int unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)
     {
         BindingComputeBuffer bcb;
@@ -219,7 +221,8 @@ void CommandListMetal::Draw(int32_t primitiveCount, int32_t instanceCount)
             continue;
 			
         auto cb = static_cast<BufferMetal*>(bcb.computeBuffer);
-        [computeEncoder_ setBuffer:cb->GetBuffer() offset:cb->GetOffset() atIndex:unit_ind];
+        [renderEncoder_ setVertexBuffer:cb->GetBuffer() offset:cb->GetOffset() atIndex:unit_ind + compute_offset];
+        [renderEncoder_ setFragmentBuffer:cb->GetBuffer() offset:cb->GetOffset() atIndex:unit_ind + compute_offset];
     }
 
 	if (isPipDirtied)
@@ -467,17 +470,8 @@ void CommandListMetal::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, 
 	assert(computeEncoder_ != nullptr);
 
 	auto pip = static_cast<PipelineStateMetal*>(bpip);
-    
-    for (int unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)
-    {
-        BindingComputeBuffer bcb;
-        GetCurrentComputeBuffer(unit_ind, bcb);
-        if (bcb.computeBuffer == nullptr)
-            continue;
-        
-        auto cb = static_cast<BufferMetal*>(bcb.computeBuffer);
-        [computeEncoder_ setBuffer:cb->GetBuffer() offset:cb->GetOffset() atIndex:1 + unit_ind];
-    }
+
+    const int compute_offset = 10;
     
     // assign constant buffers
     for(size_t i = 0; i < constantBuffers_.size(); i++)
@@ -489,6 +483,16 @@ void CommandListMetal::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, 
         }
     }
 
+    for (int unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)
+    {
+        BindingComputeBuffer bcb;
+        GetCurrentComputeBuffer(unit_ind, bcb);
+        if (bcb.computeBuffer == nullptr)
+            continue;
+        
+        auto cb = static_cast<BufferMetal*>(bcb.computeBuffer);
+        [computeEncoder_ setBuffer:cb->GetBuffer() offset:cb->GetOffset() atIndex:compute_offset + unit_ind];
+    }
     
 	if (isPipDirtied)
 	{
