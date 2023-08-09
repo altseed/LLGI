@@ -41,7 +41,7 @@ float4 _main(thread const PS_INPUT& _input, const device compute& compute0)
     return c;
 }
 
-fragment main0_out main0(main0_in in [[stage_in]], const device compute& compute0 [[buffer(1)]], float4 gl_FragCoord [[position]])
+fragment main0_out main0(main0_in in [[stage_in]], const device compute& compute0 [[buffer(10)]], float4 gl_FragCoord [[position]])
 {
     main0_out out = {};
     PS_INPUT _input;

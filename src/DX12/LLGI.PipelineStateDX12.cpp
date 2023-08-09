@@ -62,28 +62,28 @@ bool PipelineStateDX12::CreateRootSignature()
 
 	// descriptor range for constant buffer view
 	ranges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-	ranges[0].NumDescriptors = 2;
+	ranges[0].NumDescriptors = NumConstantBuffer;
 	ranges[0].BaseShaderRegister = 0;
 	ranges[0].RegisterSpace = 0;
 	ranges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	// descriptor range for shader resorce view
 	ranges[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	ranges[1].NumDescriptors = NumTexture * 2;
+	ranges[1].NumDescriptors = NumTexture;
 	ranges[1].BaseShaderRegister = 0;
 	ranges[1].RegisterSpace = 0;
 	ranges[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	// descriptor range for uav
 	ranges[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
-	ranges[2].NumDescriptors = NumComputeBuffer * 2;
+	ranges[2].NumDescriptors = NumComputeBuffer;
 	ranges[2].BaseShaderRegister = 0;
 	ranges[2].RegisterSpace = 0;
 	ranges[2].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	// descriptor range for sampler
 	ranges[3].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
-	ranges[3].NumDescriptors = NumTexture * 2;
+	ranges[3].NumDescriptors = NumTexture;
 	ranges[3].BaseShaderRegister = 0;
 	ranges[3].RegisterSpace = 0;
 	ranges[3].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
@@ -140,7 +140,7 @@ bool PipelineStateDX12::CreateComputeRootSignature()
 
 	// descriptor range for constant buffer view
 	ranges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-	ranges[0].NumDescriptors = 1;
+	ranges[0].NumDescriptors = NumConstantBuffer;
 	ranges[0].BaseShaderRegister = 0;
 	ranges[0].RegisterSpace = 0;
 	ranges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;

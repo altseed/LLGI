@@ -5,6 +5,7 @@
 
 namespace LLGI
 {
+static constexpr int NumConstantBuffer = 4;
 static constexpr int NumTexture = TextureSlotMax;
 static constexpr int NumComputeBuffer = TextureSlotMax;
 
@@ -72,21 +73,20 @@ private:
 	bool isPipelineDirtied = true;
 	bool doesBeginWithPlatform_ = false;
 
-	std::array<Buffer*, static_cast<int>(ShaderStageType::Max)> constantBuffers;
-	std::array<std::array<BindingComputeBuffer, NumComputeBuffer>, static_cast<int>(ShaderStageType::Max)> computeBuffers_;
+	std::array<BindingComputeBuffer, NumComputeBuffer> computeBuffers_;
 
 protected:
 	bool isInRenderPass_ = false;
 	bool isInBegin_ = false;
 
-	std::array<std::array<BindingTexture, NumTexture>, 2> currentTextures;
+	std::array<Buffer*, NumConstantBuffer> constantBuffers_;
+	std::array<BindingTexture, NumTexture> currentTextures_;
 
 protected:
 	void GetCurrentVertexBuffer(BindingVertexBuffer& buffer, bool& isDirtied);
 	void GetCurrentIndexBuffer(BindingIndexBuffer& buffer, bool& isDirtied);
 	void GetCurrentPipelineState(PipelineState*& pipelineState, bool& isDirtied);
-	void GetCurrentConstantBuffer(ShaderStageType type, Buffer*& buffer);
-	void GetCurrentComputeBuffer(int32_t unit, ShaderStageType shaderStage, BindingComputeBuffer& buffer);
+	void GetCurrentComputeBuffer(int32_t unit, BindingComputeBuffer& buffer);
 	void RegisterReferencedObject(ReferenceObject* referencedObject);
 
 public:
@@ -116,8 +116,8 @@ public:
 	virtual void SetVertexBuffer(Buffer* vertexBuffer, int32_t stride, int32_t offset);
 	virtual void SetIndexBuffer(Buffer* indexBuffer, int32_t stride, int32_t offset = 0);
 	virtual void SetPipelineState(PipelineState* pipelineState);
-	virtual void SetConstantBuffer(Buffer* constantBuffer, ShaderStageType shaderStage);
-	virtual void SetComputeBuffer(Buffer* computeBuffer, int32_t stride, int32_t unit, ShaderStageType shaderStage);
+	virtual void SetConstantBuffer(Buffer* constantBuffer, int32_t unit);
+	virtual void SetComputeBuffer(Buffer* computeBuffer, int32_t stride, int32_t unit);
 
 	/**
 		@brief	copy a texture
@@ -134,11 +134,8 @@ public:
 
 	/**
 		@brief specify textures
-		@note
-		shaderStage is ignored in DirectX12 (common textures are used on all stages)
 	*/
-	virtual void
-	SetTexture(Texture* texture, TextureWrapMode wrapMode, TextureMinMagFilter minmagFilter, int32_t unit, ShaderStageType shaderStage);
+	virtual void SetTexture(Texture* texture, TextureWrapMode wrapMode, TextureMinMagFilter minmagFilter, int32_t unit);
 
 	/**
 		@brief generate mipmap

@@ -14,7 +14,7 @@ struct VS_OUTPUT
     vec4 Color;
 };
 
-layout(set = 0, binding = 9, std430) readonly buffer compute
+layout(set = 2, binding = 0, std430) readonly buffer compute
 {
     float _data[];
 } compute_1;

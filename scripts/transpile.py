@@ -14,7 +14,7 @@ os.chdir(os.path.dirname(__file__))
 
 transpiler_filename = "ShaderTranspiler.exe" if platform.system() == 'Windows' else "ShaderTranspiler"
 transpiler_path = os.path.join("../build/tools/ShaderTranspiler/Debug", transpiler_filename)
-if not os.path.isfile(transpiler_path):
+if os.path.isfile(transpiler_path):
     shutil.copy(transpiler_path, ".")
 
 verts = glob.glob(os.path.join(target_directory, 'HLSL_DX12/*.vert'), recursive=True)
