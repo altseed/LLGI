@@ -376,10 +376,9 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 			continue;
 		}
 
-		vk::DescriptorBufferInfo descriptorBufferInfo;
-		descriptorBufferInfo.buffer = cb->GetBuffer();
-		descriptorBufferInfo.offset = cb->GetOffset();
-		descriptorBufferInfo.range = cb->GetSize();
+		descriptorBufferInfos[descriptorBufferIndex].buffer = cb->GetBuffer();
+		descriptorBufferInfos[descriptorBufferIndex].offset = cb->GetOffset();
+		descriptorBufferInfos[descriptorBufferIndex].range = cb->GetSize();
 
 		vk::WriteDescriptorSet desc;
 		desc.descriptorType = vk::DescriptorType::eUniformBufferDynamic;
