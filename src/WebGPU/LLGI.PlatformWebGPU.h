@@ -10,7 +10,7 @@ class PlatformWebGPU : public Platform
 {
 private:
 	wgpu::SwapChain swapchain_;
-	wgpu::WGPUDevice device_;
+	wgpu::Device device_;
 
 public:
 	int GetCurrentFrameIndex() const override;

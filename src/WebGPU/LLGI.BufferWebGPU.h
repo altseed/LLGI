@@ -17,7 +17,6 @@ public:
 	void* Lock() override;
 	void* Lock(int32_t offset, int32_t size) override;
 	void Unlock() override;
-	void* const Read() override;
 
 	int32_t GetSize() override;
 

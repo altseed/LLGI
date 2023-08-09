@@ -7,7 +7,8 @@
 namespace LLGI
 {
 
-CommandListWebGPU::CommandListWebGPU(wgpu::Device device) {
+CommandListWebGPU::CommandListWebGPU(wgpu::Device device)
+{
 
 	for (int w = 0; w < 2; w++)
 	{
@@ -16,7 +17,7 @@ CommandListWebGPU::CommandListWebGPU(wgpu::Device device) {
 			std::array<wgpu::FilterMode, 2> filters;
 			filters[0] = wgpu::FilterMode::Nearest;
 			filters[1] = wgpu::FilterMode::Linear;
-			
+
 			std::array<wgpu::AddressMode, 2> am;
 			am[0] = wgpu::AddressMode::ClampToEdge;
 			am[1] = wgpu::AddressMode::Repeat;
@@ -65,7 +66,7 @@ void CommandListWebGPU::EndRenderPass()
 {
 	if (renderPassEncorder_ != nullptr)
 	{
-		renderPassEncorder_.EndPass();
+		renderPassEncorder_.End();
 		renderPassEncorder_ = nullptr;
 	}
 
@@ -76,6 +77,7 @@ void CommandListWebGPU::Draw(int32_t primitiveCount, int32_t instanceCount)
 {
 	BindingVertexBuffer bvb;
 	BindingIndexBuffer bib;
+	Buffer* cb = nullptr;
 	PipelineState* bpip = nullptr;
 
 	bool isVBDirtied = false;
@@ -112,6 +114,24 @@ void CommandListWebGPU::Draw(int32_t primitiveCount, int32_t instanceCount)
 	}
 
 	throw "Not implemented (Constant buffer)";
+
+	// constant buffer
+	{
+		for (int stage_ind = 0; stage_ind < 2; stage_ind++)
+		{
+			GetCurrentConstantBuffer(static_cast<ShaderStageType>(stage_ind), cb);
+			if (cb != nullptr)
+			{
+				auto _cb = static_cast<BufferWebGPU*>(cb);
+				// TODO
+			}
+			else
+			{
+				// set dummy values
+				// TODO
+			}
+		}
+	}
 
 	wgpu::BindGroupLayoutDescriptor layoutDesc = {};
 	std::array<wgpu::BindGroupLayoutEntry, NumTexture * 2> layoutEntries;

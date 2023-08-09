@@ -11,7 +11,7 @@
 namespace LLGI
 {
 
-GraphicsWebGPU::GraphicsWebGPU(wgpu::Device device) : device_(device) { queue_ = device.queue(); }
+GraphicsWebGPU::GraphicsWebGPU(wgpu::Device device) : device_(device) { queue_ = device.GetQueue(); }
 
 void GraphicsWebGPU::SetWindowSize(const Vec2I& windowSize) { throw "Not implemented"; }
 

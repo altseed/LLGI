@@ -9,12 +9,17 @@ namespace LLGI
 
 class TextureWebGPU : public Texture
 {
+	wgpu::Device device_;
+
 	wgpu::Texture texture_;
 	wgpu::TextureView textureView_;
 	TextureParameter parameter_;
+	std::vector<uint8_t> temp_buffer_;
 
 public:
 	bool Initialize(wgpu::Device& device, const TextureParameter& parameter);
+	void* Lock() override;
+	void Unlock() override;
 
 	const TextureParameter& GetParameter() const { return parameter_; }
 

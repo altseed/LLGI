@@ -34,25 +34,11 @@ bool BufferWebGPU::Initialize(wgpu::Device& device, const BufferUsageType usage,
 	return buffer_ != nullptr;
 }
 
-void* BufferWebGPU::Lock()
-{
-	return buffer_.GetMappedRange(0, GetSize());
-}
+void* BufferWebGPU::Lock() { return buffer_.GetMappedRange(0, GetSize()); }
 
-void* BufferWebGPU::Lock(int32_t offset, int32_t size)
-{
-	return buffer_.GetMappedRange(offset, size);
-}
+void* BufferWebGPU::Lock(int32_t offset, int32_t size) { return buffer_.GetMappedRange(offset, size); }
 
-void BufferWebGPU::Unlock() 
-{
-	buffer_.Unmap();
-}
-
-void* const BufferWebGPU::Read()
-{
-	throw "Unimeplemented";
-}
+void BufferWebGPU::Unlock() { buffer_.Unmap(); }
 
 int32_t BufferWebGPU::GetSize() { return size_; }
 

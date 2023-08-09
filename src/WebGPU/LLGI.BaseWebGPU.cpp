@@ -226,7 +226,7 @@ wgpu::TextureFormat ConvertFormat(TextureFormatType format)
 		return wgpu::TextureFormat::Depth32Float;
 
 	if (format == TextureFormatType::D24S8)
-		return wgpu::TextureFormat::Depth24UnormStencil8;
+		return wgpu::TextureFormat::Depth24PlusStencil8;
 
 	if (format == TextureFormatType::D32S8)
 		return wgpu::TextureFormat::Depth32FloatStencil8;
@@ -278,7 +278,7 @@ TextureFormatType ConvertFormat(wgpu::TextureFormat format)
 	if (format == wgpu::TextureFormat::Depth32Float)
 		return TextureFormatType::D32;
 
-	if (format == wgpu::TextureFormat::Depth24UnormStencil8)
+	if (format == wgpu::TextureFormat::Depth24PlusStencil8)
 		return TextureFormatType::D24S8;
 
 	if (format == wgpu::TextureFormat::Depth32FloatStencil8)

@@ -36,7 +36,7 @@ bool ShaderWebGPU::Initialize(wgpu::Device& device, DataStructure* data, int32_t
 	if (isCode)
 	{
 		wgslDesc.sType = wgpu::SType::ShaderModuleWGSLDescriptor;
-		wgslDesc.source = reinterpret_cast<const char*>(data[0].Data);
+		wgslDesc.code = reinterpret_cast<const char*>(data[0].Data);
 		desc.nextInChain = reinterpret_cast<wgpu::ChainedStruct*>(&wgslDesc);
 	}
 	else

@@ -1,10 +1,14 @@
 #include "LLGI.TextureWebGPU.h"
 
+#include <dawn/platform/DawnPlatform.h>
+
 namespace LLGI
 {
 
 bool TextureWebGPU::Initialize(wgpu::Device& device, const TextureParameter& parameter)
 {
+	device_ = device;
+
 	const auto getDimension = [](int dimension)
 	{
 		if (dimension == 1)
@@ -44,7 +48,8 @@ bool TextureWebGPU::Initialize(wgpu::Device& device, const TextureParameter& par
 
 		if ((parameter.Usage & TextureUsageType::External) != TextureUsageType::NoneFlag)
 		{
-			texDesc.usage |= wgpu::TextureUsage::Present;
+			throw "Not implemented";
+			// texDesc.usage |= dawn::platform::kPresentTextureUsage;
 		}
 
 		bool isArray = false;
@@ -80,14 +85,34 @@ bool TextureWebGPU::Initialize(wgpu::Device& device, const TextureParameter& par
 	}
 
 	format_ = parameter.Format;
-	
+
 	samplingCount_ = parameter.SampleCount;
 
 	mipmapCount_ = parameter.MipLevelCount;
 
-	throw "Not implemented (Copy cpu to gpu)";
-
 	return texture_ != nullptr && textureView_ != nullptr;
+}
+
+void* TextureWebGPU::Lock()
+{
+	auto cpuMemorySize = GetTextureMemorySize(format_, parameter_.Size);
+	temp_buffer_.resize(cpuMemorySize);
+	return temp_buffer_.data();
+}
+
+void TextureWebGPU::Unlock()
+{
+	wgpu::ImageCopyTexture imageCopyTexture{};
+	imageCopyTexture.texture = texture_;
+
+	wgpu::TextureDataLayout textureDataLayout;
+	textureDataLayout.bytesPerRow =
+		parameter_.Size.X * GetTextureMemorySize(format_, parameter_.Size) / (parameter_.Size.Y * parameter_.Size.Z);
+	wgpu::Extent3D extent;
+	extent.width = parameter_.Size.X;
+	extent.height = parameter_.Size.Y;
+	extent.depthOrArrayLayers = parameter_.Size.Z;
+	device_.GetQueue().WriteTexture(&imageCopyTexture, temp_buffer_.data(), temp_buffer_.size(), &textureDataLayout, &extent);
 }
 
 } // namespace LLGI
