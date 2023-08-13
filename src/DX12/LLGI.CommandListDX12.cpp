@@ -803,10 +803,7 @@ void CommandListDX12::ClearDepth()
 	}
 
 	auto handle = rt->GetHandleDSV();
-	for (int i = 0; i < rt->GetCount(); i++)
-	{
-		currentCommandList_->ClearDepthStencilView(handle[i], D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-	}
+	currentCommandList_->ClearDepthStencilView(handle[0], D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 }
 
 ID3D12GraphicsCommandList* CommandListDX12::GetCommandList() const { return commandList_.get(); }
