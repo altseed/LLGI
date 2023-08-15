@@ -6,7 +6,7 @@
 #include <glslang/SPIRV/GlslangToSpv.h>
 #endif
 
-#include <glslang/Include/ResourceLimits.h>
+#include <glslang/Public/ResourceLimits.h>
 #include <glslang/Public/ShaderLang.h>
 
 #include <functional>
@@ -24,8 +24,6 @@
 #include <spirv_cross/spirv_msl.hpp>
 #include <spirv_cross/spirv_reflect.hpp>
 #endif
-
-#include "ResourceLimits.h"
 
 namespace LLGI
 {
@@ -442,7 +440,6 @@ std::shared_ptr<SPIRV> SPIRVGenerator::Generate(
 {
 	std::string codeStr(code);
 	glslang::TProgram program;
-	TBuiltInResource resources = glslang::DefaultTBuiltInResource;
 	auto shaderStage = GetGlslangShaderStage(shaderStageType);
 
 	glslang::TShader shader = glslang::TShader(shaderStage);
@@ -477,7 +474,7 @@ std::shared_ptr<SPIRV> SPIRVGenerator::Generate(
 	includer.pushExternalLocalDirectory(dirnameOf(path));
 
 	int defaultVersion = 110;
-	if (!shader.parse(&resources, defaultVersion, false, messages, includer))
+	if (!shader.parse(GetDefaultResources(), defaultVersion, false, messages, includer))
 	{
 		return std::make_shared<SPIRV>(shader.getInfoLog());
 	}

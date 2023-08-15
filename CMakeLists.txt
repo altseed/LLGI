@@ -111,26 +111,38 @@ if(BUILD_VULKAN_COMPILER OR BUILD_TOOL)
     list(
       APPEND
       LLGI_THIRDPARTY_LIBRARIES
+	  debug
+	  GenericCodeGend
       debug
       glslangd
+	  debug
+	  glslang-default-resource-limitsd
+      debug
+      HLSLd
+	  debug
+	  MachineIndependentd
       debug
       SPIRVd
       debug
       OGLCompilerd
       debug
       OSDependentd
-      debug
-      HLSLd
+	  optimized
+	  GenericCodeGen
       optimized
       glslang
+	  optimized
+	  glslang-default-resource-limits
       optimized
+      HLSL
+	  optimized
+	  MachineIndependent
+	  optimized
       SPIRV
       optimized
       OGLCompiler
       optimized
-      OSDependent
-      optimized
-      HLSL)
+      OSDependent)
 
     ExternalProject_Add(
       EP_SPIRV-Cross
