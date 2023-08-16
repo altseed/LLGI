@@ -2,8 +2,7 @@ cmake_minimum_required(VERSION 3.0.0)
 project(ShaderTranspilerCore)
 
 add_library(
-  ShaderTranspilerCore STATIC ShaderTranspilerCore.cpp ShaderTranspilerCore.h
-                              ResourceLimits.cpp ResourceLimits.h)
+  ShaderTranspilerCore STATIC ShaderTranspilerCore.cpp ShaderTranspilerCore.h)
 
 target_compile_features(ShaderTranspilerCore PUBLIC cxx_std_14)
 target_include_directories(ShaderTranspilerCore
