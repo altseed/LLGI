@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.15)
 
 # The project's name
 project(LLGI)
@@ -108,41 +108,56 @@ if(BUILD_VULKAN_COMPILER OR BUILD_TOOL)
          ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang/include)
     list(APPEND LLGI_THIRDPARTY_LIBRARY_DIRECTORIES
          ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang/lib)
+
+    if ("${CMAKE_BUILD_TYPE}" STREQUAL "" AND NOT WIN32)
     list(
       APPEND
       LLGI_THIRDPARTY_LIBRARIES
-	  debug
-	  GenericCodeGend
+      GenericCodeGen
+      glslang
+      glslang-default-resource-limits
+      HLSL
+      MachineIndependent
+      SPIRV
+      OGLCompiler
+      OSDependent)
+    else()
+    list(
+      APPEND
+      LLGI_THIRDPARTY_LIBRARIES
+      debug
+      GenericCodeGend
       debug
       glslangd
-	  debug
-	  glslang-default-resource-limitsd
+      debug
+      glslang-default-resource-limitsd
       debug
       HLSLd
-	  debug
-	  MachineIndependentd
+      debug
+      MachineIndependentd
       debug
       SPIRVd
       debug
       OGLCompilerd
       debug
       OSDependentd
-	  optimized
-	  GenericCodeGen
+      optimized
+      GenericCodeGen
       optimized
       glslang
-	  optimized
-	  glslang-default-resource-limits
+      optimized
+      glslang-default-resource-limits
       optimized
       HLSL
-	  optimized
-	  MachineIndependent
-	  optimized
+      optimized
+      MachineIndependent
+      optimized
       SPIRV
       optimized
       OGLCompiler
       optimized
       OSDependent)
+    endif()
 
     ExternalProject_Add(
       EP_SPIRV-Cross
