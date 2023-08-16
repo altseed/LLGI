@@ -113,14 +113,14 @@ if(BUILD_VULKAN_COMPILER OR BUILD_TOOL)
     list(
       APPEND
       LLGI_THIRDPARTY_LIBRARIES
-      GenericCodeGen
       glslang
       glslang-default-resource-limits
       HLSL
       MachineIndependent
       SPIRV
       OGLCompiler
-      OSDependent)
+      OSDependent
+      GenericCodeGen)
 
       else()
 
@@ -140,8 +140,6 @@ if(BUILD_VULKAN_COMPILER OR BUILD_TOOL)
       APPEND
       LLGI_THIRDPARTY_LIBRARIES
       debug
-      GenericCodeGend
-      debug
       glslangd
       debug
       glslang-default-resource-limitsd
@@ -155,8 +153,8 @@ if(BUILD_VULKAN_COMPILER OR BUILD_TOOL)
       OGLCompilerd
       debug
       OSDependentd
-      optimized
-      GenericCodeGen
+      debug
+      GenericCodeGend
       optimized
       glslang
       optimized
@@ -170,7 +168,9 @@ if(BUILD_VULKAN_COMPILER OR BUILD_TOOL)
       optimized
       OGLCompiler
       optimized
-      OSDependent)
+      OSDependent
+      optimized
+      GenericCodeGen)
     endif()
 
     ExternalProject_Add(
