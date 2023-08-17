@@ -20,6 +20,8 @@ public:
 
 	int32_t GetSize() override;
 
+	int32_t GetOffset() const { return offset_; }
+
 	wgpu::Buffer& GetBuffer();
 };
 

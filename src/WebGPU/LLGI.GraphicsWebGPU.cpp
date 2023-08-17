@@ -15,7 +15,12 @@ GraphicsWebGPU::GraphicsWebGPU(wgpu::Device device) : device_(device) { queue_ =
 
 void GraphicsWebGPU::SetWindowSize(const Vec2I& windowSize) { throw "Not implemented"; }
 
-void GraphicsWebGPU::Execute(CommandList* commandList) { throw "Not implemented"; }
+void GraphicsWebGPU::Execute(CommandList* commandList)
+{
+	auto commandListWgpu = static_cast<CommandListWebGPU*>(commandList);
+	auto cb = commandListWgpu->GetCommandBuffer();
+	queue_.Submit(1, &cb);
+}
 
 void GraphicsWebGPU::WaitFinish() { throw "Not implemented"; }
 

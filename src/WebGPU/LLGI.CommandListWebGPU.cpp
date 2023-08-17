@@ -9,7 +9,6 @@ namespace LLGI
 
 CommandListWebGPU::CommandListWebGPU(wgpu::Device device)
 {
-
 	for (int w = 0; w < 2; w++)
 	{
 		for (int f = 0; f < 2; f++)
@@ -69,15 +68,13 @@ void CommandListWebGPU::EndRenderPass()
 		renderPassEncorder_.End();
 		renderPassEncorder_ = nullptr;
 	}
-
-	throw "Not implemented";
+	CommandList::EndRenderPass();
 }
 
 void CommandListWebGPU::Draw(int32_t primitiveCount, int32_t instanceCount)
 {
 	BindingVertexBuffer bvb;
 	BindingIndexBuffer bib;
-	Buffer* cb = nullptr;
 	PipelineState* bpip = nullptr;
 
 	bool isVBDirtied = false;
@@ -113,71 +110,85 @@ void CommandListWebGPU::Draw(int32_t primitiveCount, int32_t instanceCount)
 		renderPassEncorder_.SetStencilReference(pip->StencilRef);
 	}
 
-	throw "Not implemented (Constant buffer)";
-
 	// constant buffer
+	wgpu::BindGroupLayoutDescriptor constantLayoutDesc = {};
+	std::array<wgpu::BindGroupLayoutEntry, NumConstantBuffer> constantLayoutEntries;
+
+	for (uint32_t i = 0; i < NumConstantBuffer; i++)
 	{
-		for (int stage_ind = 0; stage_ind < 2; stage_ind++)
-		{
-			GetCurrentConstantBuffer(static_cast<ShaderStageType>(stage_ind), cb);
-			if (cb != nullptr)
-			{
-				auto _cb = static_cast<BufferWebGPU*>(cb);
-				// TODO
-			}
-			else
-			{
-				// set dummy values
-				// TODO
-			}
-		}
+		constantLayoutEntries[i].buffer.type = wgpu::BufferBindingType::Uniform;
+		constantLayoutEntries[i].visibility = wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment;
+		constantLayoutEntries[i].binding = i;
 	}
 
-	wgpu::BindGroupLayoutDescriptor layoutDesc = {};
-	std::array<wgpu::BindGroupLayoutEntry, NumTexture * 2> layoutEntries;
+	constantLayoutDesc.entryCount = constantLayoutEntries.size();
+	constantLayoutDesc.entries = constantLayoutEntries.data();
+	auto constantBindingLayout = device_.CreateBindGroupLayout(&constantLayoutDesc);
+
+	std::array<wgpu::BindGroupEntry, NumConstantBuffer> constantBindGroupEntries;
+
+	for (size_t unit_ind = 0; unit_ind < constantBuffers_.size(); unit_ind++)
+	{
+		auto cb = static_cast<BufferWebGPU*>(constantBuffers_[unit_ind]);
+		if (cb == nullptr)
+		{
+			continue;
+		}
+
+		constantBindGroupEntries[unit_ind].binding = unit_ind;
+		constantBindGroupEntries[unit_ind].buffer = cb->GetBuffer();
+		constantBindGroupEntries[unit_ind].size = cb->GetSize();
+		constantBindGroupEntries[unit_ind].offset = cb->GetOffset();
+	}
+
+	wgpu::BindGroupDescriptor constantBindGroupDesc = {};
+	constantBindGroupDesc.layout = constantBindingLayout;
+	constantBindGroupDesc.entries = constantBindGroupEntries.data();
+	constantBindGroupDesc.entryCount = constantBindGroupEntries.size();
+	auto constantBindGroup = device_.CreateBindGroup(&constantBindGroupDesc);
+
+	wgpu::BindGroupLayoutDescriptor textureLayoutDesc = {};
+	std::array<wgpu::BindGroupLayoutEntry, NumTexture> textureLayoutEntries;
 	throw "Not implemented (Cache layout)";
 
 	for (uint32_t i = 0; i < NumTexture; i++)
 	{
-		layoutEntries[i].visibility = wgpu::ShaderStage::Vertex;
-		layoutEntries[i].binding = i;
-		layoutEntries[i + NumTexture].visibility = wgpu::ShaderStage::Fragment;
-		layoutEntries[i + NumTexture].binding = i;
+		textureLayoutEntries[i].visibility = wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment;
+		textureLayoutEntries[i].binding = i;
+		textureLayoutEntries[i].sampler.type = wgpu::SamplerBindingType::Filtering;
+		textureLayoutEntries[i].texture.sampleType = wgpu::TextureSampleType::Float;	 // TODO : Fix correct
+		textureLayoutEntries[i].texture.viewDimension = wgpu::TextureViewDimension::e2D; // TODO : Fix correct
 	}
 
-	layoutDesc.entryCount = NumTexture * 2;
-	layoutDesc.entries = layoutEntries.data();
+	textureLayoutDesc.entryCount = NumTexture;
+	textureLayoutDesc.entries = textureLayoutEntries.data();
 
-	auto bindLayout = device_.CreateBindGroupLayout(&layoutDesc);
+	auto textureBindLayout = device_.CreateBindGroupLayout(&textureLayoutDesc);
 
-	wgpu::BindGroupDescriptor groupDesc = {};
-	std::array<wgpu::BindGroupEntry, NumTexture * 2> groupEntries;
+	wgpu::BindGroupDescriptor textureBindGroupDesc = {};
+	std::array<wgpu::BindGroupEntry, NumTexture> textureGroupEntries;
 
-	for (int stage_ind = 0; stage_ind < 2; stage_ind++)
+	for (int unit_ind = 0; unit_ind < static_cast<int32_t>(currentTextures_.size()); unit_ind++)
 	{
-		for (size_t unit_ind = 0; unit_ind < currentTextures[stage_ind].size(); unit_ind++)
-		{
-			if (currentTextures[stage_ind][unit_ind].texture != nullptr)
-			{
-				auto texture = static_cast<TextureWebGPU*>(currentTextures[stage_ind][unit_ind].texture);
-				auto wm = (int32_t)currentTextures[stage_ind][unit_ind].wrapMode;
-				auto mm = (int32_t)currentTextures[stage_ind][unit_ind].minMagFilter;
+		if (currentTextures_[unit_ind].texture == nullptr)
+			continue;
+		auto texture = static_cast<TextureWebGPU*>(currentTextures_[unit_ind].texture);
+		auto wm = (int32_t)currentTextures_[unit_ind].wrapMode;
+		auto mm = (int32_t)currentTextures_[unit_ind].minMagFilter;
 
-				auto& groupEntry = groupEntries[unit_ind + stage_ind * NumTexture];
-
-				groupEntry.binding = unit_ind;
-				groupEntry.textureView = texture->GetTextureView();
-				groupEntry.sampler = samplers_[wm][mm];
-			}
-		}
+		auto& groupEntry = textureGroupEntries[unit_ind];
+		groupEntry.binding = unit_ind;
+		groupEntry.textureView = texture->GetTextureView();
+		groupEntry.sampler = samplers_[wm][mm];
 	}
 
-	groupDesc.layout = bindLayout;
-	groupDesc.entries = groupEntries.data();
-	groupDesc.entryCount = NumTexture * 2;
+	textureBindGroupDesc.layout = textureBindLayout;
+	textureBindGroupDesc.entries = textureGroupEntries.data();
+	textureBindGroupDesc.entryCount = NumTexture;
+	auto textureBindGroup = device_.CreateBindGroup(&textureBindGroupDesc);
 
-	auto bindGroup = device_.CreateBindGroup(&groupDesc);
-	renderPassEncorder_.SetBindGroup(0, bindGroup);
+	renderPassEncorder_.SetBindGroup(0, constantBindGroup);
+	renderPassEncorder_.SetBindGroup(1, textureBindGroup);
 
 	int indexPerPrim = 0;
 

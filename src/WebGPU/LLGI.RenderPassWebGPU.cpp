@@ -62,50 +62,57 @@ bool RenderPassWebGPU::Initialize(
 		resolvedDepthTextureImpl = reinterpret_cast<TextureWebGPU*>(resolvedDepthTexture);
 	}
 
-	std::array<wgpu::RenderPassColorAttachment, RenderTargetMax> colorAttachments;
-
 	descriptor_.colorAttachmentCount = textureCount;
-	descriptor_.colorAttachments = colorAttachments.data();
+	descriptor_.colorAttachments = colorAttachments_.data();
 
 	for (int i = 0; i < textureCount; i++)
 	{
-		colorAttachments[i].view = texturesImpl[i]->GetTextureView();
+		colorAttachments_[i].view = texturesImpl[i]->GetTextureView();
 
-		if(GetIsColorCleared())
+		if (GetIsColorCleared())
 		{
-			// TODO
+			colorAttachments_[i].loadOp = wgpu::LoadOp::Clear;
+			colorAttachments_[i].storeOp = wgpu::StoreOp::Store;
+			colorAttachments_[i].clearValue = {
+				GetClearColor().R / 255.0, GetClearColor().G / 255.0, GetClearColor().B / 255.0, GetClearColor().A / 255.0};
 		}
 		else
 		{
-			// TODO
+			colorAttachments_[i].loadOp = wgpu::LoadOp::Load;
+			colorAttachments_[i].storeOp = wgpu::StoreOp::Store;
+			colorAttachments_[i].clearValue = {0, 0, 0, 1};
 		}
 
 		if (resolvedTextureImpl != nullptr)
 		{
-			colorAttachments[i].resolveTarget = resolvedDepthTextureImpl->GetTextureView();
-			colorAttachments[i].storeOp = wgpu::StoreOp::Store;
+			colorAttachments_[i].resolveTarget = resolvedDepthTextureImpl->GetTextureView();
+			colorAttachments_[i].storeOp = wgpu::StoreOp::Store;
 		}
 	}
 
-	wgpu::RenderPassDepthStencilAttachment depthStencilAttachiment;
-
 	if (depthTexture != nullptr)
 	{
-		depthStencilAttachiment.view = depthTextureImpl->GetTextureView();
+		depthStencilAttachiment_.view = depthTextureImpl->GetTextureView();
 
-		if(GetIsDepthCleared())
+		if (GetIsDepthCleared())
 		{
-			// TODO
+			depthStencilAttachiment_.depthLoadOp = wgpu::LoadOp::Clear;
+			depthStencilAttachiment_.depthStoreOp = wgpu::StoreOp::Store;
+			depthStencilAttachiment_.depthClearValue = 1.0f;
 		}
 		else
 		{
-			// TODO
+			depthStencilAttachiment_.depthLoadOp = wgpu::LoadOp::Load;
+			depthStencilAttachiment_.depthStoreOp = wgpu::StoreOp::Store;
+			depthStencilAttachiment_.depthClearValue = 1.0f;
 		}
 
 		if (resolvedDepthTextureImpl != nullptr)
 		{
 			// ?
 		}
+
+		descriptor_.depthStencilAttachment = &depthStencilAttachiment_;
 	}
 
 	throw "Not implemented";

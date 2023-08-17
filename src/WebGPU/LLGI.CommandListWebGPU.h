@@ -34,6 +34,8 @@ public:
 
 	void CopyTexture(
 		Texture* src, Texture* dst, const Vec3I& srcPos, const Vec3I& dstPos, const Vec3I& size, int srcLayer, int dstLayer) override;
+
+	const wgpu::CommandBuffer& GetCommandBuffer() const { return commandBuffer_; }
 };
 
 } // namespace LLGI
