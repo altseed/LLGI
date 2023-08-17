@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.15)
 
 # The project's name
 project(LLGI)
@@ -92,7 +92,39 @@ endif()
 if(BUILD_VULKAN_COMPILER OR BUILD_TOOL)
   if(USE_THIRDPARTY_DIRECTORY)
 
+    list(APPEND LLGI_THIRDPARTY_INCLUDES
+         ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang/include)
+    list(APPEND LLGI_THIRDPARTY_LIBRARY_DIRECTORIES
+         ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang/lib)
+
+    if ("${CMAKE_BUILD_TYPE}" STREQUAL "" AND NOT WIN32)
     ExternalProject_Add(
+      EP_glslang
+      SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/glslang
+      PREFIX ${CMAKE_CURRENT_BINARY_DIR}/EP/Build/glslang
+      INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang
+      CMAKE_ARGS
+        -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang
+        -DCMAKE_USER_MAKE_RULES_OVERRIDE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/CFlagOverrides.cmake
+        -DUSE_MSVC_RUNTIME_LIBRARY_DLL=${USE_MSVC_RUNTIME_LIBRARY_DLL}
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
+
+    list(
+      APPEND
+      LLGI_THIRDPARTY_LIBRARIES
+      glslang
+      glslang-default-resource-limits
+      HLSL
+      MachineIndependent
+      SPIRV
+      OGLCompiler
+      OSDependent
+      GenericCodeGen)
+
+      else()
+
+      ExternalProject_Add(
       EP_glslang
       SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/glslang
       PREFIX ${CMAKE_CURRENT_BINARY_DIR}/EP/Build/glslang
@@ -104,15 +136,17 @@ if(BUILD_VULKAN_COMPILER OR BUILD_TOOL)
         -DCMAKE_DEBUG_POSTFIX=d
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
-    list(APPEND LLGI_THIRDPARTY_INCLUDES
-         ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang/include)
-    list(APPEND LLGI_THIRDPARTY_LIBRARY_DIRECTORIES
-         ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang/lib)
     list(
       APPEND
       LLGI_THIRDPARTY_LIBRARIES
       debug
       glslangd
+      debug
+      glslang-default-resource-limitsd
+      debug
+      HLSLd
+      debug
+      MachineIndependentd
       debug
       SPIRVd
       debug
@@ -120,9 +154,15 @@ if(BUILD_VULKAN_COMPILER OR BUILD_TOOL)
       debug
       OSDependentd
       debug
-      HLSLd
+      GenericCodeGend
       optimized
       glslang
+      optimized
+      glslang-default-resource-limits
+      optimized
+      HLSL
+      optimized
+      MachineIndependent
       optimized
       SPIRV
       optimized
@@ -130,7 +170,8 @@ if(BUILD_VULKAN_COMPILER OR BUILD_TOOL)
       optimized
       OSDependent
       optimized
-      HLSL)
+      GenericCodeGen)
+    endif()
 
     ExternalProject_Add(
       EP_SPIRV-Cross
