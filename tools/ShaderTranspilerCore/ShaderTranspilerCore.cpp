@@ -268,7 +268,11 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 		{
 			compiler.set_name(remap.combined_id, spirv_cross::join("Sampler_", compiler.get_name(remap.sampler_id)));
 			auto location = compiler.get_decoration(remap.sampler_id, spv::DecorationBinding);
-			compiler.set_decoration(remap.combined_id, spv::DecorationLocation, location);
+
+			if (!isVulkanMode_)
+			{
+				compiler.set_decoration(remap.combined_id, spv::DecorationLocation, location);
+			}
 		}
 	}
 

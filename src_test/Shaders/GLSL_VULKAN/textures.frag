@@ -7,9 +7,9 @@ struct PS_Input
     vec4 Color;
 };
 
-layout(location = 0, set = 1, binding = 0) uniform sampler2D Sampler_g_sampler1;
-layout(location = 1, set = 1, binding = 1) uniform sampler2DArray Sampler_g_sampler2;
-layout(location = 2, set = 1, binding = 2) uniform sampler3D Sampler_g_sampler3;
+layout(set = 1, binding = 0) uniform sampler2D Sampler_g_sampler1;
+layout(set = 1, binding = 0) uniform sampler2DArray Sampler_g_sampler2;
+layout(set = 1, binding = 0) uniform sampler3D Sampler_g_sampler3;
 
 layout(location = 0) in vec2 Input_UV;
 layout(location = 1) in vec4 Input_Color;
