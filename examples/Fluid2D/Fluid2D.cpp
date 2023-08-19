@@ -559,14 +559,18 @@ void Fluid2D::Render(LLGI::Graphics* graphics, LLGI::CommandList* commandList, L
     if (itr == pipelineCache_.end())
     {
         const auto pip = graphics->CreatePiplineState();
-        pip->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
+        pip->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32B32A32_FLOAT;
         pip->VertexLayouts[1] = LLGI::VertexLayoutFormat::R8G8B8A8_UNORM;
+        pip->VertexLayouts[2] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
         pip->VertexLayouts[3] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
-        pip->VertexLayouts[4] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
         pip->VertexLayoutNames[0] = "POSITION";
         pip->VertexLayoutNames[1] = "COLOR";
-        pip->VertexLayoutNames[2] = "UV1";
-        pip->VertexLayoutNames[3] = "UV2";
+        pip->VertexLayoutNames[2] = "UV";
+        pip->VertexLayoutNames[3] = "UV";
+        pip->VertexLayoutSemantics[0] = 0;
+        pip->VertexLayoutSemantics[1] = 0;
+        pip->VertexLayoutSemantics[2] = 0;
+        pip->VertexLayoutSemantics[3] = 1;
         pip->VertexLayoutCount = 4;
         pip->Topology = LLGI::TopologyType::Triangle;
 
@@ -581,7 +585,7 @@ void Fluid2D::Render(LLGI::Graphics* graphics, LLGI::CommandList* commandList, L
         pip->SetShader(LLGI::ShaderStageType::Vertex, vs_.get());
         pip->SetShader(LLGI::ShaderStageType::Pixel, ps_.get());
         pip->SetRenderPassPipelineState(renderPassState.get());
-        pip->Compile();
+        assert(pip->Compile());
         pipeline = LLGI::CreateSharedPtr(pip);
         pipelineCache_[renderPassState] = pipeline;
     }
