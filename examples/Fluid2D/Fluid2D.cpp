@@ -350,15 +350,15 @@ Fluid2D::Fluid2D(LLGI::Graphics* graphics, LLGI::DeviceType deviceType)
         const auto cb = (BuildVBIBCB*)buildVBIBConstant_->Lock();
 
         cb->ParticleRadius = ParticleRadius;
-        cb->Color[0] = 0.2f;
-        cb->Color[1] = 0.2f;
-        cb->Color[2] = 1.0f;
-        cb->Color[3] = 1.0f;
+        cb->Color[0] = 50u;
+        cb->Color[1] = 50u;
+        cb->Color[2] = 255u;
+        cb->Color[3] = 255u;
 
-        cb->FixedColor[0] = 0.0f;
-        cb->FixedColor[1] = 0.0f;
-        cb->FixedColor[2] = 0.0f;
-        cb->FixedColor[3] = 1.0f;
+        cb->FixedColor[0] = 0u;
+        cb->FixedColor[1] = 0u;
+        cb->FixedColor[2] = 0u;
+        cb->FixedColor[3] = 255u;
 
         buildVBIBConstant_->Unlock();
     }
@@ -428,81 +428,81 @@ void Fluid2D::Update(LLGI::Graphics* graphics, LLGI::CommandList* commandList)
 
     commandList->BeginComputePass();
 
-    commandList->SetPipelineState(calcExternalPipeline_.get());
-    commandList->SetConstantBuffer(calcExternalConstant_.get(), 0);
-    commandList->SetComputeBuffer(particles_.get(), sizeof(Particle), 0);
-    commandList->Dispatch(ParticlesCount, 1, 1, 1, 1, 1);
-    commandList->ResetComputeBuffer();
+    // commandList->SetPipelineState(calcExternalPipeline_.get());
+    // commandList->SetConstantBuffer(calcExternalConstant_.get(), 0);
+    // commandList->SetComputeBuffer(particles_.get(), sizeof(Particle), 0);
+    // commandList->Dispatch(ParticlesCount, 1, 1, 1, 1, 1);
+    // commandList->ResetComputeBuffer();
 
-    for (int l = 0; l < IterationCount; l++)
-    {
-        commandList->SetPipelineState(buildGridPipeline_.get());
-        commandList->SetConstantBuffer(buildGridConstant_.get(), 0);
-        commandList->SetComputeBuffer(particles_.get(), sizeof(Particle), 0);
-        commandList->SetComputeBuffer(gridTable_.get(), sizeof(int[2]), 1);
-        commandList->Dispatch(ParticlesCount, 1, 1, 1, 1, 1);
-        commandList->ResetComputeBuffer();
+    // for (int l = 0; l < IterationCount; l++)
+    // {
+    //     commandList->SetPipelineState(buildGridPipeline_.get());
+    //     commandList->SetConstantBuffer(buildGridConstant_.get(), 0);
+    //     commandList->SetComputeBuffer(particles_.get(), sizeof(Particle), 0);
+    //     commandList->SetComputeBuffer(gridTable_.get(), sizeof(int[2]), 1);
+    //     commandList->Dispatch(ParticlesCount, 1, 1, 1, 1, 1);
+    //     commandList->ResetComputeBuffer();
 
-        const int nlog = static_cast<int>(std::log2f(ParticlesCount));
-        int inc;
+    //     const int nlog = static_cast<int>(std::log2f(ParticlesCount));
+    //     int inc;
 
-        commandList->SetPipelineState(bitonicSortPipeline_.get());
-        commandList->SetComputeBuffer(gridTable_.get(), sizeof(int[2]), 0);
-        for (int i = 0; i < nlog; i++)
-        {
-            inc = 1 << i;
+    //     commandList->SetPipelineState(bitonicSortPipeline_.get());
+    //     commandList->SetComputeBuffer(gridTable_.get(), sizeof(int[2]), 0);
+    //     for (int i = 0; i < nlog; i++)
+    //     {
+    //         inc = 1 << i;
 
-            const auto dir = 2 << i;
+    //         const auto dir = 2 << i;
 
-            for (int j = 0; j < i + 1; j++)
-            {
-                {
-                    const auto cb = (BitonicSortCB*)bitonicSortConstant_->Lock();
-                    cb->Inc = inc;
-                    cb->Dir = dir;
-                    bitonicSortConstant_->Unlock();
-                }
+    //         for (int j = 0; j < i + 1; j++)
+    //         {
+    //             {
+    //                 const auto cb = (BitonicSortCB*)bitonicSortConstant_->Lock();
+    //                 cb->Inc = inc;
+    //                 cb->Dir = dir;
+    //                 bitonicSortConstant_->Unlock();
+    //             }
 
-                commandList->SetConstantBuffer(bitonicSortConstant_.get(), 0);
-                commandList->Dispatch(ParticlesCount / 2, 1, 1, 1, 1, 1);
+    //             commandList->SetConstantBuffer(bitonicSortConstant_.get(), 0);
+    //             commandList->Dispatch(ParticlesCount / 2, 1, 1, 1, 1, 1);
 
-                inc /= 2;
-            }
-        }
-        commandList->ResetComputeBuffer();
+    //             inc /= 2;
+    //         }
+    //     }
+    //     commandList->ResetComputeBuffer();
 
-        commandList->SetPipelineState(clearGridIndicesPipeline_.get());
-        commandList->SetComputeBuffer(gridIndicesTable_.get(), sizeof(int[2]), 0);
-        commandList->Dispatch(gridNum_.X * gridNum_.Y, 1, 1, 1, 1, 1);
-        commandList->ResetComputeBuffer();
+    //     commandList->SetPipelineState(clearGridIndicesPipeline_.get());
+    //     commandList->SetComputeBuffer(gridIndicesTable_.get(), sizeof(int[2]), 0);
+    //     commandList->Dispatch(gridNum_.X * gridNum_.Y, 1, 1, 1, 1, 1);
+    //     commandList->ResetComputeBuffer();
 
-        commandList->SetPipelineState(buildGridIndicesPipeline_.get());
-        commandList->SetConstantBuffer(buildGridIndicesConstant_.get(), 0);
-        commandList->SetComputeBuffer(gridTable_.get(), sizeof(int[2]), 0);
-        commandList->SetComputeBuffer(gridIndicesTable_.get(), sizeof(int[2]), 1);
-        commandList->Dispatch(ParticlesCount, 1, 1, 1, 1, 1);
-        commandList->ResetComputeBuffer();
+    //     commandList->SetPipelineState(buildGridIndicesPipeline_.get());
+    //     commandList->SetConstantBuffer(buildGridIndicesConstant_.get(), 0);
+    //     commandList->SetComputeBuffer(gridTable_.get(), sizeof(int[2]), 0);
+    //     commandList->SetComputeBuffer(gridIndicesTable_.get(), sizeof(int[2]), 1);
+    //     commandList->Dispatch(ParticlesCount, 1, 1, 1, 1, 1);
+    //     commandList->ResetComputeBuffer();
 
-        commandList->SetComputeBuffer(particles_.get(), sizeof(Particle), 0);
-        commandList->SetComputeBuffer(gridTable_.get(), sizeof(int[2]), 1);
-        commandList->SetComputeBuffer(gridIndicesTable_.get(), sizeof(int[2]), 2);
-        {
-            commandList->SetPipelineState(calcScalingFactorPipeline_.get());
-            commandList->SetConstantBuffer(calcScalingFactorConstant_.get(), 0);
-            commandList->Dispatch(ParticlesCount, 1, 1, 1, 1, 1);
+    //     commandList->SetComputeBuffer(particles_.get(), sizeof(Particle), 0);
+    //     commandList->SetComputeBuffer(gridTable_.get(), sizeof(int[2]), 1);
+    //     commandList->SetComputeBuffer(gridIndicesTable_.get(), sizeof(int[2]), 2);
+    //     {
+    //         commandList->SetPipelineState(calcScalingFactorPipeline_.get());
+    //         commandList->SetConstantBuffer(calcScalingFactorConstant_.get(), 0);
+    //         commandList->Dispatch(ParticlesCount, 1, 1, 1, 1, 1);
 
-            commandList->SetPipelineState(calcCorrectPositionPipeline_.get());
-            commandList->SetConstantBuffer(calcCorrectPositionConstant_.get(), 0);
-            commandList->Dispatch(ParticlesCount, 1, 1, 1, 1, 1);
-        }
-        commandList->ResetComputeBuffer();
-    }
+    //         commandList->SetPipelineState(calcCorrectPositionPipeline_.get());
+    //         commandList->SetConstantBuffer(calcCorrectPositionConstant_.get(), 0);
+    //         commandList->Dispatch(ParticlesCount, 1, 1, 1, 1, 1);
+    //     }
+    //     commandList->ResetComputeBuffer();
+    // }
 
-    commandList->SetPipelineState(integratePipeline_.get());
-    commandList->SetConstantBuffer(integrateConstant_.get(), 0);
-    commandList->SetComputeBuffer(particles_.get(), sizeof(Particle), 0);
-    commandList->Dispatch(ParticlesCount, 1, 1, 1, 1, 1);
-    commandList->ResetComputeBuffer();
+    // commandList->SetPipelineState(integratePipeline_.get());
+    // commandList->SetConstantBuffer(integrateConstant_.get(), 0);
+    // commandList->SetComputeBuffer(particles_.get(), sizeof(Particle), 0);
+    // commandList->Dispatch(ParticlesCount, 1, 1, 1, 1, 1);
+    // commandList->ResetComputeBuffer();
 
     commandList->SetPipelineState(buildVBIBPipeline_.get());
     commandList->SetConstantBuffer(buildVBIBConstant_.get(), 0);
@@ -531,7 +531,7 @@ void Fluid2D::Render(LLGI::Graphics* graphics, LLGI::CommandList* commandList, L
     if (itr == pipelineCache_.end())
     {
         const auto pip = graphics->CreatePiplineState();
-        pip->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32B32A32_FLOAT;
+        pip->VertexLayouts[0] = LLGI::VertexLayoutFormat::R32G32B32_FLOAT;
         pip->VertexLayouts[1] = LLGI::VertexLayoutFormat::R8G8B8A8_UNORM;
         pip->VertexLayouts[2] = LLGI::VertexLayoutFormat::R32G32_FLOAT;
         pip->VertexLayouts[3] = LLGI::VertexLayoutFormat::R32G32_FLOAT;

@@ -62,7 +62,7 @@ struct alignas(16) BuildVBIBCB
 struct alignas(16) Vertex
 {
     float Position[3];
-    float Color[3];
+    float Color[4];
     float UV1[2];
     float UV2[2];
 };

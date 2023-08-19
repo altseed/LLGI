@@ -22,7 +22,7 @@ int2 GetGridPos(float2 pos, float2 gridSize)
 struct Vertex
 {
     float3 Position;
-    int Color;
+    float4 Color;
     float2 UV1;
     float2 UV2;
 };
@@ -38,31 +38,19 @@ RWStructuredBuffer<Particle> particles : register(u0);
 RWStructuredBuffer<Vertex> vertex_ : register(u1);
 RWStructuredBuffer<int> index : register(u2);
 
-int DecodeFloatRGBA(float4 rgba) {
-    int res = 0;
-    res += (int)(rgba.a * 255);
-    res = res << 8;
-    res += (int)(rgba.b * 255);
-    res = res << 8;
-    res += (int)(rgba.g * 255);
-    res = res << 8;
-    res += (int)(rgba.r * 255);
-    return res;
-}
-
 [numthreads(1, 1, 1)]
 void main(uint3 dtid : SV_DispatchThreadID)
 {
-    int c = DecodeFloatRGBA(lerp(Color, FixedColor, particles[dtid.x].IsFix));
+    float4 c = lerp(Color, FixedColor, particles[dtid.x].IsFix);
     for (int i = 0; i < 4; i++)
     {
         vertex_[dtid.x * 4 + i].Color = c;
     }
-    float3 pos = float3(particles[dtid.x].Current, 0.5);
-    vertex_[dtid.x * 4].Position = pos + float3(-1, -1, 0) * ParticleRadius * 3;
-    vertex_[dtid.x * 4 + 1].Position = pos + float3(1, -1, 0) * ParticleRadius * 3;
-    vertex_[dtid.x * 4 + 2].Position = pos + float3(1, 1, 0) * ParticleRadius * 3;
-    vertex_[dtid.x * 4 + 3].Position = pos + float3(-1, 1, 0) * ParticleRadius * 3;
+    float3 pos = float3(particles[dtid.x].Current, 0.0);
+    vertex_[dtid.x * 4].Position = pos + float3(-1, -1, 0) * ParticleRadius;
+    vertex_[dtid.x * 4 + 1].Position = pos + float3(1, -1, 0) * ParticleRadius;
+    vertex_[dtid.x * 4 + 2].Position = pos + float3(1, 1, 0) * ParticleRadius;
+    vertex_[dtid.x * 4 + 3].Position = pos + float3(-1, 1, 0) * ParticleRadius;
     vertex_[dtid.x * 4].UV1 = float2(0, 0);
     vertex_[dtid.x * 4 + 1].UV1 = float2(1, 0);
     vertex_[dtid.x * 4 + 2].UV1 = float2(1, 1);
