@@ -457,17 +457,17 @@ void Fluid2D::Update(LLGI::Graphics* graphics, LLGI::CommandList* commandList)
     commandList->BeginComputePass();
 
     commandList->SetPipelineState(calcExternalPipeline_.get());
-    commandList->SetConstantBuffer(calcExternalConstant_.get(), LLGI::ShaderStageType::Compute);
-    commandList->SetComputeBuffer(particles_.get(), sizeof(Particle), 0, LLGI::ShaderStageType::Compute);
+    commandList->SetConstantBuffer(calcExternalConstant_.get(), 0);
+    commandList->SetComputeBuffer(particles_.get(), sizeof(Particle), 0);
     commandList->Dispatch(ParticlesCount, 1, 1, 1, 1, 1);
     commandList->ResetComputeBuffer();
 
     for (int l = 0; l < IterationCount; l++)
     {
         commandList->SetPipelineState(buildGridPipeline_.get());
-        commandList->SetConstantBuffer(buildGridConstant_.get(), LLGI::ShaderStageType::Compute);
-        commandList->SetComputeBuffer(particles_.get(), sizeof(Particle), 0, LLGI::ShaderStageType::Compute);
-        commandList->SetComputeBuffer(gridTable_.get(), sizeof(int[2]), 1, LLGI::ShaderStageType::Compute);
+        commandList->SetConstantBuffer(buildGridConstant_.get(), 0);
+        commandList->SetComputeBuffer(particles_.get(), sizeof(Particle), 0);
+        commandList->SetComputeBuffer(gridTable_.get(), sizeof(int[2]), 1);
         commandList->Dispatch(ParticlesCount, 1, 1, 1, 1, 1);
         commandList->ResetComputeBuffer();
 
@@ -475,7 +475,7 @@ void Fluid2D::Update(LLGI::Graphics* graphics, LLGI::CommandList* commandList)
         int inc;
 
         commandList->SetPipelineState(bitonicSortPipeline_.get());
-        commandList->SetComputeBuffer(gridTable_.get(), sizeof(int[2]), 0, LLGI::ShaderStageType::Compute);
+        commandList->SetComputeBuffer(gridTable_.get(), sizeof(int[2]), 0);
         for (int i = 0; i < nlog; i++)
         {
             inc = 1 << i;
@@ -491,7 +491,7 @@ void Fluid2D::Update(LLGI::Graphics* graphics, LLGI::CommandList* commandList)
                     bitonicSortConstant_->Unlock();
                 }
 
-                commandList->SetConstantBuffer(bitonicSortConstant_.get(), LLGI::ShaderStageType::Compute);
+                commandList->SetConstantBuffer(bitonicSortConstant_.get(), 0);
                 commandList->Dispatch(ParticlesCount / 2, 1, 1, 1, 1, 1);
 
                 inc /= 2;
@@ -500,43 +500,43 @@ void Fluid2D::Update(LLGI::Graphics* graphics, LLGI::CommandList* commandList)
         commandList->ResetComputeBuffer();
 
         commandList->SetPipelineState(clearGridIndicesPipeline_.get());
-        commandList->SetComputeBuffer(gridIndicesTable_.get(), sizeof(int[2]), 0, LLGI::ShaderStageType::Compute);
+        commandList->SetComputeBuffer(gridIndicesTable_.get(), sizeof(int[2]), 0);
         commandList->Dispatch(gridNum_.X * gridNum_.Y, 1, 1, 1, 1, 1);
         commandList->ResetComputeBuffer();
 
         commandList->SetPipelineState(buildGridIndicesPipeline_.get());
-        commandList->SetConstantBuffer(buildGridIndicesConstant_.get(), LLGI::ShaderStageType::Compute);
-        commandList->SetComputeBuffer(gridTable_.get(), sizeof(int[2]), 0, LLGI::ShaderStageType::Compute);
-        commandList->SetComputeBuffer(gridIndicesTable_.get(), sizeof(int[2]), 1, LLGI::ShaderStageType::Compute);
+        commandList->SetConstantBuffer(buildGridIndicesConstant_.get(), 0);
+        commandList->SetComputeBuffer(gridTable_.get(), sizeof(int[2]), 0);
+        commandList->SetComputeBuffer(gridIndicesTable_.get(), sizeof(int[2]), 1);
         commandList->Dispatch(ParticlesCount, 1, 1, 1, 1, 1);
         commandList->ResetComputeBuffer();
 
-        commandList->SetComputeBuffer(particles_.get(), sizeof(Particle), 0, LLGI::ShaderStageType::Compute);
-        commandList->SetComputeBuffer(gridTable_.get(), sizeof(int[2]), 1, LLGI::ShaderStageType::Compute);
-        commandList->SetComputeBuffer(gridIndicesTable_.get(), sizeof(int[2]), 2, LLGI::ShaderStageType::Compute);
+        commandList->SetComputeBuffer(particles_.get(), sizeof(Particle), 0);
+        commandList->SetComputeBuffer(gridTable_.get(), sizeof(int[2]), 1);
+        commandList->SetComputeBuffer(gridIndicesTable_.get(), sizeof(int[2]), 2);
         {
             commandList->SetPipelineState(calcScalingFactorPipeline_.get());
-            commandList->SetConstantBuffer(calcScalingFactorConstant_.get(), LLGI::ShaderStageType::Compute);
+            commandList->SetConstantBuffer(calcScalingFactorConstant_.get(), 0);
             commandList->Dispatch(ParticlesCount, 1, 1, 1, 1, 1);
 
             commandList->SetPipelineState(calcCorrectPositionPipeline_.get());
-            commandList->SetConstantBuffer(calcCorrectPositionConstant_.get(), LLGI::ShaderStageType::Compute);
+            commandList->SetConstantBuffer(calcCorrectPositionConstant_.get(), 0);
             commandList->Dispatch(ParticlesCount, 1, 1, 1, 1, 1);
         }
         commandList->ResetComputeBuffer();
     }
 
     commandList->SetPipelineState(integratePipeline_.get());
-    commandList->SetConstantBuffer(integrateConstant_.get(), LLGI::ShaderStageType::Compute);
-    commandList->SetComputeBuffer(particles_.get(), sizeof(Particle), 0, LLGI::ShaderStageType::Compute);
+    commandList->SetConstantBuffer(integrateConstant_.get(), 0);
+    commandList->SetComputeBuffer(particles_.get(), sizeof(Particle), 0);
     commandList->Dispatch(ParticlesCount, 1, 1, 1, 1, 1);
     commandList->ResetComputeBuffer();
 
     commandList->SetPipelineState(buildVBIBPipeline_.get());
-    commandList->SetConstantBuffer(buildVBIBConstant_.get(), LLGI::ShaderStageType::Compute);
-    commandList->SetComputeBuffer(particles_.get(), sizeof(Particle), 0, LLGI::ShaderStageType::Compute);
-    commandList->SetComputeBuffer(particleComputeVertex_.get(), sizeof(Vertex), 1, LLGI::ShaderStageType::Compute);
-    commandList->SetComputeBuffer(particleComputeIndex_.get(), sizeof(int), 2, LLGI::ShaderStageType::Compute);
+    commandList->SetConstantBuffer(buildVBIBConstant_.get(), 0);
+    commandList->SetComputeBuffer(particles_.get(), sizeof(Particle), 0);
+    commandList->SetComputeBuffer(particleComputeVertex_.get(), sizeof(Vertex), 1);
+    commandList->SetComputeBuffer(particleComputeIndex_.get(), sizeof(int), 2);
     commandList->Dispatch(ParticlesCount, 1, 1, 1, 1, 1);
     commandList->ResetComputeBuffer();
 
