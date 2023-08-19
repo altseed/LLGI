@@ -324,10 +324,8 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 	auto ib = static_cast<BufferVulkan*>(ib_.indexBuffer);
 	auto pip = static_cast<PipelineStateVulkan*>(pip_);
 
-	if (pip->GetRenderPassPipelineState()->Key != renderPass_->GetKey())
+	if (renderPass_ != nullptr && pip->GetRenderPassPipelineState()->Key != renderPass_->GetKey())
 	{
-		auto key1 = pip->GetRenderPassPipelineState()->Key;
-		auto key2 = renderPass_->GetKey();
 		Log(LogType::Warning, "Pipeline states between Pipeline state and render pass is different.");
 		return;
 	}
