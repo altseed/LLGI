@@ -63,7 +63,11 @@ std::shared_ptr<LLGI::Shader> CreateShader(
 
         data.push_back(d);
 
-        return LLGI::CreateSharedPtr(graphics->CreateShader(data.data(), static_cast<int32_t>(data.size())));
+        const auto shader = graphics->CreateShader(data.data(), static_cast<int32_t>(data.size()));
+
+        assert(shader != nullptr);
+
+        return LLGI::CreateSharedPtr(shader);
     }
     else
     {
@@ -85,7 +89,11 @@ std::shared_ptr<LLGI::Shader> CreateShader(
             data.push_back(d);
         }
 
-        return LLGI::CreateSharedPtr(graphics->CreateShader(data.data(), static_cast<int32_t>(data.size())));
+        const auto shader = graphics->CreateShader(data.data(), static_cast<int32_t>(data.size()));
+
+        assert(shader != nullptr);
+
+        return LLGI::CreateSharedPtr(shader);
     }
 }
 
@@ -191,11 +199,7 @@ Fluid2D::Fluid2D(LLGI::Graphics* graphics, LLGI::DeviceType deviceType)
         graphics->CreateBuffer(LLGI::BufferUsageType::Constant | LLGI::BufferUsageType::MapWrite, sizeof(CalcExternalForceCB))
     );
     calcExternalPipeline_->SetShader(LLGI::ShaderStageType::Compute, calcExternalShader_.get());
-    if (!calcExternalPipeline_->Compile())
-    {
-        std::cerr << "failed to compile calcExternalPipline" << std::endl;
-        abort();
-    }
+    assert(calcExternalPipeline_->Compile());
 
     {
         const auto cb = (CalcExternalForceCB*)calcExternalConstant_->Lock();
@@ -220,11 +224,7 @@ Fluid2D::Fluid2D(LLGI::Graphics* graphics, LLGI::DeviceType deviceType)
     );
 
     buildGridPipeline_->SetShader(LLGI::ShaderStageType::Compute, buildGridShader_.get());
-    if (!buildGridPipeline_->Compile())
-    {
-        std::cerr << "failed to compile buildGridPipeline" << std::endl;
-        abort();
-    }
+    assert(buildGridPipeline_->Compile());
 
     {
         const auto cb = (BuildGridCB*)buildGridConstant_->Lock();
@@ -244,21 +244,13 @@ Fluid2D::Fluid2D(LLGI::Graphics* graphics, LLGI::DeviceType deviceType)
     );
 
     bitonicSortPipeline_->SetShader(LLGI::ShaderStageType::Compute, bitonicSortShader_.get());
-    if (!bitonicSortPipeline_->Compile())
-    {
-        std::cerr << "failed to compile bitonicSortPipeline" << std::endl;
-        abort();
-    }
+   assert(bitonicSortPipeline_->Compile());
 
     // clearGridIndices
     std::cout << "Creating clearGridIndicesPipeline_" << std::endl;
     clearGridIndicesPipeline_ = LLGI::CreateSharedPtr(graphics->CreatePiplineState());
     clearGridIndicesPipeline_->SetShader(LLGI::ShaderStageType::Compute, clearGridIndicesShader_.get());
-    if (!clearGridIndicesPipeline_->Compile())
-    {
-        std::cerr << "failed to compile clearGridIndicesPipeline" << std::endl;
-        abort();
-    }
+    assert(clearGridIndicesPipeline_->Compile());
 
     // buildGridIndices
     std::cout << "Creating buildGridIndicesPipeline_" << std::endl;
@@ -267,11 +259,7 @@ Fluid2D::Fluid2D(LLGI::Graphics* graphics, LLGI::DeviceType deviceType)
         graphics->CreateBuffer(LLGI::BufferUsageType::Constant | LLGI::BufferUsageType::MapWrite, sizeof(BuildGridIndicesCB))
     );
     buildGridIndicesPipeline_->SetShader(LLGI::ShaderStageType::Compute, buildGridIndicesShader_.get());
-    if (!buildGridIndicesPipeline_->Compile())
-    {
-        std::cerr << "failed to compile buildGridIndicesPipeline" << std::endl;
-        abort();
-    }
+    assert(buildGridIndicesPipeline_->Compile());
 
     {
         const auto cb = (BuildGridIndicesCB*)buildGridIndicesConstant_->Lock();
@@ -288,11 +276,7 @@ Fluid2D::Fluid2D(LLGI::Graphics* graphics, LLGI::DeviceType deviceType)
         graphics->CreateBuffer(LLGI::BufferUsageType::Constant | LLGI::BufferUsageType::MapWrite, sizeof(CalcScalingFactorCB))
     );
     calcScalingFactorPipeline_->SetShader(LLGI::ShaderStageType::Compute, calcScalingFactorShader_.get());
-    if (!calcScalingFactorPipeline_->Compile())
-    {
-        std::cerr << "failed to compile calcScalingFactorPipeline" << std::endl;
-        abort();
-    }
+    assert(calcScalingFactorPipeline_->Compile());
 
     {
         const auto cb = (CalcScalingFactorCB*)calcScalingFactorConstant_->Lock();
@@ -317,11 +301,7 @@ Fluid2D::Fluid2D(LLGI::Graphics* graphics, LLGI::DeviceType deviceType)
     );
 
     calcCorrectPositionPipeline_->SetShader(LLGI::ShaderStageType::Compute, calcCorrectPositionShader_.get());
-    if (!calcCorrectPositionPipeline_->Compile())
-    {
-        std::cerr << "failed to compile calcCorrectPositionPipeline" << std::endl;
-        abort();
-    }
+    assert(calcCorrectPositionPipeline_->Compile());
 
     {
         const auto cb = (CalcCorrectPositionCB*)calcCorrectPositionConstant_->Lock();
@@ -346,11 +326,7 @@ Fluid2D::Fluid2D(LLGI::Graphics* graphics, LLGI::DeviceType deviceType)
     );
 
     integratePipeline_->SetShader(LLGI::ShaderStageType::Compute, integrateShader_.get());
-    if (!integratePipeline_->Compile())
-    {
-        std::cerr << "failed to compile integratePipeline" << std::endl;
-        abort();
-    }
+    assert(integratePipeline_->Compile());
 
     {
         const auto cb = (IntegrateCB*)integrateConstant_->Lock();
@@ -368,11 +344,7 @@ Fluid2D::Fluid2D(LLGI::Graphics* graphics, LLGI::DeviceType deviceType)
     );
 
     buildVBIBPipeline_->SetShader(LLGI::ShaderStageType::Compute, buildVBIBShader_.get());
-    if (!buildVBIBPipeline_->Compile())
-    {
-        std::cerr << "failed to compile buildVBIBPipeline" << std::endl;
-        abort();
-    }
+    assert(buildVBIBPipeline_->Compile());
 
     {
         const auto cb = (BuildVBIBCB*)buildVBIBConstant_->Lock();
