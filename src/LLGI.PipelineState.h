@@ -53,6 +53,8 @@ public:
 
 	virtual void SetShader(ShaderStageType stage, Shader* shader);
 
+	virtual RenderPassPipelineState* GetRenderPassPipelineState() const;
+
 	virtual void SetRenderPassPipelineState(RenderPassPipelineState* renderPassPipelineState);
 
 	virtual bool Compile();

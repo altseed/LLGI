@@ -324,6 +324,14 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 	auto ib = static_cast<BufferVulkan*>(ib_.indexBuffer);
 	auto pip = static_cast<PipelineStateVulkan*>(pip_);
 
+	if (pip->GetRenderPassPipelineState()->Key != renderPass_->GetKey())
+	{
+		auto key1 = pip->GetRenderPassPipelineState()->Key;
+		auto key2 = renderPass_->GetKey();
+		Log(LogType::Warning, "Pipeline states between Pipeline state and render pass is different.");
+		return;
+	}
+
 	// assign a vertex buffer
 	if (isVBDirtied)
 	{
@@ -616,7 +624,7 @@ void CommandListVulkan::CopyBuffer(Buffer* src, Buffer* dst)
 
 void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
 {
-	auto renderPass_ = static_cast<RenderPassVulkan*>(renderPass);
+	renderPass_ = static_cast<RenderPassVulkan*>(renderPass);
 	if (!renderPass_->GetIsValid())
 	{
 		CommandList::BeginRenderPass(renderPass);
@@ -718,6 +726,7 @@ void CommandListVulkan::EndRenderPass()
 		currentCommandBuffer_.endRenderPass();
 	}
 	isInValidRenderPass_ = false;
+	renderPass_ = nullptr;
 	CommandList::EndRenderPass();
 }
 

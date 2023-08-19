@@ -107,6 +107,8 @@ struct RenderPassPipelineStateKey
 				HasResolvedRenderTarget == value.HasResolvedRenderTarget && HasResolvedDepthTarget == value.HasResolvedDepthTarget);
 	}
 
+	bool operator!=(const RenderPassPipelineStateKey& value) const { return !(*this == value); }
+
 	struct Hash
 	{
 		typedef std::size_t result_type;

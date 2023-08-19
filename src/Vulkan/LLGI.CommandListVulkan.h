@@ -43,6 +43,8 @@ private:
 	int32_t currentSwapBufferIndex_;
 	std::vector<vk::Fence> fences_;
 	vk::Sampler samplers_[2][2];
+
+	RenderPassVulkan* renderPass_ = nullptr;
 	bool isInValidRenderPass_ = false;
 
 public:
