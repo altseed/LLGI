@@ -6,12 +6,12 @@ layout(set = 0, binding = 0, std140) uniform CB
     int ParticlesCount;
 } _22;
 
-layout(set = 0, binding = 1, std430) buffer gridTable
+layout(set = 2, binding = 0, std430) buffer gridTable
 {
     ivec2 _data[];
 } gridTable_1;
 
-layout(set = 0, binding = 2, std430) buffer gridIndicesTable
+layout(set = 2, binding = 1, std430) buffer gridIndicesTable
 {
     ivec2 _data[];
 } gridIndicesTable_1;

@@ -10,7 +10,7 @@ struct Particle
     uint IsFix;
 };
 
-layout(set = 0, binding = 1, std430) buffer particles
+layout(set = 2, binding = 0, std430) buffer particles
 {
     Particle _data[];
 } particles_1;

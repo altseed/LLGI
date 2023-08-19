@@ -84,7 +84,7 @@ void _main(thread const uint3& dtid, constant CB& _67, device particles& particl
     index_1._data[(dtid.x * 6u) + 5u] = int((dtid.x * 4u) + 3u);
 }
 
-kernel void main0(constant CB& _67 [[buffer(0)]], device particles& particles_1 [[buffer(1)]], device vertex_& vertex_1 [[buffer(2)]], device index& index_1 [[buffer(3)]], uint3 gl_GlobalInvocationID [[thread_position_in_grid]])
+kernel void main0(constant CB& _67 [[buffer(0)]], device particles& particles_1 [[buffer(10)]], device vertex_& vertex_1 [[buffer(11)]], device index& index_1 [[buffer(12)]], uint3 gl_GlobalInvocationID [[thread_position_in_grid]])
 {
     uint3 dtid = gl_GlobalInvocationID;
     uint3 param = dtid;

@@ -42,7 +42,7 @@ void _main(thread const uint3& dtid, device particles& particles_1, constant CB&
     particles_1._data[dtid.x].Next = pos;
 }
 
-kernel void main0(constant CB& _41 [[buffer(0)]], device particles& particles_1 [[buffer(1)]], uint3 gl_GlobalInvocationID [[thread_position_in_grid]])
+kernel void main0(constant CB& _41 [[buffer(0)]], device particles& particles_1 [[buffer(10)]], uint3 gl_GlobalInvocationID [[thread_position_in_grid]])
 {
     uint3 dtid = gl_GlobalInvocationID;
     uint3 param = dtid;

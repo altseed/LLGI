@@ -49,7 +49,7 @@ void _main(thread const uint3& dtid, constant CB& _22, device gridTable& gridTab
     }
 }
 
-kernel void main0(constant CB& _22 [[buffer(0)]], device gridTable& gridTable_1 [[buffer(1)]], device gridTable& gridIndicesTable [[buffer(2)]], uint3 gl_GlobalInvocationID [[thread_position_in_grid]])
+kernel void main0(constant CB& _22 [[buffer(0)]], device gridTable& gridTable_1 [[buffer(10)]], device gridTable& gridIndicesTable [[buffer(11)]], uint3 gl_GlobalInvocationID [[thread_position_in_grid]])
 {
     uint3 dtid = gl_GlobalInvocationID;
     uint3 param = dtid;

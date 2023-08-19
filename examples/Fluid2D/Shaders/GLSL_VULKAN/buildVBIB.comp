@@ -25,17 +25,17 @@ layout(set = 0, binding = 0, std140) uniform CB
     vec4 FixedColor;
 } _67;
 
-layout(set = 0, binding = 1, std430) buffer particles
+layout(set = 2, binding = 0, std430) buffer particles
 {
     Particle _data[];
 } particles_1;
 
-layout(set = 0, binding = 2, std430) buffer vertex_
+layout(set = 2, binding = 1, std430) buffer vertex_
 {
     Vertex _data[];
 } vertex_1;
 
-layout(set = 0, binding = 3, std430) buffer index
+layout(set = 2, binding = 2, std430) buffer index
 {
     int _data[];
 } index_1;
