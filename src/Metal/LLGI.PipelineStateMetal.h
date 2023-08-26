@@ -33,8 +33,6 @@ public:
 
 	std::array<Shader*, static_cast<int>(ShaderStageType::Max)> GetShaders() const { return shaders; }
 
-	RenderPassPipelineState* GetRenderPassPipelineState() const { return renderPassPipelineState_.get(); }
-
 	id<MTLRenderPipelineState>& GetRenderPipelineState() { return pipelineState_; }
 
 	id<MTLDepthStencilState>& GetDepthStencilState() { return depthStencilState_; }
