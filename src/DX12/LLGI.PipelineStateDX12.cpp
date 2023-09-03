@@ -135,7 +135,7 @@ FAILED_EXIT:
 
 bool PipelineStateDX12::CreateComputeRootSignature()
 {
-	D3D12_DESCRIPTOR_RANGE ranges[2] = {{}, {}};
+	D3D12_DESCRIPTOR_RANGE ranges[3] = {{}, {}};
 	D3D12_ROOT_PARAMETER rootParameters[1] = {{}};
 
 	// descriptor range for constant buffer view
@@ -145,16 +145,22 @@ bool PipelineStateDX12::CreateComputeRootSignature()
 	ranges[0].RegisterSpace = 0;
 	ranges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	// descriptor range for uav
-	ranges[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
-	ranges[1].NumDescriptors = NumComputeBuffer;
+	ranges[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	ranges[1].NumDescriptors = NumTexture;
 	ranges[1].BaseShaderRegister = 0;
 	ranges[1].RegisterSpace = 0;
 	ranges[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
+	// descriptor range for uav
+	ranges[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+	ranges[2].NumDescriptors = NumComputeBuffer;
+	ranges[2].BaseShaderRegister = 0;
+	ranges[2].RegisterSpace = 0;
+	ranges[2].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
 	// descriptor table for CBV/UAV
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParameters[0].DescriptorTable.NumDescriptorRanges = 2;
+	rootParameters[0].DescriptorTable.NumDescriptorRanges = 3;
 	rootParameters[0].DescriptorTable.pDescriptorRanges = &ranges[0];
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 

@@ -74,14 +74,13 @@ private:
 	bool isPipelineDirtied = true;
 	bool doesBeginWithPlatform_ = false;
 
-	std::array<BindingComputeBuffer, NumComputeBuffer> computeBuffers_;
-
 protected:
 	bool isInRenderPass_ = false;
 	bool isInBegin_ = false;
 
 	std::array<Buffer*, NumConstantBuffer> constantBuffers_;
 	std::array<BindingTexture, NumTexture> currentTextures_;
+	std::array<BindingComputeBuffer, NumComputeBuffer> computeBuffers_;
 
 protected:
 	void GetCurrentVertexBuffer(BindingVertexBuffer& buffer, bool& isDirtied);
