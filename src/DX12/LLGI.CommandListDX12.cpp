@@ -495,6 +495,26 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 					graphics_->GetDevice()->CreateSampler(&samplerDesc, cpuHandle);
 				}
 			}
+			else if (unit_ind < NumComputeBuffer && computeBuffers_[unit_ind].computeBuffer != nullptr &&
+					 computeBuffers_[unit_ind].is_read_only)
+			{
+				BindingComputeBuffer compute = computeBuffers_[unit_ind];
+
+				auto buffer = static_cast<BufferDX12*>(compute.computeBuffer);
+
+				D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+
+				srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+				srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+				srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+				srvDesc.Buffer.FirstElement = 0;
+				srvDesc.Buffer.StructureByteStride = compute.stride;
+				srvDesc.Buffer.NumElements = compute.computeBuffer->GetSize() / compute.stride;
+				srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+
+				auto cpuHandle = cpuDescriptorHandleConstant[NumConstantBuffer + static_cast<int32_t>(unit_ind)];
+				graphics_->GetDevice()->CreateShaderResourceView(buffer->Get(), &srvDesc, cpuHandle);
+			}
 		}
 
 		// UAV
@@ -503,7 +523,7 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 			BindingComputeBuffer compute;
 			GetCurrentComputeBuffer(unit_ind, compute);
 
-			if (compute.computeBuffer == nullptr)
+			if (compute.computeBuffer == nullptr || compute.is_read_only)
 				continue;
 
 			auto computeBuffer = static_cast<BufferDX12*>(compute.computeBuffer);
@@ -695,7 +715,7 @@ void CommandListDX12::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, i
 		currentCommandList_->SetPipelineState(p);
 	}
 
-	int32_t requiredCBDescriptorCount = NumConstantBuffer + NumComputeBuffer;
+	int32_t requiredCBDescriptorCount = NumConstantBuffer + NumTexture + NumComputeBuffer;
 
 	ID3D12DescriptorHeap* heapConstant = nullptr;
 
@@ -743,13 +763,37 @@ void CommandListDX12::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, i
 		}
 	}
 
+	// SRV
+	for (size_t unit_ind = 0; unit_ind < currentTextures_.size(); unit_ind++)
+	{
+		if (unit_ind < NumComputeBuffer && computeBuffers_[unit_ind].computeBuffer != nullptr && computeBuffers_[unit_ind].is_read_only)
+		{
+			BindingComputeBuffer compute = computeBuffers_[unit_ind];
+
+			auto buffer = static_cast<BufferDX12*>(compute.computeBuffer);
+
+			D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+
+			srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+			srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+			srvDesc.Buffer.FirstElement = 0;
+			srvDesc.Buffer.StructureByteStride = compute.stride;
+			srvDesc.Buffer.NumElements = compute.computeBuffer->GetSize() / compute.stride;
+			srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+
+			auto cpuHandle = cpuDescriptorHandleConstant[NumConstantBuffer + static_cast<int32_t>(unit_ind)];
+			graphics_->GetDevice()->CreateShaderResourceView(buffer->Get(), &srvDesc, cpuHandle);
+		}
+	}
+
 	// UAV
 	for (int32_t unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)
 	{
 		BindingComputeBuffer compute;
 		GetCurrentComputeBuffer(unit_ind, compute);
 
-		if (compute.computeBuffer == nullptr)
+		if (compute.computeBuffer == nullptr || compute.is_read_only)
 			continue;
 
 		auto computeBuffer = static_cast<BufferDX12*>(compute.computeBuffer);
@@ -763,7 +807,7 @@ void CommandListDX12::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, i
 		uavDesc.Buffer.FirstElement = 0;
 		uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 
-		auto cpuHandle = cpuDescriptorHandleConstant[NumConstantBuffer + unit_ind];
+		auto cpuHandle = cpuDescriptorHandleConstant[NumConstantBuffer + NumTexture + unit_ind];
 		graphics_->GetDevice()->CreateUnorderedAccessView(computeBuffer->Get(), nullptr, &uavDesc, cpuHandle);
 	}
 

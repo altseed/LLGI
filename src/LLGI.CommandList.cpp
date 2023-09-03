@@ -198,10 +198,11 @@ void CommandList::SetConstantBuffer(Buffer* constantBuffer, int32_t unit)
 	RegisterReferencedObject(constantBuffer);
 }
 
-void CommandList::SetComputeBuffer(Buffer* computeBuffer, int32_t stride, int32_t unit)
+void CommandList::SetComputeBuffer(Buffer* computeBuffer, int32_t stride, int32_t unit, bool is_readonly)
 {
 	SafeAssign(computeBuffers_[unit].computeBuffer, computeBuffer);
 	computeBuffers_[unit].stride = stride;
+	computeBuffers_[unit].is_read_only = is_readonly;
 	RegisterReferencedObject(computeBuffer);
 }
 

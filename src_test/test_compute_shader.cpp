@@ -15,7 +15,7 @@ struct OutputData
 	float value;
 };
 
-void test_compute_shader(LLGI::DeviceType deviceType)
+void test_compute_shader(LLGI::DeviceType deviceType, bool is_read_only)
 {
 	LLGI::PlatformParameter pp;
 	pp.Device = deviceType;
@@ -30,7 +30,14 @@ void test_compute_shader(LLGI::DeviceType deviceType)
 
 	std::shared_ptr<LLGI::Shader> shader_cs = nullptr;
 
-	TestHelper::CreateComputeShader(graphics.get(), deviceType, "basic.comp", shader_cs);
+	if (is_read_only)
+	{
+		TestHelper::CreateComputeShader(graphics.get(), deviceType, "readwrite.comp", shader_cs);
+	}
+	else
+	{
+		TestHelper::CreateComputeShader(graphics.get(), deviceType, "basic.comp", shader_cs);
+	}
 
 	auto pip = LLGI::CreateSharedPtr(graphics->CreatePiplineState());
 	pip->SetShader(LLGI::ShaderStageType::Compute, shader_cs.get());
@@ -96,8 +103,8 @@ void test_compute_shader(LLGI::DeviceType deviceType)
 	commandList->CopyBuffer(inputBuffer.get(), inputComputeBuffer.get());
 	commandList->BeginComputePass();
 	commandList->SetPipelineState(pip.get());
-	commandList->SetComputeBuffer(inputComputeBuffer.get(), sizeof(InputData), 0);
-	commandList->SetComputeBuffer(outputComputeBuffer.get(), sizeof(OutputData), 1);
+	commandList->SetComputeBuffer(inputComputeBuffer.get(), sizeof(InputData), 0, is_read_only);
+	commandList->SetComputeBuffer(outputComputeBuffer.get(), sizeof(OutputData), 1, false);
 	commandList->SetConstantBuffer(constantBuffer.get(), 0);
 	commandList->Dispatch(dataSize, 1, 1, 1, 1, 1);
 	commandList->EndComputePass();
@@ -130,4 +137,7 @@ void test_compute_shader(LLGI::DeviceType deviceType)
 	platform->Present();
 }
 
-TestRegister ComputeShader_Basic("ComputeShader.Basic", [](LLGI::DeviceType device) -> void { test_compute_shader(device); });
+TestRegister ComputeShader_Basic("ComputeShader.Basic", [](LLGI::DeviceType device) -> void { test_compute_shader(device, false); });
+
+TestRegister ComputeShader_Basic_ReadOnly("ComputeShader.Basic_ReadOnly",
+										  [](LLGI::DeviceType device) -> void { test_compute_shader(device, true); });

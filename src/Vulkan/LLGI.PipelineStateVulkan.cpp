@@ -459,6 +459,7 @@ bool PipelineStateVulkan::CreateGraphicsPipeline()
 		textureLayoutBindings[i].pImmutableSamplers = nullptr;
 	}
 
+	// compute buffer info(readonly)
 	std::array<vk::DescriptorSetLayoutBinding, 8> computeLayoutBindings;
 
 	for (size_t i = 0; i < computeLayoutBindings.size(); i++)
