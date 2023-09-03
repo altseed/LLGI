@@ -51,6 +51,7 @@ protected:
 	{
 		Buffer* computeBuffer = nullptr;
 		int32_t stride = 0;
+		bool is_read_only = false;
 	};
 
 private:
@@ -117,7 +118,7 @@ public:
 	virtual void SetIndexBuffer(Buffer* indexBuffer, int32_t stride, int32_t offset = 0);
 	virtual void SetPipelineState(PipelineState* pipelineState);
 	virtual void SetConstantBuffer(Buffer* constantBuffer, int32_t unit);
-	virtual void SetComputeBuffer(Buffer* computeBuffer, int32_t stride, int32_t unit);
+	virtual void SetComputeBuffer(Buffer* computeBuffer, int32_t stride, int32_t unit, bool is_readonly);
 
 	/**
 		@brief	copy a texture

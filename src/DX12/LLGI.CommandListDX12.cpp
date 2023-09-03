@@ -495,6 +495,17 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 					graphics_->GetDevice()->CreateSampler(&samplerDesc, cpuHandle);
 				}
 			}
+			else if (unit_ind < NumComputeBuffer)
+			{
+				BindingComputeBuffer compute;
+				GetCurrentComputeBuffer(unit_ind, compute);
+
+				if (compute.computeBuffer == nullptr || !compute.is_read_only)
+					continue;
+
+				D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+
+			}
 		}
 
 		// UAV
@@ -503,7 +514,7 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 			BindingComputeBuffer compute;
 			GetCurrentComputeBuffer(unit_ind, compute);
 
-			if (compute.computeBuffer == nullptr)
+			if (compute.computeBuffer == nullptr || compute.is_read_only)
 				continue;
 
 			auto computeBuffer = static_cast<BufferDX12*>(compute.computeBuffer);
@@ -749,7 +760,7 @@ void CommandListDX12::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, i
 		BindingComputeBuffer compute;
 		GetCurrentComputeBuffer(unit_ind, compute);
 
-		if (compute.computeBuffer == nullptr)
+		if (compute.computeBuffer == nullptr || compute.is_read_only)
 			continue;
 
 		auto computeBuffer = static_cast<BufferDX12*>(compute.computeBuffer);
