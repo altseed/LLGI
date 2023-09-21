@@ -262,6 +262,8 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 
 	spirv_cross::ShaderResources resources = compiler.get_shader_resources();
 
+	std::map<spirv_cross::VariableID, uint32_t> sampler_id_to_index;
+
 	if (shaderModel_ <= 420 || isVulkanMode_)
 	{
 		for (auto& remap : compiler.get_combined_image_samplers())
@@ -276,9 +278,15 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 		}
 	}
 
+	for (auto& remap : compiler.get_combined_image_samplers())
+	{
+		auto location = compiler.get_decoration(remap.sampler_id, spv::DecorationBinding);
+		sampler_id_to_index[remap.combined_id] = location;
+	}
+
 	for (auto& resource : resources.sampled_images)
 	{
-		auto i = compiler.get_decoration(resource.id, spv::DecorationLocation);
+		auto i = sampler_id_to_index[resource.id];
 		compiler.set_decoration(resource.id, spv::DecorationBinding, i);
 
 		if (isVulkanMode_)
