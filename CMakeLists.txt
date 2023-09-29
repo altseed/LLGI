@@ -239,19 +239,19 @@ if(BUILD_VULKAN_COMPILER OR BUILD_TOOL)
 endif()
 
 if(BUILD_VULKAN)
-  add_definitions(-DENABLE_VULKAN)
+  add_compile_definitions(ENABLE_VULKAN)
 
   if(GLSLANG_WITHOUT_INSTALL)
-    add_compile_definitions(LLGI PRIVATE ENABLE_GLSLANG_WITHOUT_INSTALL)
+    add_compile_definitions(ENABLE_GLSLANG_WITHOUT_INSTALL)
   endif()
 
   if(BUILD_VULKAN_COMPILER)
-    add_definitions(-DENABLE_VULKAN_COMPILER)
+    add_compile_definitions(ENABLE_VULKAN_COMPILER)
   endif()
 endif()
 
 if(APPLE)
-  add_definitions(-DENABLE_METAL)
+  add_compile_definitions(ENABLE_METAL)
 endif()
 
 add_subdirectory("src")
