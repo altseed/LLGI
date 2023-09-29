@@ -10,7 +10,7 @@ target_include_directories(ShaderTranspiler PUBLIC ../ShaderTranspilerCore)
 target_link_libraries(ShaderTranspiler PUBLIC ShaderTranspilerCore)
 
 if(MSVC)
-  target_compile_options(ShaderTranspiler PRIVATE /W4 /WX /wd"4100")
+  target_compile_options(ShaderTranspiler PRIVATE /W4 /WX /wd4100)
 else()
   target_compile_options(ShaderTranspiler PRIVATE -Wall -Werror)
 endif()

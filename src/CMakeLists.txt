@@ -89,7 +89,7 @@ else()
 endif()
 
 if(MSVC)
-  target_compile_options(LLGI PRIVATE /W4 /WX /wd"4100")
+  target_compile_options(LLGI PRIVATE /W4 /WX /wd4100)
 else()
   target_compile_options(LLGI PRIVATE -Wall -Werror)
 endif()
