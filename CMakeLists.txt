@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.15)
 # The project's name
 project(LLGI)
 
+include(GNUInstallDirs)
 include(ExternalProject)
 
 # linux flag
