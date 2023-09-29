@@ -30,7 +30,7 @@ if(USE_THIRDPARTY_DIRECTORY)
 endif()
 
 if(MSVC)
-  target_compile_options(ShaderTranspilerCore PRIVATE /W4 /WX /wd"4100")
+  target_compile_options(ShaderTranspilerCore PRIVATE /W4 /WX /wd4100)
 else()
   target_compile_options(ShaderTranspilerCore PRIVATE -Wall -Werror)
 endif()

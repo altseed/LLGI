@@ -45,7 +45,7 @@ file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders
 clang_format(LLGI_Test)
 
 if(MSVC)
-  target_compile_options(LLGI_Test PRIVATE /W4 /WX /wd"4100")
+  target_compile_options(LLGI_Test PRIVATE /W4 /WX /wd4100)
 else()
   target_compile_options(LLGI_Test PRIVATE -Wall -Werror)
 endif()
