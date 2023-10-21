@@ -23,7 +23,7 @@ DescriptorPoolVulkan::DescriptorPoolVulkan(
 		vk::DescriptorPoolCreateInfo poolInfo;
 		poolInfo.poolSizeCount = 3;
 		poolInfo.pPoolSizes = poolSizes.data();
-		poolInfo.maxSets = slotSizeMax_;
+		poolInfo.maxSets = slotSizeMax_ * 3;
 
 		descriptorPool_ = graphics_->GetDevice().createDescriptorPool(poolInfo);
 	}
@@ -40,7 +40,7 @@ DescriptorPoolVulkan::DescriptorPoolVulkan(
 		vk::DescriptorPoolCreateInfo poolInfo;
 		poolInfo.poolSizeCount = 3;
 		poolInfo.pPoolSizes = poolSizes.data();
-		poolInfo.maxSets = slotSizeMax_;
+		poolInfo.maxSets = slotSizeMax_ * 3;
 
 		computeDescriptorPool_ = graphics_->GetDevice().createDescriptorPool(poolInfo);
 	}
