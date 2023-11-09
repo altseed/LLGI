@@ -4,7 +4,7 @@ project(ShaderTranspilerCore)
 add_library(
   ShaderTranspilerCore STATIC ShaderTranspilerCore.cpp ShaderTranspilerCore.h)
 
-target_compile_features(ShaderTranspilerCore PUBLIC cxx_std_14)
+target_compile_features(ShaderTranspilerCore PUBLIC cxx_std_17)
 target_include_directories(ShaderTranspilerCore
                            PUBLIC ${LLGI_THIRDPARTY_INCLUDES})
 
