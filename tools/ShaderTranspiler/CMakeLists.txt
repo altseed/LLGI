@@ -3,7 +3,7 @@ project(ShaderTranspiler)
 
 add_executable(ShaderTranspiler main.cpp)
 
-target_compile_features(ShaderTranspiler PUBLIC cxx_std_14)
+target_compile_features(ShaderTranspiler PUBLIC cxx_std_17)
 
 target_include_directories(ShaderTranspiler PUBLIC ../ShaderTranspilerCore)
 

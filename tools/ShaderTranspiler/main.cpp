@@ -195,9 +195,18 @@ int main(int argc, char* argv[])
 	}
 
 	std::cout << inputPath << " -> " << outputPath << " ShaderModel=" << shaderModel << std::endl;
-	if (!transpiler->Transpile(spirv))
+
+	try
 	{
-		std::cout << transpiler->GetErrorCode() << std::endl;
+		if (!transpiler->Transpile(spirv))
+		{
+			std::cout << transpiler->GetErrorCode() << std::endl;
+			return 0;
+		}
+	}
+	catch (const std::runtime_error& e)
+	{
+		std::cout << e.what() << std::endl;
 		return 0;
 	}
 
