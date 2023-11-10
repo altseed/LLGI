@@ -28,7 +28,7 @@ private:
 
 	int32_t memorySize = 0;
 	std::unique_ptr<InternalBuffer> cpuBuf;
-	void* data = nullptr;
+	void* data_ = nullptr;
 
 	bool isExternalResource_ = false;
 
@@ -53,6 +53,8 @@ public:
 
 	void* Lock() override;
 	void Unlock() override;
+
+	bool GetData(std::vector<uint8_t>& data) override;
 
 	Vec3I GetSize() const { return textureSize; }
 	Vec2I GetSizeAs2D() const override;

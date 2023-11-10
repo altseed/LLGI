@@ -152,7 +152,7 @@ bool TextureMetal::Initialize(GraphicsMetal* owner, const TextureParameter& para
 	}
 
 	format_ = ConvertFormat(texture_.pixelFormat);
-	data.resize(GetTextureMemorySize(format_, parameter.Size));
+	data_.resize(GetTextureMemorySize(format_, parameter.Size));
 	parameter_ = parameter;
 	return true;
 }
@@ -204,9 +204,23 @@ void TextureMetal::Reset(id<MTLTexture> nativeTexture)
 	format_ = ConvertFormat(texture_.pixelFormat);
 }
 
-void* TextureMetal::Lock() { return data.data(); }
+void* TextureMetal::Lock() { return data_.data(); }
 
-void TextureMetal::Unlock() { Write(data.data()); }
+void TextureMetal::Unlock() { Write(data_.data()); }
+
+bool TextureMetal::GetData(std::vector<uint8_t>& data)
+{
+	// TODO : Implement it
+	MTLRegion region = {{0, 0, 0}, {static_cast<uint32_t>(size_.X), static_cast<uint32_t>(size_.Y), 1}};
+
+	auto allSize = GetTextureMemorySize(ConvertFormat(texture_.pixelFormat), Vec3I{size_.X, size_.Y, 1});
+
+	data.resize(allSize);
+
+	[texture_ getBytes:region mipmapLevel:0 withBytes:data bytesPerRow:allSize / size_.Y];
+
+	return false;
+}
 
 Vec2I TextureMetal::GetSizeAs2D() const { return Vec2I{size_.X, size_.Y}; }
 

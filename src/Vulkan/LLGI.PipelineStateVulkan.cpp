@@ -546,7 +546,7 @@ bool PipelineStateVulkan::CreateComputePipeline()
 	for (size_t i = 0; i < textureLayoutBindings.size(); i++)
 	{
 		textureLayoutBindings[i].binding = static_cast<uint32_t>(i);
-		textureLayoutBindings[i].descriptorType = vk::DescriptorType::eCombinedImageSampler;
+		textureLayoutBindings[i].descriptorType = vk::DescriptorType::eStorageImage;
 		textureLayoutBindings[i].descriptorCount = 1;
 		textureLayoutBindings[i].stageFlags = stageFlag;
 		textureLayoutBindings[i].pImmutableSamplers = nullptr;

@@ -785,30 +785,104 @@ void CommandListDX12::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, i
 			auto cpuHandle = cpuDescriptorHandleConstant[NumConstantBuffer + static_cast<int32_t>(unit_ind)];
 			graphics_->GetDevice()->CreateShaderResourceView(buffer->Get(), &srvDesc, cpuHandle);
 		}
+
+		// textures
+		// TODO : Remove copy and paste
+		if (currentTextures_[unit_ind].texture != nullptr)
+		{
+			auto texture = static_cast<TextureDX12*>(currentTextures_[unit_ind].texture);
+
+			// Make barrier to use a render target
+			if (texture->GetType() == TextureType::Render)
+			{
+				texture->ResourceBarrier(currentCommandList_,
+										 D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+			}
+
+			// SRV
+			{
+				D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+
+				if (texture->GetParameter().Dimension == 3)
+				{
+					srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
+					srvDesc.Texture3D.MipLevels = 1;
+					srvDesc.Texture3D.MostDetailedMip = 0;
+					srvDesc.Texture3D.ResourceMinLODClamp = 0.0f;
+				}
+				else if ((texture->GetParameter().Usage & TextureUsageType::Array) != TextureUsageType::NoneFlag)
+				{
+					if (texture->GetParameter().SampleCount > 1)
+					{
+						srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY;
+					}
+					else
+					{
+						srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+					}
+					srvDesc.Texture2DArray.ArraySize = texture->GetParameter().Size.Z;
+					srvDesc.Texture2DArray.FirstArraySlice = 0;
+					srvDesc.Texture2DArray.MipLevels = 1;
+					srvDesc.Texture2DArray.MostDetailedMip = 0;
+					srvDesc.Texture2DArray.PlaneSlice = 0;
+					srvDesc.Texture2DArray.ResourceMinLODClamp = 0.0f;
+				}
+				else
+				{
+					if (texture->GetParameter().SampleCount > 1)
+					{
+						srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
+					}
+					else
+					{
+						srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+					}
+					srvDesc.Texture2D.MipLevels = 1;
+					srvDesc.Texture2D.MostDetailedMip = 0;
+				}
+
+				srvDesc.Format = DirectX12::GetShaderResourceViewFormat(texture->GetDXGIFormat());
+				srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+				auto cpuHandle = cpuDescriptorHandleConstant[NumConstantBuffer + static_cast<int32_t>(unit_ind)];
+				graphics_->GetDevice()->CreateShaderResourceView(texture->Get(), &srvDesc, cpuHandle);
+			}
+		}
 	}
 
 	// UAV
 	for (int32_t unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)
 	{
-		BindingComputeBuffer compute;
-		GetCurrentComputeBuffer(unit_ind, compute);
+		if (computeBuffers_[unit_ind].computeBuffer != nullptr && !computeBuffers_[unit_ind].is_read_only)
+		{
+			BindingComputeBuffer compute = computeBuffers_[unit_ind];
+			auto computeBuffer = static_cast<BufferDX12*>(compute.computeBuffer);
+			D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 
-		if (compute.computeBuffer == nullptr || compute.is_read_only)
-			continue;
+			uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+			uavDesc.Format = DXGI_FORMAT_UNKNOWN;
 
-		auto computeBuffer = static_cast<BufferDX12*>(compute.computeBuffer);
-		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+			uavDesc.Buffer.StructureByteStride = compute.stride;
+			uavDesc.Buffer.NumElements = computeBuffer->GetSize() / compute.stride;
+			uavDesc.Buffer.FirstElement = 0;
+			uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 
-		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-		uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+			auto cpuHandle = cpuDescriptorHandleConstant[NumConstantBuffer + NumTexture + unit_ind];
+			graphics_->GetDevice()->CreateUnorderedAccessView(computeBuffer->Get(), nullptr, &uavDesc, cpuHandle);
+		}
 
-		uavDesc.Buffer.StructureByteStride = compute.stride;
-		uavDesc.Buffer.NumElements = computeBuffer->GetSize() / compute.stride;
-		uavDesc.Buffer.FirstElement = 0;
-		uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+		if (currentTextures_[unit_ind].texture != nullptr)
+		{
+			auto texture = static_cast<TextureDX12*>(currentTextures_[unit_ind].texture);
+			D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 
-		auto cpuHandle = cpuDescriptorHandleConstant[NumConstantBuffer + NumTexture + unit_ind];
-		graphics_->GetDevice()->CreateUnorderedAccessView(computeBuffer->Get(), nullptr, &uavDesc, cpuHandle);
+			uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+			uavDesc.Format = DirectX12::GetShaderResourceViewFormat(texture->GetDXGIFormat());
+			uavDesc.Texture2D.MipSlice = 0;
+			uavDesc.Texture2D.PlaneSlice = 0;
+			auto cpuHandle = cpuDescriptorHandleConstant[NumConstantBuffer + NumTexture + unit_ind];
+			graphics_->GetDevice()->CreateUnorderedAccessView(texture->Get(), nullptr, &uavDesc, cpuHandle);
+		}
 	}
 
 	currentCommandList_->Dispatch(groupX, groupY, groupZ);

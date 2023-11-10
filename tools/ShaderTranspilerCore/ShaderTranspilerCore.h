@@ -53,7 +53,7 @@ public:
 	SPIRVTranspiler() = default;
 	virtual ~SPIRVTranspiler() = default;
 
-	virtual bool Transpile(const std::shared_ptr<SPIRV>& spirv);
+	virtual bool Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI::ShaderStageType shaderStageType);
 	std::string GetErrorCode() const;
 	std::string GetCode() const;
 };
@@ -69,13 +69,13 @@ class SPIRVToHLSLTranspiler : public SPIRVTranspiler
 
 public:
 	SPIRVToHLSLTranspiler(int32_t shaderModel = 40, bool isDX12 = false);
-	bool Transpile(const std::shared_ptr<SPIRV>& spirv) override;
+	bool Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI::ShaderStageType shaderStageType) override;
 };
 
 class SPIRVToMSLTranspiler : public SPIRVTranspiler
 {
 public:
-	bool Transpile(const std::shared_ptr<SPIRV>& spirv) override;
+	bool Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI::ShaderStageType shaderStageType) override;
 };
 
 class SPIRVToGLSLTranspiler : public SPIRVTranspiler
@@ -92,13 +92,13 @@ public:
 	{
 	}
 
-	bool Transpile(const std::shared_ptr<SPIRV>& spirv) override;
+	bool Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI::ShaderStageType shaderStageType) override;
 };
 
 class SPIRVReflection : public SPIRVTranspiler
 {
 public:
-	bool Transpile(const std::shared_ptr<SPIRV>& spirv) override;
+	bool Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI::ShaderStageType shaderStageType) override;
 
 	std::vector<ShaderReflectionUniform> Uniforms;
 

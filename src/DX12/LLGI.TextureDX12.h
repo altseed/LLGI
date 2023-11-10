@@ -17,19 +17,21 @@ private:
 	ID3D12CommandQueue* commandQueue_ = nullptr;
 
 	ID3D12Resource* texture_ = nullptr;
-	ID3D12Resource* buffer_ = nullptr;
+	ID3D12Resource* buffer_for_upload_ = nullptr;
+	ID3D12Resource* buffer_for_readback_ = nullptr;
+
 	D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint_;
 	D3D12_RESOURCE_STATES state_ = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COMMON;
 	DXGI_FORMAT dxgiFormat_;
 
 	//! DX12 doesn't have packed buffer
-	std::vector<uint8_t> lockedBuffer_;
+	std::vector<uint8_t> locked_buffer_;
 
-	Vec3I textureSize_;
-	int32_t cpuMemorySize_;
+	Vec3I texture_size_;
+	int32_t cpu_memory_size_;
 	TextureParameter parameter_;
 
-	void CreateBuffer();
+	void CreateUploadReadbackBuffer();
 
 public:
 	TextureDX12(GraphicsDX12* graphics, bool hasStrongRef);
@@ -45,11 +47,14 @@ public:
 	bool Initialize(ID3D12Resource* textureResource);
 
 	void* Lock() override;
+
 	void Unlock() override;
+
+	bool GetData(std::vector<uint8_t>& data) override;
 
 	const TextureParameter& GetParameter() const { return parameter_; }
 
-	Vec3I GetSize() const { return textureSize_; }
+	Vec3I GetSize() const { return texture_size_; }
 
 	Vec2I GetSizeAs2D() const override;
 	ID3D12Resource* Get() const { return texture_; }

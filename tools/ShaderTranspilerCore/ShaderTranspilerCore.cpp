@@ -169,7 +169,7 @@ ShaderStageType SPIRV::GetStage() const { return shaderStage_; }
 
 const std::vector<uint32_t>& SPIRV::GetData() const { return data_; }
 
-bool SPIRVTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv) { return false; }
+bool SPIRVTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI::ShaderStageType shaderStageType) { return false; }
 
 std::string SPIRVTranspiler::GetErrorCode() const { return errorCode_; }
 
@@ -177,7 +177,7 @@ std::string SPIRVTranspiler::GetCode() const { return code_; }
 
 SPIRVToHLSLTranspiler::SPIRVToHLSLTranspiler(int32_t shaderModel, bool isDX12) : shaderModel_(shaderModel), isDX12_(isDX12) {}
 
-bool SPIRVToHLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
+bool SPIRVToHLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI::ShaderStageType shaderStageType)
 {
 	spirv_cross::CompilerHLSL compiler(spirv->GetData());
 
@@ -225,7 +225,7 @@ bool SPIRVToHLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 	return true;
 }
 
-bool SPIRVToMSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
+bool SPIRVToMSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI::ShaderStageType shaderStageType)
 {
 	spirv_cross::CompilerMSL compiler(spirv->GetData());
 
@@ -253,12 +253,25 @@ bool SPIRVToMSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 	return true;
 }
 
-bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
+bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI::ShaderStageType shaderStageType)
 {
 	spirv_cross::CompilerGLSL compiler(spirv->GetData());
 
-	// to combine a sampler and a texture
-	compiler.build_combined_image_samplers();
+	if (shaderStageType == LLGI::ShaderStageType::Compute)
+	{
+		if (!isVulkanMode_)
+		{
+			compiler.build_dummy_sampler_for_combined_images();
+
+			// to combine a sampler and a texture
+			compiler.build_combined_image_samplers();
+		}
+	}
+	else
+	{
+		// to combine a sampler and a texture
+		compiler.build_combined_image_samplers();
+	}
 
 	spirv_cross::ShaderResources resources = compiler.get_shader_resources();
 
@@ -290,6 +303,19 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 		compiler.set_decoration(resource.id, spv::DecorationBinding, i);
 
 		if (isVulkanMode_)
+		{
+			compiler.set_decoration(resource.id, spv::DecorationDescriptorSet, 1);
+		}
+	}
+
+	if (shaderStageType == LLGI::ShaderStageType::Compute && isVulkanMode_)
+	{
+		for (auto& resource : resources.storage_images)
+		{
+			compiler.set_decoration(resource.id, spv::DecorationDescriptorSet, 1);
+		}
+
+		for (auto& resource : resources.separate_images)
 		{
 			compiler.set_decoration(resource.id, spv::DecorationDescriptorSet, 1);
 		}
@@ -383,7 +409,7 @@ public:
 	}
 };
 
-bool SPIRVReflection::Transpile(const std::shared_ptr<SPIRV>& spirv)
+bool SPIRVReflection::Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI::ShaderStageType shaderStageType)
 {
 	Textures.clear();
 	Uniforms.clear();

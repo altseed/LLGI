@@ -278,13 +278,19 @@ void SetImageLayout(vk::CommandBuffer cmdbuffer,
 	{
 		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eMemoryRead;
 	}
+	else if (newImageLayout == vk::ImageLayout::eGeneral)
+	{
+		imageMemoryBarrier.dstAccessMask = vk::AccessFlagBits::eMemoryRead | vk::AccessFlagBits::eMemoryWrite;
+	}
 
 	if (imageMemoryBarrier.dstAccessMask == vk::AccessFlagBits::eTransferWrite ||
+		imageMemoryBarrier.dstAccessMask == vk::AccessFlagBits::eTransferWrite ||
 		imageMemoryBarrier.dstAccessMask == vk::AccessFlagBits::eTransferRead ||
 		imageMemoryBarrier.dstAccessMask == vk::AccessFlagBits::eColorAttachmentWrite ||
 		imageMemoryBarrier.dstAccessMask == vk::AccessFlagBits::eShaderRead ||
 		imageMemoryBarrier.srcAccessMask == vk::AccessFlagBits::eColorAttachmentWrite ||
-		imageMemoryBarrier.srcAccessMask == vk::AccessFlagBits::eTransferRead)
+		imageMemoryBarrier.srcAccessMask == vk::AccessFlagBits::eTransferRead ||
+		imageMemoryBarrier.dstAccessMask == (vk::AccessFlagBits::eMemoryRead | vk::AccessFlagBits::eMemoryWrite))
 	{
 		cmdbuffer.pipelineBarrier(
 			GetStageFlag(oldImageLayout), GetStageFlag(newImageLayout), vk::DependencyFlags(), nullptr, nullptr, imageMemoryBarrier);

@@ -107,6 +107,11 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics,
 		type_ = TextureType::Render;
 	}
 
+	if (BitwiseContains(parameter.Usage, TextureUsageType::Storage))
+	{
+		resourceUsage = resourceUsage | vk::ImageUsageFlagBits::eStorage;
+	}
+
 	samplingCount_ = parameter.SampleCount;
 
 	int mipmapCount = parameter.MipLevelCount;
@@ -148,7 +153,7 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics,
 		cpuBuf = std::unique_ptr<InternalBuffer>(new InternalBuffer(graphics_));
 		vk::BufferCreateInfo bufferInfo;
 		bufferInfo.size = memorySize;
-		bufferInfo.usage = vk::BufferUsageFlagBits::eTransferSrc;
+		bufferInfo.usage = vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst;
 		vk::Buffer buffer = device.createBuffer(bufferInfo);
 
 		vk::MemoryRequirements memReqs = device.getBufferMemoryRequirements(buffer);
@@ -301,8 +306,8 @@ void* TextureVulkan::Lock()
 	if (graphics_ == nullptr)
 		return nullptr;
 
-	data = graphics_->GetDevice().mapMemory(cpuBuf->devMem(), 0, memorySize, vk::MemoryMapFlags());
-	return data;
+	data_ = graphics_->GetDevice().mapMemory(cpuBuf->devMem(), 0, memorySize, vk::MemoryMapFlags());
+	return data_;
 }
 
 void TextureVulkan::Unlock()
@@ -327,19 +332,19 @@ void TextureVulkan::Unlock()
 
 	auto isArray = (parameter_.Usage & TextureUsageType::Array) != TextureUsageType::NoneFlag;
 
-	vk::BufferImageCopy imageBufferCopy;
+	vk::BufferImageCopy imageRegion;
 
-	imageBufferCopy.bufferOffset = 0;
-	imageBufferCopy.bufferRowLength = 0;
-	imageBufferCopy.bufferImageHeight = 0;
+	imageRegion.bufferOffset = 0;
+	imageRegion.bufferRowLength = 0;
+	imageRegion.bufferImageHeight = 0;
 
-	imageBufferCopy.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
-	imageBufferCopy.imageSubresource.mipLevel = 0;
-	imageBufferCopy.imageSubresource.baseArrayLayer = 0;
-	imageBufferCopy.imageSubresource.layerCount = isArray ? parameter_.Size.Z : 1;
+	imageRegion.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+	imageRegion.imageSubresource.mipLevel = 0;
+	imageRegion.imageSubresource.baseArrayLayer = 0;
+	imageRegion.imageSubresource.layerCount = isArray ? parameter_.Size.Z : 1;
 
-	imageBufferCopy.imageOffset = vk::Offset3D(0, 0, 0);
-	imageBufferCopy.imageExtent =
+	imageRegion.imageOffset = vk::Offset3D(0, 0, 0);
+	imageRegion.imageExtent =
 		vk::Extent3D(static_cast<uint32_t>(GetSizeAs2D().X), static_cast<uint32_t>(GetSizeAs2D().Y), isArray ? 1 : parameter_.Size.Z);
 
 	vk::ImageSubresourceRange colorSubRange;
@@ -349,7 +354,7 @@ void TextureVulkan::Unlock()
 
 	vk::ImageLayout imageLayout = vk::ImageLayout::eTransferDstOptimal;
 	ResourceBarrier(copyCommandBuffer, imageLayout);
-	copyCommandBuffer.copyBufferToImage(cpuBuf->buffer(), image_, imageLayout, imageBufferCopy);
+	copyCommandBuffer.copyBufferToImage(cpuBuf->buffer(), image_, imageLayout, imageRegion);
 	ResourceBarrier(copyCommandBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
 	copyCommandBuffer.end();
 
@@ -369,6 +374,82 @@ void TextureVulkan::Unlock()
 	graphics_->GetQueue().waitIdle();
 
 	graphics_->GetDevice().freeCommandBuffers(graphics_->GetCommandPool(), copyCommandBuffer);
+}
+
+bool TextureVulkan::GetData(std::vector<uint8_t>& data)
+{
+	if (graphics_ == nullptr)
+	{
+		return false;
+	}
+
+	// copy buffer
+	vk::CommandBufferAllocateInfo cmdBufInfo;
+	cmdBufInfo.commandPool = graphics_->GetCommandPool();
+	cmdBufInfo.level = vk::CommandBufferLevel::ePrimary;
+	cmdBufInfo.commandBufferCount = 1;
+	vk::CommandBuffer copyCommandBuffer = graphics_->GetDevice().allocateCommandBuffers(cmdBufInfo)[0];
+
+	vk::CommandBufferBeginInfo cmdBufferBeginInfo;
+
+	copyCommandBuffer.begin(cmdBufferBeginInfo);
+
+	auto isArray = (parameter_.Usage & TextureUsageType::Array) != TextureUsageType::NoneFlag;
+
+	vk::BufferImageCopy imageRegion;
+
+	imageRegion.bufferOffset = 0;
+	imageRegion.bufferRowLength = 0;
+	imageRegion.bufferImageHeight = 0;
+
+	imageRegion.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+	imageRegion.imageSubresource.mipLevel = 0;
+	imageRegion.imageSubresource.baseArrayLayer = 0;
+	imageRegion.imageSubresource.layerCount = isArray ? parameter_.Size.Z : 1;
+
+	imageRegion.imageOffset = vk::Offset3D(0, 0, 0);
+	imageRegion.imageExtent =
+		vk::Extent3D(static_cast<uint32_t>(GetSizeAs2D().X), static_cast<uint32_t>(GetSizeAs2D().Y), isArray ? 1 : parameter_.Size.Z);
+
+	vk::ImageSubresourceRange colorSubRange;
+	colorSubRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+	colorSubRange.levelCount = 1;
+	colorSubRange.layerCount = isArray ? parameter_.Size.Z : 1;
+
+	vk::ImageLayout imageLayout = vk::ImageLayout::eTransferSrcOptimal;
+	ResourceBarrier(copyCommandBuffer, imageLayout);
+	copyCommandBuffer.copyImageToBuffer(image_, imageLayout, cpuBuf->buffer(), imageRegion);
+	ResourceBarrier(copyCommandBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
+	copyCommandBuffer.end();
+
+	// submit and wait to execute command
+	std::array<vk::SubmitInfo, 1> copySubmitInfos;
+	copySubmitInfos[0].commandBufferCount = 1;
+	copySubmitInfos[0].pCommandBuffers = &copyCommandBuffer;
+
+	const auto submitResult =
+		graphics_->GetQueue().submit(static_cast<uint32_t>(copySubmitInfos.size()), copySubmitInfos.data(), vk::Fence());
+	if (submitResult != vk::Result::eSuccess)
+	{
+		LLGI::Log(LogType::Error, "Failed to submit");
+		return false;
+	}
+
+	graphics_->GetQueue().waitIdle();
+
+	graphics_->GetDevice().freeCommandBuffers(graphics_->GetCommandPool(), copyCommandBuffer);
+
+	auto datatemp = graphics_->GetDevice().mapMemory(cpuBuf->devMem(), 0, memorySize, vk::MemoryMapFlags());
+
+	if (datatemp != nullptr)
+	{
+		data.resize(memorySize);
+		memcpy(data.data(), datatemp, memorySize);
+	}
+
+	graphics_->GetDevice().unmapMemory(cpuBuf->devMem());
+
+	return true;
 }
 
 Vec2I TextureVulkan::GetSizeAs2D() const { return {textureSize.X, textureSize.Y}; }

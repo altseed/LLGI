@@ -483,6 +483,16 @@ void CommandListMetal::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, 
         }
     }
 
+	// Assign textures
+    for (int unit_ind = 0; unit_ind < currentTextures_.size(); unit_ind++)
+    {
+        if (currentTextures_[unit_ind].texture == nullptr)
+            continue;
+
+        auto texture = (TextureMetal*)currentTextures_[unit_ind].texture;        
+        [computeEncoder_ setTexture:texture->GetTexture() atIndex:unit_ind];
+    }
+
     for (int unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)
     {
         BindingComputeBuffer bcb;
