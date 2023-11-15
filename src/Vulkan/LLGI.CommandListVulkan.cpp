@@ -32,7 +32,7 @@ DescriptorPoolVulkan::DescriptorPoolVulkan(
 		std::array<vk::DescriptorPoolSize, 3> poolSizes;
 		poolSizes[0].type = vk::DescriptorType::eUniformBufferDynamic;
 		poolSizes[0].descriptorCount = slotSizeMax_ * constant_size;
-		poolSizes[1].type = vk::DescriptorType::eCombinedImageSampler;
+		poolSizes[1].type = vk::DescriptorType::eStorageImage;
 		poolSizes[1].descriptorCount = slotSizeMax_ * texture_size;
 		poolSizes[2].type = vk::DescriptorType::eStorageBufferDynamic;
 		poolSizes[2].descriptorCount = slotSizeMax_ * storage_size;
@@ -762,6 +762,9 @@ void CommandListVulkan::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ,
 	std::array<vk::DescriptorBufferInfo, NumConstantBuffer + NumTexture + NumComputeBuffer> descriptorBufferInfos;
 	int descriptorBufferIndex = 0;
 
+	std::array<vk::DescriptorImageInfo, NumTexture> descriptorImageInfos;
+	int descriptorImageIndex = 0;
+
 	for (size_t unit_ind = 0; unit_ind < constantBuffers_.size(); unit_ind++)
 	{
 		auto cb = static_cast<BufferVulkan*>(constantBuffers_[unit_ind]);
@@ -785,6 +788,39 @@ void CommandListVulkan::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ,
 		writeDescriptorSets[writeDescriptorIndex] = desc;
 
 		descriptorBufferIndex++;
+		writeDescriptorIndex++;
+	}
+
+	// Assign textures
+	for (int unit_ind = 0; unit_ind < static_cast<int32_t>(currentTextures_.size()); unit_ind++)
+	{
+		if (currentTextures_[unit_ind].texture == nullptr)
+			continue;
+
+		auto texture = (TextureVulkan*)currentTextures_[unit_ind].texture;
+		// auto wm = (int32_t)currentTextures_[unit_ind].wrapMode;
+		// auto mm = (int32_t)currentTextures_[unit_ind].minMagFilter;
+
+		texture->ResourceBarrier(currentCommandBuffer_, vk::ImageLayout::eGeneral);
+
+		vk::DescriptorImageInfo imageInfo;
+		imageInfo.imageLayout = vk::ImageLayout::eGeneral;
+
+		imageInfo.imageView = texture->GetView();
+		// imageInfo.sampler = samplers_[wm][mm];
+		descriptorImageInfos[descriptorImageIndex] = imageInfo;
+
+		vk::WriteDescriptorSet desc;
+		desc.dstSet = descriptorSets[1];
+		desc.dstBinding = unit_ind;
+		desc.dstArrayElement = 0;
+		desc.pImageInfo = &descriptorImageInfos[descriptorImageIndex];
+		desc.descriptorCount = 1;
+		desc.descriptorType = vk::DescriptorType::eStorageImage;
+
+		writeDescriptorSets[writeDescriptorIndex] = desc;
+
+		descriptorImageIndex++;
 		writeDescriptorIndex++;
 	}
 

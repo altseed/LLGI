@@ -11,6 +11,7 @@ enum class OutputType
 	VULKAN_GLSL,
 	MSL,
 	HLSL,
+	SPV,
 	Max,
 };
 
@@ -70,6 +71,11 @@ int main(int argc, char* argv[])
 		else if (args[i] == "-V")
 		{
 			outputType = OutputType::VULKAN_GLSL;
+			i += 1;
+		}
+		else if (args[i] == "-S")
+		{
+			outputType = OutputType::SPV;
 			i += 1;
 		}
 		else if (args[i] == "-D")
@@ -151,7 +157,8 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
-	auto loadFunc = [](std::string s) -> std::vector<uint8_t> {
+	auto loadFunc = [](std::string s) -> std::vector<uint8_t>
+	{
 		std::ifstream file(s, std::ios_base::binary | std::ios_base::ate);
 		if (file)
 		{
@@ -175,7 +182,7 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
-	auto transpiler = std::shared_ptr<LLGI::SPIRVTranspiler>();
+	std::shared_ptr<LLGI::SPIRVTranspiler> transpiler = nullptr;
 
 	if (outputType == OutputType::GLSL)
 	{
@@ -198,9 +205,26 @@ int main(int argc, char* argv[])
 
 	try
 	{
-		if (!transpiler->Transpile(spirv))
+		if (transpiler != nullptr)
 		{
-			std::cout << transpiler->GetErrorCode() << std::endl;
+			if (!transpiler->Transpile(spirv, shaderStage))
+			{
+				std::cout << transpiler->GetErrorCode() << std::endl;
+				return 1;
+			}
+		}
+		else if (outputType == OutputType::SPV)
+		{
+			std::ofstream ofs;
+			ofs.open(outputPath, std::ios::app | std::ios::binary);
+			if (!ofs)
+			{
+				return 1;
+			}
+
+			ofs.write(reinterpret_cast<const char*>(spirv->GetData().data()), spirv->GetData().size() * sizeof(int));
+			ofs.flush();
+			ofs.close();
 			return 0;
 		}
 	}

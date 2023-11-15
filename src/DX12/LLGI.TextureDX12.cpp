@@ -34,8 +34,8 @@ TextureDX12::TextureDX12(ID3D12Resource* textureResource, ID3D12Device* device, 
 	dxgiFormat_ = desc.Format;
 
 	format_ = ConvertFormat(desc.Format);
-	textureSize_ = Vec3I(static_cast<int32_t>(desc.Width), static_cast<int32_t>(desc.Height), 1);
-	cpuMemorySize_ = GetTextureMemorySize(format_, {textureSize_.X, textureSize_.Y, 1});
+	texture_size_ = Vec3I(static_cast<int32_t>(desc.Width), static_cast<int32_t>(desc.Height), 1);
+	cpu_memory_size_ = GetTextureMemorySize(format_, {texture_size_.X, texture_size_.Y, 1});
 
 	UINT64 size = 0;
 	device_->GetCopyableFootprints(&desc, 0, 1, 0, &footprint_, nullptr, nullptr, &size);
@@ -44,7 +44,8 @@ TextureDX12::TextureDX12(ID3D12Resource* textureResource, ID3D12Device* device, 
 TextureDX12::~TextureDX12()
 {
 	SafeRelease(texture_);
-	SafeRelease(buffer_);
+	SafeRelease(buffer_for_upload_);
+	SafeRelease(buffer_for_readback_);
 
 	if (hasStrongRef_)
 	{
@@ -63,8 +64,8 @@ bool TextureDX12::Initialize(const TextureParameter& parameter)
 
 	format_ = parameter.Format;
 	dxgiFormat_ = ConvertFormat(parameter.Format);
-	cpuMemorySize_ = GetTextureMemorySize(format_, parameter.Size);
-	textureSize_ = parameter.Size;
+	cpu_memory_size_ = GetTextureMemorySize(format_, parameter.Size);
+	texture_size_ = parameter.Size;
 	samplingCount_ = parameter.SampleCount;
 	parameter_ = parameter;
 
@@ -92,6 +93,11 @@ bool TextureDX12::Initialize(const TextureParameter& parameter)
 	{
 		resourceFlag = resourceFlag | D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 		type_ = TextureType::Render;
+	}
+
+	if (BitwiseContains(parameter.Usage, TextureUsageType::Storage))
+	{
+		resourceFlag |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 	}
 
 	if (type_ == TextureType::Render)
@@ -126,7 +132,7 @@ bool TextureDX12::Initialize(const TextureParameter& parameter)
 										dxgiFormat_,
 										dimension,
 										D3D12_RESOURCE_STATE_COPY_DEST,
-										D3D12_RESOURCE_FLAG_NONE,
+										resourceFlag,
 										parameter.Size,
 										parameter.SampleCount);
 
@@ -137,7 +143,7 @@ bool TextureDX12::Initialize(const TextureParameter& parameter)
 		return false;
 
 	// TODO: when it's NOT editable, do NOT call CreateBuffer.
-	CreateBuffer();
+	CreateUploadReadbackBuffer();
 
 	return true;
 }
@@ -153,8 +159,8 @@ bool TextureDX12::Initialize(ID3D12Resource* textureResource)
 	dxgiFormat_ = desc.Format;
 
 	format_ = ConvertFormat(desc.Format);
-	textureSize_ = Vec3I(static_cast<int32_t>(desc.Width), static_cast<int32_t>(desc.Height), 1);
-	cpuMemorySize_ = GetTextureMemorySize(format_, textureSize_);
+	texture_size_ = Vec3I(static_cast<int32_t>(desc.Width), static_cast<int32_t>(desc.Height), 1);
+	cpu_memory_size_ = GetTextureMemorySize(format_, texture_size_);
 
 	UINT64 size = 0;
 	device_->GetCopyableFootprints(&desc, 0, 1, 0, &footprint_, nullptr, nullptr, &size);
@@ -162,61 +168,71 @@ bool TextureDX12::Initialize(ID3D12Resource* textureResource)
 	return true;
 }
 
-void TextureDX12::CreateBuffer()
+void TextureDX12::CreateUploadReadbackBuffer()
 {
 	UINT64 size = 0;
 	auto textureDesc = texture_->GetDesc();
 	device_->GetCopyableFootprints(&textureDesc, 0, 1, 0, &footprint_, nullptr, nullptr, &size);
 
-	buffer_ = CreateResourceBuffer(device_,
-								   D3D12_HEAP_TYPE_UPLOAD,
-								   DXGI_FORMAT_UNKNOWN,
-								   D3D12_RESOURCE_DIMENSION_BUFFER,
-								   D3D12_RESOURCE_STATE_GENERIC_READ,
-								   D3D12_RESOURCE_FLAG_NONE,
-								   {static_cast<int32_t>(size), 1, 1},
-								   1);
-	assert(buffer_ != nullptr);
+	buffer_for_upload_ = CreateResourceBuffer(device_,
+											  D3D12_HEAP_TYPE_UPLOAD,
+											  DXGI_FORMAT_UNKNOWN,
+											  D3D12_RESOURCE_DIMENSION_BUFFER,
+											  D3D12_RESOURCE_STATE_GENERIC_READ,
+											  D3D12_RESOURCE_FLAG_NONE,
+											  {static_cast<int32_t>(size), 1, 1},
+											  1);
+	assert(buffer_for_upload_ != nullptr);
 
-	if (static_cast<int32_t>(footprint_.Footprint.RowPitch) != cpuMemorySize_ / textureSize_.Y)
+	buffer_for_readback_ = CreateResourceBuffer(device_,
+												D3D12_HEAP_TYPE_READBACK,
+												DXGI_FORMAT_UNKNOWN,
+												D3D12_RESOURCE_DIMENSION_BUFFER,
+												D3D12_RESOURCE_STATE_COPY_DEST,
+												D3D12_RESOURCE_FLAG_NONE,
+												{static_cast<int32_t>(size), 1, 1},
+												1);
+	assert(buffer_for_readback_ != nullptr);
+
+	if (static_cast<int32_t>(footprint_.Footprint.RowPitch) != cpu_memory_size_ / texture_size_.Y)
 	{
-		lockedBuffer_.resize(cpuMemorySize_);
+		locked_buffer_.resize(cpu_memory_size_);
 	}
 }
 
 void* TextureDX12::Lock()
 {
-	if (lockedBuffer_.size() > 0)
+	if (locked_buffer_.size() > 0)
 	{
-		return lockedBuffer_.data();
+		return locked_buffer_.data();
 	}
 	else
 	{
-		void* ptr;
-		buffer_->Map(0, nullptr, &ptr);
+		void* ptr = nullptr;
+		buffer_for_upload_->Map(0, nullptr, &ptr);
 		return ptr;
 	}
 }
 
 void TextureDX12::Unlock()
 {
-	if (lockedBuffer_.size() > 0)
+	if (locked_buffer_.size() > 0)
 	{
 		uint8_t* ptr = nullptr;
-		buffer_->Map(0, nullptr, (void**)&ptr);
+		buffer_for_upload_->Map(0, nullptr, (void**)&ptr);
 
-		for (int32_t i = 0; i < textureSize_.Y; i++)
+		for (int32_t i = 0; i < texture_size_.Y; i++)
 		{
 			auto p = ptr + i * footprint_.Footprint.RowPitch;
-			auto rowPitch = cpuMemorySize_ / textureSize_.Y;
-			memcpy(p, lockedBuffer_.data() + rowPitch * i, rowPitch);
+			auto rowPitch = cpu_memory_size_ / texture_size_.Y;
+			memcpy(p, locked_buffer_.data() + rowPitch * i, rowPitch);
 		}
 
-		buffer_->Unmap(0, nullptr);
+		buffer_for_upload_->Unmap(0, nullptr);
 	}
 	else
 	{
-		buffer_->Unmap(0, nullptr);
+		buffer_for_upload_->Unmap(0, nullptr);
 	}
 
 	ID3D12CommandAllocator* commandAllocator = nullptr;
@@ -255,7 +271,7 @@ void TextureDX12::Unlock()
 		goto FAILED_EXIT;
 	}
 
-	src.pResource = buffer_;
+	src.pResource = buffer_for_upload_;
 	src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
 	src.PlacedFootprint = footprint_;
 
@@ -289,7 +305,106 @@ FAILED_EXIT:
 	}
 }
 
-Vec2I TextureDX12::GetSizeAs2D() const { return Vec2I{textureSize_.X, textureSize_.Y}; }
+bool TextureDX12::GetData(std::vector<uint8_t>& data)
+{
+
+	ID3D12CommandAllocator* commandAllocator = nullptr;
+	ID3D12GraphicsCommandList* commandList = nullptr;
+	ID3D12Fence* fence = nullptr;
+
+	D3D12_TEXTURE_COPY_LOCATION src = {}, dst = {};
+
+	HANDLE event = CreateEvent(0, 0, 0, 0);
+
+	if (event == nullptr)
+	{
+		auto msg = (std::string("Error : ") + std::string(__FILE__) + " : " + std::to_string(__LINE__) + std::string(" : "));
+		::LLGI::Log(::LLGI::LogType::Error, msg.c_str());
+		goto FAILED_EXIT;
+	}
+
+	auto hr = device_->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
+	if (FAILED(hr))
+	{
+		SHOW_DX12_ERROR(hr, device_);
+		goto FAILED_EXIT;
+	}
+
+	hr = device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator, NULL, IID_PPV_ARGS(&commandList));
+	if (FAILED(hr))
+	{
+		SHOW_DX12_ERROR(hr, device_);
+		goto FAILED_EXIT;
+	}
+
+	hr = device_->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
+	if (FAILED(hr))
+	{
+		SHOW_DX12_ERROR(hr, device_);
+		goto FAILED_EXIT;
+	}
+
+	src.pResource = texture_;
+	src.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+	src.SubresourceIndex = 0;
+
+	dst.pResource = buffer_for_readback_;
+	dst.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+	dst.PlacedFootprint = footprint_;
+
+	ResourceBarrier(commandList, D3D12_RESOURCE_STATE_COPY_SOURCE);
+
+	commandList->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
+
+	ResourceBarrier(commandList, D3D12_RESOURCE_STATE_GENERIC_READ);
+
+	commandList->Close();
+	ID3D12CommandList* list[] = {commandList};
+	commandQueue_->ExecuteCommandLists(1, list);
+
+	// TODO optimize it
+	hr = commandQueue_->Signal(fence, 1);
+	fence->SetEventOnCompletion(1, event);
+	WaitForSingleObject(event, INFINITE);
+
+	uint8_t* ptr = nullptr;
+	buffer_for_readback_->Map(0, nullptr, (void**)&ptr);
+	if (ptr != nullptr)
+	{
+		UINT64 size = 0;
+		auto textureDesc = texture_->GetDesc();
+		device_->GetCopyableFootprints(&textureDesc, 0, 1, 0, &footprint_, nullptr, nullptr, &size);
+
+		data.resize(static_cast<size_t>(size));
+		memcpy(data.data(), ptr, static_cast<size_t>(size));
+		buffer_for_readback_->Unmap(0, nullptr);
+	}
+
+	SafeRelease(commandList);
+	SafeRelease(commandAllocator);
+	SafeRelease(fence);
+
+	if (event != nullptr)
+	{
+		CloseHandle(event);
+	}
+
+	return true;
+
+FAILED_EXIT:
+	SafeRelease(commandList);
+	SafeRelease(commandAllocator);
+	SafeRelease(fence);
+
+	if (event != nullptr)
+	{
+		CloseHandle(event);
+	}
+
+	return false;
+}
+
+Vec2I TextureDX12::GetSizeAs2D() const { return Vec2I{texture_size_.X, texture_size_.Y}; }
 
 void TextureDX12::ResourceBarrier(ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES state)
 {

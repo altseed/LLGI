@@ -15,6 +15,13 @@ bool TextureMetal::Initialize(id<MTLDevice> device, const TextureParameter& para
 	const bool isRenderTarget = (parameter.Usage & TextureUsageType::RenderTarget) != TextureUsageType::NoneFlag;
 
 	type_ = TextureType::Color;
+    
+    MTLTextureUsage usage = MTLTextureUsageUnknown;
+    
+    if(BitwiseContains(parameter.Usage, TextureUsageType::Storage))
+    {
+        usage |= (MTLTextureUsageShaderRead | MTLTextureUsageShaderWrite);
+    }
 
 	if (IsDepthFormat(parameter.Format))
 	{
@@ -22,7 +29,7 @@ bool TextureMetal::Initialize(id<MTLDevice> device, const TextureParameter& para
 																			   width:parameter.Size.X
 																			  height:parameter.Size.Y
 																		   mipmapped:isMipmapped];
-		textureDescriptor.usage = MTLTextureUsageRenderTarget;
+		textureDescriptor.usage = usage | MTLTextureUsageRenderTarget;
 		textureDescriptor.textureType = MTLTextureType2D;
 		textureDescriptor.storageMode = MTLStorageModePrivate;
 		textureDescriptor.sampleCount = parameter.SampleCount;
@@ -43,10 +50,11 @@ bool TextureMetal::Initialize(id<MTLDevice> device, const TextureParameter& para
 																		   mipmapped:isMipmapped];
 
 		textureDescriptor = [[[MTLTextureDescriptor alloc] init] autorelease];
-
+        textureDescriptor.usage = usage;
+        
 		if (isRenderTarget)
 		{
-			textureDescriptor.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
+			textureDescriptor.usage = textureDescriptor.usage | MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
 			type_ = TextureType::Render;
 		}
 
@@ -152,7 +160,7 @@ bool TextureMetal::Initialize(GraphicsMetal* owner, const TextureParameter& para
 	}
 
 	format_ = ConvertFormat(texture_.pixelFormat);
-	data.resize(GetTextureMemorySize(format_, parameter.Size));
+	data_.resize(GetTextureMemorySize(format_, parameter.Size));
 	parameter_ = parameter;
 	return true;
 }
@@ -204,9 +212,24 @@ void TextureMetal::Reset(id<MTLTexture> nativeTexture)
 	format_ = ConvertFormat(texture_.pixelFormat);
 }
 
-void* TextureMetal::Lock() { return data.data(); }
+void* TextureMetal::Lock() { return data_.data(); }
 
-void TextureMetal::Unlock() { Write(data.data()); }
+void TextureMetal::Unlock() { Write(data_.data()); }
+
+bool TextureMetal::GetData(std::vector<uint8_t>& data)
+{
+	// TODO : Implement it
+	MTLRegion region = {{0, 0, 0}, {static_cast<uint32_t>(size_.X), static_cast<uint32_t>(size_.Y), 1}};
+
+	auto all_size = GetTextureMemorySize(ConvertFormat(texture_.pixelFormat), Vec3I{size_.X, size_.Y, 1});
+    auto bytes_per_row = all_size / size_.Y;
+
+	data.resize(all_size);
+
+	[texture_ getBytes:data.data() bytesPerRow:bytes_per_row bytesPerImage:all_size fromRegion:region mipmapLevel:0 slice:0];
+
+	return true;
+}
 
 Vec2I TextureMetal::GetSizeAs2D() const { return Vec2I{size_.X, size_.Y}; }
 

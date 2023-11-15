@@ -1,0 +1,21 @@
+#version 430
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(set = 1, binding = 1, rgba32f) uniform readonly image2D read1;
+layout(set = 1, binding = 2, rgba32f) uniform readonly image2D read2;
+layout(set = 1, binding = 0, rgba32f) uniform writeonly image2D write;
+
+void _main(uvec3 dtid)
+{
+    uvec2 index = dtid.xy;
+    vec4 storeTemp = imageLoad(read1, ivec2(index)) + imageLoad(read2, ivec2(index));
+    imageStore(write, ivec2(index), storeTemp);
+}
+
+void main()
+{
+    uvec3 dtid = gl_GlobalInvocationID;
+    uvec3 param = dtid;
+    _main(param);
+}
+

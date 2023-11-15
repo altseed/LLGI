@@ -28,6 +28,8 @@ public:
 	*/
 	virtual void* Lock(int32_t mipmapLevel) { return nullptr; }
 
+	virtual bool GetData(std::vector<uint8_t>& data) { return false; }
+
 	/**
 		@brief	Generate mipmaps based on level zero.
 	*/

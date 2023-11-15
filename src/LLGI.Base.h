@@ -273,7 +273,8 @@ enum class TextureUsageType : uint32_t
 	NoneFlag = 0,
 	RenderTarget = 1 << 0,
 	Array = 1 << 1,
-	External = 1 << 2,
+	Storage = 1 << 2,
+	External = 1 << 3,
 };
 
 inline TextureUsageType operator|(TextureUsageType lhs, TextureUsageType rhs)

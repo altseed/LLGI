@@ -11,7 +11,7 @@ class TextureMetal : public Texture
 {
 private:
 	ReferenceObject* owner_ = nullptr;
-	std::vector<uint8_t> data;
+	std::vector<uint8_t> data_;
 
 	id<MTLTexture> texture_ = nullptr;
 	Vec3I size_;
@@ -31,6 +31,7 @@ public:
 	void Reset(id<MTLTexture> nativeTexture);
 	void* Lock() override;
 	void Unlock() override;
+	bool GetData(std::vector<uint8_t>& data) override;
 	Vec2I GetSizeAs2D() const override;
 
 	const TextureParameter& GetParameter() const { return parameter_; }

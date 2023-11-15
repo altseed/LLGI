@@ -1191,37 +1191,37 @@ void test_vtf(LLGI::DeviceType deviceType)
 	pips.clear();
 }
 
-TestRegister SimpleRender_BasicTriangle("SimpleRender.BasicTriangle",
-										[](LLGI::DeviceType device) -> void
-										{ test_simple_rectangle(device, SingleRectangleTestMode::Triangle); });
+TestRegister SimpleRender_BasicTriangle("SimpleRender.BasicTriangle", [](LLGI::DeviceType device) -> void {
+	test_simple_rectangle(device, SingleRectangleTestMode::Triangle);
+});
 
 TestRegister SimpleRender_BasicLine("SimpleRender.BasicLine",
 									[](LLGI::DeviceType device) -> void { test_simple_rectangle(device, SingleRectangleTestMode::Line); });
 
-TestRegister SimpleRender_BasicPoint("SimpleRender.BasicPoint",
-									 [](LLGI::DeviceType device) -> void
-									 { test_simple_rectangle(device, SingleRectangleTestMode::Point); });
+TestRegister SimpleRender_BasicPoint("SimpleRender.BasicPoint", [](LLGI::DeviceType device) -> void {
+	test_simple_rectangle(device, SingleRectangleTestMode::Point);
+});
 
 TestRegister SimpleRender_IndexOffset("SimpleRender.IndexOffset", [](LLGI::DeviceType device) -> void { test_index_offset(device); });
 
-TestRegister SimpleRender_ConstantLT("SimpleRender.ConstantLT",
-									 [](LLGI::DeviceType device) -> void
-									 { test_simple_constant_rectangle(LLGI::ConstantBufferType::LongTime, device); });
+TestRegister SimpleRender_ConstantLT("SimpleRender.ConstantLT", [](LLGI::DeviceType device) -> void {
+	test_simple_constant_rectangle(LLGI::ConstantBufferType::LongTime, device);
+});
 
-TestRegister SimpleRender_ConstantST("SimpleRender.ConstantST",
-									 [](LLGI::DeviceType device) -> void
-									 { test_simple_constant_rectangle(LLGI::ConstantBufferType::ShortTime, device); });
+TestRegister SimpleRender_ConstantST("SimpleRender.ConstantST", [](LLGI::DeviceType device) -> void {
+	test_simple_constant_rectangle(LLGI::ConstantBufferType::ShortTime, device);
+});
 
-TestRegister SimpleRender_Tex_RGBA8("SimpleRender.Texture_RGBA8",
-									[](LLGI::DeviceType device) -> void
-									{ test_simple_texture_rectangle(device, SimpleTextureRectangleTestMode::RGBA8); });
+TestRegister SimpleRender_Tex_RGBA8("SimpleRender.Texture_RGBA8", [](LLGI::DeviceType device) -> void {
+	test_simple_texture_rectangle(device, SimpleTextureRectangleTestMode::RGBA8);
+});
 
-TestRegister SimpleRender_Tex_RGBA32F("SimpleRender.Texture_RGBA32F",
-									  [](LLGI::DeviceType device) -> void
-									  { test_simple_texture_rectangle(device, SimpleTextureRectangleTestMode::RGBA32F); });
-TestRegister SimpleRender_Tex_R8("SimpleRender.Texture_R8",
-								 [](LLGI::DeviceType device) -> void
-								 { test_simple_texture_rectangle(device, SimpleTextureRectangleTestMode::R8); });
+TestRegister SimpleRender_Tex_RGBA32F("SimpleRender.Texture_RGBA32F", [](LLGI::DeviceType device) -> void {
+	test_simple_texture_rectangle(device, SimpleTextureRectangleTestMode::RGBA32F);
+});
+TestRegister SimpleRender_Tex_R8("SimpleRender.Texture_R8", [](LLGI::DeviceType device) -> void {
+	test_simple_texture_rectangle(device, SimpleTextureRectangleTestMode::R8);
+});
 
 TestRegister SimpleRender_Instansing("SimpleRender.Instansing", [](LLGI::DeviceType device) -> void { test_instancing(device); });
 
