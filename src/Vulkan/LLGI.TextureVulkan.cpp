@@ -208,6 +208,7 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics,
 	mipmapCount_ = mipmapCount;
 	vkTextureFormat_ = imageCreateInfo.format;
 	format_ = VulkanHelper::VkFormatToTextureFormat(static_cast<VkFormat>(vkTextureFormat_));
+	usage_ = parameter_.Usage;
 
 	ResetImageLayouts(mipmapCount_, imageCreateInfo.initialLayout);
 

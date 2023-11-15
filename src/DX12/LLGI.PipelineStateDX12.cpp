@@ -135,8 +135,8 @@ FAILED_EXIT:
 
 bool PipelineStateDX12::CreateComputeRootSignature()
 {
-	D3D12_DESCRIPTOR_RANGE ranges[3] = {{}, {}};
-	D3D12_ROOT_PARAMETER rootParameters[1] = {{}};
+	D3D12_DESCRIPTOR_RANGE ranges[4] = {{}, {}};
+	D3D12_ROOT_PARAMETER rootParameters[2] = {{}, {}};
 
 	// descriptor range for constant buffer view
 	ranges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
@@ -158,14 +158,27 @@ bool PipelineStateDX12::CreateComputeRootSignature()
 	ranges[2].RegisterSpace = 0;
 	ranges[2].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
+	// descriptor range for sampler
+	ranges[3].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
+	ranges[3].NumDescriptors = NumTexture;
+	ranges[3].BaseShaderRegister = 0;
+	ranges[3].RegisterSpace = 0;
+	ranges[3].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
 	// descriptor table for CBV/UAV
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	rootParameters[0].DescriptorTable.NumDescriptorRanges = 3;
 	rootParameters[0].DescriptorTable.pDescriptorRanges = &ranges[0];
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
+	// descriptor table for sampler
+	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParameters[1].DescriptorTable.NumDescriptorRanges = 1;
+	rootParameters[1].DescriptorTable.pDescriptorRanges = &ranges[3];
+	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
 	D3D12_ROOT_SIGNATURE_DESC desc = {};
-	desc.NumParameters = 1;
+	desc.NumParameters = 2;
 	desc.pParameters = rootParameters;
 	desc.NumStaticSamplers = 0;
 	desc.pStaticSamplers = nullptr;

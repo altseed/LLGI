@@ -871,7 +871,7 @@ void CommandListDX12::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, i
 			graphics_->GetDevice()->CreateUnorderedAccessView(computeBuffer->Get(), nullptr, &uavDesc, cpuHandle);
 		}
 
-		if (currentTextures_[unit_ind].texture != nullptr)
+		if (currentTextures_[unit_ind].texture != nullptr && BitwiseContains(currentTextures_[unit_ind].texture->GetUsage(), TextureUsageType::Storage))
 		{
 			auto texture = static_cast<TextureDX12*>(currentTextures_[unit_ind].texture);
 			D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};

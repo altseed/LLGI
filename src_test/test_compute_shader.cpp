@@ -163,9 +163,7 @@ void test_compute_shader_texture(LLGI::DeviceType deviceType)
 
 	LLGI::TextureParameter texParamRead1;
 	texParamRead1.Size = {1, 1, 1};
-	// For Vulkan
 	texParamRead1.Format = LLGI::TextureFormatType::R32G32B32A32_FLOAT;
-	// For DX12
 	texParamRead1.Usage = LLGI::TextureUsageType::Storage;
 	auto texRead1 = LLGI::CreateSharedPtr(graphics->CreateTexture(texParamRead1));
 
@@ -181,10 +179,7 @@ void test_compute_shader_texture(LLGI::DeviceType deviceType)
 
 	LLGI::TextureParameter texParamRead2;
 	texParamRead2.Size = {1, 1, 1};
-	// For Vulkan
 	texParamRead2.Format = LLGI::TextureFormatType::R32G32B32A32_FLOAT;
-	// For DX12
-	texParamRead2.Usage = LLGI::TextureUsageType::Storage;
 	auto texRead2 = LLGI::CreateSharedPtr(graphics->CreateTexture(texParamRead2));
 
 	if (auto data = texRead2->Lock())

@@ -20,7 +20,7 @@ private:
 
 	vk::Pipeline computePipeline_ = nullptr;
 	vk::PipelineLayout computePipelineLayout_ = nullptr;
-	std::array<vk::DescriptorSetLayout, 3> computeDescriptorSetLayouts_;
+	std::array<vk::DescriptorSetLayout, 4> computeDescriptorSetLayouts_;
 
 	bool CreateGraphicsPipeline();
 	bool CreateComputePipeline();
@@ -45,7 +45,7 @@ public:
 
 	vk::PipelineLayout GetComputePipelineLayout() const { return computePipelineLayout_; }
 
-	const std::array<vk::DescriptorSetLayout, 3>& GetComputeDescriptorSetLayout() const { return computeDescriptorSetLayouts_; }
+	const std::array<vk::DescriptorSetLayout, 4>& GetComputeDescriptorSetLayout() const { return computeDescriptorSetLayouts_; }
 };
 
 } // namespace LLGI

@@ -15,4 +15,6 @@ bool Texture::IsDepthTexture() const { return false; }
 
 TextureFormatType Texture::GetFormat() const { return format_; }
 
+TextureUsageType Texture::GetUsage() const { return usage_; }
+
 } // namespace LLGI

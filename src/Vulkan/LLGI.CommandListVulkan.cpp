@@ -29,18 +29,20 @@ DescriptorPoolVulkan::DescriptorPoolVulkan(
 	}
 
 	{
-		std::array<vk::DescriptorPoolSize, 3> poolSizes;
+		std::array<vk::DescriptorPoolSize, 4> poolSizes;
 		poolSizes[0].type = vk::DescriptorType::eUniformBufferDynamic;
 		poolSizes[0].descriptorCount = slotSizeMax_ * constant_size;
-		poolSizes[1].type = vk::DescriptorType::eStorageImage;
+		poolSizes[1].type = vk::DescriptorType::eCombinedImageSampler;
 		poolSizes[1].descriptorCount = slotSizeMax_ * texture_size;
 		poolSizes[2].type = vk::DescriptorType::eStorageBufferDynamic;
 		poolSizes[2].descriptorCount = slotSizeMax_ * storage_size;
+		poolSizes[3].type = vk::DescriptorType::eStorageImage;
+		poolSizes[3].descriptorCount = slotSizeMax_ * texture_size;
 
 		vk::DescriptorPoolCreateInfo poolInfo;
-		poolInfo.poolSizeCount = 3;
+		poolInfo.poolSizeCount = 4;
 		poolInfo.pPoolSizes = poolSizes.data();
-		poolInfo.maxSets = slotSizeMax_ * 3;
+		poolInfo.maxSets = slotSizeMax_ * 4;
 
 		computeDescriptorPool_ = graphics_->GetDevice().createDescriptorPool(poolInfo);
 	}
@@ -756,14 +758,17 @@ void CommandListVulkan::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ,
 		return;
 	}
 
-	std::array<vk::WriteDescriptorSet, NumConstantBuffer + NumTexture + NumComputeBuffer> writeDescriptorSets;
+	std::array<vk::WriteDescriptorSet, NumConstantBuffer + NumTexture * 2 + NumComputeBuffer> writeDescriptorSets;
 	int writeDescriptorIndex = 0;
 
-	std::array<vk::DescriptorBufferInfo, NumConstantBuffer + NumTexture + NumComputeBuffer> descriptorBufferInfos;
+	std::array<vk::DescriptorBufferInfo, NumConstantBuffer + NumTexture * 2 + NumComputeBuffer> descriptorBufferInfos;
 	int descriptorBufferIndex = 0;
 
 	std::array<vk::DescriptorImageInfo, NumTexture> descriptorImageInfos;
 	int descriptorImageIndex = 0;
+
+	std::array<vk::DescriptorImageInfo, NumTexture> descriptorImageStorageInfos;
+	int descriptorImageStorageIndex = 0;
 
 	for (size_t unit_ind = 0; unit_ind < constantBuffers_.size(); unit_ind++)
 	{
@@ -795,19 +800,33 @@ void CommandListVulkan::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ,
 	for (int unit_ind = 0; unit_ind < static_cast<int32_t>(currentTextures_.size()); unit_ind++)
 	{
 		if (currentTextures_[unit_ind].texture == nullptr)
+		{
 			continue;
+		}
+
+		if (BitwiseContains(currentTextures_[unit_ind].texture->GetUsage(), TextureUsageType::Storage))
+		{
+			continue;
+		}
 
 		auto texture = (TextureVulkan*)currentTextures_[unit_ind].texture;
-		// auto wm = (int32_t)currentTextures_[unit_ind].wrapMode;
-		// auto mm = (int32_t)currentTextures_[unit_ind].minMagFilter;
-
-		texture->ResourceBarrier(currentCommandBuffer_, vk::ImageLayout::eGeneral);
-
+		auto wm = (int32_t)currentTextures_[unit_ind].wrapMode;
+		auto mm = (int32_t)currentTextures_[unit_ind].minMagFilter;
 		vk::DescriptorImageInfo imageInfo;
-		imageInfo.imageLayout = vk::ImageLayout::eGeneral;
+
+		if (texture->GetType() == TextureType::Depth)
+		{
+			//	texture->ResourceBarrier(cmdBuffer, vk::ImageLayout::eDepthStencilReadOnlyOptimal);
+			imageInfo.imageLayout = vk::ImageLayout::eDepthStencilReadOnlyOptimal;
+		}
+		else
+		{
+			//	texture->ResourceBarrier(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
+			imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+		}
 
 		imageInfo.imageView = texture->GetView();
-		// imageInfo.sampler = samplers_[wm][mm];
+		imageInfo.sampler = samplers_[wm][mm];
 		descriptorImageInfos[descriptorImageIndex] = imageInfo;
 
 		vk::WriteDescriptorSet desc;
@@ -816,7 +835,7 @@ void CommandListVulkan::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ,
 		desc.dstArrayElement = 0;
 		desc.pImageInfo = &descriptorImageInfos[descriptorImageIndex];
 		desc.descriptorCount = 1;
-		desc.descriptorType = vk::DescriptorType::eStorageImage;
+		desc.descriptorType = vk::DescriptorType::eCombinedImageSampler;
 
 		writeDescriptorSets[writeDescriptorIndex] = desc;
 
@@ -853,6 +872,46 @@ void CommandListVulkan::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ,
 		writeDescriptorIndex++;
 	}
 
+	// Assign textures
+	for (int unit_ind = 0; unit_ind < static_cast<int32_t>(currentTextures_.size()); unit_ind++)
+	{
+		if (currentTextures_[unit_ind].texture == nullptr)
+		{
+			continue;
+		}
+
+		if (!BitwiseContains(currentTextures_[unit_ind].texture->GetUsage(), TextureUsageType::Storage))
+		{
+			continue;
+		}
+
+		auto texture = (TextureVulkan*)currentTextures_[unit_ind].texture;
+		// auto wm = (int32_t)currentTextures_[unit_ind].wrapMode;
+		// auto mm = (int32_t)currentTextures_[unit_ind].minMagFilter;
+
+		texture->ResourceBarrier(currentCommandBuffer_, vk::ImageLayout::eGeneral);
+
+		vk::DescriptorImageInfo imageInfo;
+		imageInfo.imageLayout = vk::ImageLayout::eGeneral;
+
+		imageInfo.imageView = texture->GetView();
+		// imageInfo.sampler = samplers_[wm][mm];
+		descriptorImageStorageInfos[descriptorImageStorageIndex] = imageInfo;
+
+		vk::WriteDescriptorSet desc;
+		desc.dstSet = descriptorSets[3];
+		desc.dstBinding = unit_ind;
+		desc.dstArrayElement = 0;
+		desc.pImageInfo = &descriptorImageStorageInfos[descriptorImageStorageIndex];
+		desc.descriptorCount = 1;
+		desc.descriptorType = vk::DescriptorType::eStorageImage;
+
+		writeDescriptorSets[writeDescriptorIndex] = desc;
+
+		descriptorImageStorageIndex++;
+		writeDescriptorIndex++;
+	}
+
 	if (writeDescriptorIndex > 0)
 	{
 		graphics_->GetDevice().updateDescriptorSets(writeDescriptorIndex, writeDescriptorSets.data(), 0, nullptr);
@@ -862,7 +921,7 @@ void CommandListVulkan::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ,
 	offsets.fill(0);
 
 	currentCommandBuffer_.bindDescriptorSets(
-		vk::PipelineBindPoint::eCompute, pip->GetComputePipelineLayout(), 0, 3, descriptorSets.data(), 12, offsets.data());
+		vk::PipelineBindPoint::eCompute, pip->GetComputePipelineLayout(), 0, 4, descriptorSets.data(), 12, offsets.data());
 
 	// assign a pipeline
 	if (isPipDirtied)
