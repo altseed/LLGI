@@ -375,7 +375,7 @@ bool TextureDX12::GetData(std::vector<uint8_t>& data)
 		auto textureDesc = texture_->GetDesc();
 		device_->GetCopyableFootprints(&textureDesc, 0, 1, 0, &footprint_, nullptr, nullptr, &size);
 
-		data.resize(size);
+		data.resize(static_cast<size_t>(size));
 		memcpy(data.data(), ptr, size);
 		buffer_for_readback_->Unmap(0, nullptr);
 	}
