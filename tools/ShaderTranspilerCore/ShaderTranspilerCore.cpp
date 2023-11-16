@@ -259,7 +259,7 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI:
 
 	if (shaderStageType == LLGI::ShaderStageType::Compute)
 	{
-		if (!isVulkanMode_)
+		// if (!isVulkanMode_)
 		{
 			compiler.build_dummy_sampler_for_combined_images();
 
@@ -312,7 +312,7 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI:
 	{
 		for (auto& resource : resources.storage_images)
 		{
-			compiler.set_decoration(resource.id, spv::DecorationDescriptorSet, 1);
+			compiler.set_decoration(resource.id, spv::DecorationDescriptorSet, 3);
 		}
 
 		for (auto& resource : resources.separate_images)

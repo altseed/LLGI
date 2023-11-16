@@ -12,6 +12,8 @@ private:
 protected:
 	TextureType type_ = TextureType::Unknown;
 	TextureFormatType format_ = TextureFormatType::Unknown;
+	TextureUsageType usage_ = TextureUsageType::NoneFlag;
+
 	int32_t samplingCount_ = 1;
 	int32_t mipmapCount_ = 1;
 
@@ -42,6 +44,8 @@ public:
 	TextureType GetType() const { return type_; }
 
 	virtual TextureFormatType GetFormat() const;
+
+	TextureUsageType GetUsage() const;
 
 	int32_t GetSamplingCount() const { return samplingCount_; }
 

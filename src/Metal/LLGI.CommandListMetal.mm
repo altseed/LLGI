@@ -460,6 +460,8 @@ void CommandListMetal::EndComputePass()
 
 void CommandListMetal::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, int32_t threadX, int32_t threadY, int32_t threadZ)
 {
+    const int mipmapFilter = 1;
+
 	PipelineState* bpip = nullptr;
 
 	bool isPipDirtied = false;
@@ -489,8 +491,17 @@ void CommandListMetal::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, 
         if (currentTextures_[unit_ind].texture == nullptr)
             continue;
 
-        auto texture = (TextureMetal*)currentTextures_[unit_ind].texture;        
+        auto texture = (TextureMetal*)currentTextures_[unit_ind].texture;
+        auto wm = (int32_t)currentTextures_[unit_ind].wrapMode;
+        auto mm = (int32_t)currentTextures_[unit_ind].minMagFilter;
+        auto pm = 0;
+        if (texture->GetTexture().mipmapLevelCount >= 2)
+        {
+            pm = mipmapFilter;
+        }
+        
         [computeEncoder_ setTexture:texture->GetTexture() atIndex:unit_ind];
+        [computeEncoder_ setSamplerState:samplerStates_[wm][mm][pm] atIndex:unit_ind];
     }
 
     for (int unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)

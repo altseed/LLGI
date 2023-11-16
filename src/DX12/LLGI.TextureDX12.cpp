@@ -63,6 +63,7 @@ bool TextureDX12::Initialize(const TextureParameter& parameter)
 	}
 
 	format_ = parameter.Format;
+	usage_ = parameter.Usage;
 	dxgiFormat_ = ConvertFormat(parameter.Format);
 	cpu_memory_size_ = GetTextureMemorySize(format_, parameter.Size);
 	texture_size_ = parameter.Size;

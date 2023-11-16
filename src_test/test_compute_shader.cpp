@@ -15,7 +15,7 @@ struct OutputData
 	float value;
 };
 
-void test_compute_shader(LLGI::DeviceType deviceType, bool is_read_only)
+void test_compute_shader_compute_buffer(LLGI::DeviceType deviceType, bool is_read_only)
 {
 	LLGI::PlatformParameter pp;
 	pp.Device = deviceType;
@@ -158,14 +158,13 @@ void test_compute_shader_texture(LLGI::DeviceType deviceType)
 	pip->SetShader(LLGI::ShaderStageType::Compute, shader_cs.get());
 	if (!pip->Compile())
 	{
+        std::cout << "Failed : Compile" << std::endl;
 		abort();
 	}
 
 	LLGI::TextureParameter texParamRead1;
 	texParamRead1.Size = {1, 1, 1};
-	// For Vulkan
 	texParamRead1.Format = LLGI::TextureFormatType::R32G32B32A32_FLOAT;
-	// For DX12
 	texParamRead1.Usage = LLGI::TextureUsageType::Storage;
 	auto texRead1 = LLGI::CreateSharedPtr(graphics->CreateTexture(texParamRead1));
 
@@ -181,10 +180,7 @@ void test_compute_shader_texture(LLGI::DeviceType deviceType)
 
 	LLGI::TextureParameter texParamRead2;
 	texParamRead2.Size = {1, 1, 1};
-	// For Vulkan
 	texParamRead2.Format = LLGI::TextureFormatType::R32G32B32A32_FLOAT;
-	// For DX12
-	texParamRead2.Usage = LLGI::TextureUsageType::Storage;
 	auto texRead2 = LLGI::CreateSharedPtr(graphics->CreateTexture(texParamRead2));
 
 	if (auto data = texRead2->Lock())
@@ -226,6 +222,10 @@ void test_compute_shader_texture(LLGI::DeviceType deviceType)
 	{
 		if (!(result[0] == 128 && result[1] == 64 && result[2] == 64 && result[3] == 128))
 		{
+            std::cout << "Failed : Mismatch" << static_cast<int>(result[0]) << ","
+            << static_cast<int>(result[1]) << ","
+            << static_cast<int>(result[2]) << ","
+            << static_cast<int>(result[3]) << std::endl;
 			abort();
 		}
 	}
@@ -233,10 +233,10 @@ void test_compute_shader_texture(LLGI::DeviceType deviceType)
 	platform->Present();
 }
 
-TestRegister ComputeShader_Basic("ComputeShader.Basic", [](LLGI::DeviceType device) -> void { test_compute_shader(device, false); });
+TestRegister ComputeShader_Basic("ComputeShader.ComputeBuffer", [](LLGI::DeviceType device) -> void { test_compute_shader_compute_buffer(device, false); });
 
-TestRegister ComputeShader_Basic_ReadOnly("ComputeShader.Basic_ReadOnly",
-										  [](LLGI::DeviceType device) -> void { test_compute_shader(device, true); });
+TestRegister ComputeShader_Basic_ReadOnly("ComputeShader.ComputeBuffer_ReadOnly",
+										  [](LLGI::DeviceType device) -> void { test_compute_shader_compute_buffer(device, true); });
 
-TestRegister ComputeShader_Basic_Texture("ComputeShader.Basic_Texture",
+TestRegister ComputeShader_Basic_Texture("ComputeShader.Texture",
 										 [](LLGI::DeviceType device) -> void { test_compute_shader_texture(device); });

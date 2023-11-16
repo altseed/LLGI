@@ -546,7 +546,7 @@ bool PipelineStateVulkan::CreateComputePipeline()
 	for (size_t i = 0; i < textureLayoutBindings.size(); i++)
 	{
 		textureLayoutBindings[i].binding = static_cast<uint32_t>(i);
-		textureLayoutBindings[i].descriptorType = vk::DescriptorType::eStorageImage;
+		textureLayoutBindings[i].descriptorType = vk::DescriptorType::eCombinedImageSampler;
 		textureLayoutBindings[i].descriptorCount = 1;
 		textureLayoutBindings[i].stageFlags = stageFlag;
 		textureLayoutBindings[i].pImmutableSamplers = nullptr;
@@ -563,20 +563,34 @@ bool PipelineStateVulkan::CreateComputePipeline()
 		computeLayoutBindings[i].pImmutableSamplers = nullptr;
 	}
 
-	vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutInfos[3];
+	std::array<vk::DescriptorSetLayoutBinding, TextureSlotMax> storageImageLayoutBindings;
+
+	for (size_t i = 0; i < storageImageLayoutBindings.size(); i++)
+	{
+		storageImageLayoutBindings[i].binding = static_cast<uint32_t>(i);
+		storageImageLayoutBindings[i].descriptorType = vk::DescriptorType::eStorageImage;
+		storageImageLayoutBindings[i].descriptorCount = 1;
+		storageImageLayoutBindings[i].stageFlags = stageFlag;
+		storageImageLayoutBindings[i].pImmutableSamplers = nullptr;
+	}
+
+	vk::DescriptorSetLayoutCreateInfo descriptorSetLayoutInfos[4];
 	descriptorSetLayoutInfos[0].bindingCount = static_cast<int32_t>(uboLayoutBindings.size());
 	descriptorSetLayoutInfos[0].pBindings = uboLayoutBindings.data();
 	descriptorSetLayoutInfos[1].bindingCount = static_cast<int32_t>(textureLayoutBindings.size());
 	descriptorSetLayoutInfos[1].pBindings = textureLayoutBindings.data();
 	descriptorSetLayoutInfos[2].bindingCount = static_cast<int32_t>(computeLayoutBindings.size());
 	descriptorSetLayoutInfos[2].pBindings = computeLayoutBindings.data();
+	descriptorSetLayoutInfos[3].bindingCount = static_cast<int32_t>(storageImageLayoutBindings.size());
+	descriptorSetLayoutInfos[3].pBindings = storageImageLayoutBindings.data();
 
 	computeDescriptorSetLayouts_[0] = graphics_->GetDevice().createDescriptorSetLayout(descriptorSetLayoutInfos[0]);
 	computeDescriptorSetLayouts_[1] = graphics_->GetDevice().createDescriptorSetLayout(descriptorSetLayoutInfos[1]);
 	computeDescriptorSetLayouts_[2] = graphics_->GetDevice().createDescriptorSetLayout(descriptorSetLayoutInfos[2]);
+	computeDescriptorSetLayouts_[3] = graphics_->GetDevice().createDescriptorSetLayout(descriptorSetLayoutInfos[3]);
 
 	vk::PipelineLayoutCreateInfo layoutInfo = {};
-	layoutInfo.setLayoutCount = 3;
+	layoutInfo.setLayoutCount = 4;
 	layoutInfo.pSetLayouts = computeDescriptorSetLayouts_.data();
 	layoutInfo.pushConstantRangeCount = 0;
 	layoutInfo.pPushConstantRanges = nullptr;
