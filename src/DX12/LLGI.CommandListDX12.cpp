@@ -718,11 +718,20 @@ void CommandListDX12::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, i
 	int32_t requiredCBDescriptorCount = NumConstantBuffer + NumTexture + NumComputeBuffer;
 
 	ID3D12DescriptorHeap* heapConstant = nullptr;
+	ID3D12DescriptorHeap* heapSampler = nullptr;
 
 	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 32> cpuDescriptorHandleConstant;
 	std::array<D3D12_GPU_DESCRIPTOR_HANDLE, 32> gpuDescriptorHandleConstant;
+	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 32> cpuDescriptorHandleSampler;
+	std::array<D3D12_GPU_DESCRIPTOR_HANDLE, 32> gpuDescriptorHandleSampler;
 
 	if (!cbDescriptorHeap_->Allocate(heapConstant, cpuDescriptorHandleConstant, gpuDescriptorHandleConstant, requiredCBDescriptorCount))
+	{
+		Log(LogType::Error, "Failed to draw because of descriptors.");
+		return;
+	}
+
+	if (!samplerDescriptorHeap_->Allocate(heapSampler, cpuDescriptorHandleSampler, gpuDescriptorHandleSampler, NumTexture))
 	{
 		Log(LogType::Error, "Failed to draw because of descriptors.");
 		return;
@@ -732,11 +741,13 @@ void CommandListDX12::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, i
 		// set using descriptor heaps
 		ID3D12DescriptorHeap* heaps[] = {
 			heapConstant,
+			heapSampler,
 		};
-		currentCommandList_->SetDescriptorHeaps(1, heaps);
+		currentCommandList_->SetDescriptorHeaps(2, heaps);
 
 		// set descriptor tables
 		currentCommandList_->SetComputeRootDescriptorTable(0, gpuDescriptorHandleConstant[0]);
+		currentCommandList_->SetComputeRootDescriptorTable(1, gpuDescriptorHandleSampler[0]);
 	}
 
 	// constant buffer
@@ -792,6 +803,8 @@ void CommandListDX12::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, i
 			!BitwiseContains(currentTextures_[unit_ind].texture->GetUsage(), TextureUsageType::Storage))
 		{
 			auto texture = static_cast<TextureDX12*>(currentTextures_[unit_ind].texture);
+			auto wrapMode = currentTextures_[unit_ind].wrapMode;
+			auto minMagFilter = currentTextures_[unit_ind].minMagFilter;
 
 			// Make barrier to use a render target
 			if (texture->GetType() == TextureType::Render)
@@ -847,6 +860,41 @@ void CommandListDX12::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, i
 
 				auto cpuHandle = cpuDescriptorHandleConstant[NumConstantBuffer + static_cast<int32_t>(unit_ind)];
 				graphics_->GetDevice()->CreateShaderResourceView(texture->Get(), &srvDesc, cpuHandle);
+			}
+
+			// Sampler
+			{
+				D3D12_SAMPLER_DESC samplerDesc = {};
+
+				if (minMagFilter == TextureMinMagFilter::Nearest)
+				{
+					samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+				}
+				else
+				{
+					samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+				}
+
+				if (wrapMode == TextureWrapMode::Repeat)
+				{
+					samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+					samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+					samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+				}
+				else
+				{
+					samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+					samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+					samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+				}
+				samplerDesc.MipLODBias = 0;
+				samplerDesc.MaxAnisotropy = 0;
+				samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+				samplerDesc.MinLOD = 0.0f;
+				samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+
+				auto cpuHandle = cpuDescriptorHandleSampler[unit_ind];
+				graphics_->GetDevice()->CreateSampler(&samplerDesc, cpuHandle);
 			}
 		}
 	}
