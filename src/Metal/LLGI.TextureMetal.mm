@@ -160,6 +160,7 @@ bool TextureMetal::Initialize(GraphicsMetal* owner, const TextureParameter& para
 	}
 
 	format_ = ConvertFormat(texture_.pixelFormat);
+    usage_ = parameter.Usage;
 	data_.resize(GetTextureMemorySize(format_, parameter.Size));
 	parameter_ = parameter;
 	return true;
