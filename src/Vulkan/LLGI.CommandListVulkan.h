@@ -21,7 +21,8 @@ private:
 	std::vector<std::vector<vk::DescriptorSet>> computeCache;
 
 public:
-	DescriptorPoolVulkan(std::shared_ptr<GraphicsVulkan> graphics, int32_t slot_size_max, int32_t constant_size, int32_t texture_size, int32_t storage_size);
+	DescriptorPoolVulkan(
+		std::shared_ptr<GraphicsVulkan> graphics, int32_t slot_size_max, int32_t constant_size, int32_t texture_size, int32_t storage_size);
 	virtual ~DescriptorPoolVulkan();
 	const std::vector<vk::DescriptorSet>& Get(PipelineStateVulkan* pip);
 	const std::vector<vk::DescriptorSet>& GetCompute(PipelineStateVulkan* pip);
@@ -47,8 +48,27 @@ private:
 	RenderPassVulkan* renderPass_ = nullptr;
 	bool isInValidRenderPass_ = false;
 
+	void AssignConstantBuffersToCommandList(const vk::DescriptorSet& descriptorSet,
+											vk::WriteDescriptorSet* descriptorSets,
+											int& descriptorSetOffset,
+											vk::DescriptorBufferInfo* descBuffers,
+											int& descBufferOffset);
+
+	void AssignComputeBuffersToCommandList(const vk::DescriptorSet& descriptorSet,
+											vk::WriteDescriptorSet* descriptorSets,
+											int& descriptorSetOffset,
+											vk::DescriptorBufferInfo* descBuffers,
+											int& descBufferOffset);
+
+	void AssignTexturesToCommandList(const vk::DescriptorSet& descriptorSet,
+									 vk::WriteDescriptorSet* descriptorSets,
+									 int& descriptorSetOffset,
+									 vk::DescriptorImageInfo* descImages,
+									 int& descImageOffset,
+									 const std::function<bool(TextureUsageType)>& filter);
+
 public:
-	CommandListVulkan();
+	CommandListVulkan() = default;
 	~CommandListVulkan() override;
 
 	bool Initialize(GraphicsVulkan* graphics, int32_t drawingCount);

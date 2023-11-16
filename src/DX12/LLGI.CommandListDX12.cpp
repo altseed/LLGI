@@ -9,6 +9,102 @@
 namespace LLGI
 {
 
+D3D12_SHADER_RESOURCE_VIEW_DESC CommandListDX12::GetSRVDescFromTexture(const TextureDX12* texture)
+{
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+
+	if (texture->GetParameter().Dimension == 3)
+	{
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
+		srvDesc.Texture3D.MipLevels = 1;
+		srvDesc.Texture3D.MostDetailedMip = 0;
+		srvDesc.Texture3D.ResourceMinLODClamp = 0.0f;
+	}
+	else if ((texture->GetParameter().Usage & TextureUsageType::Array) != TextureUsageType::NoneFlag)
+	{
+		if (texture->GetParameter().SampleCount > 1)
+		{
+			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY;
+		}
+		else
+		{
+			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+		}
+		srvDesc.Texture2DArray.ArraySize = texture->GetParameter().Size.Z;
+		srvDesc.Texture2DArray.FirstArraySlice = 0;
+		srvDesc.Texture2DArray.MipLevels = 1;
+		srvDesc.Texture2DArray.MostDetailedMip = 0;
+		srvDesc.Texture2DArray.PlaneSlice = 0;
+		srvDesc.Texture2DArray.ResourceMinLODClamp = 0.0f;
+	}
+	else
+	{
+		if (texture->GetParameter().SampleCount > 1)
+		{
+			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
+		}
+		else
+		{
+			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		}
+		srvDesc.Texture2D.MipLevels = 1;
+		srvDesc.Texture2D.MostDetailedMip = 0;
+	}
+
+	srvDesc.Format = DirectX12::GetShaderResourceViewFormat(texture->GetDXGIFormat());
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	return srvDesc;
+}
+
+D3D12_SAMPLER_DESC CommandListDX12::GeSamplerDescFromBindingTexture(const CommandList::BindingTexture& texture)
+{
+	auto wrapMode = texture.wrapMode;
+	auto minMagFilter = texture.minMagFilter;
+
+	D3D12_SAMPLER_DESC samplerDesc = {};
+
+	if (minMagFilter == TextureMinMagFilter::Nearest)
+	{
+		samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+	}
+	else
+	{
+		samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	}
+
+	if (wrapMode == TextureWrapMode::Repeat)
+	{
+		samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	}
+	else
+	{
+		samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	}
+	samplerDesc.MipLODBias = 0;
+	samplerDesc.MaxAnisotropy = 0;
+	samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+	samplerDesc.MinLOD = 0.0f;
+	samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+	return samplerDesc;
+}
+
+D3D12_SHADER_RESOURCE_VIEW_DESC CommandListDX12::GetSRVDescFromBindingBuffer(const CommandList::BindingComputeBuffer& buffer)
+{
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Buffer.FirstElement = 0;
+	srvDesc.Buffer.StructureByteStride = buffer.stride;
+	srvDesc.Buffer.NumElements = buffer.computeBuffer->GetSize() / buffer.stride;
+	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+	return srvDesc;
+}
+
 void CommandListDX12::BeginInternal()
 {
 	rtDescriptorHeap_->Reset();
@@ -401,8 +497,6 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 			if (currentTextures_[unit_ind].texture != nullptr)
 			{
 				auto texture = static_cast<TextureDX12*>(currentTextures_[unit_ind].texture);
-				auto wrapMode = currentTextures_[unit_ind].wrapMode;
-				auto minMagFilter = currentTextures_[unit_ind].minMagFilter;
 
 				// Make barrier to use a render target
 				if (texture->GetType() == TextureType::Render)
@@ -413,84 +507,14 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 
 				// SRV
 				{
-					D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-
-					if (texture->GetParameter().Dimension == 3)
-					{
-						srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
-						srvDesc.Texture3D.MipLevels = 1;
-						srvDesc.Texture3D.MostDetailedMip = 0;
-						srvDesc.Texture3D.ResourceMinLODClamp = 0.0f;
-					}
-					else if ((texture->GetParameter().Usage & TextureUsageType::Array) != TextureUsageType::NoneFlag)
-					{
-						if (texture->GetParameter().SampleCount > 1)
-						{
-							srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY;
-						}
-						else
-						{
-							srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
-						}
-						srvDesc.Texture2DArray.ArraySize = texture->GetParameter().Size.Z;
-						srvDesc.Texture2DArray.FirstArraySlice = 0;
-						srvDesc.Texture2DArray.MipLevels = 1;
-						srvDesc.Texture2DArray.MostDetailedMip = 0;
-						srvDesc.Texture2DArray.PlaneSlice = 0;
-						srvDesc.Texture2DArray.ResourceMinLODClamp = 0.0f;
-					}
-					else
-					{
-						if (texture->GetParameter().SampleCount > 1)
-						{
-							srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
-						}
-						else
-						{
-							srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-						}
-						srvDesc.Texture2D.MipLevels = 1;
-						srvDesc.Texture2D.MostDetailedMip = 0;
-					}
-
-					srvDesc.Format = DirectX12::GetShaderResourceViewFormat(texture->GetDXGIFormat());
-					srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-
+					D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = GetSRVDescFromTexture(texture);
 					auto cpuHandle = cpuDescriptorHandleConstant[NumConstantBuffer + static_cast<int32_t>(unit_ind)];
 					graphics_->GetDevice()->CreateShaderResourceView(texture->Get(), &srvDesc, cpuHandle);
 				}
 
 				// Sampler
 				{
-					D3D12_SAMPLER_DESC samplerDesc = {};
-
-					if (minMagFilter == TextureMinMagFilter::Nearest)
-					{
-						samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-					}
-					else
-					{
-						samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-					}
-
-					if (wrapMode == TextureWrapMode::Repeat)
-					{
-						samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-						samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-						samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-					}
-					else
-					{
-						samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-						samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-						samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-					}
-					samplerDesc.MipLODBias = 0;
-					samplerDesc.MaxAnisotropy = 0;
-					samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-					samplerDesc.MinLOD = 0.0f;
-					samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
-
+					D3D12_SAMPLER_DESC samplerDesc = GeSamplerDescFromBindingTexture(currentTextures_[unit_ind]);
 					auto cpuHandle = cpuDescriptorHandleSampler[unit_ind];
 					graphics_->GetDevice()->CreateSampler(&samplerDesc, cpuHandle);
 				}
@@ -501,17 +525,7 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 				BindingComputeBuffer compute = computeBuffers_[unit_ind];
 
 				auto buffer = static_cast<BufferDX12*>(compute.computeBuffer);
-
-				D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-
-				srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-				srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-				srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-				srvDesc.Buffer.FirstElement = 0;
-				srvDesc.Buffer.StructureByteStride = compute.stride;
-				srvDesc.Buffer.NumElements = compute.computeBuffer->GetSize() / compute.stride;
-				srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-
+				D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = GetSRVDescFromBindingBuffer(compute);
 				auto cpuHandle = cpuDescriptorHandleConstant[NumConstantBuffer + static_cast<int32_t>(unit_ind)];
 				graphics_->GetDevice()->CreateShaderResourceView(buffer->Get(), &srvDesc, cpuHandle);
 			}
@@ -782,29 +796,16 @@ void CommandListDX12::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, i
 			BindingComputeBuffer compute = computeBuffers_[unit_ind];
 
 			auto buffer = static_cast<BufferDX12*>(compute.computeBuffer);
-
-			D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-
-			srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-			srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-			srvDesc.Buffer.FirstElement = 0;
-			srvDesc.Buffer.StructureByteStride = compute.stride;
-			srvDesc.Buffer.NumElements = compute.computeBuffer->GetSize() / compute.stride;
-			srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-
+			D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = GetSRVDescFromBindingBuffer(compute);
 			auto cpuHandle = cpuDescriptorHandleConstant[NumConstantBuffer + static_cast<int32_t>(unit_ind)];
 			graphics_->GetDevice()->CreateShaderResourceView(buffer->Get(), &srvDesc, cpuHandle);
 		}
 
 		// textures
-		// TODO : Remove copy and paste
 		if (currentTextures_[unit_ind].texture != nullptr &&
 			!BitwiseContains(currentTextures_[unit_ind].texture->GetUsage(), TextureUsageType::Storage))
 		{
 			auto texture = static_cast<TextureDX12*>(currentTextures_[unit_ind].texture);
-			auto wrapMode = currentTextures_[unit_ind].wrapMode;
-			auto minMagFilter = currentTextures_[unit_ind].minMagFilter;
 
 			// Make barrier to use a render target
 			if (texture->GetType() == TextureType::Render)
@@ -815,84 +816,14 @@ void CommandListDX12::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, i
 
 			// SRV
 			{
-				D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-
-				if (texture->GetParameter().Dimension == 3)
-				{
-					srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
-					srvDesc.Texture3D.MipLevels = 1;
-					srvDesc.Texture3D.MostDetailedMip = 0;
-					srvDesc.Texture3D.ResourceMinLODClamp = 0.0f;
-				}
-				else if ((texture->GetParameter().Usage & TextureUsageType::Array) != TextureUsageType::NoneFlag)
-				{
-					if (texture->GetParameter().SampleCount > 1)
-					{
-						srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY;
-					}
-					else
-					{
-						srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
-					}
-					srvDesc.Texture2DArray.ArraySize = texture->GetParameter().Size.Z;
-					srvDesc.Texture2DArray.FirstArraySlice = 0;
-					srvDesc.Texture2DArray.MipLevels = 1;
-					srvDesc.Texture2DArray.MostDetailedMip = 0;
-					srvDesc.Texture2DArray.PlaneSlice = 0;
-					srvDesc.Texture2DArray.ResourceMinLODClamp = 0.0f;
-				}
-				else
-				{
-					if (texture->GetParameter().SampleCount > 1)
-					{
-						srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
-					}
-					else
-					{
-						srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-					}
-					srvDesc.Texture2D.MipLevels = 1;
-					srvDesc.Texture2D.MostDetailedMip = 0;
-				}
-
-				srvDesc.Format = DirectX12::GetShaderResourceViewFormat(texture->GetDXGIFormat());
-				srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-
+				D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = GetSRVDescFromTexture(texture);
 				auto cpuHandle = cpuDescriptorHandleConstant[NumConstantBuffer + static_cast<int32_t>(unit_ind)];
 				graphics_->GetDevice()->CreateShaderResourceView(texture->Get(), &srvDesc, cpuHandle);
 			}
 
 			// Sampler
 			{
-				D3D12_SAMPLER_DESC samplerDesc = {};
-
-				if (minMagFilter == TextureMinMagFilter::Nearest)
-				{
-					samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-				}
-				else
-				{
-					samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-				}
-
-				if (wrapMode == TextureWrapMode::Repeat)
-				{
-					samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-					samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-					samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-				}
-				else
-				{
-					samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-					samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-					samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-				}
-				samplerDesc.MipLODBias = 0;
-				samplerDesc.MaxAnisotropy = 0;
-				samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-				samplerDesc.MinLOD = 0.0f;
-				samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
-
+				D3D12_SAMPLER_DESC samplerDesc = GeSamplerDescFromBindingTexture(currentTextures_[unit_ind]);
 				auto cpuHandle = cpuDescriptorHandleSampler[unit_ind];
 				graphics_->GetDevice()->CreateSampler(&samplerDesc, cpuHandle);
 			}
