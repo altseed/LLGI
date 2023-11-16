@@ -123,7 +123,122 @@ void DescriptorPoolVulkan::Reset()
 	computeOffset = 0;
 }
 
-CommandListVulkan::CommandListVulkan() {}
+void CommandListVulkan::AssignConstantBuffersToCommandList(const vk::DescriptorSet& descriptorSet,
+														   vk::WriteDescriptorSet* descriptorSets,
+														   int& descriptorSetOffset,
+														   vk::DescriptorBufferInfo* descBuffers,
+														   int& descBufferOffset)
+{
+	for (size_t unit_ind = 0; unit_ind < constantBuffers_.size(); unit_ind++)
+	{
+		auto cb = static_cast<BufferVulkan*>(constantBuffers_[unit_ind]);
+		if (cb == nullptr)
+		{
+			continue;
+		}
+
+		descBuffers[descBufferOffset].buffer = cb->GetBuffer();
+		descBuffers[descBufferOffset].offset = cb->GetOffset();
+		descBuffers[descBufferOffset].range = cb->GetSize();
+
+		vk::WriteDescriptorSet desc;
+		desc.descriptorType = vk::DescriptorType::eUniformBufferDynamic;
+		desc.dstSet = descriptorSet;
+		desc.dstBinding = static_cast<int>(unit_ind);
+		desc.dstArrayElement = 0;
+		desc.pBufferInfo = &(descBuffers[descBufferOffset]);
+		desc.descriptorCount = 1;
+
+		descriptorSets[descriptorSetOffset] = desc;
+
+		descBufferOffset++;
+		descriptorSetOffset++;
+	}
+}
+
+void CommandListVulkan::AssignComputeBuffersToCommandList(const vk::DescriptorSet& descriptorSet,
+														  vk::WriteDescriptorSet* descriptorSets,
+														  int& descriptorSetOffset,
+														  vk::DescriptorBufferInfo* descBuffers,
+														  int& descBufferOffset)
+{
+	for (int unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)
+	{
+		BindingComputeBuffer cb_;
+		GetCurrentComputeBuffer(unit_ind, cb_);
+
+		if (cb_.computeBuffer == nullptr)
+			continue;
+
+		auto cb = static_cast<BufferVulkan*>(cb_.computeBuffer);
+
+		descBuffers[descBufferOffset].buffer = cb->GetBuffer();
+		descBuffers[descBufferOffset].offset = cb->GetOffset();
+		descBuffers[descBufferOffset].range = cb->GetSize();
+
+		vk::WriteDescriptorSet desc;
+		desc.descriptorType = vk::DescriptorType::eStorageBufferDynamic;
+		desc.dstSet = descriptorSet;
+		desc.dstBinding = static_cast<int>(unit_ind);
+		desc.dstArrayElement = 0;
+		desc.pBufferInfo = &(descBuffers[descBufferOffset]);
+		desc.descriptorCount = 1;
+
+		descriptorSets[descriptorSetOffset] = desc;
+
+		descBufferOffset++;
+		descriptorSetOffset++;
+	}
+}
+
+void CommandListVulkan::AssignTexturesToCommandList(const vk::DescriptorSet& descriptorSet,
+													vk::WriteDescriptorSet* writeDescriptorSets,
+													int& writeDescriptorSetOffset,
+													vk::DescriptorImageInfo* descImages,
+													int& descImageOffset,
+													const std::function<bool(TextureUsageType)>& filter)
+{
+	for (int32_t unit_ind = 0; unit_ind < static_cast<int32_t>(currentTextures_.size()); unit_ind++)
+	{
+		if (currentTextures_[unit_ind].texture == nullptr || !filter(currentTextures_[unit_ind].texture->GetUsage()))
+		{
+			continue;
+		}
+
+		auto texture = (TextureVulkan*)currentTextures_[unit_ind].texture;
+		auto wm = (int32_t)currentTextures_[unit_ind].wrapMode;
+		auto mm = (int32_t)currentTextures_[unit_ind].minMagFilter;
+		vk::DescriptorImageInfo imageInfo;
+
+		if (texture->GetType() == TextureType::Depth)
+		{
+			//	texture->ResourceBarrier(cmdBuffer, vk::ImageLayout::eDepthStencilReadOnlyOptimal);
+			imageInfo.imageLayout = vk::ImageLayout::eDepthStencilReadOnlyOptimal;
+		}
+		else
+		{
+			//	texture->ResourceBarrier(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
+			imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+		}
+
+		imageInfo.imageView = texture->GetView();
+		imageInfo.sampler = samplers_[wm][mm];
+		descImages[descImageOffset] = imageInfo;
+
+		vk::WriteDescriptorSet desc;
+		desc.dstSet = descriptorSet;
+		desc.dstBinding = unit_ind;
+		desc.dstArrayElement = 0;
+		desc.pImageInfo = &descImages[descImageOffset];
+		desc.descriptorCount = 1;
+		desc.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+
+		writeDescriptorSets[writeDescriptorSetOffset] = desc;
+
+		descImageOffset++;
+		writeDescriptorSetOffset++;
+	}
+}
 
 CommandListVulkan::~CommandListVulkan()
 {
@@ -376,100 +491,18 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 	std::array<vk::DescriptorImageInfo, NumTexture> descriptorImageInfos;
 	int descriptorImageIndex = 0;
 
-	for (size_t unit_ind = 0; unit_ind < constantBuffers_.size(); unit_ind++)
-	{
-		auto cb = static_cast<BufferVulkan*>(constantBuffers_[unit_ind]);
-		if (cb == nullptr)
-		{
-			continue;
-		}
+	AssignConstantBuffersToCommandList(
+		descriptorSets[0], writeDescriptorSets.data(), writeDescriptorIndex, descriptorBufferInfos.data(), descriptorBufferIndex);
 
-		descriptorBufferInfos[descriptorBufferIndex].buffer = cb->GetBuffer();
-		descriptorBufferInfos[descriptorBufferIndex].offset = cb->GetOffset();
-		descriptorBufferInfos[descriptorBufferIndex].range = cb->GetSize();
+	AssignTexturesToCommandList(descriptorSets[1],
+								writeDescriptorSets.data(),
+								writeDescriptorIndex,
+								descriptorImageInfos.data(),
+								descriptorImageIndex,
+								[](TextureUsageType t) -> bool { return true; });
 
-		vk::WriteDescriptorSet desc;
-		desc.descriptorType = vk::DescriptorType::eUniformBufferDynamic;
-		desc.dstSet = descriptorSets[0];
-		desc.dstBinding = static_cast<int>(unit_ind);
-		desc.dstArrayElement = 0;
-		desc.pBufferInfo = &(descriptorBufferInfos[descriptorBufferIndex]);
-		desc.descriptorCount = 1;
-
-		writeDescriptorSets[writeDescriptorIndex] = desc;
-
-		descriptorBufferIndex++;
-		writeDescriptorIndex++;
-	}
-
-	// Assign textures
-	for (int unit_ind = 0; unit_ind < static_cast<int32_t>(currentTextures_.size()); unit_ind++)
-	{
-		if (currentTextures_[unit_ind].texture == nullptr)
-			continue;
-
-		auto texture = (TextureVulkan*)currentTextures_[unit_ind].texture;
-		auto wm = (int32_t)currentTextures_[unit_ind].wrapMode;
-		auto mm = (int32_t)currentTextures_[unit_ind].minMagFilter;
-
-		vk::DescriptorImageInfo imageInfo;
-		if (texture->GetType() == TextureType::Depth)
-		{
-			//	texture->ResourceBarrier(cmdBuffer, vk::ImageLayout::eDepthStencilReadOnlyOptimal);
-			imageInfo.imageLayout = vk::ImageLayout::eDepthStencilReadOnlyOptimal;
-		}
-		else
-		{
-			//	texture->ResourceBarrier(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
-			imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-		}
-
-		imageInfo.imageView = texture->GetView();
-		imageInfo.sampler = samplers_[wm][mm];
-		descriptorImageInfos[descriptorImageIndex] = imageInfo;
-
-		vk::WriteDescriptorSet desc;
-		desc.dstSet = descriptorSets[1];
-		desc.dstBinding = unit_ind;
-		desc.dstArrayElement = 0;
-		desc.pImageInfo = &descriptorImageInfos[descriptorImageIndex];
-		desc.descriptorCount = 1;
-		desc.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-
-		writeDescriptorSets[writeDescriptorIndex] = desc;
-
-		descriptorImageIndex++;
-		writeDescriptorIndex++;
-	}
-
-	// compute buffer
-	for (int unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)
-	{
-		BindingComputeBuffer cb_;
-		GetCurrentComputeBuffer(unit_ind, cb_);
-
-		if (cb_.computeBuffer == nullptr)
-			continue;
-
-		auto cb = static_cast<BufferVulkan*>(cb_.computeBuffer);
-
-		descriptorBufferInfos[descriptorBufferIndex].buffer = cb->GetBuffer();
-		descriptorBufferInfos[descriptorBufferIndex].offset = cb->GetOffset();
-		descriptorBufferInfos[descriptorBufferIndex].range = cb->GetSize();
-
-		vk::WriteDescriptorSet desc;
-		desc.descriptorType = vk::DescriptorType::eStorageBufferDynamic;
-		desc.dstSet = descriptorSets[2];
-		desc.dstBinding = unit_ind;
-		desc.dstArrayElement = 0;
-		desc.pBufferInfo = &(descriptorBufferInfos[descriptorBufferIndex]);
-		desc.descriptorCount = 1;
-
-		writeDescriptorSets[writeDescriptorIndex] = desc;
-
-		descriptorBufferIndex++;
-		writeDescriptorIndex++;
-	}
+	AssignComputeBuffersToCommandList(
+		descriptorSets[2], writeDescriptorSets.data(), writeDescriptorIndex, descriptorBufferInfos.data(), descriptorBufferIndex);
 
 	if (writeDescriptorIndex > 0)
 	{
@@ -770,132 +803,35 @@ void CommandListVulkan::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ,
 	std::array<vk::DescriptorImageInfo, NumTexture> descriptorImageStorageInfos;
 	int descriptorImageStorageIndex = 0;
 
-	for (size_t unit_ind = 0; unit_ind < constantBuffers_.size(); unit_ind++)
-	{
-		auto cb = static_cast<BufferVulkan*>(constantBuffers_[unit_ind]);
-		if (cb == nullptr)
-		{
-			continue;
-		}
+	AssignConstantBuffersToCommandList(
+		descriptorSets[0], writeDescriptorSets.data(), writeDescriptorIndex, descriptorBufferInfos.data(), descriptorBufferIndex);
 
-		descriptorBufferInfos[descriptorBufferIndex].buffer = cb->GetBuffer();
-		descriptorBufferInfos[descriptorBufferIndex].offset = cb->GetOffset();
-		descriptorBufferInfos[descriptorBufferIndex].range = cb->GetSize();
+	AssignTexturesToCommandList(descriptorSets[1],
+								writeDescriptorSets.data(),
+								writeDescriptorIndex,
+								descriptorImageInfos.data(),
+								descriptorImageIndex,
+								[](TextureUsageType t) -> bool { return !BitwiseContains(t, TextureUsageType::Storage); });
 
-		vk::WriteDescriptorSet desc;
-		desc.descriptorType = vk::DescriptorType::eUniformBufferDynamic;
-		desc.dstSet = descriptorSets[0];
-		desc.dstBinding = static_cast<int>(unit_ind);
-		desc.dstArrayElement = 0;
-		desc.pBufferInfo = &(descriptorBufferInfos[descriptorBufferIndex]);
-		desc.descriptorCount = 1;
-
-		writeDescriptorSets[writeDescriptorIndex] = desc;
-
-		descriptorBufferIndex++;
-		writeDescriptorIndex++;
-	}
+	AssignComputeBuffersToCommandList(
+		descriptorSets[2], writeDescriptorSets.data(), writeDescriptorIndex, descriptorBufferInfos.data(), descriptorBufferIndex);
 
 	// Assign textures
 	for (int unit_ind = 0; unit_ind < static_cast<int32_t>(currentTextures_.size()); unit_ind++)
 	{
-		if (currentTextures_[unit_ind].texture == nullptr)
+		if (currentTextures_[unit_ind].texture == nullptr ||
+			!BitwiseContains(currentTextures_[unit_ind].texture->GetUsage(), TextureUsageType::Storage))
 		{
 			continue;
 		}
 
-		if (BitwiseContains(currentTextures_[unit_ind].texture->GetUsage(), TextureUsageType::Storage))
-		{
-			continue;
-		}
-
+		const auto targetImageLayout = vk::ImageLayout::eGeneral;
 		auto texture = (TextureVulkan*)currentTextures_[unit_ind].texture;
-		auto wm = (int32_t)currentTextures_[unit_ind].wrapMode;
-		auto mm = (int32_t)currentTextures_[unit_ind].minMagFilter;
-		vk::DescriptorImageInfo imageInfo;
-
-		if (texture->GetType() == TextureType::Depth)
-		{
-			//	texture->ResourceBarrier(cmdBuffer, vk::ImageLayout::eDepthStencilReadOnlyOptimal);
-			imageInfo.imageLayout = vk::ImageLayout::eDepthStencilReadOnlyOptimal;
-		}
-		else
-		{
-			//	texture->ResourceBarrier(cmdBuffer, vk::ImageLayout::eShaderReadOnlyOptimal);
-			imageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-		}
-
-		imageInfo.imageView = texture->GetView();
-		imageInfo.sampler = samplers_[wm][mm];
-		descriptorImageInfos[descriptorImageIndex] = imageInfo;
-
-		vk::WriteDescriptorSet desc;
-		desc.dstSet = descriptorSets[1];
-		desc.dstBinding = unit_ind;
-		desc.dstArrayElement = 0;
-		desc.pImageInfo = &descriptorImageInfos[descriptorImageIndex];
-		desc.descriptorCount = 1;
-		desc.descriptorType = vk::DescriptorType::eCombinedImageSampler;
-
-		writeDescriptorSets[writeDescriptorIndex] = desc;
-
-		descriptorImageIndex++;
-		writeDescriptorIndex++;
-	}
-
-	// compute buffer
-	for (int unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)
-	{
-		BindingComputeBuffer cb_;
-		GetCurrentComputeBuffer(unit_ind, cb_);
-
-		if (cb_.computeBuffer == nullptr)
-			continue;
-
-		auto cb = static_cast<BufferVulkan*>(cb_.computeBuffer);
-
-		descriptorBufferInfos[descriptorBufferIndex].buffer = cb->GetBuffer();
-		descriptorBufferInfos[descriptorBufferIndex].offset = cb->GetOffset();
-		descriptorBufferInfos[descriptorBufferIndex].range = cb->GetSize();
-
-		vk::WriteDescriptorSet desc;
-		desc.descriptorType = vk::DescriptorType::eStorageBufferDynamic;
-		desc.dstSet = descriptorSets[2];
-		desc.dstBinding = unit_ind;
-		desc.dstArrayElement = 0;
-		desc.pBufferInfo = &(descriptorBufferInfos[descriptorBufferIndex]);
-		desc.descriptorCount = 1;
-
-		writeDescriptorSets[writeDescriptorIndex] = desc;
-
-		descriptorBufferIndex++;
-		writeDescriptorIndex++;
-	}
-
-	// Assign textures
-	for (int unit_ind = 0; unit_ind < static_cast<int32_t>(currentTextures_.size()); unit_ind++)
-	{
-		if (currentTextures_[unit_ind].texture == nullptr)
-		{
-			continue;
-		}
-
-		if (!BitwiseContains(currentTextures_[unit_ind].texture->GetUsage(), TextureUsageType::Storage))
-		{
-			continue;
-		}
-
-		auto texture = (TextureVulkan*)currentTextures_[unit_ind].texture;
-		// auto wm = (int32_t)currentTextures_[unit_ind].wrapMode;
-		// auto mm = (int32_t)currentTextures_[unit_ind].minMagFilter;
-
-		texture->ResourceBarrier(currentCommandBuffer_, vk::ImageLayout::eGeneral);
+		texture->ResourceBarrier(currentCommandBuffer_, targetImageLayout);
 
 		vk::DescriptorImageInfo imageInfo;
-		imageInfo.imageLayout = vk::ImageLayout::eGeneral;
-
+		imageInfo.imageLayout = targetImageLayout;
 		imageInfo.imageView = texture->GetView();
-		// imageInfo.sampler = samplers_[wm][mm];
 		descriptorImageStorageInfos[descriptorImageStorageIndex] = imageInfo;
 
 		vk::WriteDescriptorSet desc;

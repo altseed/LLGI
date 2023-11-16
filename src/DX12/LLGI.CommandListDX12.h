@@ -38,6 +38,10 @@ private:
 
 	ID3D12GraphicsCommandList* currentCommandList_ = nullptr;
 
+	D3D12_SHADER_RESOURCE_VIEW_DESC GetSRVDescFromTexture(const TextureDX12* texture);
+	D3D12_SAMPLER_DESC GeSamplerDescFromBindingTexture(const BindingTexture& texture);
+	D3D12_SHADER_RESOURCE_VIEW_DESC GetSRVDescFromBindingBuffer(const BindingComputeBuffer& buffer);
+	
 	void BeginInternal();
 
 public:
