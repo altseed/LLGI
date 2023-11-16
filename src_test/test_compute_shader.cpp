@@ -15,7 +15,7 @@ struct OutputData
 	float value;
 };
 
-void test_compute_shader(LLGI::DeviceType deviceType, bool is_read_only)
+void test_compute_shader_compute_buffer(LLGI::DeviceType deviceType, bool is_read_only)
 {
 	LLGI::PlatformParameter pp;
 	pp.Device = deviceType;
@@ -233,10 +233,10 @@ void test_compute_shader_texture(LLGI::DeviceType deviceType)
 	platform->Present();
 }
 
-TestRegister ComputeShader_Basic("ComputeShader.Basic", [](LLGI::DeviceType device) -> void { test_compute_shader(device, false); });
+TestRegister ComputeShader_Basic("ComputeShader.ComputeBuffer", [](LLGI::DeviceType device) -> void { test_compute_shader_compute_buffer(device, false); });
 
-TestRegister ComputeShader_Basic_ReadOnly("ComputeShader.Basic_ReadOnly",
-										  [](LLGI::DeviceType device) -> void { test_compute_shader(device, true); });
+TestRegister ComputeShader_Basic_ReadOnly("ComputeShader.ComputeBuffer_ReadOnly",
+										  [](LLGI::DeviceType device) -> void { test_compute_shader_compute_buffer(device, true); });
 
-TestRegister ComputeShader_Basic_Texture("ComputeShader.Basic_Texture",
+TestRegister ComputeShader_Basic_Texture("ComputeShader.Texture",
 										 [](LLGI::DeviceType device) -> void { test_compute_shader_texture(device); });
