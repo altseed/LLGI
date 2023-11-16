@@ -221,6 +221,10 @@ void test_compute_shader_texture(LLGI::DeviceType deviceType)
 	{
 		if (!(result[0] == 128 && result[1] == 64 && result[2] == 64 && result[3] == 128))
 		{
+            std::cout << "Failed : " << static_cast<int>(result[0]) << ","
+            << static_cast<int>(result[1]) << ","
+            << static_cast<int>(result[2]) << ","
+            << static_cast<int>(result[3]) << std::endl;
 			abort();
 		}
 	}
