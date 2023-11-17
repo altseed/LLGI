@@ -5,7 +5,9 @@
 
 namespace LLGI
 {
-
+/**
+ * TODO : Implement short time buffer
+*/
 class BufferWebGPU : public Buffer
 {
 	wgpu::Buffer buffer_ = nullptr;

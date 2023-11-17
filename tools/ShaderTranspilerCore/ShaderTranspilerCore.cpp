@@ -25,6 +25,12 @@
 #include <spirv_cross/spirv_reflect.hpp>
 #endif
 
+#if (ENABLE_WEBGPU)
+#include <tint/tint.h>
+#endif
+
+#include <iostream>
+
 namespace LLGI
 {
 
@@ -160,6 +166,23 @@ EShLanguage GetGlslangShaderStage(ShaderStageType type)
 	throw std::string("Unimplemented ShaderStage");
 }
 } // namespace
+
+void test_tint(const std::vector<uint32_t> input)
+{
+	tint::Initialize();
+	tint::spirv::reader::Options read_options;
+	auto program = tint::spirv::reader::Read(input, read_options);
+
+	tint::wgsl::writer::Options gen_options;
+	auto result = tint::wgsl::writer::Generate(program, gen_options);
+	if (!result)
+	{
+		std::cout << "Failed to generate: " << result.Failure() << std::endl;
+	}
+
+	std::cout << result->wgsl << std::endl;
+	tint::Shutdown();
+}
 
 SPIRV::SPIRV(const std::vector<uint32_t>& data, ShaderStageType shaderStage) : data_(data), shaderStage_(shaderStage) {}
 
@@ -389,6 +412,50 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI:
 	}
 
 	return true;
+}
+
+SPIRVToWGSLTranspiler::SPIRVToWGSLTranspiler()
+{
+#if (ENABLE_WEBGPU)
+	tint::Initialize();
+#endif
+}
+
+SPIRVToWGSLTranspiler::~SPIRVToWGSLTranspiler()
+{
+#if (ENABLE_WEBGPU)
+	tint::Shutdown();
+#endif
+}
+
+bool SPIRVToWGSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI::ShaderStageType shaderStageType)
+{
+#if (ENABLE_WEBGPU)
+	tint::spirv::reader::Options read_options;
+	auto program = tint::spirv::reader::Read(spirv->GetData(), read_options);
+
+	tint::inspector::Inspector inspector(program);
+	tint::ast::transform::Manager manager;
+
+	// TODO : Remapping
+
+	tint::ast::transform::DataMap inputs;
+	tint::ast::transform::DataMap outputs;
+	program = manager.Run(program, inputs, outputs);
+
+	tint::wgsl::writer::Options gen_options;
+	auto result = tint::wgsl::writer::Generate(program, gen_options);
+	if (!result)
+	{
+		errorCode_ = result.Failure().reason.str();
+		return false;
+	}
+
+	code_ = result->wgsl;
+	return true;
+#else
+	return false;
+#endif
 }
 
 class ReflectionCompiler : public spirv_cross::Compiler

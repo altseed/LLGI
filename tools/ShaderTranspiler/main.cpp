@@ -11,13 +11,13 @@ enum class OutputType
 	VULKAN_GLSL,
 	MSL,
 	HLSL,
+	WGSL,
 	SPV,
 	Max,
 };
 
 int main(int argc, char* argv[])
 {
-
 	std::vector<std::string> args;
 
 	for (int i = 1; i < argc; i++)
@@ -71,6 +71,11 @@ int main(int argc, char* argv[])
 		else if (args[i] == "-V")
 		{
 			outputType = OutputType::VULKAN_GLSL;
+			i += 1;
+		}
+		else if (args[i] == "-W")
+		{
+			outputType = OutputType::WGSL;
 			i += 1;
 		}
 		else if (args[i] == "-S")
@@ -199,6 +204,10 @@ int main(int argc, char* argv[])
 	else if (outputType == OutputType::HLSL)
 	{
 		transpiler = std::make_shared<LLGI::SPIRVToHLSLTranspiler>(shaderModel != 0 ? shaderModel : 40, isDX12);
+	}
+	else if (outputType == OutputType::WGSL)
+	{
+		transpiler = std::make_shared<LLGI::SPIRVToWGSLTranspiler>();
 	}
 
 	std::cout << inputPath << " -> " << outputPath << " ShaderModel=" << shaderModel << std::endl;

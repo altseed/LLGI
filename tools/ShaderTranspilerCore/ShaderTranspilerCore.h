@@ -24,6 +24,8 @@ struct ShaderReflectionTexture
 	int32_t Offset = 0;
 };
 
+void test_tint(const std::vector<uint32_t> input);
+
 class SPIRV
 {
 private:
@@ -92,6 +94,14 @@ public:
 	{
 	}
 
+	bool Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI::ShaderStageType shaderStageType) override;
+};
+
+class SPIRVToWGSLTranspiler : public SPIRVTranspiler
+{
+public:
+	SPIRVToWGSLTranspiler();
+	~SPIRVToWGSLTranspiler() override;
 	bool Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI::ShaderStageType shaderStageType) override;
 };
 

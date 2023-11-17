@@ -41,3 +41,7 @@ endif()
 if(SPIRVCROSS_WITHOUT_INSTALL)
   target_compile_definitions(ShaderTranspilerCore PRIVATE ENABLE_SPIRVCROSS_WITHOUT_INSTALL)
 endif()
+
+if(BUILD_WEBGPU)
+  target_link_libraries(ShaderTranspilerCore PRIVATE tint_api)
+endif()

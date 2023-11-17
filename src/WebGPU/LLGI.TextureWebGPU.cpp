@@ -46,6 +46,11 @@ bool TextureWebGPU::Initialize(wgpu::Device& device, const TextureParameter& par
 			texDesc.usage |= wgpu::TextureUsage::RenderAttachment;
 		}
 
+		if(BitwiseContains(parameter.Usage, TextureUsageType::Storage))
+		{
+			texDesc.usage |= wgpu::TextureUsage::StorageBinding;
+		}
+
 		if ((parameter.Usage & TextureUsageType::External) != TextureUsageType::NoneFlag)
 		{
 			throw "Not implemented";
@@ -85,9 +90,8 @@ bool TextureWebGPU::Initialize(wgpu::Device& device, const TextureParameter& par
 	}
 
 	format_ = parameter.Format;
-
+	usage_ = parameter.Usage;
 	samplingCount_ = parameter.SampleCount;
-
 	mipmapCount_ = parameter.MipLevelCount;
 
 	return texture_ != nullptr && textureView_ != nullptr;
