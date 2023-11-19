@@ -181,11 +181,19 @@ bool PlatformVulkan::CreateDepthBuffer(Vec2I windowSize)
 	param.Size = {windowSize.X, windowSize.Y, 1};
 
 	depthStencilTexture_ = new TextureVulkan();
-	if (!depthStencilTexture_->Initialize(nullptr, vkDevice_, vkPhysicalDevice, nullptr, param))
+	if (depthStencilTexture_->Initialize(nullptr, vkDevice_, vkPhysicalDevice, nullptr, param))
 	{
-		return false;
+		return true;
 	}
-	return true;
+
+	// Avoid when depth buffer creation fails (occurs on AMD GPUs).
+	param.Format = TextureFormatType::D32S8;
+	if (depthStencilTexture_->Initialize(nullptr, vkDevice_, vkPhysicalDevice, nullptr, param))
+	{
+		return true;
+	}
+
+	return false;
 }
 
 void PlatformVulkan::CreateRenderPass()

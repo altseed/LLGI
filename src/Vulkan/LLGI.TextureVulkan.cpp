@@ -90,7 +90,7 @@ bool TextureVulkan::Initialize(GraphicsVulkan* graphics,
 		vk::FormatProperties formatProps = physicalDevice.getFormatProperties((vk::Format)vkFormat);
 		if (!(formatProps.optimalTilingFeatures & vk::FormatFeatureFlagBits::eDepthStencilAttachment))
 		{
-			throw "Invalid formatProps";
+			return false;
 		}
 	}
 	else
