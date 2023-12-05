@@ -26,6 +26,10 @@
 #endif
 
 #if (ENABLE_WEBGPU)
+#include "src/tint/api/common/binding_point.h"
+#include "src/tint/lang/wgsl/ast/transform/binding_remapper.h"
+#include "src/tint/lang/wgsl/ast/transform/manager.h"
+#include "src/tint/lang/wgsl/inspector/inspector.h"
 #include <tint/tint.h>
 #endif
 
@@ -433,15 +437,59 @@ bool SPIRVToWGSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI:
 #if (ENABLE_WEBGPU)
 	tint::spirv::reader::Options read_options;
 	auto program = tint::spirv::reader::Read(spirv->GetData(), read_options);
-
 	tint::inspector::Inspector inspector(program);
 	tint::ast::transform::Manager manager;
 
 	// TODO : Remapping
 
-	tint::ast::transform::DataMap inputs;
-	tint::ast::transform::DataMap outputs;
-	program = manager.Run(program, inputs, outputs);
+	tint::ast::transform::BindingRemapper::BindingPoints binding_points;
+	auto entry_points = inspector.GetEntryPoints();
+	for (auto& entry_point : entry_points)
+	{
+		auto bindings = inspector.GetResourceBindings(entry_point.name);
+		for (auto& binding : bindings)
+		{
+			tint::ast::transform::BindingPoint src = {binding.bind_group, binding.binding};
+			
+			if (binding.resource_type == tint::inspector::ResourceBinding::ResourceType::kUniformBuffer)
+			{
+				binding_points.emplace(src, tint::ast::transform::BindingPoint{0, binding.binding});
+			}
+			else if (binding.resource_type == tint::inspector::ResourceBinding::ResourceType::kStorageBuffer)
+			{
+				binding_points.emplace(src, tint::ast::transform::BindingPoint{2, binding.binding});
+			}
+			else if (binding.resource_type == tint::inspector::ResourceBinding::ResourceType::kReadOnlyStorageBuffer)
+			{
+				binding_points.emplace(src, tint::ast::transform::BindingPoint{1, binding.binding});
+			}
+			else if (binding.resource_type == tint::inspector::ResourceBinding::ResourceType::kSampler)
+			{
+				binding_points.emplace(src, tint::ast::transform::BindingPoint{4, binding.binding});
+			}
+			else if (binding.resource_type == tint::inspector::ResourceBinding::ResourceType::kSampledTexture)
+			{
+				binding_points.emplace(src, tint::ast::transform::BindingPoint{1, binding.binding});
+			}
+			else
+			{
+				std::cout << "This binding is not supported." << std::endl;
+				std::cout << (int)binding.resource_type << ", " << binding.bind_group << ", " << binding.binding << std::endl;
+				binding_points.emplace(src, tint::ast::transform::BindingPoint{binding.bind_group, binding.binding});
+			}
+		}
+	}
+
+	if (!binding_points.empty())
+	{
+		tint::ast::transform::Manager manager;
+		tint::ast::transform::DataMap inputs;
+		tint::ast::transform::DataMap outputs;
+		inputs.Add<tint::ast::transform::BindingRemapper::Remappings>(
+			std::move(binding_points), tint::ast::transform::BindingRemapper::AccessControls{}, true);
+		manager.Add<tint::ast::transform::BindingRemapper>();
+		program = manager.Run(program, inputs, outputs);
+	}
 
 	tint::wgsl::writer::Options gen_options;
 	auto result = tint::wgsl::writer::Generate(program, gen_options);

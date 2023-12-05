@@ -1,0 +1,41 @@
+@group(0) @binding(1) var read1 : texture_2d<f32>;
+
+@group(0) @binding(2) var read2 : texture_2d<f32>;
+
+@group(0) @binding(2) var read2_sampler : sampler;
+
+@group(0) @binding(0) var write : texture_storage_2d<rgba32float, write>;
+
+var<private> dtid_2 : vec3u;
+
+fn x_main_vu3_(dtid : ptr<function, vec3u>) {
+  var index : vec2u;
+  var storeTemp : vec4f;
+  let x_16 = *(dtid);
+  index = x_16.xy;
+  let x_26 = index;
+  let x_27 = textureLoad(read1, vec2i(x_26), 0i);
+  let x_41 = textureSampleLevel(read2, read2_sampler, vec2f(), 0.0f);
+  storeTemp = (x_27 + x_41);
+  let x_45 = index;
+  let x_46 = storeTemp;
+  textureStore(write, vec2i(x_45), x_46);
+  return;
+}
+
+fn main_1() {
+  var dtid_1 : vec3u;
+  var param : vec3u;
+  let x_50 = dtid_2;
+  dtid_1 = x_50;
+  let x_52 = dtid_1;
+  param = x_52;
+  x_main_vu3_(&(param));
+  return;
+}
+
+@compute @workgroup_size(1i, 1i, 1i)
+fn main(@builtin(global_invocation_id) dtid_2_param : vec3u) {
+  dtid_2 = dtid_2_param;
+  main_1();
+}
