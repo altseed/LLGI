@@ -171,23 +171,6 @@ EShLanguage GetGlslangShaderStage(ShaderStageType type)
 }
 } // namespace
 
-void test_tint(const std::vector<uint32_t> input)
-{
-	tint::Initialize();
-	tint::spirv::reader::Options read_options;
-	auto program = tint::spirv::reader::Read(input, read_options);
-
-	tint::wgsl::writer::Options gen_options;
-	auto result = tint::wgsl::writer::Generate(program, gen_options);
-	if (!result)
-	{
-		std::cout << "Failed to generate: " << result.Failure() << std::endl;
-	}
-
-	std::cout << result->wgsl << std::endl;
-	tint::Shutdown();
-}
-
 SPIRV::SPIRV(const std::vector<uint32_t>& data, ShaderStageType shaderStage) : data_(data), shaderStage_(shaderStage) {}
 
 SPIRV::SPIRV(const std::string& error) : error_(error), shaderStage_{} {}
@@ -438,10 +421,8 @@ bool SPIRVToWGSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI:
 	tint::spirv::reader::Options read_options;
 	auto program = tint::spirv::reader::Read(spirv->GetData(), read_options);
 	tint::inspector::Inspector inspector(program);
-	tint::ast::transform::Manager manager;
 
-	// TODO : Remapping
-
+	// TODO : tint remapper has many bugs. Inspector and remapper breaks some shaders and export empty code without an error.
 	tint::ast::transform::BindingRemapper::BindingPoints binding_points;
 	auto entry_points = inspector.GetEntryPoints();
 	for (auto& entry_point : entry_points)
@@ -450,26 +431,25 @@ bool SPIRVToWGSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI:
 		for (auto& binding : bindings)
 		{
 			tint::ast::transform::BindingPoint src = {binding.bind_group, binding.binding};
-			
 			if (binding.resource_type == tint::inspector::ResourceBinding::ResourceType::kUniformBuffer)
 			{
-				binding_points.emplace(src, tint::ast::transform::BindingPoint{0, binding.binding});
+				binding_points.emplace(src, tint::ast::transform::BindingPoint{0, binding.binding % 100});
 			}
 			else if (binding.resource_type == tint::inspector::ResourceBinding::ResourceType::kStorageBuffer)
 			{
-				binding_points.emplace(src, tint::ast::transform::BindingPoint{2, binding.binding});
+				binding_points.emplace(src, tint::ast::transform::BindingPoint{2, binding.binding % 100});
 			}
 			else if (binding.resource_type == tint::inspector::ResourceBinding::ResourceType::kReadOnlyStorageBuffer)
 			{
-				binding_points.emplace(src, tint::ast::transform::BindingPoint{1, binding.binding});
+				binding_points.emplace(src, tint::ast::transform::BindingPoint{1, binding.binding % 100});
 			}
 			else if (binding.resource_type == tint::inspector::ResourceBinding::ResourceType::kSampler)
 			{
-				binding_points.emplace(src, tint::ast::transform::BindingPoint{4, binding.binding});
+				binding_points.emplace(src, tint::ast::transform::BindingPoint{4, binding.binding % 100});
 			}
 			else if (binding.resource_type == tint::inspector::ResourceBinding::ResourceType::kSampledTexture)
 			{
-				binding_points.emplace(src, tint::ast::transform::BindingPoint{1, binding.binding});
+				binding_points.emplace(src, tint::ast::transform::BindingPoint{1, binding.binding % 100});
 			}
 			else
 			{
@@ -588,8 +568,12 @@ SPIRVGenerator::SPIRVGenerator(const std::function<std::vector<std::uint8_t>(std
 
 SPIRVGenerator::~SPIRVGenerator() { glslang::FinalizeProcess(); }
 
-std::shared_ptr<SPIRV> SPIRVGenerator::Generate(
-	const char* path, const char* code, std::vector<SPIRVGeneratorMacro> macros, ShaderStageType shaderStageType, bool isYInverted)
+std::shared_ptr<SPIRV> SPIRVGenerator::Generate(const char* path,
+												const char* code,
+												std::vector<SPIRVGeneratorMacro> macros,
+												ShaderStageType shaderStageType,
+												bool isYInverted,
+												bool addBindingOffset)
 {
 	std::string codeStr(code);
 	glslang::TProgram program;
@@ -617,11 +601,19 @@ std::shared_ptr<SPIRV> SPIRVGenerator::Generate(
 	}
 
 	shader.setPreamble(macro.c_str());
-	// shader->setAutoMapBindings(true);
-	// shader->setAutoMapLocations(true);
+
+	if (addBindingOffset)
+	{
+		shader.setShiftBinding(glslang::TResourceType::EResSampler, 0);
+		shader.setShiftBinding(glslang::TResourceType::EResTexture, 100);
+		shader.setShiftBinding(glslang::TResourceType::EResImage, 200);
+		shader.setShiftBinding(glslang::TResourceType::EResUbo, 300);
+		shader.setShiftBinding(glslang::TResourceType::EResSsbo, 400);
+		shader.setShiftBinding(glslang::TResourceType::EResUav, 500);
+	}
 
 	shader.setStrings(shaderStrings, 1);
-	const auto messages = static_cast<EShMessages>(EShMsgSpvRules | EShMsgVulkanRules | EShMsgReadHlsl | EShOptFull);
+	const auto messages = static_cast<EShMessages>(EShMsgSpvRules | EShMsgVulkanRules | EShMsgReadHlsl | EShOptFull | EShMsgHlslOffsets);
 
 	DirStackFileIncluder includer(onLoad_);
 	includer.pushExternalLocalDirectory(dirnameOf(path));
@@ -637,6 +629,14 @@ std::shared_ptr<SPIRV> SPIRVGenerator::Generate(
 	if (!program.link(messages))
 	{
 		return std::make_shared<SPIRV>(program.getInfoLog());
+	}
+
+	if (addBindingOffset)
+	{
+		if (!program.mapIO())
+		{
+			return std::make_shared<SPIRV>(program.getInfoLog());
+		}
 	}
 
 	std::vector<unsigned int> spirv;

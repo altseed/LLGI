@@ -24,8 +24,6 @@ struct ShaderReflectionTexture
 	int32_t Offset = 0;
 };
 
-void test_tint(const std::vector<uint32_t> input);
-
 class SPIRV
 {
 private:
@@ -139,7 +137,7 @@ public:
 	~SPIRVGenerator();
 
 	std::shared_ptr<SPIRV> Generate(
-		const char* path, const char* code, std::vector<SPIRVGeneratorMacro> macros, ShaderStageType shaderStageType, bool isYInverted);
+		const char* path, const char* code, std::vector<SPIRVGeneratorMacro> macros, ShaderStageType shaderStageType, bool isYInverted, bool addBindingOffset);
 };
 
 } // namespace LLGI

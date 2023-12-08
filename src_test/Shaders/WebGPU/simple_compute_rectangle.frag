@@ -26,7 +26,7 @@ var<private> input_Color : vec4f;
 
 var<private> x_entryPointOutput : vec4f;
 
-@internal(disable_validation__binding_point_collision) @group(0) @binding(1) var<uniform> x_60 : CB;
+@internal(disable_validation__binding_point_collision) @group(0) @binding(301) var<uniform> x_60 : CB;
 
 fn x_main_struct_PS_INPUT_vf4_vf2_vf41_(input : ptr<function, PS_INPUT>) -> vec4f {
   var c : vec4f;

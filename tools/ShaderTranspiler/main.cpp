@@ -179,7 +179,8 @@ int main(int argc, char* argv[])
 
 	auto generator = std::make_shared<LLGI::SPIRVGenerator>(loadFunc);
 
-	auto spirv = generator->Generate(inputPath.c_str(), code.c_str(), macros, shaderStage, outputType == OutputType::VULKAN_GLSL);
+	auto spirv = generator->Generate(
+		inputPath.c_str(), code.c_str(), macros, shaderStage, outputType == OutputType::VULKAN_GLSL, outputType == OutputType::WGSL);
 
 	if (spirv->GetData().size() == 0)
 	{
@@ -239,7 +240,7 @@ int main(int argc, char* argv[])
 	}
 	catch (const std::runtime_error& e)
 	{
-		std::cout << e.what() << std::endl;
+		std::cout << "Error : " << e.what() << std::endl;
 		return 0;
 	}
 
@@ -248,6 +249,12 @@ int main(int argc, char* argv[])
 	{
 		std::cout << "Invald output" << std::endl;
 		return 0;
+	}
+
+	if (transpiler->GetCode() == "")
+	{
+		std::cout << "No code is generated." << std::endl;
+		return 1;
 	}
 
 	outputfile << transpiler->GetCode();

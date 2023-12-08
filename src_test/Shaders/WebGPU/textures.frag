@@ -4,15 +4,15 @@ struct PS_Input {
   Color : vec4f,
 }
 
-@internal(disable_validation__binding_point_collision) @group(4) @binding(0) var g_texture1 : texture_2d<f32>;
+@internal(disable_validation__binding_point_collision) @group(1) @binding(0) var g_texture1 : texture_2d<f32>;
 
 @internal(disable_validation__binding_point_collision) @group(4) @binding(0) var g_sampler1 : sampler;
 
-@internal(disable_validation__binding_point_collision) @group(4) @binding(1) var g_texture2 : texture_2d_array<f32>;
+@internal(disable_validation__binding_point_collision) @group(1) @binding(1) var g_texture2 : texture_2d_array<f32>;
 
 @internal(disable_validation__binding_point_collision) @group(4) @binding(1) var g_sampler2 : sampler;
 
-@internal(disable_validation__binding_point_collision) @group(4) @binding(2) var g_texture3 : texture_3d<f32>;
+@internal(disable_validation__binding_point_collision) @group(1) @binding(2) var g_texture3 : texture_3d<f32>;
 
 @internal(disable_validation__binding_point_collision) @group(4) @binding(2) var g_sampler3 : sampler;
 

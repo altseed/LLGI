@@ -3,7 +3,7 @@ struct CS_OUTPUT {
   value : f32,
 }
 
-alias RTArr = @stride(4) array<CS_OUTPUT>;
+alias RTArr = array<CS_OUTPUT>;
 
 struct write {
   /* @offset(0) */
@@ -17,7 +17,7 @@ struct CS_INPUT {
   value2 : f32,
 }
 
-alias RTArr_1 = @stride(8) array<CS_INPUT>;
+alias RTArr_1 = array<CS_INPUT>;
 
 struct read {
   /* @offset(0) */
@@ -31,7 +31,7 @@ struct CB {
 
 @internal(disable_validation__binding_point_collision) @group(2) @binding(1) var<storage, read_write> write_1 : write;
 
-@internal(disable_validation__binding_point_collision) @group(0) @binding(0) var<storage, read_write> read_1 : read;
+@internal(disable_validation__binding_point_collision) @group(2) @binding(0) var<storage, read_write> read_1 : read;
 
 @internal(disable_validation__binding_point_collision) @group(0) @binding(0) var<uniform> x_43 : CB;
 
@@ -39,22 +39,15 @@ var<private> dtid_2 : vec3u;
 
 fn x_main_vu3_(dtid : ptr<function, vec3u>) {
   let x_24 = (*(dtid)).x;
-  let x_31 = (*(dtid)).x;
-  let x_34 = read_1.x_data[x_31].value1;
-  let x_36 = (*(dtid)).x;
-  let x_39 = read_1.x_data[x_36].value2;
-  let x_45 = x_43.offset;
-  write_1.x_data[x_24].value = ((x_34 * x_39) + x_45);
+  write_1.x_data[x_24].value = ((read_1.x_data[(*(dtid)).x].value1 * read_1.x_data[(*(dtid)).x].value2) + x_43.offset);
   return;
 }
 
 fn main_1() {
   var dtid_1 : vec3u;
   var param : vec3u;
-  let x_51 = dtid_2;
-  dtid_1 = x_51;
-  let x_53 = dtid_1;
-  param = x_53;
+  dtid_1 = dtid_2;
+  param = dtid_1;
   x_main_vu3_(&(param));
   return;
 }
