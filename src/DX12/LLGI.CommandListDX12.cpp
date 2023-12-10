@@ -525,6 +525,13 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 				BindingComputeBuffer compute = computeBuffers_[unit_ind];
 
 				auto buffer = static_cast<BufferDX12*>(compute.computeBuffer);
+
+				D3D12_RESOURCE_BARRIER barrier = {};
+				barrier.Transition.pResource = buffer->Get();
+				barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+				barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+				currentCommandList_->ResourceBarrier(1, &barrier);
+
 				D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = GetSRVDescFromBindingBuffer(compute);
 				auto cpuHandle = cpuDescriptorHandleConstant[NumConstantBuffer + static_cast<int32_t>(unit_ind)];
 				graphics_->GetDevice()->CreateShaderResourceView(buffer->Get(), &srvDesc, cpuHandle);
@@ -541,11 +548,15 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 				continue;
 
 			auto computeBuffer = static_cast<BufferDX12*>(compute.computeBuffer);
-			D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 
+			D3D12_RESOURCE_BARRIER barrier = {};
+			barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+			barrier.UAV.pResource = computeBuffer->Get();
+			currentCommandList_->ResourceBarrier(1, &barrier);
+
+			D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 			uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
 			uavDesc.Format = DXGI_FORMAT_UNKNOWN;
-
 			uavDesc.Buffer.StructureByteStride = compute.stride;
 			uavDesc.Buffer.NumElements = computeBuffer->GetSize() / compute.stride;
 			uavDesc.Buffer.FirstElement = 0;
@@ -585,6 +596,23 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 
 	// draw polygon
 	currentCommandList_->DrawIndexedInstanced(primitiveCount * indexPerPrim, instanceCount, 0, 0, 0);
+
+	for (size_t unit_ind = 0; unit_ind < currentTextures_.size(); unit_ind++)
+	{
+		if (unit_ind < NumComputeBuffer && computeBuffers_[unit_ind].computeBuffer != nullptr &&
+			computeBuffers_[unit_ind].is_read_only)
+		{
+			BindingComputeBuffer compute = computeBuffers_[unit_ind];
+
+			auto buffer = static_cast<BufferDX12*>(compute.computeBuffer);
+
+			D3D12_RESOURCE_BARRIER barrier = {};
+			barrier.Transition.pResource = buffer->Get();
+			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+			currentCommandList_->ResourceBarrier(1, &barrier);
+		}
+	}
 
 	CommandList::Draw(primitiveCount, instanceCount);
 }
@@ -796,6 +824,13 @@ void CommandListDX12::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, i
 			BindingComputeBuffer compute = computeBuffers_[unit_ind];
 
 			auto buffer = static_cast<BufferDX12*>(compute.computeBuffer);
+
+			D3D12_RESOURCE_BARRIER barrier = {};
+			barrier.Transition.pResource = buffer->Get();
+			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+			currentCommandList_->ResourceBarrier(1, &barrier);
+
 			D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = GetSRVDescFromBindingBuffer(compute);
 			auto cpuHandle = cpuDescriptorHandleConstant[NumConstantBuffer + static_cast<int32_t>(unit_ind)];
 			graphics_->GetDevice()->CreateShaderResourceView(buffer->Get(), &srvDesc, cpuHandle);
@@ -837,11 +872,15 @@ void CommandListDX12::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, i
 		{
 			BindingComputeBuffer compute = computeBuffers_[unit_ind];
 			auto computeBuffer = static_cast<BufferDX12*>(compute.computeBuffer);
-			D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 
+			D3D12_RESOURCE_BARRIER barrier = {};
+			barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+			barrier.UAV.pResource = computeBuffer->Get();
+			currentCommandList_->ResourceBarrier(1, &barrier);
+
+			D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 			uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
 			uavDesc.Format = DXGI_FORMAT_UNKNOWN;
-
 			uavDesc.Buffer.StructureByteStride = compute.stride;
 			uavDesc.Buffer.NumElements = computeBuffer->GetSize() / compute.stride;
 			uavDesc.Buffer.FirstElement = 0;
@@ -867,6 +906,22 @@ void CommandListDX12::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, i
 	}
 
 	currentCommandList_->Dispatch(groupX, groupY, groupZ);
+
+	for (size_t unit_ind = 0; unit_ind < currentTextures_.size(); unit_ind++)
+	{
+		if (unit_ind < NumComputeBuffer && computeBuffers_[unit_ind].computeBuffer != nullptr && computeBuffers_[unit_ind].is_read_only)
+		{
+			BindingComputeBuffer compute = computeBuffers_[unit_ind];
+
+			auto buffer = static_cast<BufferDX12*>(compute.computeBuffer);
+
+			D3D12_RESOURCE_BARRIER barrier = {};
+			barrier.Transition.pResource = buffer->Get();
+			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+			currentCommandList_->ResourceBarrier(1, &barrier);
+		}
+	}
 
 	CommandList::Dispatch(groupX, groupY, groupZ, threadX, threadY, threadZ);
 }
