@@ -35,6 +35,8 @@ public:
 	int32_t GetOffset() const { return offset_; }
 
 	vk::Buffer GetBuffer() { return buffer_->buffer(); }
+
+	void ResourceBarrier(vk::CommandBuffer& commandBuffer, const vk::AccessFlagBits& srcAccess, const vk::AccessFlagBits& dstAccess);
 };
 
 } // namespace LLGI

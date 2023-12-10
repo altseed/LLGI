@@ -504,6 +504,20 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 	AssignComputeBuffersToCommandList(
 		descriptorSets[2], writeDescriptorSets.data(), writeDescriptorIndex, descriptorBufferInfos.data(), descriptorBufferIndex);
 
+	// Assign compute buffers
+	for (int unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)
+	{
+		BindingComputeBuffer cb_;
+		GetCurrentComputeBuffer(unit_ind, cb_);
+
+		if (cb_.computeBuffer == nullptr)
+			continue;
+
+		auto cb = static_cast<BufferVulkan*>(cb_.computeBuffer);
+
+		cb->ResourceBarrier(currentCommandBuffer_, vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eTransferRead);
+	}
+
 	if (writeDescriptorIndex > 0)
 	{
 		graphics_->GetDevice().updateDescriptorSets(writeDescriptorIndex, writeDescriptorSets.data(), 0, nullptr);
@@ -813,9 +827,6 @@ void CommandListVulkan::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ,
 								descriptorImageIndex,
 								[](TextureUsageType t) -> bool { return !BitwiseContains(t, TextureUsageType::Storage); });
 
-	AssignComputeBuffersToCommandList(
-		descriptorSets[2], writeDescriptorSets.data(), writeDescriptorIndex, descriptorBufferInfos.data(), descriptorBufferIndex);
-
 	// Assign textures
 	for (int unit_ind = 0; unit_ind < static_cast<int32_t>(currentTextures_.size()); unit_ind++)
 	{
@@ -846,6 +857,23 @@ void CommandListVulkan::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ,
 
 		descriptorImageStorageIndex++;
 		writeDescriptorIndex++;
+	}
+
+	AssignComputeBuffersToCommandList(
+		descriptorSets[2], writeDescriptorSets.data(), writeDescriptorIndex, descriptorBufferInfos.data(), descriptorBufferIndex);
+
+	// Assign compute buffers
+	for (int unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)
+	{
+		BindingComputeBuffer cb_;
+		GetCurrentComputeBuffer(unit_ind, cb_);
+
+		if (cb_.computeBuffer == nullptr)
+			continue;
+
+		auto cb = static_cast<BufferVulkan*>(cb_.computeBuffer);
+
+		cb->ResourceBarrier(currentCommandBuffer_, vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eTransferRead);
 	}
 
 	if (writeDescriptorIndex > 0)
