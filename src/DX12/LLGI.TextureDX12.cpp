@@ -160,7 +160,7 @@ bool TextureDX12::Initialize(ID3D12Resource* textureResource)
 	dxgiFormat_ = desc.Format;
 
 	format_ = ConvertFormat(desc.Format);
-	texture_size_ = Vec3I(static_cast<int32_t>(desc.Width), static_cast<int32_t>(desc.Height), 1);
+	texture_size_ = Vec3I(static_cast<int32_t>(desc.Width), static_cast<int32_t>(desc.Height), static_cast<int32_t>(desc.DepthOrArraySize));
 	cpu_memory_size_ = GetTextureMemorySize(format_, texture_size_);
 
 	UINT64 size = 0;
@@ -195,7 +195,7 @@ void TextureDX12::CreateUploadReadbackBuffer()
 												1);
 	assert(buffer_for_readback_ != nullptr);
 
-	if (static_cast<int32_t>(footprint_.Footprint.RowPitch) != cpu_memory_size_ / texture_size_.Y)
+	if (static_cast<int32_t>(footprint_.Footprint.RowPitch) != cpu_memory_size_ / (texture_size_.Y * texture_size_.Z))
 	{
 		locked_buffer_.resize(cpu_memory_size_);
 	}
@@ -222,10 +222,11 @@ void TextureDX12::Unlock()
 		uint8_t* ptr = nullptr;
 		buffer_for_upload_->Map(0, nullptr, (void**)&ptr);
 
-		for (int32_t i = 0; i < texture_size_.Y; i++)
+		int32_t rowCount = texture_size_.Y * texture_size_.Z;
+		for (int32_t i = 0; i < rowCount; i++)
 		{
 			auto p = ptr + i * footprint_.Footprint.RowPitch;
-			auto rowPitch = cpu_memory_size_ / texture_size_.Y;
+			auto rowPitch = cpu_memory_size_ / rowCount;
 			memcpy(p, locked_buffer_.data() + rowPitch * i, rowPitch);
 		}
 
