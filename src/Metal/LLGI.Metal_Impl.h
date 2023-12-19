@@ -9,7 +9,7 @@ namespace LLGI
 {
 
 //! which buffer is used as vertex buffer
-const int VertexBufferIndex = 2;
+const int VertexBufferIndex = 4;
 
 MTLPixelFormat ConvertFormat(TextureFormatType format);
 
