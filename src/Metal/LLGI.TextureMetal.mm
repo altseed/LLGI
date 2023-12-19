@@ -131,11 +131,13 @@ bool TextureMetal::Initialize(id<MTLDevice> device, const TextureParameter& para
 
 void TextureMetal::Write(const uint8_t* data)
 {
-	MTLRegion region = {{0, 0, 0}, {static_cast<uint32_t>(size_.X), static_cast<uint32_t>(size_.Y), 1}};
+	MTLRegion region = {{0, 0, 0}, {static_cast<uint32_t>(size_.X), static_cast<uint32_t>(size_.Y), static_cast<uint32_t>(size_.Z)}};
 
-	auto allSize = GetTextureMemorySize(ConvertFormat(texture_.pixelFormat), Vec3I{size_.X, size_.Y, 1});
+	auto all_size = GetTextureMemorySize(ConvertFormat(texture_.pixelFormat), size_);
+	auto bytes_per_row = all_size / size_.Y / size_.Z;
+	auto bytes_per_image = all_size / size_.Z;
 
-	[texture_ replaceRegion:region mipmapLevel:0 withBytes:data bytesPerRow:allSize / size_.Y];
+	[texture_ replaceRegion:region mipmapLevel:0 slice:0 withBytes:data bytesPerRow:bytes_per_row bytesPerImage:bytes_per_image];
 }
 
 TextureMetal::TextureMetal() {}
@@ -201,11 +203,13 @@ void TextureMetal::Reset(id<MTLTexture> nativeTexture)
 	{
 		size_.X = static_cast<int32_t>(texture_.width);
 		size_.Y = static_cast<int32_t>(texture_.height);
+		size_.Z = static_cast<int32_t>(texture_.depth);
 	}
 	else
 	{
 		size_.X = 0.0f;
 		size_.Y = 0.0f;
+		size_.Z = 0.0f;
 	}
 
 	fromExternal_ = true;
@@ -220,14 +224,15 @@ void TextureMetal::Unlock() { Write(data_.data()); }
 bool TextureMetal::GetData(std::vector<uint8_t>& data)
 {
 	// TODO : Implement it
-	MTLRegion region = {{0, 0, 0}, {static_cast<uint32_t>(size_.X), static_cast<uint32_t>(size_.Y), 1}};
+	MTLRegion region = {{0, 0, 0}, {static_cast<uint32_t>(size_.X), static_cast<uint32_t>(size_.Y), static_cast<uint32_t>(size_.Z)}};
 
-	auto all_size = GetTextureMemorySize(ConvertFormat(texture_.pixelFormat), Vec3I{size_.X, size_.Y, 1});
-    auto bytes_per_row = all_size / size_.Y;
+	auto all_size = GetTextureMemorySize(ConvertFormat(texture_.pixelFormat), size_);
+    auto bytes_per_row = all_size / size_.Y / size_.Z;
+	auto bytes_per_image = all_size / size_.Z;
 
 	data.resize(all_size);
 
-	[texture_ getBytes:data.data() bytesPerRow:bytes_per_row bytesPerImage:all_size fromRegion:region mipmapLevel:0 slice:0];
+	[texture_ getBytes:data.data() bytesPerRow:bytes_per_row bytesPerImage:bytes_per_image fromRegion:region mipmapLevel:0 slice:0];
 
 	return true;
 }
