@@ -1006,7 +1006,7 @@ void test_vertex_structured(LLGI::DeviceType deviceType)
 
 	std::shared_ptr<LLGI::Buffer> inputComputeBuffer;
 	inputComputeBuffer = LLGI::CreateSharedPtr(
-		graphics->CreateBuffer(LLGI::BufferUsageType::Compute | LLGI::BufferUsageType::CopyDst, sizeof(InputData) * dataSize));
+		graphics->CreateBuffer(LLGI::BufferUsageType::ComputeWrite | LLGI::BufferUsageType::CopyDst, sizeof(InputData) * dataSize));
 
 	std::map<std::shared_ptr<LLGI::RenderPassPipelineState>, std::shared_ptr<LLGI::PipelineState>> pips;
 

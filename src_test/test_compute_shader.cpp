@@ -75,11 +75,11 @@ void test_compute_shader_compute_buffer(LLGI::DeviceType deviceType, bool is_rea
 
 	std::shared_ptr<LLGI::Buffer> inputComputeBuffer;
 	inputComputeBuffer = LLGI::CreateSharedPtr(
-		graphics->CreateBuffer(LLGI::BufferUsageType::Compute | LLGI::BufferUsageType::CopyDst, sizeof(InputData) * dataSize));
+		graphics->CreateBuffer(LLGI::BufferUsageType::ComputeWrite | LLGI::BufferUsageType::CopyDst, sizeof(InputData) * dataSize));
 
 	std::shared_ptr<LLGI::Buffer> outputComputeBuffer;
 	outputComputeBuffer = LLGI::CreateSharedPtr(
-		graphics->CreateBuffer(LLGI::BufferUsageType::Compute | LLGI::BufferUsageType::CopySrc, sizeof(OutputData) * dataSize));
+		graphics->CreateBuffer(LLGI::BufferUsageType::ComputeWrite | LLGI::BufferUsageType::CopySrc, sizeof(OutputData) * dataSize));
 
 	std::shared_ptr<LLGI::Buffer> constantBuffer;
 	constantBuffer =
