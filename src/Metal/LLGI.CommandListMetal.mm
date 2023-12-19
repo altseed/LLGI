@@ -458,6 +458,31 @@ void CommandListMetal::EndComputePass()
 	}
 }
 
+bool CommandListMetal::BeginComputePassWithPlatformPtr(void* platformPtr)
+{
+	auto pp = reinterpret_cast<CommandListMetalPlatformComputePassContext*>(platformPtr);
+
+	this->computeEncoder_ = pp->ComputeEncoder;
+	
+	if (this->computeEncoder_)
+	{
+		[this->computeEncoder_ retain];
+	}
+
+	return CommandList::BeginComputePassWithPlatformPtr(platformPtr);
+}
+
+bool CommandListMetal::EndComputePassWithPlatformPtr()
+{
+	if (computeEncoder_)
+	{
+		[computeEncoder_ release];
+		computeEncoder_ = nullptr;
+	}
+
+	return CommandList::EndComputePassWithPlatformPtr();
+}
+
 void CommandListMetal::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, int32_t threadX, int32_t threadY, int32_t threadZ)
 {
     const int mipmapFilter = 1;
