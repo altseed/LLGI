@@ -17,6 +17,11 @@ struct CommandListMetalPlatformRenderPassContext
 	id<MTLRenderCommandEncoder> RenderEncoder = nullptr;
 };
 
+struct CommandListMetalPlatformComputePassContext
+{
+	id<MTLComputeCommandEncoder> ComputeEncoder = nullptr;
+};
+
 class CommandListMetal : public CommandList
 {
 	GraphicsMetal* graphics_ = nullptr;
@@ -56,6 +61,10 @@ public:
 
 	void BeginComputePass() override;
 	void EndComputePass() override;
+	
+	bool BeginComputePassWithPlatformPtr(void* platformPtr) override;
+	bool EndComputePassWithPlatformPtr() override;
+
 	void Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, int32_t threadX, int32_t threadY, int32_t threadZ) override;
 
 	bool GetIsCompleted() { return isCompleted_; }
@@ -66,6 +75,7 @@ public:
 
 	id<MTLCommandBuffer>& GetCommandBuffer() { return commandBuffer_; }
 	id<MTLRenderCommandEncoder>& GetRenderCommandEncorder() { return renderEncoder_; }
+	id<MTLComputeCommandEncoder>& GetComputeCommandEncorder() { return computeEncoder_; }
 };
 
 } // namespace LLGI

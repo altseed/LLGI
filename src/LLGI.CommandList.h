@@ -168,6 +168,9 @@ public:
 	virtual void ResetComputeBuffer();
 	virtual void BeginComputePass() {}
 	virtual void EndComputePass() {}
+	virtual bool BeginComputePassWithPlatformPtr(void* platformPtr) { return false; }
+	virtual bool EndComputePassWithPlatformPtr() { return false; }
+
 	virtual void Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, int32_t threadX, int32_t threadY, int32_t threadZ);
 
 	virtual void CopyBuffer(Buffer* src, Buffer* dst) {}
