@@ -37,12 +37,12 @@ bool BufferDX12::Initialize(GraphicsDX12* graphics, const BufferUsageType usage,
 		heapType = D3D12_HEAP_TYPE_READBACK;
 	}
 
-	if (BitwiseContains(usage, BufferUsageType::CopySrc) && !BitwiseContains(usage, BufferUsageType::Compute))
+	if (BitwiseContains(usage, BufferUsageType::CopySrc) && !BitwiseContains(usage, BufferUsageType::ComputeWrite))
 	{
 		state_ |= D3D12_RESOURCE_STATE_COPY_SOURCE;
 	}
 
-	if (BitwiseContains(usage, BufferUsageType::CopyDst) && !BitwiseContains(usage, BufferUsageType::Compute))
+	if (BitwiseContains(usage, BufferUsageType::CopyDst) && !BitwiseContains(usage, BufferUsageType::ComputeWrite))
 	{
 		state_ |= D3D12_RESOURCE_STATE_COPY_DEST;
 	}
@@ -57,10 +57,14 @@ bool BufferDX12::Initialize(GraphicsDX12* graphics, const BufferUsageType usage,
 		state_ |= D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
 	}
 
-	if (BitwiseContains(usage, BufferUsageType::Compute))
+	if (BitwiseContains(usage, BufferUsageType::ComputeWrite))
 	{
-		state_ |= D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 		flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	}
+
+	if (BitwiseContains(usage, BufferUsageType::ComputeRead) && !BitwiseContains(usage, BufferUsageType::ComputeWrite))
+	{
+		state_ |= D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 	}
 
 	if (BitwiseContains(usage, BufferUsageType::Constant))

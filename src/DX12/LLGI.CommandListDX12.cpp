@@ -827,8 +827,8 @@ void CommandListDX12::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, i
 
 			D3D12_RESOURCE_BARRIER barrier = {};
 			barrier.Transition.pResource = buffer->Get();
-			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON;
+			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 			currentCommandList_->ResourceBarrier(1, &barrier);
 
 			D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = GetSRVDescFromBindingBuffer(compute);
@@ -845,8 +845,7 @@ void CommandListDX12::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, i
 			// Make barrier to use a render target
 			if (texture->GetType() == TextureType::Render)
 			{
-				texture->ResourceBarrier(currentCommandList_,
-										 D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+				texture->ResourceBarrier(currentCommandList_, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 			}
 
 			// SRV
@@ -874,8 +873,9 @@ void CommandListDX12::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, i
 			auto computeBuffer = static_cast<BufferDX12*>(compute.computeBuffer);
 
 			D3D12_RESOURCE_BARRIER barrier = {};
-			barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-			barrier.UAV.pResource = computeBuffer->Get();
+			barrier.Transition.pResource = computeBuffer->Get();
+			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON;
+			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 			currentCommandList_->ResourceBarrier(1, &barrier);
 
 			D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
@@ -907,18 +907,18 @@ void CommandListDX12::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, i
 
 	currentCommandList_->Dispatch(groupX, groupY, groupZ);
 
-	for (size_t unit_ind = 0; unit_ind < currentTextures_.size(); unit_ind++)
+	// UAV
+	for (int32_t unit_ind = 0; unit_ind < NumComputeBuffer; unit_ind++)
 	{
-		if (unit_ind < NumComputeBuffer && computeBuffers_[unit_ind].computeBuffer != nullptr && computeBuffers_[unit_ind].is_read_only)
+		if (computeBuffers_[unit_ind].computeBuffer != nullptr && !computeBuffers_[unit_ind].is_read_only)
 		{
 			BindingComputeBuffer compute = computeBuffers_[unit_ind];
-
-			auto buffer = static_cast<BufferDX12*>(compute.computeBuffer);
+			auto computeBuffer = static_cast<BufferDX12*>(compute.computeBuffer);
 
 			D3D12_RESOURCE_BARRIER barrier = {};
-			barrier.Transition.pResource = buffer->Get();
-			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
-			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+			barrier.Transition.pResource = computeBuffer->Get();
+			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COMMON;
 			currentCommandList_->ResourceBarrier(1, &barrier);
 		}
 	}

@@ -292,11 +292,12 @@ enum class BufferUsageType : uint32_t
 	Index = 1 << 0,
 	Vertex = 1 << 1,
 	Constant = 1 << 2,
-	Compute = 1 << 3,
-	MapRead = 1 << 4,
-	MapWrite = 1 << 5,
-	CopySrc = 1 << 6,
-	CopyDst = 1 << 7,
+	ComputeRead = 1 << 3,
+	ComputeWrite = 1 << 4,
+	MapRead = 1 << 5,
+	MapWrite = 1 << 6,
+	CopySrc = 1 << 7,
+	CopyDst = 1 << 8,
 };
 
 inline BufferUsageType operator|(BufferUsageType lhs, BufferUsageType rhs)

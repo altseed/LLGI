@@ -12,7 +12,7 @@ bool Buffer::VerifyUsage(BufferUsageType usage)
 	}
 
 	if ((BitwiseContains(usage, BufferUsageType::MapWrite) || BitwiseContains(usage, BufferUsageType::MapRead)) &&
-		BitwiseContains(usage, BufferUsageType::Compute))
+		BitwiseContains(usage, BufferUsageType::ComputeWrite))
 	{
 		Log(LogType::Error, "It cannot specify Map(Read/Write) and Compute simultaniously.");
 		return false;

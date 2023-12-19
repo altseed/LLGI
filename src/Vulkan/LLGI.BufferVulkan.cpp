@@ -57,7 +57,7 @@ bool BufferVulkan::Initialize(GraphicsVulkan* graphics, BufferUsageType usage, i
 		vkUsage |= vk::BufferUsageFlagBits::eVertexBuffer;
 	}
 
-	if (BitwiseContains(usage, BufferUsageType::Compute))
+	if (BitwiseContains(usage, BufferUsageType::ComputeRead) || BitwiseContains(usage, BufferUsageType::ComputeWrite))
 	{
 		vkUsage |= vk::BufferUsageFlagBits::eStorageBuffer;
 	}
