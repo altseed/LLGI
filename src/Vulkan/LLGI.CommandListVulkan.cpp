@@ -259,7 +259,7 @@ CommandListVulkan::~CommandListVulkan()
 	}
 	fences_.clear();
 
-	for (int w = 0; w < 2; w++)
+	for (int w = 0; w < 3; w++)
 	{
 		for (int f = 0; f < 2; f++)
 		{
@@ -291,7 +291,7 @@ bool CommandListVulkan::Initialize(GraphicsVulkan* graphics, int32_t drawingCoun
 	}
 
 	// Sampler
-	for (int w = 0; w < 2; w++)
+	for (int w = 0; w < 3; w++)
 	{
 		for (int f = 0; f < 2; f++)
 		{
@@ -299,9 +299,10 @@ bool CommandListVulkan::Initialize(GraphicsVulkan* graphics, int32_t drawingCoun
 			filters[0] = vk::Filter::eNearest;
 			filters[1] = vk::Filter::eLinear;
 
-			vk::SamplerAddressMode am[2];
+			vk::SamplerAddressMode am[3];
 			am[0] = vk::SamplerAddressMode::eClampToEdge;
 			am[1] = vk::SamplerAddressMode::eRepeat;
+			am[2] = vk::SamplerAddressMode::eMirroredRepeat;
 
 			vk::SamplerCreateInfo samplerInfo;
 			samplerInfo.magFilter = filters[f];

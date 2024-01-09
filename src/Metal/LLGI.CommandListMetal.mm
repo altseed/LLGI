@@ -19,15 +19,16 @@ CommandListMetal::CommandListMetal(Graphics* graphics)
 	graphics_ = g;
 
 	// Sampler
-	for (int w = 0; w < 2; w++)
+	for (int w = 0; w < 3; w++)
 	{
 		for (int f = 0; f < 2; f++)
 		{
 			for (int m = 0; m < 3; m++)
 			{
-				MTLSamplerAddressMode ws[2];
+				MTLSamplerAddressMode ws[3];
 				ws[0] = MTLSamplerAddressModeClampToEdge;
 				ws[1] = MTLSamplerAddressModeRepeat;
+				ws[2] = MTLSamplerAddressModeMirrorRepeat;
 
 				MTLSamplerMinMagFilter fsmin[2];
 				fsmin[0] = MTLSamplerMinMagFilterNearest;
@@ -68,7 +69,7 @@ CommandListMetal::~CommandListMetal()
 
 	WaitUntilCompleted();
 
-	for (int w = 0; w < 2; w++)
+	for (int w = 0; w < 3; w++)
 	{
 		for (int f = 0; f < 2; f++)
 		{

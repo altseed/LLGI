@@ -43,7 +43,7 @@ private:
 	std::vector<std::shared_ptr<DescriptorPoolVulkan>> descriptorPools;
 	int32_t currentSwapBufferIndex_;
 	std::vector<vk::Fence> fences_;
-	vk::Sampler samplers_[2][2];
+	vk::Sampler samplers_[3][2];
 
 	RenderPassVulkan* renderPass_ = nullptr;
 	bool isInValidRenderPass_ = false;

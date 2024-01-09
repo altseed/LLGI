@@ -78,12 +78,19 @@ D3D12_SAMPLER_DESC CommandListDX12::GeSamplerDescFromBindingTexture(const Comman
 		samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 		samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	}
-	else
+	else if (wrapMode == TextureWrapMode::Clamp)
 	{
 		samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 		samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 		samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 	}
+	else if (wrapMode == TextureWrapMode::Mirror)
+	{
+		samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_MIRROR;
+		samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_MIRROR;
+		samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_MIRROR;
+	}
+
 	samplerDesc.MipLODBias = 0;
 	samplerDesc.MaxAnisotropy = 0;
 	samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
@@ -599,8 +606,7 @@ void CommandListDX12::Draw(int32_t primitiveCount, int32_t instanceCount)
 
 	for (size_t unit_ind = 0; unit_ind < currentTextures_.size(); unit_ind++)
 	{
-		if (unit_ind < NumComputeBuffer && computeBuffers_[unit_ind].computeBuffer != nullptr &&
-			computeBuffers_[unit_ind].is_read_only)
+		if (unit_ind < NumComputeBuffer && computeBuffers_[unit_ind].computeBuffer != nullptr && computeBuffers_[unit_ind].is_read_only)
 		{
 			BindingComputeBuffer compute = computeBuffers_[unit_ind];
 
@@ -845,7 +851,8 @@ void CommandListDX12::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ, i
 			// Make barrier to use a render target
 			if (texture->GetType() == TextureType::Render)
 			{
-				texture->ResourceBarrier(currentCommandList_, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+				texture->ResourceBarrier(currentCommandList_,
+										 D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 			}
 
 			// SRV

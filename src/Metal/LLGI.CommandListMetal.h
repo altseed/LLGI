@@ -26,8 +26,8 @@ class CommandListMetal : public CommandList
 {
 	GraphicsMetal* graphics_ = nullptr;
 
-	MTLSamplerDescriptor* samplers_[2][2][3];
-	id<MTLSamplerState> samplerStates_[2][2][3];
+	MTLSamplerDescriptor* samplers_[3][2][3];
+	id<MTLSamplerState> samplerStates_[3][2][3];
 
 	id<MTLCommandBuffer> commandBuffer_ = nullptr;
 	id<MTLRenderCommandEncoder> renderEncoder_ = nullptr;

@@ -95,6 +95,7 @@ enum class TextureWrapMode
 {
 	Clamp,
 	Repeat,
+	Mirror,
 };
 
 enum class TextureMinMagFilter
