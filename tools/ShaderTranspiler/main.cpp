@@ -34,6 +34,7 @@ int main(int argc, char* argv[])
 	bool isDX12 = false;
 	bool plain = false;
 	int shaderModel = 0;
+	std::vector<std::string> includeDir;
 	std::vector<LLGI::SPIRVGeneratorMacro> macros;
 
 	for (size_t i = 0; i < args.size();)
@@ -77,6 +78,11 @@ int main(int argc, char* argv[])
 		{
 			outputType = OutputType::SPV;
 			i += 1;
+		}
+		else if (args[i] == "-I")
+		{
+			includeDir.push_back(args[i + 1]);
+			i += 2;
 		}
 		else if (args[i] == "-D")
 		{
@@ -174,7 +180,7 @@ int main(int argc, char* argv[])
 
 	auto generator = std::make_shared<LLGI::SPIRVGenerator>(loadFunc);
 
-	auto spirv = generator->Generate(inputPath.c_str(), code.c_str(), macros, shaderStage, outputType == OutputType::VULKAN_GLSL);
+	auto spirv = generator->Generate(inputPath.c_str(), code.c_str(), includeDir, macros, shaderStage, outputType == OutputType::VULKAN_GLSL);
 
 	if (spirv->GetData().size() == 0)
 	{
