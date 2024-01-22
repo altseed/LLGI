@@ -473,8 +473,12 @@ SPIRVGenerator::SPIRVGenerator(const std::function<std::vector<std::uint8_t>(std
 
 SPIRVGenerator::~SPIRVGenerator() { glslang::FinalizeProcess(); }
 
-std::shared_ptr<SPIRV> SPIRVGenerator::Generate(
-	const char* path, const char* code, std::vector<SPIRVGeneratorMacro> macros, ShaderStageType shaderStageType, bool isYInverted)
+std::shared_ptr<SPIRV> SPIRVGenerator::Generate(const char* path,
+												const char* code,
+												std::vector<std::string> includeDirs,
+												std::vector<SPIRVGeneratorMacro> macros,
+												ShaderStageType shaderStageType,
+												bool isYInverted)
 {
 	std::string codeStr(code);
 	glslang::TProgram program;
@@ -510,6 +514,11 @@ std::shared_ptr<SPIRV> SPIRVGenerator::Generate(
 
 	DirStackFileIncluder includer(onLoad_);
 	includer.pushExternalLocalDirectory(dirnameOf(path));
+
+	for (auto& d : includeDirs)
+	{
+		includer.pushExternalLocalDirectory(d);
+	}
 
 	int defaultVersion = 110;
 	if (!shader.parse(GetDefaultResources(), defaultVersion, false, messages, includer))
