@@ -1,0 +1,20 @@
+#version 430
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(set = 2, binding = 0, std430) buffer gridIndicesTable
+{
+    ivec2 _data[];
+} gridIndicesTable_1;
+
+void _main(uvec3 dtid)
+{
+    gridIndicesTable_1._data[dtid.x] = ivec2(2147483647);
+}
+
+void main()
+{
+    uvec3 dtid = gl_GlobalInvocationID;
+    uvec3 param = dtid;
+    _main(param);
+}
+

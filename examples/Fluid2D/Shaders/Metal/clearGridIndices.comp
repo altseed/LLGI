@@ -1,0 +1,25 @@
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+
+#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+struct gridIndicesTable
+{
+    int2 _data[1];
+};
+
+static inline __attribute__((always_inline))
+void _main(thread const uint3& dtid, device gridIndicesTable& gridIndicesTable_1)
+{
+    gridIndicesTable_1._data[dtid.x] = int2(2147483647);
+}
+
+kernel void main0(device gridIndicesTable& gridIndicesTable_1 [[buffer(10)]], uint3 gl_GlobalInvocationID [[thread_position_in_grid]])
+{
+    uint3 dtid = gl_GlobalInvocationID;
+    uint3 param = dtid;
+    _main(param, gridIndicesTable_1);
+}
+

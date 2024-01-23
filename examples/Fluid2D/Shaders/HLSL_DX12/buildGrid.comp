@@ -1,0 +1,45 @@
+struct Particle
+{
+    float2 Current;
+    float2 Next;
+    float2 Velocity;
+    float Pscl;
+    bool IsFix;
+};
+
+#define EMPTY_CELL 0x7fffffff
+
+int GetHash(int2 gridPos, int num)
+{
+    return gridPos.x + gridPos.y * num;
+}
+
+int2 GetGridPos(float2 pos, float2 gridSize)
+{
+    return pos / gridSize;
+}
+
+cbuffer CB : register(b0)
+{
+    int2 GridNum;
+    int2 GridSize;
+    int ParticlesCount;
+};
+
+RWStructuredBuffer<Particle> particles : register(u0);
+RWStructuredBuffer<int2> gridTable : register(u1);
+
+[numthreads(1, 1, 1)]
+void main(uint3 dtid : SV_DispatchThreadID)
+{
+    if (dtid.x < ParticlesCount)
+    {
+        gridTable[dtid.x].x = GetHash(GetGridPos(particles[dtid.x].Next, GridSize), GridNum.x);
+        gridTable[dtid.x].y = dtid.x;
+    }
+    else
+    {
+        gridTable[dtid.x].x = EMPTY_CELL;
+        gridTable[dtid.x].y = dtid.x;
+    }
+}
