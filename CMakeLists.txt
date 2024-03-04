@@ -117,10 +117,8 @@ if(BUILD_VULKAN_COMPILER OR BUILD_TOOL)
       LLGI_THIRDPARTY_LIBRARIES
       glslang
       glslang-default-resource-limits
-      HLSL
       MachineIndependent
       SPIRV
-      OGLCompiler
       OSDependent
       GenericCodeGen)
 
