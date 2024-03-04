@@ -145,13 +145,9 @@ if(BUILD_VULKAN_COMPILER OR BUILD_TOOL)
       debug
       glslang-default-resource-limitsd
       debug
-      HLSLd
-      debug
       MachineIndependentd
       debug
       SPIRVd
-      debug
-      OGLCompilerd
       debug
       OSDependentd
       debug
@@ -161,13 +157,9 @@ if(BUILD_VULKAN_COMPILER OR BUILD_TOOL)
       optimized
       glslang-default-resource-limits
       optimized
-      HLSL
-      optimized
       MachineIndependent
       optimized
       SPIRV
-      optimized
-      OGLCompiler
       optimized
       OSDependent
       optimized
