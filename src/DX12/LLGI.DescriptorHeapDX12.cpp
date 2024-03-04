@@ -56,15 +56,22 @@ bool DescriptorHeapBlock::Allocate(std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 32>& 
 		return false;
 
 	auto cpuHandle = descriptorHeap_->GetCPUDescriptorHandleForHeapStart();
-	auto gpuHandle = descriptorHeap_->GetGPUDescriptorHandleForHeapStart();
 
 	for (int i = 0; i < requiredHandle; i++)
 	{
 		cpuDescriptorHandle[i] = cpuHandle;
-		gpuDescriptorHandle[i] = gpuHandle;
-
 		cpuDescriptorHandle[i].ptr += handleSize_ * (i + offset_);
-		gpuDescriptorHandle[i].ptr += handleSize_ * (i + offset_);
+	}
+
+	if (type_ <= D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER)
+	{
+		auto gpuHandle = descriptorHeap_->GetGPUDescriptorHandleForHeapStart();
+
+		for (int i = 0; i < requiredHandle; i++)
+		{
+			gpuDescriptorHandle[i] = gpuHandle;
+			gpuDescriptorHandle[i].ptr += handleSize_ * (i + offset_);
+		}
 	}
 
 	offset_ += requiredHandle;
