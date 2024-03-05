@@ -130,29 +130,20 @@ void BufferVulkan::Unlock() { graphics_->GetDevice().unmapMemory(buffer_->devMem
 
 int32_t BufferVulkan::GetSize() { return size_; }
 
-void BufferVulkan::ResourceBarrier(vk::CommandBuffer& commandBuffer, const vk::AccessFlagBits& srcAccess, const vk::AccessFlagBits& dstAccess)
+void BufferVulkan::ResourceBarrier(vk::CommandBuffer& commandBuffer, const vk::AccessFlagBits& accessFlag)
 {
-	vk::BufferMemoryBarrier bufferBarrier(
-		srcAccess,
-		dstAccess,
-		VK_QUEUE_FAMILY_IGNORED,
-		VK_QUEUE_FAMILY_IGNORED,
-		buffer_->buffer(),
-		0,
-		VK_WHOLE_SIZE
-	);
+	if (accessFlag_ == accessFlag)
+	{
+		return;
+	}
 
-	vk::PipelineStageFlags stageFlags =
-		vk::PipelineStageFlagBits::eComputeShader |
-		vk::PipelineStageFlagBits::eVertexShader;
-	commandBuffer.pipelineBarrier(
-		stageFlags,
-		stageFlags,
-		vk::DependencyFlags(),
-		0, nullptr,
-		0, &bufferBarrier,
-		0, nullptr
-	);
+	vk::BufferMemoryBarrier bufferBarrier(
+		accessFlag, accessFlag_, VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_IGNORED, buffer_->buffer(), 0, VK_WHOLE_SIZE);
+
+	vk::PipelineStageFlags stageFlags = vk::PipelineStageFlagBits::eComputeShader | vk::PipelineStageFlagBits::eVertexShader;
+	commandBuffer.pipelineBarrier(stageFlags, stageFlags, vk::DependencyFlags(), 0, nullptr, 0, &bufferBarrier, 0, nullptr);
+
+	accessFlag_ = accessFlag;
 }
 
 } // namespace LLGI

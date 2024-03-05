@@ -514,9 +514,9 @@ void CommandListVulkan::Draw(int32_t primitiveCount, int32_t instanceCount)
 		if (cb_.computeBuffer == nullptr)
 			continue;
 
-		auto cb = static_cast<BufferVulkan*>(cb_.computeBuffer);
-
-		cb->ResourceBarrier(currentCommandBuffer_, vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eTransferRead);
+		// Cannot change here
+		// auto cb = static_cast<BufferVulkan*>(cb_.computeBuffer);
+		// cb->ResourceBarrier(currentCommandBuffer_, vk::AccessFlagBits::eTransferRead);
 	}
 
 	if (writeDescriptorIndex > 0)
@@ -667,7 +667,10 @@ void CommandListVulkan::CopyBuffer(Buffer* src, Buffer* dst)
 	copyRegion.srcOffset = srcBuf->GetOffset();
 	copyRegion.dstOffset = dstBuf->GetOffset();
 	copyRegion.size = srcBuf->GetSize();
+
+	dstBuf->ResourceBarrier(currentCommandBuffer_, vk::AccessFlagBits::eTransferWrite);
 	currentCommandBuffer_.copyBuffer(srcGpuBuf, dstGpuBuf, copyRegion);
+	dstBuf->ResourceBarrier(currentCommandBuffer_, vk::AccessFlagBits::eTransferRead);
 }
 
 void CommandListVulkan::BeginRenderPass(RenderPass* renderPass)
@@ -872,9 +875,9 @@ void CommandListVulkan::Dispatch(int32_t groupX, int32_t groupY, int32_t groupZ,
 		if (cb_.computeBuffer == nullptr)
 			continue;
 
-		auto cb = static_cast<BufferVulkan*>(cb_.computeBuffer);
-
-		cb->ResourceBarrier(currentCommandBuffer_, vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eTransferRead);
+		// Cannot change here
+		// auto cb = static_cast<BufferVulkan*>(cb_.computeBuffer);
+		// cb->ResourceBarrier(currentCommandBuffer_, vk::AccessFlagBits::eTransferRead);
 	}
 
 	if (writeDescriptorIndex > 0)
