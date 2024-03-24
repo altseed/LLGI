@@ -18,7 +18,9 @@ private:
 	int32_t size_ = 0;
 	int32_t actualSize_ = 0;
 	int32_t offset_ = 0;
-	vk::AccessFlagBits accessFlag_ = vk::AccessFlagBits::eNone;
+
+	// Should specify None for the first time.
+	vk::AccessFlagBits accessFlag_ = vk::AccessFlagBits::eHostRead;
 
 public:
 	bool Initialize(GraphicsVulkan* graphics, BufferUsageType usage, int32_t size);
