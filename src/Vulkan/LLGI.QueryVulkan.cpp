@@ -21,17 +21,16 @@ bool QueryVulkan::Initialize(GraphicsVulkan* graphics, QueryType queryType, uint
 	queryType_ = queryType;
 	queryCount_ = queryCount;
 
-	vk::QueryPoolCreateInfo queryInfo{};
-	queryInfo.sType = vk::StructureType::eQueryPoolCreateInfo;
-	queryInfo.queryCount = static_cast<uint32_t>(queryCount);
+	vk::QueryPoolCreateInfo queryInfo;
+	queryInfo.setQueryCount(queryCount);
 
 	switch (queryType)
 	{
 	case QueryType::Timestamp:
-		queryInfo.queryType = vk::QueryType::eTimestamp;
+		queryInfo.setQueryType(vk::QueryType::eTimestamp);
 		break;
 	case QueryType::Occulusion:
-		queryInfo.queryType = vk::QueryType::eOcclusion;
+		queryInfo.setQueryType(vk::QueryType::eOcclusion);
 		break;
 	default:
 		return false;
@@ -44,13 +43,14 @@ bool QueryVulkan::Initialize(GraphicsVulkan* graphics, QueryType queryType, uint
 
 uint64_t QueryVulkan::GetQueryResult(uint32_t queryIndex)
 {
-	auto resultValue = graphics_->GetDevice().getQueryPoolResult<uint64_t>(
-		queryPool_, queryIndex, 1, sizeof(uint64_t),
+	uint64_t value = 0;
+	vk::Result result = graphics_->GetDevice().getQueryPoolResults(
+		queryPool_, queryIndex, 1, sizeof(uint64_t), &value, sizeof(uint64_t),
 		vk::QueryResultFlagBits::e64 | vk::QueryResultFlagBits::eWait);
 
-	if (resultValue.result == vk::Result::eSuccess)
+	if (result == vk::Result::eSuccess)
 	{
-		return resultValue.value;
+		return value;
 	}
 
 	return 0;
