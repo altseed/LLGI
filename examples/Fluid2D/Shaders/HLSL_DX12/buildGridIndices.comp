@@ -1,0 +1,30 @@
+cbuffer CB : register(b0)
+{
+    int ParticlesCount;
+};
+
+RWStructuredBuffer<int2> gridTable : register(u0);
+RWStructuredBuffer<int2> gridIndicesTable : register(u1);
+
+int getValidId(int id) {
+    return fmod(id + ParticlesCount, ParticlesCount);
+}
+
+[numthreads(1, 1, 1)]
+void main(uint3 dtid : SV_DispatchThreadID)
+{
+    int id = dtid.x;
+    int idPrev = getValidId(id - 1);
+    int idNext = getValidId(id + 1);
+    int cell = gridTable[id].x;
+    int cellPrev = gridTable[idPrev].x;
+    int cellNext = gridTable[idNext].x;
+    if (cell != cellPrev)
+    {
+        gridIndicesTable[cell].x = id;
+    }
+    if (cell != cellNext)
+    {
+        gridIndicesTable[cell].y = id + 1;
+    }
+}

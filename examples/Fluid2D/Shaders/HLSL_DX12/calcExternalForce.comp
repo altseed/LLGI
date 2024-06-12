@@ -1,0 +1,30 @@
+struct Particle
+{
+    float2 Current;
+    float2 Next;
+    float2 Velocity;
+    float Pscl;
+    bool IsFix;
+};
+
+cbuffer CB : register(b0)
+{
+    float2 Force;
+    float2 Gravity;
+    float2 Dt;
+    int2 GridNum;
+    int2 GridSize;
+};
+
+RWStructuredBuffer<Particle> particles : register(u0);
+
+[numthreads(1, 1, 1)]
+void main(uint3 dtid : SV_DispatchThreadID)
+{
+    if (particles[dtid.x].IsFix) return;
+    particles[dtid.x].Velocity += (Gravity + Force) * Dt.x;
+    float2 pos = particles[dtid.x].Current + particles[dtid.x].Velocity * Dt.x;
+    pos.x = clamp(pos.x, 8, GridNum.x * GridSize.x - 8);
+    pos.y = clamp(pos.y, 8, GridNum.y * GridSize.y - 8);
+    particles[dtid.x].Next = pos;
+}

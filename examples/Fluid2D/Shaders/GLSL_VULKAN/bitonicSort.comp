@@ -1,0 +1,42 @@
+#version 430
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(set = 0, binding = 0, std140) uniform CB
+{
+    float Inc;
+    float Dir;
+} _19;
+
+layout(set = 2, binding = 0, std430) buffer gridTable
+{
+    ivec2 _data[];
+} gridTable_1;
+
+void _main(uvec3 dtid)
+{
+    int inc = int(_19.Inc);
+    int dir = int(_19.Dir);
+    int t = int(dtid.x);
+    int low = t & (inc - 1);
+    int i = (t << 1) - low;
+    bool reverse = (dir & i) == 0;
+    ivec2 x0 = gridTable_1._data[i];
+    ivec2 x1 = gridTable_1._data[inc + i];
+    ivec2 auxa = x0;
+    ivec2 auxb = x1;
+    if ((int(x0.x < x1.x) ^ int(reverse)) != int(0u))
+    {
+        x0 = auxb;
+        x1 = auxa;
+    }
+    gridTable_1._data[i] = x0;
+    gridTable_1._data[inc + i] = x1;
+}
+
+void main()
+{
+    uvec3 dtid = gl_GlobalInvocationID;
+    uvec3 param = dtid;
+    _main(param);
+}
+
