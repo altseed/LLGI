@@ -77,6 +77,12 @@ bool PipelineStateMetal::CreateRenderPipelineState(PipelineState* self, Graphics
 				vertexDescriptor.attributes[i].bufferIndex = VertexBufferIndex;
 				vertexOffset += sizeof(float);
 			}
+			else if (pipstate->VertexLayouts[i] == VertexLayoutFormat::R16G16_UNORM)
+			{
+				vertexDescriptor.attributes[i].format = MTLVertexFormatUShort2Normalized;
+				vertexDescriptor.attributes[i].bufferIndex = VertexBufferIndex;
+				vertexOffset += sizeof(float);
+			}
 			else
 			{
 				Log(LogType::Error, "Unimplemented VertexLoayoutFormat");
