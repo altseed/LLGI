@@ -26,10 +26,10 @@ jobs:
             os: windows-2019
             label: Win_x64
           - name: mac_mac
-            os: macos-11
+            os: macos-14
             label: Mac_mac
           - name: mac_ios
-            os: macos-11
+            os: macos-14
             label: Mac_ios
 
     name: Build on ${{ matrix.name }}
@@ -90,7 +90,7 @@ jobs:
           ./LLGI_Test.exe test
 
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: Test_Result_Windows
           path: test_ci
