@@ -276,6 +276,11 @@ bool PipelineStateDX12::CreatePipelineState()
 			elementDescs[i].Format = DXGI_FORMAT_R8G8B8A8_UINT;
 			elementOffset += sizeof(float) * 1;
 		}
+		else if (VertexLayouts[i] == VertexLayoutFormat::R16G16_UNORM)
+		{
+			elementDescs[i].Format = DXGI_FORMAT_R16G16_UNORM;
+			elementOffset += sizeof(float) * 1;
+		}
 		else
 		{
 			Log(LogType::Error, "Unimplemented VertexLoayoutFormat");

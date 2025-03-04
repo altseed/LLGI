@@ -168,6 +168,11 @@ bool PipelineStateVulkan::CreateGraphicsPipeline()
 			attribDesc.format = vk::Format::eR8G8B8A8Unorm;
 			vertexOffset += sizeof(float);
 		}
+		else if (VertexLayouts[i] == VertexLayoutFormat::R16G16_UNORM)
+		{
+			attribDesc.format = vk::Format::eR16G16Unorm;
+			vertexOffset += sizeof(float);
+		}
 		else
 		{
 			Log(LogType::Error, "Unimplemented VertexLoayoutFormat");
