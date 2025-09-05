@@ -20,10 +20,10 @@ jobs:
             os: ubuntu-20.04
             label: Linux
           - name: windows_x86
-            os: windows-2019
+            os: windows-2022
             label: Win_x86
           - name: windows_x64
-            os: windows-2019
+            os: windows-2022
             label: Win_x64
           - name: mac_mac
             os: macos-14
