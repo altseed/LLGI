@@ -17,7 +17,7 @@ jobs:
         name: [linux,windows_x86,windows_x64,mac_mac,mac_ios]
         include:
           - name: linux
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             label: Linux
           - name: windows_x86
             os: windows-2022
