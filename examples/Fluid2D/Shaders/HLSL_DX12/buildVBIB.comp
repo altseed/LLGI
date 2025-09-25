@@ -1,0 +1,64 @@
+struct Particle
+{
+    float2 Current;
+    float2 Next;
+    float2 Velocity;
+    float Pscl;
+    bool IsFix;
+};
+
+#define EMPTY_CELL 0x7fffffff
+
+int GetHash(int2 gridPos, int num)
+{
+    return gridPos.x + gridPos.y * num;
+}
+
+int2 GetGridPos(float2 pos, float2 gridSize)
+{
+    return pos / gridSize;
+}
+
+struct Vertex
+{
+    float3 Position;
+    float4 Color;
+    float2 UV1;
+    float2 UV2;
+};
+
+cbuffer CB : register(b0)
+{
+    float ParticleRadius;
+    float4 Color;
+    float4 FixedColor;
+};
+
+RWStructuredBuffer<Particle> particles : register(u0);
+RWStructuredBuffer<Vertex> vertex_ : register(u1);
+RWStructuredBuffer<int> index : register(u2);
+
+[numthreads(1, 1, 1)]
+void main(uint3 dtid : SV_DispatchThreadID)
+{
+    float4 c = lerp(Color, FixedColor, particles[dtid.x].IsFix);
+    for (int i = 0; i < 4; i++)
+    {
+        vertex_[dtid.x * 4 + i].Color = c;
+    }
+    float3 pos = float3(particles[dtid.x].Current, 0.0);
+    vertex_[dtid.x * 4].Position = pos + float3(-1, -1, 0) * ParticleRadius;
+    vertex_[dtid.x * 4 + 1].Position = pos + float3(1, -1, 0) * ParticleRadius;
+    vertex_[dtid.x * 4 + 2].Position = pos + float3(1, 1, 0) * ParticleRadius;
+    vertex_[dtid.x * 4 + 3].Position = pos + float3(-1, 1, 0) * ParticleRadius;
+    vertex_[dtid.x * 4].UV1 = float2(0, 0);
+    vertex_[dtid.x * 4 + 1].UV1 = float2(1, 0);
+    vertex_[dtid.x * 4 + 2].UV1 = float2(1, 1);
+    vertex_[dtid.x * 4 + 3].UV1 = float2(0, 1);
+    index[dtid.x * 6] = dtid.x * 4;
+    index[dtid.x * 6 + 1] = dtid.x * 4 + 1;
+    index[dtid.x * 6 + 2] = dtid.x * 4 + 2;
+    index[dtid.x * 6 + 3] = dtid.x * 4;
+    index[dtid.x * 6 + 4] = dtid.x * 4 + 2;
+    index[dtid.x * 6 + 5] = dtid.x * 4 + 3;
+}

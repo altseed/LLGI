@@ -1,0 +1,156 @@
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+
+#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+struct CB
+{
+    int2 GridNum;
+    int2 GridSize;
+    float EffectiveRadius;
+    float Density;
+    float Eps;
+    float Dt;
+    float Wpoly6;
+    float GWspiky;
+};
+
+struct gridIndicesTable
+{
+    int2 _data[1];
+};
+
+struct Particle
+{
+    float2 Current;
+    float2 Next;
+    float2 Velocity;
+    float Pscl;
+    uint IsFix;
+};
+
+struct particles
+{
+    Particle _data[1];
+};
+
+static inline __attribute__((always_inline))
+int2 GetGridPos(thread const float2& pos, thread const float2& gridSize)
+{
+    return int2(pos / gridSize);
+}
+
+static inline __attribute__((always_inline))
+int GetHash(thread const int2& gridPos, thread const int& num)
+{
+    return gridPos.x + (gridPos.y * num);
+}
+
+static inline __attribute__((always_inline))
+float2 CalcDensityCellPB(thread const int2& gridPos, thread const int& i, thread const float2& pos0, constant CB& _66, device gridIndicesTable& gridIndicesTable_1, device particles& particles_1, device gridIndicesTable& gridTable)
+{
+    int2 param = gridPos;
+    int param_1 = _66.GridNum.x;
+    int gridHash = GetHash(param, param_1);
+    int startIndex = ((device int*)&gridIndicesTable_1._data[gridHash])[0u];
+    float h2 = _66.EffectiveRadius * _66.EffectiveRadius;
+    float dens = 0.0;
+    if (startIndex != 2147483647)
+    {
+        int endIndex = ((device int*)&gridIndicesTable_1._data[gridHash])[1u];
+        for (int j = startIndex; j < endIndex; j++)
+        {
+            float2 pos1 = particles_1._data[((device int*)&gridTable._data[j])[1u]].Next;
+            float r2 = dot(pos0 - pos1, pos0 - pos1);
+            if (r2 <= h2)
+            {
+                float q = h2 - r2;
+                dens += (((_66.Wpoly6 * q) * q) * q);
+            }
+        }
+    }
+    return float2(dens);
+}
+
+static inline __attribute__((always_inline))
+float CalcScalingFactorCell(thread const int2& gridPos, thread const int& i, thread const float2& pos0, constant CB& _66, device gridIndicesTable& gridIndicesTable_1, device particles& particles_1, device gridIndicesTable& gridTable)
+{
+    int2 param = gridPos;
+    int param_1 = _66.GridNum.x;
+    int gridHash = GetHash(param, param_1);
+    int startIndex = ((device int*)&gridIndicesTable_1._data[gridHash])[0u];
+    float h = _66.EffectiveRadius;
+    float r0 = _66.Density;
+    float sd = 0.0;
+    float2 sd2 = float2(0.0);
+    if (startIndex != 2147483647)
+    {
+        uint endIndex = uint(((device int*)&gridIndicesTable_1._data[gridHash])[1u]);
+        uint _195 = uint(startIndex);
+        for (uint j = _195; j < endIndex; j++)
+        {
+            float2 pos1 = particles_1._data[((device int*)&gridTable._data[j])[1u]].Next;
+            float2 rij = pos0 - pos1;
+            float r = length(rij);
+            if ((r <= h) && (r > 0.0))
+            {
+                float q = h - r;
+                float2 dp = ((rij * ((_66.GWspiky * q) * q)) / float2(r)) / float2(r0);
+                sd2 += dp;
+                sd += dot(dp, dp);
+            }
+        }
+    }
+    return sd + dot(sd2, sd2);
+}
+
+static inline __attribute__((always_inline))
+void CalcScalingFactor(thread const int& id, constant CB& _66, device gridIndicesTable& gridIndicesTable_1, device particles& particles_1, device gridIndicesTable& gridTable)
+{
+    float2 pos = particles_1._data[id].Next;
+    float h = _66.EffectiveRadius;
+    float r0 = _66.Density;
+    float2 param = pos - float2(h, h);
+    float2 param_1 = float2(_66.GridSize);
+    int2 grid_pos0 = GetGridPos(param, param_1);
+    float2 param_2 = pos + float2(h, h);
+    float2 param_3 = float2(_66.GridSize);
+    int2 grid_pos1 = GetGridPos(param_2, param_3);
+    float dens = 0.0;
+    float sd = 0.0;
+    for (int y = grid_pos0.y; y <= grid_pos1.y; y++)
+    {
+        for (int x = grid_pos0.x; x <= grid_pos1.x; x++)
+        {
+            int2 n_grid_pos = int2(x, y);
+            int2 param_4 = n_grid_pos;
+            int param_5 = id;
+            float2 param_6 = pos;
+            dens += CalcDensityCellPB(param_4, param_5, param_6, _66, gridIndicesTable_1, particles_1, gridTable).x;
+            int2 param_7 = n_grid_pos;
+            int param_8 = id;
+            float2 param_9 = pos;
+            sd += CalcScalingFactorCell(param_7, param_8, param_9, _66, gridIndicesTable_1, particles_1, gridTable);
+        }
+    }
+    float C = (dens / r0) - 1.0;
+    particles_1._data[id].Pscl = (-C) / (sd + _66.Eps);
+}
+
+static inline __attribute__((always_inline))
+void _main(thread const uint3& dtid, constant CB& _66, device gridIndicesTable& gridIndicesTable_1, device particles& particles_1, device gridIndicesTable& gridTable)
+{
+    int id = int(dtid.x);
+    int param = id;
+    CalcScalingFactor(param, _66, gridIndicesTable_1, particles_1, gridTable);
+}
+
+kernel void main0(constant CB& _66 [[buffer(0)]], device particles& particles_1 [[buffer(10)]], device gridIndicesTable& gridTable [[buffer(11)]], device gridIndicesTable& gridIndicesTable_1 [[buffer(12)]], uint3 gl_GlobalInvocationID [[thread_position_in_grid]])
+{
+    uint3 dtid = gl_GlobalInvocationID;
+    uint3 param = dtid;
+    _main(param, _66, gridIndicesTable_1, particles_1, gridTable);
+}
+

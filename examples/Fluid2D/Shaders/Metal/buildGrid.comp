@@ -1,0 +1,71 @@
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+
+#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+struct CB
+{
+    int2 GridNum;
+    int2 GridSize;
+    int ParticlesCount;
+};
+
+struct gridTable
+{
+    int2 _data[1];
+};
+
+struct Particle
+{
+    float2 Current;
+    float2 Next;
+    float2 Velocity;
+    float Pscl;
+    uint IsFix;
+};
+
+struct particles
+{
+    Particle _data[1];
+};
+
+static inline __attribute__((always_inline))
+int2 GetGridPos(thread const float2& pos, thread const float2& gridSize)
+{
+    return int2(pos / gridSize);
+}
+
+static inline __attribute__((always_inline))
+int GetHash(thread const int2& gridPos, thread const int& num)
+{
+    return gridPos.x + (gridPos.y * num);
+}
+
+static inline __attribute__((always_inline))
+void _main(thread const uint3& dtid, constant CB& _52, device gridTable& gridTable_1, device particles& particles_1)
+{
+    if (dtid.x < uint(_52.ParticlesCount))
+    {
+        float2 param = particles_1._data[dtid.x].Next;
+        float2 param_1 = float2(_52.GridSize);
+        int2 param_2 = GetGridPos(param, param_1);
+        int param_3 = _52.GridNum.x;
+        ((device int*)&gridTable_1._data[dtid.x])[0u] = GetHash(param_2, param_3);
+        ((device int*)&gridTable_1._data[dtid.x])[1u] = int(dtid.x);
+    }
+    else
+    {
+        ((device int*)&gridTable_1._data[dtid.x])[0u] = 2147483647;
+        ((device int*)&gridTable_1._data[dtid.x])[1u] = int(dtid.x);
+    }
+}
+
+kernel void main0(constant CB& _52 [[buffer(0)]], device particles& particles_1 [[buffer(10)]], device gridTable& gridTable_1 [[buffer(11)]], uint3 gl_GlobalInvocationID [[thread_position_in_grid]])
+{
+    uint3 dtid = gl_GlobalInvocationID;
+    uint3 param = dtid;
+    _main(param, _52, gridTable_1, particles_1);
+}
+

@@ -1,0 +1,22 @@
+struct Particle
+{
+    float2 Current;
+    float2 Next;
+    float2 Velocity;
+    float Pscl;
+    bool IsFix;
+};
+
+cbuffer CB : register(b0)
+{
+    float Dt;
+};
+
+RWStructuredBuffer<Particle> particles : register(u0);
+
+[numthreads(1, 1, 1)]
+void main(uint3 dtid : SV_DispatchThreadID)
+{
+    particles[dtid.x].Velocity = (particles[dtid.x].Next - particles[dtid.x].Current) / Dt;
+    particles[dtid.x].Current = particles[dtid.x].Next;
+}

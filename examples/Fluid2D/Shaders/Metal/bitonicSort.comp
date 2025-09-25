@@ -1,0 +1,47 @@
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+
+#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+struct CB
+{
+    float Inc;
+    float Dir;
+};
+
+struct gridTable
+{
+    int2 _data[1];
+};
+
+static inline __attribute__((always_inline))
+void _main(thread const uint3& dtid, constant CB& _19, device gridTable& gridTable_1)
+{
+    int inc = int(_19.Inc);
+    int dir = int(_19.Dir);
+    int t = int(dtid.x);
+    int low = t & (inc - 1);
+    int i = (t << 1) - low;
+    bool reverse = (dir & i) == 0;
+    int2 x0 = gridTable_1._data[i];
+    int2 x1 = gridTable_1._data[inc + i];
+    int2 auxa = x0;
+    int2 auxb = x1;
+    if ((int(x0.x < x1.x) ^ int(reverse)) != int(0u))
+    {
+        x0 = auxb;
+        x1 = auxa;
+    }
+    gridTable_1._data[i] = x0;
+    gridTable_1._data[inc + i] = x1;
+}
+
+kernel void main0(constant CB& _19 [[buffer(0)]], device gridTable& gridTable_1 [[buffer(10)]], uint3 gl_GlobalInvocationID [[thread_position_in_grid]])
+{
+    uint3 dtid = gl_GlobalInvocationID;
+    uint3 param = dtid;
+    _main(param, _19, gridTable_1);
+}
+
