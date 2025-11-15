@@ -16,12 +16,22 @@ struct ParsedArgs
 	std::string Filter;
 };
 
+class TestFileReader
+{
+public:
+	virtual ~TestFileReader() = default;
+	virtual std::vector<uint8_t> Read(const char* path) = 0;
+};
+
 class TestHelper
 {
 private:
 	static std::shared_ptr<InternalTestHelper> Get();
+	static std::shared_ptr<TestFileReader> GetFileReader();
 
 public:
+	static void SetFileReader(std::shared_ptr<TestFileReader> fileReader);
+
 	static ParsedArgs ParseArg(int argc, char* argv[]);
 
 	static std::vector<uint8_t> CreateDummyTextureData(LLGI::Vec2I size, LLGI::TextureFormatType format);

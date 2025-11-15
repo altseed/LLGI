@@ -1,3 +1,4 @@
+#ifndef _DISABLE_MAIN
 
 #include "TestHelper.h"
 #include "test.h"
@@ -13,7 +14,7 @@
 
 #endif
 
-#if defined(__linux__) || defined(__APPLE__) || defined(WIN32)
+#if defined(__linux__) || defined(__APPLE__) || defined(_WIN32)
 
 int main(int argc, char* argv[])
 {
@@ -66,4 +67,6 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
+#endif
+
 #endif
