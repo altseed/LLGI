@@ -9,11 +9,48 @@
 #include <regex>
 #include <string>
 
+namespace
+{
+class DefaultTestFileReader : public TestFileReader
+{
+public:
+	std::vector<uint8_t> Read(const char* path) override
+	{
+		std::vector<uint8_t> ret;
+
+#ifdef _WIN32
+		FILE* fp = nullptr;
+		fopen_s(&fp, path, "rb");
+
+#else
+		FILE* fp = fopen(path, "rb");
+#endif
+
+		if (fp == nullptr)
+		{
+			std::cout << "Not found : " << path << std::endl;
+			return ret;
+		}
+
+		fseek(fp, 0, SEEK_END);
+		auto size = ftell(fp);
+		fseek(fp, 0, SEEK_SET);
+
+		ret.resize(size);
+		fread(ret.data(), 1, size, fp);
+		fclose(fp);
+
+		return ret;
+	}
+};
+} // namespace
+
 struct InternalTestHelper
 {
 	std::string Root;
 	bool IsCaptureRequired = false;
 	std::map<std::string, std::function<void(LLGI::DeviceType)>> tests;
+	std::shared_ptr<TestFileReader> FileReader;
 };
 
 std::shared_ptr<InternalTestHelper> TestHelper::Get()
@@ -65,6 +102,18 @@ ParsedArgs TestHelper::ParseArg(int argc, char* argv[])
 
 	return args;
 }
+
+std::shared_ptr<TestFileReader> TestHelper::GetFileReader()
+{
+	auto helper = Get();
+	if (helper->FileReader == nullptr)
+	{
+		helper->FileReader = std::make_shared<DefaultTestFileReader>();
+	}
+	return helper->FileReader;
+}
+
+void TestHelper::SetFileReader(std::shared_ptr<TestFileReader> fileReader) { Get()->FileReader = fileReader; }
 
 std::vector<uint8_t> TestHelper::CreateDummyTextureData(LLGI::Vec2I size, LLGI::TextureFormatType format)
 {
@@ -149,34 +198,7 @@ std::vector<uint8_t> TestHelper::LoadData(const char* path)
 	return LoadDataWithoutRoot(path_.c_str());
 }
 
-std::vector<uint8_t> TestHelper::LoadDataWithoutRoot(const char* path)
-{
-	std::vector<uint8_t> ret;
-
-#ifdef _WIN32
-	FILE* fp = nullptr;
-	fopen_s(&fp, path, "rb");
-
-#else
-	FILE* fp = fopen(path, "rb");
-#endif
-
-	if (fp == nullptr)
-	{
-		std::cout << "Not found : " << path << std::endl;
-		return ret;
-	}
-
-	fseek(fp, 0, SEEK_END);
-	auto size = ftell(fp);
-	fseek(fp, 0, SEEK_SET);
-
-	ret.resize(size);
-	fread(ret.data(), 1, size, fp);
-	fclose(fp);
-
-	return ret;
-}
+std::vector<uint8_t> TestHelper::LoadDataWithoutRoot(const char* path) { return GetFileReader()->Read(path); }
 
 void TestHelper::SetRoot(const char* root)
 {
@@ -192,7 +214,8 @@ void TestHelper::CreateRectangle(LLGI::Graphics* graphics,
 								 std::shared_ptr<LLGI::Buffer>& vb,
 								 std::shared_ptr<LLGI::Buffer>& ib)
 {
-	vb = LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Vertex | LLGI::BufferUsageType::MapWrite, sizeof(SimpleVertex) * 4));
+	vb = LLGI::CreateSharedPtr(
+		graphics->CreateBuffer(LLGI::BufferUsageType::Vertex | LLGI::BufferUsageType::MapWrite, sizeof(SimpleVertex) * 4));
 	ib = LLGI::CreateSharedPtr(graphics->CreateBuffer(LLGI::BufferUsageType::Index | LLGI::BufferUsageType::MapWrite, 2 * 6));
 	auto vb_buf = (SimpleVertex*)vb->Lock();
 	vb_buf[0].Pos = LLGI::Vec3F(ul.X, ul.Y, ul.Z);

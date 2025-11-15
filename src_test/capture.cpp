@@ -188,7 +188,9 @@ void test_capture(LLGI::DeviceType deviceType, LLGI::Vec2I windowSize)
 	pips.clear();
 }
 
-#if defined(__linux__) || defined(__APPLE__) || defined(WIN32)
+#ifndef _DISABLE_CAPTURE_TEST
+
+#if defined(__linux__) || defined(__APPLE__) || defined(_WIN32)
 
 TestRegister Capture_Size1279("Capture.Size1279", [](LLGI::DeviceType device) -> void { test_capture(device, LLGI::Vec2I(1279, 719)); });
 
@@ -197,5 +199,7 @@ TestRegister Capture_Size800("Capture.Size800", [](LLGI::DeviceType device) -> v
 TestRegister Capture_Size1280("Capture.Size1280", [](LLGI::DeviceType device) -> void { test_capture(device, LLGI::Vec2I(1280, 720)); });
 
 TestRegister Capture_Texture("Capture.Texture", [](LLGI::DeviceType device) -> void { test_capture_texture(device); });
+
+#endif
 
 #endif
