@@ -31,16 +31,18 @@ verts = glob.glob(os.path.join(target_directory, 'HLSL_DX12/*.vert'), recursive=
 frags = glob.glob(os.path.join(target_directory, 'HLSL_DX12/*.frag'), recursive=True)
 comps = glob.glob(os.path.join(target_directory, 'HLSL_DX12/*.comp'), recursive=True)
 
-for target,directory in [
-    ('-M', 'Metal'),
-    ('-V', 'GLSL_VULKAN'),
-    ('-G', 'GLSL_GL')]:
+for target,directory,ext in [
+    ('-M', 'Metal', []),
+    ('-V', 'GLSL_VULKAN', []),
+    ('-G', 'GLSL_GL',[]),
+    ('-G', 'GLSL_GL_450',['--sm', '450'])]:
     for kind,paths in [
         ('--vert', verts),
         ('--frag', frags),
         ('--comp', comps) ]:
         for f in paths:
-            subprocess.call([transpiler_call, kind, target, '--input', f, '--output', os.path.join(target_directory, directory, os.path.basename(f))])
+            os.makedirs(os.path.join(target_directory, directory), exist_ok=True)
+            subprocess.call([transpiler_call, kind, target, '--input', f, '--output', os.path.join(target_directory, directory, os.path.basename(f))] + ext)
 
 verts = glob.glob(os.path.join(target_directory, 'GLSL_VULKAN/*.vert'), recursive=True)
 frags = glob.glob(os.path.join(target_directory, 'GLSL_VULKAN/*.frag'), recursive=True)
