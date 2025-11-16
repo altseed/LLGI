@@ -13,7 +13,7 @@ enum class RenderPassTestMode
 
 void test_renderPass(LLGI::DeviceType deviceType, RenderPassTestMode mode)
 {
-#if !(defined(__linux__) || defined(__APPLE__) || defined(WIN32))
+#if !(defined(__linux__) || defined(__APPLE__) || defined(WIN32)) || defined(_DISABLE_RENDERPASS_TEST)
 	if (mode == RenderPassTestMode::MSAA || mode == RenderPassTestMode::MSAADepth)
 	{
 		return;
