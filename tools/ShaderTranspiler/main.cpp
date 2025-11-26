@@ -11,6 +11,7 @@ enum class OutputType
 	VULKAN_GLSL,
 	MSL,
 	HLSL,
+	SPV,
 	Max,
 };
 
@@ -33,6 +34,7 @@ int main(int argc, char* argv[])
 	bool isDX12 = false;
 	bool plain = false;
 	int shaderModel = 0;
+	std::vector<std::string> includeDir;
 	std::vector<LLGI::SPIRVGeneratorMacro> macros;
 
 	for (size_t i = 0; i < args.size();)
@@ -71,6 +73,16 @@ int main(int argc, char* argv[])
 		{
 			outputType = OutputType::VULKAN_GLSL;
 			i += 1;
+		}
+		else if (args[i] == "-S")
+		{
+			outputType = OutputType::SPV;
+			i += 1;
+		}
+		else if (args[i] == "-I")
+		{
+			includeDir.push_back(args[i + 1]);
+			i += 2;
 		}
 		else if (args[i] == "-D")
 		{
@@ -151,7 +163,8 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
-	auto loadFunc = [](std::string s) -> std::vector<uint8_t> {
+	auto loadFunc = [](std::string s) -> std::vector<uint8_t>
+	{
 		std::ifstream file(s, std::ios_base::binary | std::ios_base::ate);
 		if (file)
 		{
@@ -167,7 +180,7 @@ int main(int argc, char* argv[])
 
 	auto generator = std::make_shared<LLGI::SPIRVGenerator>(loadFunc);
 
-	auto spirv = generator->Generate(inputPath.c_str(), code.c_str(), macros, shaderStage, outputType == OutputType::VULKAN_GLSL);
+	auto spirv = generator->Generate(inputPath.c_str(), code.c_str(), includeDir, macros, shaderStage, outputType == OutputType::VULKAN_GLSL);
 
 	if (spirv->GetData().size() == 0)
 	{
@@ -175,7 +188,7 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
-	auto transpiler = std::shared_ptr<LLGI::SPIRVTranspiler>();
+	std::shared_ptr<LLGI::SPIRVTranspiler> transpiler = nullptr;
 
 	if (outputType == OutputType::GLSL)
 	{
@@ -195,9 +208,35 @@ int main(int argc, char* argv[])
 	}
 
 	std::cout << inputPath << " -> " << outputPath << " ShaderModel=" << shaderModel << std::endl;
-	if (!transpiler->Transpile(spirv))
+
+	try
 	{
-		std::cout << transpiler->GetErrorCode() << std::endl;
+		if (transpiler != nullptr)
+		{
+			if (!transpiler->Transpile(spirv, shaderStage))
+			{
+				std::cout << transpiler->GetErrorCode() << std::endl;
+				return 1;
+			}
+		}
+		else if (outputType == OutputType::SPV)
+		{
+			std::ofstream ofs;
+			ofs.open(outputPath, std::ios::app | std::ios::binary);
+			if (!ofs)
+			{
+				return 1;
+			}
+
+			ofs.write(reinterpret_cast<const char*>(spirv->GetData().data()), spirv->GetData().size() * sizeof(int));
+			ofs.flush();
+			ofs.close();
+			return 0;
+		}
+	}
+	catch (const std::runtime_error& e)
+	{
+		std::cout << e.what() << std::endl;
 		return 0;
 	}
 

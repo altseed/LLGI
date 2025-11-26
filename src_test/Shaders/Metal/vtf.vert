@@ -32,13 +32,15 @@ struct main0_in
 };
 
 static inline __attribute__((always_inline))
-VS_OUTPUT _main(thread const VS_INPUT& _input, thread texture2d<float> txt, thread sampler smp)
+VS_OUTPUT _main(thread const VS_INPUT& _input, texture2d<float> txt, sampler smp)
 {
     float4 c = txt.sample(smp, _input.g_uv, level(0.0));
     VS_OUTPUT _output;
     _output.g_position = float4(_input.g_position, 1.0);
-    float2 _53 = _output.g_position.xy + c.xy;
-    _output.g_position = float4(_53.x, _53.y, _output.g_position.z, _output.g_position.w);
+    float4 _51 = _output.g_position;
+    float2 _53 = _51.xy + c.xy;
+    _output.g_position.x = _53.x;
+    _output.g_position.y = _53.y;
     _output.g_color = _input.g_color;
     return _output;
 }

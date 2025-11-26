@@ -24,7 +24,7 @@ struct main0_in
 };
 
 static inline __attribute__((always_inline))
-float4 _main(thread const PS_INPUT& _input, thread texture2d<float> txt, thread sampler smp)
+float4 _main(thread const PS_INPUT& _input, texture2d<float> txt, sampler smp)
 {
     float4 c = txt.sample(smp, _input.UV);
     c.w = 255.0;

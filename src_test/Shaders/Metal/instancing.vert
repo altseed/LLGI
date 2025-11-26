@@ -38,17 +38,17 @@ struct main0_in
 };
 
 static inline __attribute__((always_inline))
-VS_OUTPUT _main(thread const VS_INPUT& _input, constant CB& v_36)
+VS_OUTPUT _main(thread const VS_INPUT& _input, constant CB& _36)
 {
     VS_OUTPUT _output;
     _output.g_position = float4(_input.g_position, 1.0);
-    _output.g_position.x += v_36.offsets[_input.InstanceId].x;
-    _output.g_position.y += v_36.offsets[_input.InstanceId].y;
+    _output.g_position.x += _36.offsets[_input.InstanceId].x;
+    _output.g_position.y += _36.offsets[_input.InstanceId].y;
     _output.g_color = _input.g_color;
     return _output;
 }
 
-vertex main0_out main0(main0_in in [[stage_in]], constant CB& v_36 [[buffer(0)]], uint gl_InstanceIndex [[instance_id]])
+vertex main0_out main0(main0_in in [[stage_in]], constant CB& _36 [[buffer(0)]], uint gl_InstanceIndex [[instance_id]])
 {
     main0_out out = {};
     VS_INPUT _input;
@@ -57,7 +57,7 @@ vertex main0_out main0(main0_in in [[stage_in]], constant CB& v_36 [[buffer(0)]]
     _input.g_color = in.input_g_color;
     _input.InstanceId = gl_InstanceIndex;
     VS_INPUT param = _input;
-    VS_OUTPUT flattenTemp = _main(param, v_36);
+    VS_OUTPUT flattenTemp = _main(param, _36);
     out.gl_Position = flattenTemp.g_position;
     out._entryPointOutput_g_color = flattenTemp.g_color;
     return out;

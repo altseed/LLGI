@@ -6,7 +6,7 @@
 #include <glslang/SPIRV/GlslangToSpv.h>
 #endif
 
-#include <glslang/Include/ResourceLimits.h>
+#include <glslang/Public/ResourceLimits.h>
 #include <glslang/Public/ShaderLang.h>
 
 #include <functional>
@@ -24,8 +24,6 @@
 #include <spirv_cross/spirv_msl.hpp>
 #include <spirv_cross/spirv_reflect.hpp>
 #endif
-
-#include "ResourceLimits.h"
 
 namespace LLGI
 {
@@ -171,7 +169,7 @@ ShaderStageType SPIRV::GetStage() const { return shaderStage_; }
 
 const std::vector<uint32_t>& SPIRV::GetData() const { return data_; }
 
-bool SPIRVTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv) { return false; }
+bool SPIRVTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI::ShaderStageType shaderStageType) { return false; }
 
 std::string SPIRVTranspiler::GetErrorCode() const { return errorCode_; }
 
@@ -179,7 +177,7 @@ std::string SPIRVTranspiler::GetCode() const { return code_; }
 
 SPIRVToHLSLTranspiler::SPIRVToHLSLTranspiler(int32_t shaderModel, bool isDX12) : shaderModel_(shaderModel), isDX12_(isDX12) {}
 
-bool SPIRVToHLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
+bool SPIRVToHLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI::ShaderStageType shaderStageType)
 {
 	spirv_cross::CompilerHLSL compiler(spirv->GetData());
 
@@ -268,7 +266,7 @@ bool SPIRVToHLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 	return true;
 }
 
-bool SPIRVToMSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
+bool SPIRVToMSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI::ShaderStageType shaderStageType)
 {
 
 	spirv_cross::CompilerMSL compiler(spirv->GetData());
@@ -301,7 +299,7 @@ bool SPIRVToMSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 	return true;
 }
 
-bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
+bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI::ShaderStageType shaderStageType)
 {
 	spirv_cross::CompilerGLSL compiler(spirv->GetData());
 
@@ -327,9 +325,17 @@ bool SPIRVToGLSLTranspiler::Transpile(const std::shared_ptr<SPIRV>& spirv)
 		}
 	}
 
+	std::map<spirv_cross::VariableID, uint32_t> sampler_id_to_index;
+
+	for (auto& remap : compiler.get_combined_image_samplers())
+	{
+		auto location = compiler.get_decoration(remap.sampler_id, spv::DecorationBinding);
+		sampler_id_to_index[remap.combined_id] = location;
+	}
+
 	for (auto& resource : resources.sampled_images)
 	{
-		auto i = compiler.get_decoration(resource.id, spv::DecorationLocation);
+		auto i = sampler_id_to_index[resource.id];
 		compiler.set_decoration(resource.id, spv::DecorationBinding, binding_offset + i);
 
 		if (spirv->GetStage() == ShaderStageType::Vertex)
@@ -462,7 +468,7 @@ public:
 	}
 };
 
-bool SPIRVReflection::Transpile(const std::shared_ptr<SPIRV>& spirv)
+bool SPIRVReflection::Transpile(const std::shared_ptr<SPIRV>& spirv, LLGI::ShaderStageType shaderStageType)
 {
 	Textures.clear();
 	Uniforms.clear();
@@ -526,12 +532,15 @@ SPIRVGenerator::SPIRVGenerator(const std::function<std::vector<std::uint8_t>(std
 
 SPIRVGenerator::~SPIRVGenerator() { glslang::FinalizeProcess(); }
 
-std::shared_ptr<SPIRV> SPIRVGenerator::Generate(
-	const char* path, const char* code, std::vector<SPIRVGeneratorMacro> macros, ShaderStageType shaderStageType, bool isYInverted)
+std::shared_ptr<SPIRV> SPIRVGenerator::Generate(const char* path,
+												const char* code,
+												std::vector<std::string> includeDirs,
+												std::vector<SPIRVGeneratorMacro> macros,
+												ShaderStageType shaderStageType,
+												bool isYInverted)
 {
 	std::string codeStr(code);
 	glslang::TProgram program;
-	TBuiltInResource resources = glslang::DefaultTBuiltInResource;
 	auto shaderStage = GetGlslangShaderStage(shaderStageType);
 
 	glslang::TShader shader = glslang::TShader(shaderStage);
@@ -565,8 +574,13 @@ std::shared_ptr<SPIRV> SPIRVGenerator::Generate(
 	DirStackFileIncluder includer(onLoad_);
 	includer.pushExternalLocalDirectory(dirnameOf(path));
 
+	for (auto& d : includeDirs)
+	{
+		includer.pushExternalLocalDirectory(d);
+	}
+
 	int defaultVersion = 110;
-	if (!shader.parse(&resources, defaultVersion, false, messages, includer))
+	if (!shader.parse(GetDefaultResources(), defaultVersion, false, messages, includer))
 	{
 		return std::make_shared<SPIRV>(shader.getInfoLog());
 	}

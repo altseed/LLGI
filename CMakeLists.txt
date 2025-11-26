@@ -1,8 +1,9 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.15)
 
 # The project's name
 project(LLGI)
 
+include(GNUInstallDirs)
 include(ExternalProject)
 
 # linux flag
@@ -92,6 +93,12 @@ endif()
 if(BUILD_VULKAN_COMPILER OR BUILD_TOOL)
   if(USE_THIRDPARTY_DIRECTORY)
 
+    list(APPEND LLGI_THIRDPARTY_INCLUDES
+         ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang/include)
+    list(APPEND LLGI_THIRDPARTY_LIBRARY_DIRECTORIES
+         ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang/lib)
+
+    if ("${CMAKE_BUILD_TYPE}" STREQUAL "" AND NOT WIN32)
     ExternalProject_Add(
       EP_glslang
       SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/glslang
@@ -101,37 +108,65 @@ if(BUILD_VULKAN_COMPILER OR BUILD_TOOL)
         -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang
         -DCMAKE_USER_MAKE_RULES_OVERRIDE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/CFlagOverrides.cmake
         -DUSE_MSVC_RUNTIME_LIBRARY_DLL=${USE_MSVC_RUNTIME_LIBRARY_DLL}
+        -DENABLE_OPT=OFF
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+        -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
+
+    list(
+      APPEND
+      LLGI_THIRDPARTY_LIBRARIES
+      glslang
+      glslang-default-resource-limits
+      MachineIndependent
+      SPIRV
+      OSDependent
+      GenericCodeGen)
+
+      else()
+
+      ExternalProject_Add(
+      EP_glslang
+      SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/glslang
+      PREFIX ${CMAKE_CURRENT_BINARY_DIR}/EP/Build/glslang
+      INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang
+      CMAKE_ARGS
+        -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang
+        -DCMAKE_USER_MAKE_RULES_OVERRIDE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/CFlagOverrides.cmake
+        -DUSE_MSVC_RUNTIME_LIBRARY_DLL=${USE_MSVC_RUNTIME_LIBRARY_DLL}
+        -DENABLE_OPT=OFF
         -DCMAKE_DEBUG_POSTFIX=d
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -DCMAKE_POSITION_INDEPENDENT_CODE=ON
-        -DCMAKE_POLICY_VERSION_MINIMUM=3.5)
-    list(APPEND LLGI_THIRDPARTY_INCLUDES
-         ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang/include)
-    list(APPEND LLGI_THIRDPARTY_LIBRARY_DIRECTORIES
-         ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/glslang/lib)
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+        -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
     list(
       APPEND
       LLGI_THIRDPARTY_LIBRARIES
       debug
       glslangd
       debug
-      SPIRVd
+      glslang-default-resource-limitsd
       debug
-      OGLCompilerd
+      MachineIndependentd
+      debug
+      SPIRVd
       debug
       OSDependentd
       debug
-      HLSLd
+      GenericCodeGend
       optimized
       glslang
       optimized
-      SPIRV
+      glslang-default-resource-limits
       optimized
-      OGLCompiler
+      MachineIndependent
+      optimized
+      SPIRV
       optimized
       OSDependent
       optimized
-      HLSL)
+      GenericCodeGen)
+    endif()
 
     ExternalProject_Add(
       EP_SPIRV-Cross
@@ -147,8 +182,9 @@ if(BUILD_VULKAN_COMPILER OR BUILD_TOOL)
         -DSPIRV_CROSS_ENABLE_TESTS=OFF
         -DSPIRV_CROSS_FORCE_PIC=ON
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -DCMAKE_POSITION_INDEPENDENT_CODE=ON
-        -DCMAKE_POLICY_VERSION_MINIMUM=3.5)
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+        -DCMAKE_POSITION_INDEPENDENT_CODE=ON)
+
     list(APPEND LLGI_THIRDPARTY_INCLUDES
          ${CMAKE_CURRENT_BINARY_DIR}/EP/Install/SPIRV-Cross/include)
     list(APPEND LLGI_THIRDPARTY_LIBRARY_DIRECTORIES
@@ -199,19 +235,19 @@ if(BUILD_VULKAN_COMPILER OR BUILD_TOOL)
 endif()
 
 if(BUILD_VULKAN)
-  add_definitions(-DENABLE_VULKAN)
+  add_compile_definitions(ENABLE_VULKAN)
 
   if(GLSLANG_WITHOUT_INSTALL)
-    add_compile_definitions(LLGI PRIVATE ENABLE_GLSLANG_WITHOUT_INSTALL)
+    add_compile_definitions(ENABLE_GLSLANG_WITHOUT_INSTALL)
   endif()
 
   if(BUILD_VULKAN_COMPILER)
-    add_definitions(-DENABLE_VULKAN_COMPILER)
+    add_compile_definitions(ENABLE_VULKAN_COMPILER)
   endif()
 endif()
 
 if(APPLE)
-  add_definitions(-DENABLE_METAL)
+  add_compile_definitions(ENABLE_METAL)
 endif()
 
 add_subdirectory("src")
