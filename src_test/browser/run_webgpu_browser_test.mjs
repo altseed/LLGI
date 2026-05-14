@@ -28,6 +28,12 @@ function findBrowserExecutable() {
 	const candidates = [
 		process.env.CHROME_PATH,
 		process.env.EDGE_PATH,
+		'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+		'/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+		'/usr/bin/google-chrome',
+		'/usr/bin/google-chrome-stable',
+		'/usr/bin/chromium',
+		'/usr/bin/chromium-browser',
 		'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
 		'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
 		'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
@@ -41,9 +47,21 @@ function findBrowserExecutable() {
 	}
 
 	console.error('A WebGPU-capable Chrome or Edge executable is required.');
-	console.error('Set CHROME_PATH, for example:');
+	console.error('Set CHROME_PATH, for example on Windows:');
 	console.error('$env:CHROME_PATH = "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"');
+	console.error('or on macOS:');
+	console.error('CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"');
 	process.exit(2);
+}
+
+function chromeGpuArgs() {
+	if (process.platform === 'win32') {
+		return ['--use-angle=d3d11'];
+	}
+	if (process.platform === 'darwin') {
+		return ['--use-angle=metal'];
+	}
+	return [];
 }
 
 function contentType(filePath) {
@@ -214,7 +232,7 @@ let chromeStderr = '';
 try {
 	userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'llgi-webgpu-chrome-'));
 	const devtoolsPort = await getFreePort();
-	chrome = spawn(executablePath, [
+	const chromeArgs = [
 		'--headless=new',
 		`--remote-debugging-port=${devtoolsPort}`,
 		'--remote-debugging-address=127.0.0.1',
@@ -223,9 +241,10 @@ try {
 		'--no-default-browser-check',
 		'--enable-unsafe-webgpu',
 		'--ignore-gpu-blocklist',
-		'--use-angle=d3d11',
+		...chromeGpuArgs(),
 		'about:blank',
-	], {stdio: ['ignore', 'ignore', 'pipe']});
+	];
+	chrome = spawn(executablePath, chromeArgs, {stdio: ['ignore', 'ignore', 'pipe']});
 	chrome.stderr.on('data', (chunk) => {
 		chromeStderr += chunk.toString();
 	});

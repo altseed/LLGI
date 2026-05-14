@@ -64,6 +64,13 @@ before running the Node.js runner:
 $env:CHROME_PATH = "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
 ```
 
+On macOS, the runner auto-detects the standard Chrome and Edge application
+paths. If needed, set the browser path explicitly:
+
+```bash
+export CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+```
+
 A successful run ends with:
 
 ```text
@@ -119,10 +126,9 @@ $env:CHROME_PATH = "C:\Program Files\Microsoft\Edge\Application\msedge.exe"
 $env:CHROME_PATH = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 ```
 
-On this Windows environment, Playwright's downloaded Chromium/headless shell may
-expose `navigator.gpu` but still return no adapter from
-`navigator.gpu.requestAdapter()`. Use installed Chrome or Edge when running
-these tests.
+On some environments, Playwright's downloaded Chromium/headless shell may expose
+`navigator.gpu` but still return no adapter from `navigator.gpu.requestAdapter()`.
+Use installed Chrome or Edge when running these tests.
 
 ## Configure
 
